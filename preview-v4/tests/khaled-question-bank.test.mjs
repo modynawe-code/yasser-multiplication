@@ -5,6 +5,8 @@ import {
   createCompareQuestion,
   createPositionQuestion,
   createPatternQuestion,
+  createNumberOrderQuestion,
+  createVisualAdditionQuestion,
   createKhaledRound
 } from '../src/modules/khaled/domain/question-bank.js';
 
@@ -17,9 +19,13 @@ test('count questions stay within requested first-grade range',()=>{
   assert.equal(small.options.length,3);
   assert.ok(small.options.includes(small.correctAnswer));
 
-  const large=createCountQuestion({min:6,max:10,random:fixedRandom([.6,.2,.8,.4,.1,.9])});
-  assert.ok(large.count>=6&&large.count<=10);
-  assert.equal(large.skillId,'numbers-6-10');
+  const medium=createCountQuestion({min:6,max:10,random:fixedRandom([.6,.2,.8,.4,.1,.9])});
+  assert.ok(medium.count>=6&&medium.count<=10);
+  assert.equal(medium.skillId,'numbers-6-10');
+
+  const large=createCountQuestion({min:11,max:20,random:fixedRandom([.6,.2,.8,.4,.1,.9])});
+  assert.ok(large.count>=11&&large.count<=20);
+  assert.equal(large.skillId,'numbers-11-20');
 });
 
 test('comparison question correct side matches requested relation',()=>{
@@ -46,8 +52,27 @@ test('pattern question answer continues the generated sequence',()=>{
   assert.ok(question.options.includes(question.correctAnswer));
 });
 
+test('number-order questions stay within 11 to 20 and hide one value',()=>{
+  const question=createNumberOrderQuestion({random:fixedRandom([.5,.6,.1,.9,.3,.7,.2,.8])});
+  assert.equal(question.type,'number-order');
+  assert.equal(question.skillId,'numbers-11-20');
+  assert.equal(question.items.filter(value=>value===null).length,1);
+  assert.ok(question.correctAnswer>=11&&question.correctAnswer<=20);
+  assert.ok(question.options.includes(question.correctAnswer));
+});
+
+test('visual addition combines two non-empty groups with total at most ten',()=>{
+  const question=createVisualAdditionQuestion({maxTotal:10,random:fixedRandom([.4,.5,.2,.8,.1,.7,.3,.9])});
+  assert.equal(question.type,'visual-addition');
+  assert.equal(question.skillId,'addition-foundations');
+  assert.ok(question.left>=1&&question.right>=1);
+  assert.equal(question.correctAnswer,question.left+question.right);
+  assert.ok(question.correctAnswer<=10);
+  assert.ok(question.options.includes(question.correctAnswer));
+});
+
 test('all ready Khaled skills produce eight-question rounds',()=>{
-  for(const skillId of ['numbers-0-5','numbers-6-10','classify-compare','position-pattern']){
+  for(const skillId of ['numbers-0-5','numbers-6-10','numbers-11-20','classify-compare','position-pattern','addition-foundations']){
     const round=createKhaledRound({skillId,count:8});
     assert.equal(round.length,8);
     assert.ok(round.every(question=>question.skillId===skillId));

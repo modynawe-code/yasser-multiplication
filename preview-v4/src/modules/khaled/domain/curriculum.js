@@ -65,21 +65,21 @@ export const KHALED_SKILLS=Object.freeze([
     id:'numbers-11-20',
     chapter:5,
     title:'الأعداد حتى 20',
-    shortTitle:'11 إلى 20',
+    shortTitle:'11 إلى 20 • ترتيب',
     symbol:'20',
-    status:'planned',
+    status:'ready',
     activityTypes:['count-select','number-order'],
-    goals:['يعد ضمن 20','يقارن ويرتب أعدادًا ضمن 20']
+    goals:['يعد عناصر من 11 إلى 20','يربط الكمية بالعدد الصحيح حتى 20','يكمل ترتيبًا عدديًا بسيطًا ضمن 20']
   },
   {
     id:'addition-foundations',
     chapter:6,
     title:'الجمع',
-    shortTitle:'الجمع',
+    shortTitle:'جمع بصري ضمن 10',
     symbol:'+',
-    status:'planned',
+    status:'ready',
     activityTypes:['visual-addition'],
-    goals:['يمثل قصة جمع بصريًا','يجد ناتج جمع بسيط']
+    goals:['يفهم ضم مجموعتين','يمثل قصة جمع بصريًا','يجد ناتج جمع بسيط ضمن 10']
   },
   {
     id:'subtraction-foundations',

@@ -24,9 +24,17 @@ test('position and pattern structure covers the five early lessons',()=>{
   for(const lesson of ['فوق وتحت','أعلى وأوسط وأسفل','قبل وبعد','تحديد الأنماط','إنشاء الأنماط'])assert.ok(skill.lessons.includes(lesson));
 });
 
-test('four Khaled skills are playable before addition is unlocked',()=>{
+test('six first-term Khaled skill groups are playable while subtraction stays locked',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10']);
-  assert.equal(getKhaledSkill('addition-foundations').status,'planned');
+  assert.deepEqual(ready,[
+    'classify-compare',
+    'numbers-0-5',
+    'position-pattern',
+    'numbers-6-10',
+    'numbers-11-20',
+    'addition-foundations'
+  ]);
+  assert.equal(getKhaledSkill('numbers-11-20').status,'ready');
+  assert.equal(getKhaledSkill('addition-foundations').status,'ready');
   assert.equal(getKhaledSkill('subtraction-foundations').status,'later');
 });

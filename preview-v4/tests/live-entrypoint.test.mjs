@@ -21,7 +21,7 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell is bumped for the promoted live entrypoint',async()=>{
+test('service worker shell is current for expanded Khaled activities',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-14/);
+  assert.match(worker,/shell-15/);
 });
