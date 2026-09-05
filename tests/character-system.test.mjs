@@ -36,9 +36,10 @@ test('mobile visual loader avoids blob URLs and has native fallback assets',asyn
 
 test('preview service worker refreshes shell from network and preserves offline fallback',async()=>{
   const worker=await read('service-worker.js');
-  assert.match(worker,/shell-8/);
+  assert.match(worker,/shell-9/);
   assert.match(worker,/cache:'reload'/);
   assert.match(worker,/cache:'no-store'/);
+  assert.match(worker,/client\.navigate\(client\.url\)/);
   assert.match(worker,/character-system\.css/);
   assert.match(worker,/scene-controller\.js/);
   assert.match(worker,/character-assets\.js/);
