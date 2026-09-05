@@ -38,10 +38,15 @@ test('chapter five maps recognition comparison and ordering through twenty',()=>
   assert.deepEqual(skill.activityTypes,['count-select','spoken-number-select','number-compare','number-order']);
 });
 
-test('six first-term Khaled skill groups are playable while subtraction stays locked',()=>{
+test('chapter seven maps subtraction stories, zero and whole, and vertical subtraction',()=>{
+  const skill=getKhaledSkill('subtraction-foundations');
+  assert.equal(skill.chapter,7);
+  assert.equal(skill.status,'ready');
+  for(const lesson of ['قصص الطرح','طرح الصفر والكل','الطرح من الأعداد 10،11،12','الطرح الرأسي'])assert.ok(skill.lessons.includes(lesson));
+  assert.deepEqual(skill.activityTypes,['visual-subtraction','subtraction-sentence','zero-whole-subtraction','vertical-subtraction']);
+});
+
+test('seven core Khaled skill groups are playable through subtraction',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations']);
-  assert.equal(getKhaledSkill('numbers-11-20').status,'ready');
-  assert.equal(getKhaledSkill('addition-foundations').status,'ready');
-  assert.equal(getKhaledSkill('subtraction-foundations').status,'later');
+  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations']);
 });
