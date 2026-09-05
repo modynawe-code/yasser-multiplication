@@ -16,6 +16,16 @@ test('student views expose stable visual slots without coupling assets into HTML
   assert.match(css,/exam-mode/);
 });
 
+test('learning flow delegates feedback visuals to the scene controller',async()=>{
+  const controller=await read('src/ui/app-controller.js');
+  assert.match(controller,/createSceneController/);
+  assert.match(controller,/visuals\.render\('correct'\)/);
+  assert.match(controller,/visuals\.render\('wrong'\)/);
+  assert.match(controller,/mode==='exam'\?'exam':'question'/);
+  assert.match(controller,/visuals\.result\(pct\)/);
+  assert.match(controller,/visuals\.render\('parent'\)/);
+});
+
 test('offline shell caches semantic visual system and all state payloads',async()=>{
   const worker=await read('service-worker.js');
   assert.match(worker,/character-system\.css/);
