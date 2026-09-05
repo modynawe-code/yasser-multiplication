@@ -49,23 +49,18 @@ test('chapter seven maps subtraction stories, zero and whole, and vertical subtr
 test('chapter eight maps the five addition and subtraction strategies one-to-one',()=>{
   const skill=getKhaledSkill('add-sub-strategies');
   assert.equal(skill.chapter,8);
-  assert.deepEqual(skill.lessons,[
-    'الجمع بالعد التصاعدي',
-    'الجمع باستعمال خط الأعداد',
-    'الطرح بالعد التنازلي',
-    'أحل المسألة: أكتب جملة عددية',
-    'الطرح باستعمال خط الأعداد'
-  ]);
-  assert.deepEqual(skill.activityTypes,[
-    'count-on-addition',
-    'number-line-addition',
-    'count-back-subtraction',
-    'number-sentence',
-    'number-line-subtraction'
-  ]);
+  assert.deepEqual(skill.lessons,['الجمع بالعد التصاعدي','الجمع باستعمال خط الأعداد','الطرح بالعد التنازلي','أحل المسألة: أكتب جملة عددية','الطرح باستعمال خط الأعداد']);
+  assert.deepEqual(skill.activityTypes,['count-on-addition','number-line-addition','count-back-subtraction','number-sentence','number-line-subtraction']);
 });
 
-test('eight core Khaled skill groups are playable through arithmetic strategies',()=>{
+test('chapter nine maps place value through ordering to one hundred',()=>{
+  const skill=getKhaledSkill('place-value');
+  assert.equal(skill.chapter,9);
+  assert.deepEqual(skill.lessons,['الآحاد والعشرات','أحل المسألة: أخمن ثم أتحقق','الأعداد حتى 50','الأعداد حتى 100','التقدير','مقارنة الأعداد حتى 100','ترتيب الأعداد حتى 100']);
+  assert.deepEqual(skill.activityTypes,['place-value-model','place-value-clue','number-to-50','number-to-100','estimate-nearest-ten','compare-to-100','order-to-100']);
+});
+
+test('nine core Khaled skill groups are playable through place value',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies']);
+  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value']);
 });
