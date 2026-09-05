@@ -15,7 +15,11 @@ export const VISUAL_ASSETS={
   }
 };
 
-const objectUrls=new Map();
+const FALLBACK_ASSETS={
+  yasser:'assets/characters/yasser-welcome.webp',
+  assistant:'assets/assistant/assistant-welcome.webp'
+};
+const dataUrls=new Map();
 const inflight=new Map();
 
 function fallbackState(character){
@@ -31,44 +35,49 @@ function resolve(character,state){
   return{url:new URL(path,ROOT),state:selected};
 }
 
-async function loadObjectUrl(character,state){
+async function loadDataUrl(character,state){
   const resolved=resolve(character,state);
   const key=resolved.url.href;
-  if(objectUrls.has(key))return{url:objectUrls.get(key),state:resolved.state};
+  if(dataUrls.has(key))return{url:dataUrls.get(key),state:resolved.state};
   if(inflight.has(key))return{url:await inflight.get(key),state:resolved.state};
   const task=(async()=>{
-    const response=await fetch(resolved.url,{cache:'force-cache'});
+    const response=await fetch(resolved.url,{cache:'no-store'});
     if(!response.ok)throw new Error(`Visual asset failed: ${response.status}`);
-    const encoded=(await response.text()).trim();
-    const binary=atob(encoded);
-    const bytes=new Uint8Array(binary.length);
-    for(let index=0;index<binary.length;index+=1)bytes[index]=binary.charCodeAt(index);
-    const objectUrl=URL.createObjectURL(new Blob([bytes],{type:'image/webp'}));
-    objectUrls.set(key,objectUrl);
-    return objectUrl;
+    const encoded=(await response.text()).replace(/\s+/g,'');
+    if(!encoded.startsWith('UklG'))throw new Error('Visual asset payload is not WebP base64');
+    const dataUrl=`data:image/webp;base64,${encoded}`;
+    dataUrls.set(key,dataUrl);
+    return dataUrl;
   })();
   inflight.set(key,task);
   try{return{url:await task,state:resolved.state};}
   finally{inflight.delete(key);}
 }
 
+function applyFallback(image,character){
+  const path=FALLBACK_ASSETS[character];
+  if(!path){image.removeAttribute('src');return false;}
+  image.src=new URL(path,ROOT).href;
+  image.dataset.visualState=`${fallbackState(character)}-fallback`;
+  image.dataset.visualError='fallback';
+  return true;
+}
+
 export async function setVisualImage(image,{character,state,token}={}){
   if(!image)return false;
   try{
-    const loaded=await loadObjectUrl(character,state);
+    const loaded=await loadDataUrl(character,state);
     if(token!==undefined&&image.dataset.visualToken!==String(token))return false;
     image.src=loaded.url;
     image.dataset.visualState=loaded.state;
     delete image.dataset.visualError;
     return true;
   }catch(error){
-    image.removeAttribute('src');
-    image.dataset.visualError='true';
     console.warn(error);
-    return false;
+    return applyFallback(image,character);
   }
 }
 
 export function preloadVisualAssets(items){
-  return Promise.allSettled(items.map(item=>loadObjectUrl(item.character,item.state)));
+  return Promise.allSettled(items.map(item=>loadDataUrl(item.character,item.state)));
 }
