@@ -17,8 +17,7 @@ import {
 } from './renderers.js';
 import { createSceneController } from './visual/scene-controller.js';
 import { createFeedbackAudio } from './audio/feedback-audio.js';
-
-const PARENT_PIN='2580';
+import { createParentAccessGate } from '../shared/security/parent-access.js';
 
 function show(id){
   all('.view').forEach(view=>view.classList.toggle('active',view.id===id));
@@ -46,6 +45,7 @@ export function createAppController({repository}){
   let session=null;
   const visuals=createSceneController();
   const audio=createFeedbackAudio();
+  const parentAccess=createParentAccessGate();
 
   const persist=()=>repository.save(state);
   const refreshHome=()=>renderHome({state,$,all});
@@ -265,18 +265,20 @@ export function createAppController({repository}){
     $('parentBtn').onclick=()=>{
       modal.classList.add('show');
       $('pinInput').value='';
+      $('pinInput').placeholder='';
       setTimeout(()=>$('pinInput').focus(),30);
     };
     $('pinCancel').onclick=()=>modal.classList.remove('show');
-    $('pinSubmit').onclick=()=>{
-      if($('pinInput').value===PARENT_PIN){
+    $('pinSubmit').onclick=async()=>{
+      const result=await parentAccess.verify($('pinInput').value);
+      if(result.ok){
         modal.classList.remove('show');
         renderParent();
         show('parentView');
         visuals.render('parent');
       }else{
         $('pinInput').value='';
-        $('pinInput').placeholder='الرقم غير صحيح';
+        $('pinInput').placeholder=result.locked?'محاولات كثيرة — انتظر قليلًا':'الرقم غير صحيح';
       }
     };
   }
