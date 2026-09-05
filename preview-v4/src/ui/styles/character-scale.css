@@ -1,0 +1,81 @@
+:root{
+  --character-yasser-intro:clamp(320px,42vw,430px);
+  --character-assistant-intro:clamp(160px,22vw,220px);
+  --character-yasser-home:clamp(250px,34vw,340px);
+  --character-assistant-home:clamp(112px,16vw,150px);
+  --character-yasser-learn:clamp(150px,20vw,210px);
+  --character-assistant-learn:clamp(78px,10vw,100px);
+  --character-yasser-session:clamp(250px,34vw,340px);
+  --character-assistant-session:clamp(135px,18vw,180px);
+  --character-yasser-result:clamp(270px,36vw,360px);
+  --character-assistant-result:clamp(140px,19vw,190px);
+  --character-composite-result:min(78vw,620px);
+
+  --character-khaled-hub:clamp(210px,28vw,290px);
+  --character-khaled-home:clamp(190px,25vw,260px);
+  --character-khaled-session:clamp(210px,28vw,290px);
+  --character-khaled-result:clamp(260px,34vw,360px);
+
+  --character-gap-large:clamp(22px,3vw,42px);
+  --character-gap-medium:clamp(14px,2vw,28px);
+}
+
+@media (orientation:landscape) and (min-width:850px){
+  :root{
+    --character-yasser-intro:clamp(340px,52dvh,430px);
+    --character-assistant-intro:clamp(170px,27dvh,220px);
+    --character-yasser-home:clamp(270px,40dvh,340px);
+    --character-assistant-home:clamp(120px,18dvh,150px);
+    --character-yasser-learn:clamp(160px,24dvh,210px);
+    --character-assistant-learn:clamp(82px,12dvh,100px);
+    --character-yasser-session:clamp(270px,40dvh,340px);
+    --character-assistant-session:clamp(145px,22dvh,180px);
+    --character-yasser-result:clamp(290px,43dvh,360px);
+    --character-assistant-result:clamp(150px,23dvh,190px);
+    --character-khaled-hub:clamp(220px,34dvh,290px);
+    --character-khaled-home:clamp(200px,31dvh,260px);
+    --character-khaled-session:clamp(220px,35dvh,290px);
+    --character-khaled-result:clamp(280px,43dvh,360px);
+  }
+}
+
+@media (max-width:560px){
+  :root{
+    --character-yasser-intro:255px;
+    --character-assistant-intro:132px;
+    --character-yasser-home:190px;
+    --character-assistant-home:86px;
+    --character-yasser-learn:108px;
+    --character-assistant-learn:54px;
+    --character-yasser-session:195px;
+    --character-assistant-session:110px;
+    --character-yasser-result:215px;
+    --character-assistant-result:116px;
+    --character-composite-result:min(100%,430px);
+    --character-khaled-hub:160px;
+    --character-khaled-home:138px;
+    --character-khaled-session:160px;
+    --character-khaled-result:220px;
+    --character-gap-large:18px;
+    --character-gap-medium:12px;
+  }
+}
+
+@media (max-width:390px){
+  :root{
+    --character-yasser-intro:228px;
+    --character-assistant-intro:118px;
+    --character-yasser-home:170px;
+    --character-assistant-home:76px;
+    --character-yasser-learn:98px;
+    --character-assistant-learn:50px;
+    --character-yasser-session:174px;
+    --character-assistant-session:98px;
+    --character-yasser-result:196px;
+    --character-assistant-result:108px;
+    --character-khaled-hub:145px;
+    --character-khaled-home:120px;
+    --character-khaled-session:138px;
+    --character-khaled-result:190px;
+  }
+}
