@@ -81,7 +81,14 @@ test('chapter twelve maps solids, plane shapes and early fractions',()=>{
   assert.deepEqual(skill.activityTypes,['solid-identify','solid-classify','geometry-pattern','plane-solid-classify','plane-shape-identify','equal-parts','fraction-select']);
 });
 
-test('twelve Khaled skill groups are playable through geometry and fractions',()=>{
+test('chapter thirteen maps recognition, counting, modeling, equal amounts and spending',()=>{
+  const skill=getKhaledSkill('money');
+  assert.equal(skill.chapter,13);
+  assert.deepEqual(skill.lessons,['النقود: ريال واحد، ريالان، 5 ريالات، 10 ريالات','عد النقود','أحل المسألة: أمثلها','المبالغ المتساوية','استعمال النقود']);
+  assert.deepEqual(skill.activityTypes,['money-recognition','count-money','money-model','equal-money-amounts','use-money']);
+});
+
+test('all thirteen Khaled curriculum groups are playable',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value','measurement','number-patterns','geometry-fractions']);
+  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value','measurement','number-patterns','geometry-fractions','money']);
 });
