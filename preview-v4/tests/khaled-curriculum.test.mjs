@@ -8,13 +8,19 @@ test('curriculum metadata keeps current-year claim conservative',()=>{
   assert.match(KHALED_CURRICULUM_META.verificationStatus,/pending/);
 });
 
-test('chapter one lesson structure is represented',()=>{
+test('chapter one lesson structure and activity coverage are represented one-to-one',()=>{
   const skill=getKhaledSkill('classify-compare');
   assert.deepEqual(skill.lessons,[
     'التصنيف وفق خاصية واحدة',
     'التصنيف وفق أكثر من خاصية',
     'يساوي',
     'أكثر من وأقل من'
+  ]);
+  assert.deepEqual(skill.activityTypes,[
+    'classify-one-property',
+    'classify-two-properties',
+    'equality-groups',
+    'compare-groups'
   ]);
 });
 
