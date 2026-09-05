@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS attempts (
   attempt_id TEXT PRIMARY KEY,
   learner_id TEXT NOT NULL REFERENCES learners(id) ON DELETE RESTRICT,
   skill_id TEXT NOT NULL,
+  table_number INTEGER,
+  multiplier INTEGER,
   question_id TEXT,
   question_type TEXT,
   answer_json TEXT,
