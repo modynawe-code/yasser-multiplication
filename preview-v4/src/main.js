@@ -19,6 +19,7 @@ let khaledStarted=false;
 
 function enterYasser(){
   khaled.leave();
+  document.body.classList.remove('hub-mode','khaled-mode');
   if(!yasserStarted){yasserStarted=true;yasser.start();return;}
   yasser.enterHome();
 }
