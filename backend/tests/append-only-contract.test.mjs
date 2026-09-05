@@ -4,17 +4,17 @@ import { readFile } from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('D1 schema prevents attempt updates and deletes at database level',async()=>{
+test('D1 schema prevents attempt and baseline mutation at database level',async()=>{
   const sql=await read('migrations/0001_family_core.sql');
-  assert.match(sql,/CREATE TRIGGER IF NOT EXISTS attempts_no_delete/);
-  assert.match(sql,/BEFORE DELETE ON attempts/);
-  assert.match(sql,/CREATE TRIGGER IF NOT EXISTS attempts_no_update/);
-  assert.match(sql,/BEFORE UPDATE ON attempts/);
+  for(const token of ['attempts_no_delete','BEFORE DELETE ON attempts','attempts_no_update','BEFORE UPDATE ON attempts','learner_baselines_no_delete','BEFORE DELETE ON learner_baselines','learner_baselines_no_update','BEFORE UPDATE ON learner_baselines'])assert.match(sql,new RegExp(token));
   assert.match(sql,/ON DELETE RESTRICT/);
+  assert.match(sql,/table_number INTEGER/);assert.match(sql,/multiplier INTEGER/);
 });
 
-test('Worker exposes append/read sync but no attempt mutation endpoint',async()=>{
+test('Worker exposes immutable baseline plus append/read sync but no attempt mutation endpoint',async()=>{
   const worker=await read('src/index.mjs');
+  assert.match(worker,/\/v1\/sync\/baseline/);
+  assert.match(worker,/INSERT OR IGNORE INTO learner_baselines/);
   assert.match(worker,/\/v1\/sync\/attempts/);
   assert.match(worker,/\/v1\/sync\/snapshot/);
   assert.doesNotMatch(worker,/request\.method==='DELETE'.*attempt/s);
@@ -22,10 +22,10 @@ test('Worker exposes append/read sync but no attempt mutation endpoint',async()=
   assert.doesNotMatch(worker,/DELETE FROM attempts/);
 });
 
-test('Worker authenticates sync routes and does not expose D1 credentials to client code',async()=>{
-  const worker=await read('src/index.mjs');
+test('Worker authenticates sync routes and repository contains no live D1 id',async()=>{
+  const worker=await read('src/index.mjs'),config=await read('wrangler.jsonc');
   assert.match(worker,/const auth=await authenticate/);
   assert.match(worker,/if\(!auth\)return response\(request,env,401/);
   assert.match(worker,/env\.DB/);
-  assert.doesNotMatch(worker,/database_id\s*[:=]\s*['"][^R]/);
+  assert.match(config,/REPLACE_WITH_D1_DATABASE_ID/);
 });
