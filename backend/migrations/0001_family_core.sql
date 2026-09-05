@@ -29,6 +29,22 @@ CREATE TABLE IF NOT EXISTS auth_sessions (
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_parent ON auth_sessions(parent_id);
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_expiry ON auth_sessions(expires_at);
 
+CREATE TABLE IF NOT EXISTS learner_baselines (
+  learner_id TEXT PRIMARY KEY REFERENCES learners(id) ON DELETE RESTRICT,
+  state_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TRIGGER IF NOT EXISTS learner_baselines_no_delete
+BEFORE DELETE ON learner_baselines
+BEGIN
+  SELECT RAISE(ABORT, 'learner baseline is immutable');
+END;
+CREATE TRIGGER IF NOT EXISTS learner_baselines_no_update
+BEFORE UPDATE ON learner_baselines
+BEGIN
+  SELECT RAISE(ABORT, 'learner baseline is immutable');
+END;
+
 CREATE TABLE IF NOT EXISTS attempts (
   attempt_id TEXT PRIMARY KEY,
   learner_id TEXT NOT NULL REFERENCES learners(id) ON DELETE RESTRICT,
