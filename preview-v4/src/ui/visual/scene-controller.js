@@ -1,12 +1,20 @@
 import { getScene } from './scene-manifest.js';
-import { setVisualImage, preloadVisualAssets } from './character-assets.js';
+import { setVisualImage, setCompositeImage, preloadVisualAssets } from './character-assets.js';
 
 const TARGETS={
   intro:{yasser:'introYasser',assistant:'introAssistant'},
   home:{yasser:'homeYasser',assistant:'homeAssistant'},
   learn:{yasser:'learnYasser',assistant:'learnAssistant'},
   session:{yasser:'sessionYasser',assistant:'sessionAssistant'},
-  result:{yasser:'resultYasser',assistant:'resultAssistant'}
+  result:{yasser:'resultYasser',assistant:'resultAssistant',composite:'resultCelebration'}
+};
+
+const CONTAINERS={
+  intro:'introCharacters',
+  home:'homeCharacters',
+  learn:'learnVisuals',
+  session:'sessionVisuals',
+  result:'resultCharacters'
 };
 
 export function createSceneController({getElement=document.getElementById.bind(document)}={}){
@@ -21,6 +29,8 @@ export function createSceneController({getElement=document.getElementById.bind(d
         const image=getElement(id);
         if(image)image.hidden=true;
       }
+      const container=getElement(CONTAINERS[targetName]);
+      if(container)container.removeAttribute('data-scene-motion');
     }
   }
 
@@ -30,7 +40,7 @@ export function createSceneController({getElement=document.getElementById.bind(d
     if(image)image.hidden=true;
   }
 
-  async function showImage(target,character,state,token){
+  async function showCharacter(target,character,state,token){
     const id=TARGETS[target]?.[character];
     const image=id?getElement(id):null;
     if(!image||!state)return false;
@@ -40,7 +50,6 @@ export function createSceneController({getElement=document.getElementById.bind(d
     const loaded=await setVisualImage(image,{character,state,token});
 
     if(image.dataset.visualToken!==String(token))return false;
-
     if(loaded||hadVisibleSource||image.getAttribute('src')){
       image.hidden=false;
       return true;
@@ -48,6 +57,32 @@ export function createSceneController({getElement=document.getElementById.bind(d
 
     image.hidden=true;
     return false;
+  }
+
+  async function showComposite(target,state,token){
+    const id=TARGETS[target]?.composite;
+    const image=id?getElement(id):null;
+    if(!image||!state)return false;
+
+    image.dataset.visualToken=String(token);
+    const loaded=await setCompositeImage(image,{state,token});
+    if(image.dataset.visualToken!==String(token))return false;
+
+    image.hidden=!loaded;
+    return loaded;
+  }
+
+  function applyMotion(target,motion,token){
+    const container=getElement(CONTAINERS[target]);
+    if(!container)return;
+
+    container.removeAttribute('data-scene-motion');
+    if(!motion)return;
+
+    requestAnimationFrame(()=>{
+      if(token!==renderToken)return;
+      container.dataset.sceneMotion=motion;
+    });
   }
 
   function render(name){
@@ -63,12 +98,22 @@ export function createSceneController({getElement=document.getElementById.bind(d
     }
 
     hideOtherTargets(scene.target);
+    applyMotion(scene.target,scene.motion,token);
 
-    if(scene.yasser)showImage(scene.target,'yasser',scene.yasser,token);
+    if(scene.yasser)showCharacter(scene.target,'yasser',scene.yasser,token);
     else hideCharacter(scene.target,'yasser');
 
-    if(scene.assistant)showImage(scene.target,'assistant',scene.assistant,token);
+    if(scene.assistant)showCharacter(scene.target,'assistant',scene.assistant,token);
     else hideCharacter(scene.target,'assistant');
+
+    hideCharacter(scene.target,'composite');
+    if(scene.composite){
+      showComposite(scene.target,scene.composite,token).then(loaded=>{
+        if(!loaded||token!==renderToken)return;
+        hideCharacter(scene.target,'yasser');
+        hideCharacter(scene.target,'assistant');
+      });
+    }
 
     if(scene.duration&&scene.returnTo){
       timer=setTimeout(()=>render(scene.returnTo),scene.duration);
@@ -91,7 +136,8 @@ export function createSceneController({getElement=document.getElementById.bind(d
       {character:'yasser',state:'mastered'},
       {character:'assistant',state:'idle'},
       {character:'assistant',state:'thinking'},
-      {character:'assistant',state:'celebrate'}
+      {character:'assistant',state:'celebrate'},
+      {group:'composite',state:'celebration'}
     ]);
   }
 
