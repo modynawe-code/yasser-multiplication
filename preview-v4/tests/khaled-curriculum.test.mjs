@@ -74,7 +74,14 @@ test('chapter eleven maps tens, hundred chart and skip counting',()=>{
   assert.deepEqual(skill.activityTypes,['count-by-tens','find-number-pattern','hundred-chart','skip-count']);
 });
 
-test('eleven Khaled skill groups are playable through number patterns',()=>{
+test('chapter twelve maps solids, plane shapes and early fractions',()=>{
+  const skill=getKhaledSkill('geometry-fractions');
+  assert.equal(skill.chapter,12);
+  assert.deepEqual(skill.lessons,['المجسمات','تصنيف المجسمات: يتدحرج، يتراص، ينزلق','أحل المسألة: أبحث عن النمط','الأشكال المستوية والمجسمات','الأشكال المستوية','الأجزاء المتطابقة','النصف','الثلث والربع']);
+  assert.deepEqual(skill.activityTypes,['solid-identify','solid-classify','geometry-pattern','plane-solid-classify','plane-shape-identify','equal-parts','fraction-select']);
+});
+
+test('twelve Khaled skill groups are playable through geometry and fractions',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value','measurement','number-patterns']);
+  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value','measurement','number-patterns','geometry-fractions']);
 });
