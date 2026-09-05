@@ -2,6 +2,23 @@ export function ensureLearningShell(){
   const main=document.querySelector('main');
   if(!main||document.getElementById('hubView'))return;
 
+  if(!document.querySelector('link[data-learning-hub]')){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='src/modules/hub/learning-hub.css';
+    link.dataset.learningHub='true';
+    document.head.appendChild(link);
+  }
+
+  const topbar=document.querySelector('.topbar');
+  if(topbar&&!document.getElementById('switchLearnerBtn')){
+    const button=document.createElement('button');
+    button.className='icon-btn';
+    button.id='switchLearnerBtn';
+    button.textContent='اختيار الطفل';
+    topbar.appendChild(button);
+  }
+
   const shell=document.createElement('div');
   shell.innerHTML=`
     <section id="hubView" class="view">
