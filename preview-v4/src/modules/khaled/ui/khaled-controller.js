@@ -10,6 +10,7 @@ function show(id){allViews().forEach(view=>view.classList.toggle('active',view.i
 function byId(id){return document.getElementById(id);}
 function dots(count){return Array.from({length:count},()=>'<span class="khaled-dot" aria-hidden="true"></span>').join('');}
 function shapes(items,className=''){return items.map(item=>`<span class="khaled-shape ${className}" aria-hidden="true">${item}</span>`).join('');}
+function classifyToken(item){return `<span class="khaled-classify-token shape-${item.shape} color-${item.color}" aria-hidden="true"></span>`;}
 function numberTiles(items){
   return items.map(value=>value===null
     ?'<span class="khaled-number-missing" aria-hidden="true">؟</span>'
@@ -75,6 +76,13 @@ export function createKhaledController({repository,onExitToHub}={}){
       const sizeClass=question.count>10?'large':'';
       visual.innerHTML=`<div class="khaled-dot-group single ${sizeClass}">${dots(question.count)}</div>`;
       question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
+    }else if(question.type==='classify-one-property'||question.type==='classify-two-properties'){
+      visual.innerHTML=`<div class="khaled-classify-stage"><div class="khaled-classify-group">${question.group.map(classifyToken).join('')}</div><span class="khaled-classify-arrow" aria-hidden="true">←</span><span class="khaled-classify-question" aria-hidden="true">؟</span></div>`;
+      answers.classList.add('khaled-visual-answers');
+      question.options.forEach(item=>answers.appendChild(visualAnswerButton(item.key,item)));
+    }else if(question.type==='equality-groups'){
+      visual.innerHTML=`<div class="khaled-equality"><div class="khaled-equality-group">${dots(question.left)}</div><span class="khaled-equality-sign" aria-hidden="true">؟</span><div class="khaled-equality-group">${dots(question.right)}</div></div>`;
+      question.options.forEach(option=>answers.appendChild(answerButton(option.value,option.label)));
     }else if(question.type==='compare-groups'){
       visual.innerHTML=`<div class="khaled-compare"><button class="khaled-group-choice" data-answer="left">${dots(question.left)}</button><button class="khaled-group-choice" data-answer="right">${dots(question.right)}</button></div>`;
       visual.querySelectorAll('[data-answer]').forEach(button=>button.onclick=()=>submit(button.dataset.answer,button));
@@ -96,10 +104,23 @@ export function createKhaledController({repository,onExitToHub}={}){
     }
   }
 
+  function resetAnswerLayout(){byId('khaledAnswers')?.classList.remove('khaled-visual-answers');}
+
   function answerButton(value,label){
+    resetAnswerLayout();
     const button=document.createElement('button');
     button.className='khaled-answer';
     button.textContent=label;
+    button.onclick=()=>submit(value,button);
+    return button;
+  }
+
+  function visualAnswerButton(value,item){
+    const button=document.createElement('button');
+    button.className='khaled-answer khaled-token-answer';
+    button.dataset.answer=value;
+    button.innerHTML=classifyToken(item);
+    button.setAttribute('aria-label','خيار تصنيف');
     button.onclick=()=>submit(value,button);
     return button;
   }
