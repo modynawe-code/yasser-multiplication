@@ -1,7 +1,8 @@
-export function createHubController({getElement=document.getElementById.bind(document),onSelectYasser,onSelectKhaled}={}){
+export function createHubController({getElement=document.getElementById.bind(document),onBeforeShow,onSelectYasser,onSelectKhaled}={}){
   let bound=false;
 
   function showHub(){
+    onBeforeShow?.();
     document.body.classList.add('hub-mode');
     document.body.classList.remove('intro-mode');
     document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='hubView'));
