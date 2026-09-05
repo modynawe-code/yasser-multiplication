@@ -83,7 +83,7 @@ async function syncAttempts(request,env,auth){
   const learners=await learnerMap(env,auth.parent_id),receivedAt=nowIso(),statements=[];
   for(const item of parsed.value){
     const learnerId=learners[item.learnerId];if(!learnerId)return response(request,env,403,{error:'learner_not_owned'});
-    statements.push(env.DB.prepare('INSERT OR IGNORE INTO attempts(attempt_id,learner_id,skill_id,question_id,question_type,answer_json,correct_answer_json,is_correct,response_ms,client_created_at,received_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(item.attemptId,learnerId,item.skillId,item.questionId,item.questionType,item.answerJson,item.correctAnswerJson,item.isCorrect?1:0,item.responseMs,item.createdAt,receivedAt));
+    statements.push(env.DB.prepare('INSERT OR IGNORE INTO attempts(attempt_id,learner_id,skill_id,table_number,multiplier,question_id,question_type,answer_json,correct_answer_json,is_correct,response_ms,client_created_at,received_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(item.attemptId,learnerId,item.skillId,item.table,item.multiplier,item.questionId,item.questionType,item.answerJson,item.correctAnswerJson,item.isCorrect?1:0,item.responseMs,item.createdAt,receivedAt));
   }
   if(statements.length)await env.DB.batch(statements);
   return response(request,env,200,{ok:true,received:parsed.value.length});
@@ -95,7 +95,7 @@ async function syncSession(request,env,auth){
   return response(request,env,200,{ok:true});
 }
 async function snapshot(request,env,auth){
-  const attempts=await env.DB.prepare(`SELECT a.attempt_id AS attemptId,l.slug AS learnerId,a.skill_id AS skillId,a.question_id AS questionId,a.question_type AS questionType,a.answer_json AS answerJson,a.correct_answer_json AS correctAnswerJson,a.is_correct AS isCorrect,a.response_ms AS responseMs,a.client_created_at AS createdAt FROM attempts a JOIN learners l ON l.id=a.learner_id WHERE l.parent_id=? ORDER BY a.client_created_at ASC LIMIT 10000`).bind(auth.parent_id).all();
+  const attempts=await env.DB.prepare(`SELECT a.attempt_id AS attemptId,l.slug AS learnerId,a.skill_id AS skillId,a.table_number AS "table",a.multiplier,a.question_id AS questionId,a.question_type AS questionType,a.answer_json AS answerJson,a.correct_answer_json AS correctAnswerJson,a.is_correct AS isCorrect,a.response_ms AS responseMs,a.client_created_at AS createdAt FROM attempts a JOIN learners l ON l.id=a.learner_id WHERE l.parent_id=? ORDER BY a.client_created_at ASC LIMIT 10000`).bind(auth.parent_id).all();
   const sessions=await env.DB.prepare(`SELECT s.session_id AS sessionId,l.slug AS learnerId,s.skill_id AS skillId,s.mode,s.started_at AS startedAt,s.ended_at AS endedAt,s.correct,s.wrong,s.total,s.incomplete FROM learning_sessions s JOIN learners l ON l.id=s.learner_id WHERE l.parent_id=? ORDER BY COALESCE(s.ended_at,s.started_at) DESC LIMIT 500`).bind(auth.parent_id).all();
   return response(request,env,200,{attempts:(attempts.results||[]).map(item=>({...item,answer:JSON.parse(item.answerJson||'null'),correctAnswer:JSON.parse(item.correctAnswerJson||'null'),isCorrect:Boolean(item.isCorrect)})),sessions:sessions.results||[]});
 }
