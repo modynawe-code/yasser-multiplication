@@ -21,15 +21,16 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell includes append-only ledger and authenticated family sync',async()=>{
+test('service worker shell includes cloud sync and Khaled device hardening',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-28/);
+  assert.match(worker,/shell-29/);
   for(const path of [
     'shared/data/attempt-ledger.js',
     'shared/config/family-api-config.js',
     'shared/sync/family-auth-client.js',
     'shared/sync/family-sync-service.js',
     'modules/khaled/domain/money-question-bank.js',
+    'modules/khaled/ui/khaled-device-hardening.css',
     'modules/parent/family-parent-controller.js'
   ])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });
