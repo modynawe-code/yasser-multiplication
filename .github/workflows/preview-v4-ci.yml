@@ -1,0 +1,29 @@
+name: Preview V4 CI
+
+on:
+  pull_request:
+    paths:
+      - 'preview-v4/**'
+      - '.github/workflows/preview-v4-ci.yml'
+  push:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - 'preview-v4/**'
+      - '.github/workflows/preview-v4-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+        working-directory: preview-v4

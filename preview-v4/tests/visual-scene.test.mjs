@@ -10,6 +10,16 @@ test('every semantic scene resolves to a known visual asset',()=>{
       if(state===null)continue;
       assert.ok(VISUAL_ASSETS[character]?.[state],`${name}.${character}.${state}`);
     }
+    if(scene.composite)assert.ok(VISUAL_ASSETS.composite?.[scene.composite],`${name}.composite.${scene.composite}`);
+  }
+});
+
+test('character states prefer original png files and retain legacy fallback',()=>{
+  for(const character of ['yasser','assistant']){
+    for(const descriptor of Object.values(VISUAL_ASSETS[character])){
+      assert.match(descriptor.source,/assets\/visual\/original\/.*\.png$/);
+      assert.match(descriptor.fallback,/assets\/visual\/.*\.b64\.txt$/);
+    }
   }
 });
 
@@ -27,8 +37,12 @@ test('exam and parent scenes remain distraction free',()=>{
   }
 });
 
-test('result scenes use distinct visual states',()=>{
+test('result scenes use distinct visual states and excellent result uses joint celebration',()=>{
   assert.equal(getScene('result-developing').yasser,'encourage');
   assert.equal(getScene('result-good').yasser,'mastered');
   assert.equal(getScene('result-excellent').yasser,'celebrate');
+  assert.equal(getScene('result-excellent').assistant,'celebrate');
+  assert.equal(getScene('result-excellent').composite,'celebration');
+  assert.equal(getScene('result-excellent').motion,'celebrate');
+  assert.match(VISUAL_ASSETS.composite.celebration.source,/yasser-assistant-celebration\.png$/);
 });

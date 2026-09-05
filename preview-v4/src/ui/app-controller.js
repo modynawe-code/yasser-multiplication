@@ -16,6 +16,7 @@ import {
   selectedText
 } from './renderers.js';
 import { createSceneController } from './visual/scene-controller.js';
+import { createFeedbackAudio } from './audio/feedback-audio.js';
 
 const VIEWS=['introView','homeView','learnView','sessionView','resultView','parentView'];
 const PARENT_PIN='2580';
@@ -45,6 +46,7 @@ export function createAppController({repository}){
   let state=repository.load();
   let session=null;
   const visuals=createSceneController();
+  const audio=createFeedbackAudio();
 
   const persist=()=>repository.save(state);
   const refreshHome=()=>renderHome({state,$,all});
@@ -134,11 +136,13 @@ export function createAppController({repository}){
       $('feedback').textContent='ممتاز ✓';
       $('feedback').className='feedback good';
       button?.classList.add('good');
+      audio.correct();
       visualHold=visuals.render('correct');
     }else{
       $('feedback').textContent=`الصحيح ${attempt.table} × ${attempt.multiplier} = ${attempt.correctAnswer} — برجع لك عليها`;
       $('feedback').className='feedback bad';
       button?.classList.add('bad');
+      audio.wrong();
       visualHold=visuals.render('wrong');
     }
 
@@ -173,6 +177,7 @@ export function createAppController({repository}){
     refreshHome();
     show('resultView');
     visuals.result(pct);
+    audio.achievement();
   }
 
   function exitSession(){
