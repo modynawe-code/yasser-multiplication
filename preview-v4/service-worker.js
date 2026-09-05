@@ -1,8 +1,8 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-32`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-33`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
-  './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css',
+  './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css',
   './src/main.js','./src/domain/constants.js','./src/domain/state-model.js','./src/domain/mastery.js','./src/domain/question-bank.js',
   './src/application/attempt-service.js','./src/application/training-engine.js','./src/application/progress-service.js',
   './src/infrastructure/storage/local-storage-repository.js','./src/platform/pwa/register-service-worker.js',
