@@ -1,33 +1,27 @@
 # V4.2 Visual System
 
 ## Purpose
-The visual layer must remain independent from learning logic, storage, reporting and future backend integrations.
+The visual layer is presentation only. Training, mastery, storage, reporting and future backend integrations must not depend on character image files.
 
 ## Character roles
 - Yasser is the primary learning character.
 - Calculator is the secondary helper.
-- Characters never determine application state; UI state selects a visual asset.
+- Student UI state may select an asset; assets never determine application state.
+- Exam mode and the parent dashboard stay visually quiet.
 
-## Yasser states
-- welcome
-- thinking
-- encourage
-- success
-- mastery
+## Semantic states
+Yasser: `welcome`, `thinking`, `encourage`, `success`, `mastery`.
 
-## Assistant states
-- neutral
-- thinking
-- success
+Assistant: `welcome`, `thinking`, `success`.
 
 ## Asset policy
-- WebP with transparency for runtime delivery.
-- Original high-resolution generated assets are not coupled to component logic.
-- UI references semantic state names rather than generation filenames.
-- Assets should remain replaceable without changing training or mastery code.
+- Transparent WebP for runtime delivery.
+- Semantic filenames live under `assets/characters` and `assets/assistant`.
+- Replacing artwork must not require changes to domain/application layers.
+- Source-generation filenames never appear in UI logic.
 
 ## Motion policy
-Motion is short, optional and disabled by `prefers-reduced-motion`. No continuous distracting animation during exams.
+Motion is optional and respects `prefers-reduced-motion`. No continuous distracting animation during an exam.
 
 ## Performance
-Character assets are loaded only where needed and kept small enough for tablet/mobile PWA use.
+Only assets needed for the active student surface are loaded. Parent reports do not load mascots.
