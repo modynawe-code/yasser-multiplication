@@ -1,5 +1,6 @@
 import { KHALED_SKILLS, getKhaledSkill } from '../domain/curriculum.js';
 import { createKhaledRound } from '../domain/question-bank.js';
+import { createAdvancedKhaledRound } from '../domain/advanced-question-bank.js';
 import { recordKhaledAttempt } from '../domain/state-model.js';
 import { createSpeechService } from '../../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../../ui/audio/feedback-audio.js';
@@ -8,6 +9,7 @@ import { isAdditionQuestion, renderAdditionQuestion } from './khaled-addition-re
 import { isSubtractionQuestion, renderSubtractionQuestion } from './khaled-subtraction-renderer.js';
 import { isStrategiesQuestion, renderStrategiesQuestion } from './khaled-strategies-renderer.js';
 import { isPlaceValueQuestion, renderPlaceValueQuestion } from './khaled-place-value-renderer.js';
+import { isAdvancedQuestion, renderAdvancedQuestion } from './khaled-advanced-renderer.js';
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -30,7 +32,7 @@ export function createKhaledController({repository,onExitToHub}={}){
   }
 
   function enter(){document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');document.body.classList.add('khaled-mode');renderHome();show('khaledHomeView');visuals.home();}
-  function startSkill(skillId){const skill=getKhaledSkill(skillId);if(!skill||skill.status!=='ready')return;session={skillId,questions:createKhaledRound({skillId,count:8}),index:0,correct:0,wrong:0,answers:[],completed:false};byId('khaledSessionTitle').textContent=skill.title;show('khaledSessionView');renderQuestion();}
+  function startSkill(skillId){const skill=getKhaledSkill(skillId);if(!skill||skill.status!=='ready')return;const questions=createAdvancedKhaledRound({skillId,count:8})||createKhaledRound({skillId,count:8});session={skillId,questions,index:0,correct:0,wrong:0,answers:[],completed:false};byId('khaledSessionTitle').textContent=skill.title;show('khaledSessionView');renderQuestion();}
 
   function speakQuestion(question){const id=question?.id;setTimeout(()=>{const active=session?.questions?.[session.index];if(active?.id===id)speech.speak(question.spokenPrompt||'');},220);}
 
@@ -70,6 +72,8 @@ export function createKhaledController({repository,onExitToHub}={}){
       renderStrategiesQuestion({question,visual,answers,createAnswerButton:answerButton});
     }else if(isPlaceValueQuestion(question)){
       renderPlaceValueQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
+    }else if(isAdvancedQuestion(question)){
+      renderAdvancedQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
     }else visual.innerHTML='';
     speakQuestion(question);
   }
