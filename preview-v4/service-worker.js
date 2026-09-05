@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-26`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-27`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-system.css',
@@ -8,7 +8,7 @@ const APP_SHELL=[
   './src/infrastructure/storage/local-storage-repository.js','./src/platform/pwa/register-service-worker.js',
   './src/ui/dom.js','./src/ui/renderers.js','./src/ui/app-controller.js','./src/ui/audio/feedback-audio.js',
   './src/ui/visual/character-assets.js','./src/ui/visual/scene-manifest.js','./src/ui/visual/scene-controller.js',
-  './src/shared/audio/speech-service.js','./src/shared/security/parent-access.js',
+  './src/shared/audio/speech-service.js','./src/shared/security/parent-access.js','./src/shared/data/attempt-ledger.js',
   './src/modules/hub/hub-controller.js','./src/modules/hub/learning-shell.js','./src/modules/hub/learning-hub.css',
   './src/modules/khaled/domain/curriculum.js','./src/modules/khaled/domain/question-bank.js','./src/modules/khaled/domain/advanced-question-bank.js','./src/modules/khaled/domain/addition-question-bank.js','./src/modules/khaled/domain/subtraction-question-bank.js','./src/modules/khaled/domain/add-sub-strategies-question-bank.js','./src/modules/khaled/domain/place-value-question-bank.js','./src/modules/khaled/domain/measurement-question-bank.js','./src/modules/khaled/domain/number-patterns-question-bank.js','./src/modules/khaled/domain/geometry-fractions-question-bank.js','./src/modules/khaled/domain/money-question-bank.js','./src/modules/khaled/domain/state-model.js',
   './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css','./src/modules/khaled/ui/khaled-activity-types.css','./src/modules/khaled/ui/khaled-number-relations.css','./src/modules/khaled/ui/khaled-addition-renderer.js','./src/modules/khaled/ui/khaled-addition.css','./src/modules/khaled/ui/khaled-subtraction-renderer.js','./src/modules/khaled/ui/khaled-subtraction.css','./src/modules/khaled/ui/khaled-strategies-renderer.js','./src/modules/khaled/ui/khaled-strategies.css','./src/modules/khaled/ui/khaled-place-value-renderer.js','./src/modules/khaled/ui/khaled-place-value.css','./src/modules/khaled/ui/khaled-advanced-renderer.js','./src/modules/khaled/ui/khaled-measurement-renderer.js','./src/modules/khaled/ui/khaled-measurement.css','./src/modules/khaled/ui/khaled-number-patterns-renderer.js','./src/modules/khaled/ui/khaled-number-patterns.css','./src/modules/khaled/ui/khaled-geometry-fractions-renderer.js','./src/modules/khaled/ui/khaled-geometry-fractions.css','./src/modules/khaled/ui/khaled-money-renderer.js','./src/modules/khaled/ui/khaled-money.css',
