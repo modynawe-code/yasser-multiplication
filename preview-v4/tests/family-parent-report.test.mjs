@@ -17,7 +17,8 @@ test('family shell exposes overview, learner and session report tabs',async()=>{
   assert.match(shell,/id="familyParentBtn"/);
   assert.match(shell,/id="familyParentView"/);
   for(const tab of ['overview','yasser','khaled','sessions'])assert.match(shell,new RegExp(`data-family-parent-tab="${tab}"`));
-  assert.match(shell,/id="familyPinModal"/);
+  assert.match(shell,/modal\.id='familyPinModal'/);
+  assert.match(shell,/id="familyPinInput"/);
 });
 
 test('family renderers combine Yasser and Khaled without erasing historical errors',async()=>{
