@@ -21,7 +21,10 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell is current for expanded Khaled activities',async()=>{
+test('service worker shell is current for family report and Khaled scenes',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-15/);
+  assert.match(worker,/shell-16/);
+  for(const path of ['shared/security/parent-access.js','modules/khaled/ui/khaled-scene-controller.js','modules/khaled/ui/khaled-character-system.css','modules/parent/family-parent-controller.js','modules/parent/family-parent-renderers.js','modules/parent/family-parent.css']){
+    assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  }
 });

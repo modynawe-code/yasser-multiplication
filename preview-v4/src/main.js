@@ -5,39 +5,57 @@ import { ensureLearningShell } from './modules/hub/learning-shell.js';
 import { createHubController } from './modules/hub/hub-controller.js';
 import { createKhaledRepository } from './modules/khaled/infrastructure/storage/local-storage-repository.js';
 import { createKhaledController } from './modules/khaled/ui/khaled-controller.js';
+import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
+import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
 
 ensureLearningShell();
 
-const yasser=createAppController({repository:createLocalStorageRepository()});
+const yasserRepository=createLocalStorageRepository();
+const khaledRepository=createKhaledRepository();
+const yasser=createAppController({repository:yasserRepository});
 let yasserStarted=false;
+let hub;
 
 const khaled=createKhaledController({
-  repository:createKhaledRepository(),
-  onExitToHub:()=>hub.show()
+  repository:khaledRepository,
+  onExitToHub:()=>hub?.show()
 });
 let khaledStarted=false;
+const hubVisuals=createKhaledSceneController();
+
+const familyParent=createFamilyParentController({
+  getYasserState:()=>yasser.getState(),
+  getKhaledState:()=>khaled.getState(),
+  onExitToHub:()=>hub?.show()
+});
 
 function enterYasser(){
   khaled.leave();
-  document.body.classList.remove('hub-mode','khaled-mode');
+  familyParent.leave();
+  document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode');
   if(!yasserStarted){yasserStarted=true;yasser.start();return;}
   yasser.enterHome();
 }
 
 function enterKhaled(){
   yasser.leave();
+  familyParent.leave();
   if(!khaledStarted){khaledStarted=true;khaled.start();return;}
   khaled.enter();
 }
 
-const hub=createHubController({
+hub=createHubController({
   onBeforeShow:()=>{
     yasser.leave();
     khaled.leave();
+    familyParent.leave();
   },
+  onAfterShow:()=>hubVisuals.hub(),
   onSelectYasser:enterYasser,
   onSelectKhaled:enterKhaled
 });
 
+familyParent.start();
+hubVisuals.warm();
 hub.start();
 registerServiceWorker();

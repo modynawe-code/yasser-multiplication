@@ -2,6 +2,8 @@ import { KHALED_SKILLS, getKhaledSkill } from '../domain/curriculum.js';
 import { createKhaledRound } from '../domain/question-bank.js';
 import { recordKhaledAttempt } from '../domain/state-model.js';
 import { createSpeechService } from '../../../shared/audio/speech-service.js';
+import { createFeedbackAudio } from '../../../ui/audio/feedback-audio.js';
+import { createKhaledSceneController } from './khaled-scene-controller.js';
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -20,6 +22,8 @@ export function createKhaledController({repository,onExitToHub}={}){
   let session=null;
   let bound=false;
   const speech=createSpeechService();
+  const audio=createFeedbackAudio();
+  const visuals=createKhaledSceneController();
 
   function persist(){repository.save(state);}
 
@@ -39,10 +43,11 @@ export function createKhaledController({repository,onExitToHub}={}){
   }
 
   function enter(){
-    document.body.classList.remove('hub-mode','intro-mode');
+    document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');
     document.body.classList.add('khaled-mode');
     renderHome();
     show('khaledHomeView');
+    visuals.home();
   }
 
   function startSkill(skillId){
@@ -64,6 +69,7 @@ export function createKhaledController({repository,onExitToHub}={}){
     const visual=byId('khaledVisual');
     const answers=byId('khaledAnswers');
     answers.innerHTML='';
+    visuals.question();
 
     if(question.type==='count-select'){
       const sizeClass=question.count>10?'large':'';
@@ -104,11 +110,21 @@ export function createKhaledController({repository,onExitToHub}={}){
     const isCorrect=String(answer)===String(question.correctAnswer);
     const attempt=recordKhaledAttempt(state,{skillId:session.skillId,isCorrect,question,answer});
     session.answers.push(attempt);
-    if(isCorrect){session.correct+=1;button?.classList.add('good');byId('khaledFeedback').textContent='ممتاز يا خالد ✓';}
-    else{session.wrong+=1;button?.classList.add('bad');byId('khaledFeedback').textContent='حاول مرة ثانية في السؤال الجاي';}
+    if(isCorrect){
+      session.correct+=1;
+      button?.classList.add('good');
+      byId('khaledFeedback').textContent='ممتاز يا خالد ✓';
+      audio.correct();
+    }else{
+      session.wrong+=1;
+      button?.classList.add('bad');
+      byId('khaledFeedback').textContent='حاول مرة ثانية في السؤال الجاي';
+      audio.wrong();
+    }
+    visuals.feedback(isCorrect);
     persist();
     session.index+=1;
-    setTimeout(renderQuestion,900);
+    setTimeout(renderQuestion,isCorrect?1150:1450);
   }
 
   function storeSession({incomplete=false}={}){
@@ -133,6 +149,8 @@ export function createKhaledController({repository,onExitToHub}={}){
     byId('khaledResultCorrect').textContent=session.correct;
     byId('khaledResultWrong').textContent=session.wrong;
     show('khaledResultView');
+    visuals.result(pct);
+    audio.achievement();
   }
 
   function leave(){
@@ -161,8 +179,8 @@ export function createKhaledController({repository,onExitToHub}={}){
   }
 
   return{
-    start(){bind();enter();},
-    enter(){bind();enter();},
+    start(){bind();visuals.warm();enter();},
+    enter(){bind();visuals.warm();enter();},
     leave,
     getState(){return state;}
   };
