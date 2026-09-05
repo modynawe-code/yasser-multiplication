@@ -42,7 +42,7 @@ export function ensureLearningShell(){
               <img id="hubKhaledCharacter" class="khaled-character-image" alt="" width="1086" height="1448" decoding="async" hidden />
               <div class="learner-placeholder khaled" id="hubKhaledFallback"><span>+</span><span>−</span></div>
             </div>
-            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>عد • مقارنة • أنماط • أعداد • جمع</small></div>
+            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>عد • مقارنة • أنماط • أعداد • جمع وطرح</small></div>
           </button>
         </div>
       </div>
@@ -70,7 +70,7 @@ export function ensureLearningShell(){
         <div class="card khaled-question-card">
           <div class="khaled-session-character" aria-hidden="true">
             <img id="khaledSessionCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" hidden />
-            <div class="khaled-character-fallback compact" id="khaledSessionCharacterFallback">+ ?</div>
+            <div class="khaled-character-fallback compact" id="khaledSessionCharacterFallback">+ −</div>
           </div>
           <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال">🔊 اسمع السؤال</button>
           <h3 id="khaledPrompt">اختر الإجابة</h3>
