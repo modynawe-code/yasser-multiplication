@@ -60,7 +60,14 @@ test('chapter nine maps place value through ordering to one hundred',()=>{
   assert.deepEqual(skill.activityTypes,['place-value-model','place-value-clue','number-to-50','number-to-100','estimate-nearest-ten','compare-to-100','order-to-100']);
 });
 
-test('nine core Khaled skill groups are playable through place value',()=>{
+test('chapter ten maps length, nonstandard units, mass and capacity',()=>{
+  const skill=getKhaledSkill('measurement');
+  assert.equal(skill.chapter,10);
+  assert.deepEqual(skill.lessons,['مقارنة الأطوال وترتيبها','وحدات الطول غير القياسية','أحل المسألة: أخمن ثم أتحقق','مقارنة الكتل وترتيبها','مقارنة السعات وترتيبها']);
+  assert.deepEqual(skill.activityTypes,['length-compare','nonstandard-length','measurement-guess-check','mass-compare','capacity-compare']);
+});
+
+test('ten Khaled skill groups are playable through measurement',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value']);
+  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value','measurement']);
 });

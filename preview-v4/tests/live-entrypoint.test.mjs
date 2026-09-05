@@ -21,14 +21,15 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell is current through chapter nine place value',async()=>{
+test('service worker shell is current through chapter ten measurement',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-22/);
+  assert.match(worker,/shell-23/);
   for(const path of [
-    'modules/khaled/domain/add-sub-strategies-question-bank.js',
-    'modules/khaled/domain/place-value-question-bank.js',
-    'modules/khaled/ui/khaled-place-value-renderer.js',
-    'modules/khaled/ui/khaled-place-value.css',
+    'modules/khaled/domain/advanced-question-bank.js',
+    'modules/khaled/domain/measurement-question-bank.js',
+    'modules/khaled/ui/khaled-advanced-renderer.js',
+    'modules/khaled/ui/khaled-measurement-renderer.js',
+    'modules/khaled/ui/khaled-measurement.css',
     'modules/parent/family-parent-controller.js'
   ])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });
