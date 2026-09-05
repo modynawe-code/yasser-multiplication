@@ -63,7 +63,7 @@ test('chapter nine maps place value through ordering to one hundred',()=>{
 test('chapter ten maps length, nonstandard units, mass and capacity',()=>{
   const skill=getKhaledSkill('measurement');
   assert.equal(skill.chapter,10);
-  assert.deepEqual(skill.lessons,['مقارنة الأطوال وترتيبها','وحدات الطول غير القياسية','أحل المسألة: أخمن ثم أتحقق','مقارنة الكتل','مقارنة السعات']);
+  assert.deepEqual(skill.lessons,['مقارنة الأطوال وترتيبها','وحدات الطول غير القياسية','أحل المسألة: أخمن ثم أتحقق','مقارنة الكتل وترتيبها','مقارنة السعات وترتيبها']);
   assert.deepEqual(skill.activityTypes,['length-compare','nonstandard-length','measurement-guess-check','mass-compare','capacity-compare']);
 });
 
