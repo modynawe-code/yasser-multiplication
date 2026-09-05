@@ -4,6 +4,7 @@ import { recordKhaledAttempt } from '../domain/state-model.js';
 import { createSpeechService } from '../../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../../ui/audio/feedback-audio.js';
 import { createKhaledSceneController } from './khaled-scene-controller.js';
+import { isAdditionQuestion, renderAdditionQuestion } from './khaled-addition-renderer.js';
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -28,13 +29,7 @@ export function createKhaledController({repository,onExitToHub}={}){
   function enter(){document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');document.body.classList.add('khaled-mode');renderHome();show('khaledHomeView');visuals.home();}
   function startSkill(skillId){const skill=getKhaledSkill(skillId);if(!skill||skill.status!=='ready')return;session={skillId,questions:createKhaledRound({skillId,count:8}),index:0,correct:0,wrong:0,answers:[],completed:false};byId('khaledSessionTitle').textContent=skill.title;show('khaledSessionView');renderQuestion();}
 
-  function speakQuestion(question){
-    const id=question?.id;
-    setTimeout(()=>{
-      const active=session?.questions?.[session.index];
-      if(active?.id===id)speech.speak(question.spokenPrompt||'');
-    },220);
-  }
+  function speakQuestion(question){const id=question?.id;setTimeout(()=>{const active=session?.questions?.[session.index];if(active?.id===id)speech.speak(question.spokenPrompt||'');},220);}
 
   function renderQuestion(){
     if(!session||session.index>=session.questions.length)return finish();
@@ -64,8 +59,8 @@ export function createKhaledController({repository,onExitToHub}={}){
       visual.innerHTML=`<div class="khaled-pattern" dir="ltr">${shapes(question.items)}<span class="khaled-pattern-missing" aria-hidden="true">؟</span></div>`;question.options.forEach(value=>answers.appendChild(answerButton(value,value)));
     }else if(question.type==='number-order'){
       visual.innerHTML=`<div class="khaled-number-line" dir="ltr">${numberTiles(question.items)}</div>`;question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
-    }else if(question.type==='visual-addition'){
-      visual.innerHTML=`<div class="khaled-addition" dir="ltr"><div class="khaled-add-group">${dots(question.left)}</div><span class="khaled-add-sign" aria-hidden="true">+</span><div class="khaled-add-group">${dots(question.right)}</div><span class="khaled-add-sign" aria-hidden="true">=</span><span class="khaled-add-question" aria-hidden="true">؟</span></div>`;question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
+    }else if(isAdditionQuestion(question)){
+      renderAdditionQuestion({question,visual,answers,createAnswerButton:answerButton});
     }else visual.innerHTML='';
     speakQuestion(question);
   }
@@ -73,12 +68,7 @@ export function createKhaledController({repository,onExitToHub}={}){
   function answerButton(value,label){const button=document.createElement('button');button.className='khaled-answer';button.textContent=label;button.onclick=()=>submit(value,button);return button;}
   function visualAnswerButton(value,item){const button=document.createElement('button');button.className='khaled-answer khaled-token-answer';button.dataset.answer=value;button.innerHTML=classifyToken(item);button.setAttribute('aria-label','خيار تصنيف');button.onclick=()=>submit(value,button);return button;}
 
-  function submit(answer,button){
-    if(!session)return;const question=session.questions[session.index],isCorrect=String(answer)===String(question.correctAnswer),attempt=recordKhaledAttempt(state,{skillId:session.skillId,isCorrect,question,answer});session.answers.push(attempt);
-    speech.stop();
-    if(isCorrect){session.correct+=1;button?.classList.add('good');byId('khaledFeedback').textContent='ممتاز يا خالد ✓';audio.correct();}else{session.wrong+=1;button?.classList.add('bad');byId('khaledFeedback').textContent='حاول مرة ثانية في السؤال الجاي';audio.wrong();}
-    visuals.feedback(isCorrect);persist();session.index+=1;setTimeout(renderQuestion,isCorrect?1150:1450);
-  }
+  function submit(answer,button){if(!session)return;const question=session.questions[session.index],isCorrect=String(answer)===String(question.correctAnswer),attempt=recordKhaledAttempt(state,{skillId:session.skillId,isCorrect,question,answer});session.answers.push(attempt);speech.stop();if(isCorrect){session.correct+=1;button?.classList.add('good');byId('khaledFeedback').textContent='ممتاز يا خالد ✓';audio.correct();}else{session.wrong+=1;button?.classList.add('bad');byId('khaledFeedback').textContent='حاول مرة ثانية في السؤال الجاي';audio.wrong();}visuals.feedback(isCorrect);persist();session.index+=1;setTimeout(renderQuestion,isCorrect?1150:1450);}
 
   function storeSession({incomplete=false}={}){if(!session||!session.answers.length)return;const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0;state.sessions.unshift({at:new Date().toISOString(),skillId:session.skillId,correct:session.correct,wrong:session.wrong,total:completed,pct,incomplete});state.sessions=state.sessions.slice(0,100);persist();}
   function finish(){if(!session)return;const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0,skill=getKhaledSkill(session.skillId);storeSession();session.completed=true;byId('khaledResultTitle').textContent=pct>=90?'أبدعت يا خالد ⭐':pct>=70?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';byId('khaledResultPct').textContent=`${pct}%`;byId('khaledResultSkill').textContent=skill?.title||'';byId('khaledResultCorrect').textContent=session.correct;byId('khaledResultWrong').textContent=session.wrong;show('khaledResultView');visuals.result(pct);audio.achievement();}

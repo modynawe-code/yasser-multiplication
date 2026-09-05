@@ -53,21 +53,25 @@ test('Khaled mode hides Yasser chrome and preserves incomplete sessions',async()
   assert.match(khaled,/visuals\.result\(pct\)/);
 });
 
-test('Khaled UI renders number-order and visual-addition activities responsively',async()=>{
-  const css=await read('src/modules/hub/learning-hub.css');
+test('Khaled UI keeps number activities inline and delegates addition to its focused renderer',async()=>{
+  const hubCss=await read('src/modules/hub/learning-hub.css');
   const khaled=await read('src/modules/khaled/ui/khaled-controller.js');
+  const addition=await read('src/modules/khaled/ui/khaled-addition-renderer.js');
+  const additionCss=await read('src/modules/khaled/ui/khaled-addition.css');
   assert.match(khaled,/question\.type==='number-order'/);
-  assert.match(khaled,/question\.type==='visual-addition'/);
+  assert.match(khaled,/isAdditionQuestion\(question\)/);
+  assert.match(khaled,/renderAdditionQuestion/);
   assert.match(khaled,/khaled-number-line/);
-  assert.match(khaled,/khaled-addition/);
-  assert.match(css,/\.khaled-number-line/);
-  assert.match(css,/\.khaled-addition/);
-  assert.match(css,/\.khaled-dot-group\.large/);
+  assert.match(addition,/visual-addition/);
+  assert.match(addition,/khaled-addition/);
+  assert.match(additionCss,/\.khaled-addition-sentence/);
+  assert.match(hubCss,/\.khaled-number-line/);
+  assert.match(hubCss,/\.khaled-dot-group\.large/);
 });
 
 test('offline shell includes hub, Khaled, parent and speech modules',async()=>{
   const worker=await read('service-worker.js');
-  for(const path of ['modules/hub/hub-controller.js','modules/hub/learning-shell.js','modules/hub/learning-hub.css','modules/khaled/domain/curriculum.js','modules/khaled/ui/khaled-controller.js','modules/khaled/ui/khaled-scene-controller.js','modules/parent/family-parent-controller.js','shared/audio/speech-service.js']){
+  for(const path of ['modules/hub/hub-controller.js','modules/hub/learning-shell.js','modules/hub/learning-hub.css','modules/khaled/domain/curriculum.js','modules/khaled/ui/khaled-controller.js','modules/khaled/ui/khaled-scene-controller.js','modules/khaled/ui/khaled-addition-renderer.js','modules/parent/family-parent-controller.js','shared/audio/speech-service.js']){
     assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   }
 });
