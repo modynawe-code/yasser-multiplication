@@ -6,7 +6,7 @@ const TYPES=Object.freeze(['money-recognition','count-money','money-model','equa
 export function isMoneyQuestion(question){return TYPES.includes(question?.type);}
 function moneyPiece(value){const kind=value===1?'coin':'note';return `<span class="khaled-money-piece ${kind} value-${value}" aria-hidden="true"><b>${value}</b><small>ريال</small></span>`;}
 function moneySet(values){return `<div class="khaled-money-set">${values.map(moneyPiece).join('')}</div>`;}
-function optionButton({answers,option,submitAnswer}){const button=document.createElement('button');button.className='khaled-answer khaled-money-option';button.innerHTML=moneySet(option.coins);button.setAttribute('aria-label',`مجموعة نقود قيمتها ${option.amount ?? option.coins.reduce((a,b)=>a+b,0)} ريال`);button.onclick=()=>submitAnswer(option.value,button);answers.appendChild(button);}
+function optionButton({answers,option,submitAnswer}){const button=document.createElement('button');button.className='khaled-answer khaled-money-option';button.dataset.answerValue=String(option.value);button.innerHTML=moneySet(option.coins);button.setAttribute('aria-label',`مجموعة نقود قيمتها ${option.amount ?? option.coins.reduce((a,b)=>a+b,0)} ريال`);button.onclick=()=>submitAnswer(option.value,button);answers.appendChild(button);}
 export function renderMoneyQuestion({question,visual,answers,createAnswerButton,submitAnswer}){
   ensureStyle();
   if(question.type==='money-recognition'||question.type==='count-money'){

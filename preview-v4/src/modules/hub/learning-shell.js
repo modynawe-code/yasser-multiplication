@@ -13,6 +13,7 @@ export function ensureLearningShell(){
 
   ensureStyle('src/modules/hub/learning-hub.css','learning-hub');
   ensureStyle('src/modules/khaled/ui/khaled-character-system.css','khaled-characters');
+  ensureStyle('src/modules/khaled/ui/khaled-device-hardening.css','khaled-device-hardening');
   ensureStyle('src/modules/parent/family-parent.css','family-parent');
 
   const topbar=document.querySelector('.topbar');
@@ -76,7 +77,7 @@ export function ensureLearningShell(){
           <h3 id="khaledPrompt">اختر الإجابة</h3>
           <div class="khaled-visual" id="khaledVisual"></div>
           <div class="khaled-answers" id="khaledAnswers"></div>
-          <div class="khaled-feedback" id="khaledFeedback"></div>
+          <div class="khaled-feedback" id="khaledFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
       </div>
     </section>
