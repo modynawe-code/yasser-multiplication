@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "yasser-khaled-family-api",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-08-01",
+  "workers_dev": true,
+  "vars": {
+    "ALLOWED_ORIGINS": "https://modynawe-code.github.io,http://127.0.0.1:4173,http://localhost:4173",
+    "SESSION_TTL_DAYS": "30"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "yasser-khaled-family",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

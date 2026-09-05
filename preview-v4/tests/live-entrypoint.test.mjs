@@ -21,15 +21,15 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell includes final curriculum and append-only attempt ledger',async()=>{
+test('service worker shell includes append-only ledger and authenticated family sync',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-27/);
+  assert.match(worker,/shell-28/);
   for(const path of [
     'shared/data/attempt-ledger.js',
+    'shared/config/family-api-config.js',
+    'shared/sync/family-auth-client.js',
+    'shared/sync/family-sync-service.js',
     'modules/khaled/domain/money-question-bank.js',
-    'modules/khaled/ui/khaled-advanced-renderer.js',
-    'modules/khaled/ui/khaled-money-renderer.js',
-    'modules/khaled/ui/khaled-money.css',
     'modules/parent/family-parent-controller.js'
   ])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });

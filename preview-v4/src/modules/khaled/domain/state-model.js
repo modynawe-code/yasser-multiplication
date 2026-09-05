@@ -49,6 +49,16 @@ export function normalizeKhaledState(candidate){
   return state;
 }
 
+export function applyKhaledAttemptEvent(state,event){
+  if(!event?.attemptId||state.attemptLog?.some(item=>item.attemptId===event.attemptId))return false;
+  const skill=state.skills[event.skillId];if(!skill)return false;
+  const isCorrect=Boolean(event.isCorrect),createdAt=event.createdAt||event.at||new Date().toISOString();
+  state.totalAttempts++;skill.attempts++;
+  if(isCorrect){state.totalCorrect++;skill.correct++;}else{state.totalWrong++;skill.wrong++;}
+  skill.recent=[...skill.recent,isCorrect].slice(-10);skill.last=createdAt;
+  return appendAttemptEvent(state,{...event,learnerId:'khaled',isCorrect,createdAt,at:createdAt});
+}
+
 export function recordKhaledAttempt(state,{skillId,isCorrect,question,answer,createdAt=new Date().toISOString()}){
   const skill=state.skills[skillId];
   if(!skill)throw new Error(`Unknown Khaled skill state: ${skillId}`);
@@ -58,19 +68,7 @@ export function recordKhaledAttempt(state,{skillId,isCorrect,question,answer,cre
   else{state.totalWrong+=1;skill.wrong+=1;}
   skill.recent=[...skill.recent,isCorrect].slice(-10);
   skill.last=createdAt;
-  const event={
-    attemptId:createAttemptId('kha'),
-    schemaVersion:1,
-    learnerId:'khaled',
-    skillId,
-    questionId:question.id,
-    questionType:question.type,
-    answer,
-    correctAnswer:question.correctAnswer,
-    isCorrect:Boolean(isCorrect),
-    createdAt,
-    at:createdAt
-  };
+  const event={attemptId:createAttemptId('kha'),schemaVersion:1,learnerId:'khaled',skillId,questionId:question.id,questionType:question.type,answer,correctAnswer:question.correctAnswer,isCorrect:Boolean(isCorrect),createdAt,at:createdAt};
   appendAttemptEvent(state,event);
   return event;
 }

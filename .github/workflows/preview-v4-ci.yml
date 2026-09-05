@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'preview-v4/**'
+      - 'backend/**'
       - '.github/workflows/preview-v4-ci.yml'
   push:
     branches:
@@ -11,6 +12,7 @@ on:
       - 'feature/**'
     paths:
       - 'preview-v4/**'
+      - 'backend/**'
       - '.github/workflows/preview-v4-ci.yml'
 
 permissions:
@@ -25,5 +27,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm test
+      - name: Test learning app
+        run: npm test
         working-directory: preview-v4
+      - name: Test family backend
+        run: node --test backend/tests/*.test.mjs
