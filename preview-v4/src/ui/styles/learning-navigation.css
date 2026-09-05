@@ -1,0 +1,8 @@
+.learning-nav-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.learning-nav-actions .icon-btn,.session-head>.icon-btn{min-height:48px;min-width:48px;padding-inline:14px}
+.learning-nav-actions .icon-btn[data-nav="home"]{background:var(--primary-soft);border-color:#d5defc;color:var(--primary)}
+
+@media(max-width:560px){
+  .learning-nav-actions{gap:6px}
+  .learning-nav-actions .icon-btn,.session-head>.icon-btn{min-height:48px;padding-inline:11px;font-size:12px}
+}
