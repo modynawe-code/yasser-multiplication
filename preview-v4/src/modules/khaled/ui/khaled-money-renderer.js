@@ -14,13 +14,13 @@ export function renderMoneyQuestion({question,visual,answers,createAnswerButton,
     question.options.forEach(value=>answers.appendChild(createAnswerButton(value,`${value} ريال`)));
   }else if(question.type==='money-model'){
     visual.innerHTML=`<div class="khaled-money-target"><small>المبلغ المطلوب</small><strong>${question.target}</strong><span>ريال</span></div>`;
-    answers.classList.add('khaled-money-answers');question.options.forEach(option=>optionButton({answers,option,submitAnswer}));
+    question.options.forEach(option=>optionButton({answers,option,submitAnswer}));
   }else if(question.type==='equal-money-amounts'){
     visual.innerHTML=`<div class="khaled-money-equality"><section>${moneySet(question.left)}</section><b>؟</b><section>${moneySet(question.right)}</section></div>`;
     question.options.forEach(option=>answers.appendChild(createAnswerButton(option.value,option.label)));
   }else if(question.type==='use-money'){
     visual.innerHTML=`<div class="khaled-price-tag"><small>السعر</small><strong>${question.price}</strong><span>ريال</span></div>`;
-    answers.classList.add('khaled-money-answers');question.options.forEach(option=>optionButton({answers,option,submitAnswer}));
+    question.options.forEach(option=>optionButton({answers,option,submitAnswer}));
   }
   return true;
 }
