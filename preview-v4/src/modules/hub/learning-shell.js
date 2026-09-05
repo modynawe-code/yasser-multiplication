@@ -42,7 +42,7 @@ export function ensureLearningShell(){
               <img id="hubKhaledCharacter" class="khaled-character-image" alt="" width="1086" height="1448" decoding="async" hidden />
               <div class="learner-placeholder khaled" id="hubKhaledFallback"><span>+</span><span>−</span></div>
             </div>
-            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>عد • مقارنة • أنماط • أعداد • جمع وطرح</small></div>
+            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>أعداد • عمليات • قياس • أشكال • نقود</small></div>
           </button>
         </div>
       </div>
