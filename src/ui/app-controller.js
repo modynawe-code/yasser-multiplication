@@ -17,7 +17,7 @@ import {
 } from './renderers.js';
 import { createSceneController } from './visual/scene-controller.js';
 
-const VIEWS=['homeView','learnView','sessionView','resultView','parentView'];
+const VIEWS=['introView','homeView','learnView','sessionView','resultView','parentView'];
 const PARENT_PIN='2580';
 
 function show(id){
@@ -50,6 +50,7 @@ export function createAppController({repository}){
   const refreshHome=()=>renderHome({state,$,all});
 
   function goHome(){
+    document.body.classList.remove('intro-mode');
     session=null;
     refreshHome();
     show('homeView');
@@ -68,6 +69,7 @@ export function createAppController({repository}){
   }
 
   function start(mode,customQuestions=null){
+    document.body.classList.remove('intro-mode');
     session=createSession({mode,state,selectedTables:state.selected,customQuestions});
     $('sessionTitle').textContent=mode==='exam'?'الاختبار المكثف':'تدريب اليوم';
     $('questionCard').classList.toggle('exam-mode',mode==='exam');
@@ -142,8 +144,8 @@ export function createAppController({repository}){
 
     $('streakBadge').textContent=`🔥 ${session.streak} متتالية`;
 
-    const fallbackHold=attempt.isCorrect?1600:2200;
-    setTimeout(renderQuestion,(visualHold||fallbackHold)+80);
+    const fallbackHold=attempt.isCorrect?1700:2400;
+    setTimeout(renderQuestion,(visualHold||fallbackHold)+100);
   }
 
   function finish(){
@@ -209,6 +211,8 @@ export function createAppController({repository}){
   }
 
   function bind(){
+    $('introStart').onclick=goHome;
+
     all('.table-chip').forEach(button=>
       button.addEventListener('click',()=>selectTable(Number(button.dataset.table)))
     );
@@ -272,7 +276,9 @@ export function createAppController({repository}){
       bind();
       refreshHome();
       visuals.warm();
-      visuals.render('home');
+      document.body.classList.add('intro-mode');
+      show('introView');
+      visuals.render('intro');
     },
     getState(){return state;}
   };
