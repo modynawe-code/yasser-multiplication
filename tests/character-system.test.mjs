@@ -26,8 +26,19 @@ test('learning flow delegates feedback visuals to the scene controller',async()=
   assert.match(controller,/visuals\.render\('parent'\)/);
 });
 
-test('offline shell caches semantic visual system and all state payloads',async()=>{
+test('mobile visual loader avoids blob URLs and has native fallback assets',async()=>{
+  const assets=await read('src/ui/visual/character-assets.js');
+  assert.match(assets,/data:image\/webp;base64/);
+  assert.doesNotMatch(assets,/createObjectURL/);
+  assert.match(assets,/assets\/characters\/yasser-welcome\.webp/);
+  assert.match(assets,/assets\/assistant\/assistant-welcome\.webp/);
+});
+
+test('preview service worker refreshes shell from network and preserves offline fallback',async()=>{
   const worker=await read('service-worker.js');
+  assert.match(worker,/shell-8/);
+  assert.match(worker,/cache:'reload'/);
+  assert.match(worker,/cache:'no-store'/);
   assert.match(worker,/character-system\.css/);
   assert.match(worker,/scene-controller\.js/);
   assert.match(worker,/character-assets\.js/);
