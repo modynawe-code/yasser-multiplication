@@ -34,6 +34,7 @@ export function createKhaledController({repository,onExitToHub}={}){
 
   function enter(){
     document.body.classList.remove('hub-mode','intro-mode');
+    document.body.classList.add('khaled-mode');
     renderHome();
     show('khaledHomeView');
   }
@@ -41,7 +42,7 @@ export function createKhaledController({repository,onExitToHub}={}){
   function startSkill(skillId){
     const skill=getKhaledSkill(skillId);
     if(!skill||skill.status!=='ready')return;
-    session={skillId,questions:createKhaledRound({skillId,count:8}),index:0,correct:0,wrong:0,answers:[]};
+    session={skillId,questions:createKhaledRound({skillId,count:8}),index:0,correct:0,wrong:0,answers:[],completed:false};
     byId('khaledSessionTitle').textContent=skill.title;
     show('khaledSessionView');
     renderQuestion();
@@ -97,14 +98,22 @@ export function createKhaledController({repository,onExitToHub}={}){
     setTimeout(renderQuestion,900);
   }
 
+  function storeSession({incomplete=false}={}){
+    if(!session||!session.answers.length)return;
+    const completed=session.correct+session.wrong;
+    const pct=completed?Math.round(session.correct/completed*100):0;
+    state.sessions.unshift({at:new Date().toISOString(),skillId:session.skillId,correct:session.correct,wrong:session.wrong,total:completed,pct,incomplete});
+    state.sessions=state.sessions.slice(0,100);
+    persist();
+  }
+
   function finish(){
     if(!session)return;
     const completed=session.correct+session.wrong;
     const pct=completed?Math.round(session.correct/completed*100):0;
     const skill=getKhaledSkill(session.skillId);
-    state.sessions.unshift({at:new Date().toISOString(),skillId:session.skillId,correct:session.correct,wrong:session.wrong,total:completed,pct});
-    state.sessions=state.sessions.slice(0,100);
-    persist();
+    storeSession();
+    session.completed=true;
     byId('khaledResultTitle').textContent=pct>=90?'أبدعت يا خالد ⭐':pct>=70?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';
     byId('khaledResultPct').textContent=`${pct}%`;
     byId('khaledResultSkill').textContent=skill?.title||'';
@@ -113,12 +122,24 @@ export function createKhaledController({repository,onExitToHub}={}){
     show('khaledResultView');
   }
 
+  function leave(){
+    if(session&&!session.completed&&session.answers.length)storeSession({incomplete:true});
+    speech.stop();
+    document.body.classList.remove('khaled-mode');
+    session=null;
+  }
+
+  function exitSession(){
+    leave();
+    enter();
+  }
+
   function bind(){
     if(bound)return;
     bound=true;
-    byId('khaledHomeToHub')?.addEventListener('click',()=>{speech.stop();session=null;onExitToHub?.();});
-    byId('khaledExitSession')?.addEventListener('click',enter);
-    byId('khaledResultHome')?.addEventListener('click',enter);
+    byId('khaledHomeToHub')?.addEventListener('click',()=>onExitToHub?.());
+    byId('khaledExitSession')?.addEventListener('click',exitSession);
+    byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enter();});
     byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));
     byId('hearKhaledQuestion')?.addEventListener('click',()=>{
       const question=session?.questions?.[session.index];
@@ -129,7 +150,7 @@ export function createKhaledController({repository,onExitToHub}={}){
   return{
     start(){bind();enter();},
     enter(){bind();enter();},
-    leave(){speech.stop();session=null;},
+    leave,
     getState(){return state;}
   };
 }
