@@ -21,11 +21,12 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell includes cloud sync, shared character scale, and Khaled device hardening',async()=>{
+test('service worker shell includes cloud sync, shared UI contracts, and Khaled device hardening',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-32/);
+  assert.match(worker,/shell-33/);
   for(const path of [
     'ui/styles/character-scale.css',
+    'ui/styles/learning-navigation.css',
     'shared/data/attempt-ledger.js',
     'shared/config/family-api-config.js',
     'shared/sync/family-auth-client.js',
