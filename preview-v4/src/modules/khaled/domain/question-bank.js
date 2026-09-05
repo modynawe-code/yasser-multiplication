@@ -11,16 +11,16 @@ function uniqueOptions(correct,min,max,random=Math.random){
   return shuffle([...values],random);
 }
 
-export function createCountQuestion({max=5,random=Math.random}={}){
-  const count=Math.floor(random()*(max+1));
+export function createCountQuestion({min=0,max=5,random=Math.random}={}){
+  const count=Math.floor(random()*(max-min+1))+min;
   return{
-    id:`count-${max}-${count}-${Math.round(random()*1e7)}`,
+    id:`count-${min}-${max}-${count}-${Math.round(random()*1e7)}`,
     skillId:max<=5?'numbers-0-5':'numbers-6-10',
     type:'count-select',
     prompt:'كم دائرة تشوف؟',
     spokenPrompt:'عد الدوائر، ثم اختر العدد الصحيح.',
     count,
-    options:uniqueOptions(count,0,max,random),
+    options:uniqueOptions(count,min,max,random),
     correctAnswer:count
   };
 }
@@ -43,11 +43,80 @@ export function createCompareQuestion({max=5,random=Math.random}={}){
   };
 }
 
+const POSITION_SHAPES=Object.freeze(['★','●','▲']);
+
+export function createPositionQuestion({random=Math.random}={}){
+  const variant=Math.floor(random()*3);
+  if(variant===0){
+    const askTop=random()>=.5;
+    return{
+      id:`position-above-${Math.round(random()*1e7)}`,
+      skillId:'position-pattern',
+      type:'position-select',
+      layout:'vertical-two',
+      prompt:askTop?'وش الشكل اللي فوق؟':'وش الشكل اللي تحت؟',
+      spokenPrompt:askTop?'اختر الشكل الموجود فوق.':'اختر الشكل الموجود تحت.',
+      items:['★','●'],
+      options:['★','●'],
+      correctAnswer:askTop?'★':'●'
+    };
+  }
+  if(variant===1){
+    const targetIndex=Math.floor(random()*3);
+    const labels=['الأعلى','الأوسط','الأسفل'];
+    return{
+      id:`position-three-${targetIndex}-${Math.round(random()*1e7)}`,
+      skillId:'position-pattern',
+      type:'position-select',
+      layout:'vertical-three',
+      prompt:`وش الشكل ${labels[targetIndex]}؟`,
+      spokenPrompt:`اختر الشكل ${labels[targetIndex]}.`,
+      items:[...POSITION_SHAPES],
+      options:[...POSITION_SHAPES],
+      correctAnswer:POSITION_SHAPES[targetIndex]
+    };
+  }
+
+  const askAfter=random()>=.5;
+  return{
+    id:`position-order-${askAfter?'after':'before'}-${Math.round(random()*1e7)}`,
+    skillId:'position-pattern',
+    type:'position-select',
+    layout:'horizontal-sequence',
+    prompt:askAfter?'أي شكل بعد الدائرة؟':'أي شكل قبل الدائرة؟',
+    spokenPrompt:askAfter?'انظر إلى الترتيب، واختر الشكل الذي يأتي بعد الدائرة.':'انظر إلى الترتيب، واختر الشكل الذي يأتي قبل الدائرة.',
+    items:['★','●','▲'],
+    options:['★','▲'],
+    correctAnswer:askAfter?'▲':'★'
+  };
+}
+
+export function createPatternQuestion({random=Math.random}={}){
+  const patterns=[
+    {items:['●','▲','●','▲'],answer:'●',options:['●','▲','■']},
+    {items:['★','★','●','★','★','●'],answer:'★',options:['★','●','▲']},
+    {items:['■','●','■','●'],answer:'■',options:['■','●','★']}
+  ];
+  const selected=patterns[Math.floor(random()*patterns.length)];
+  return{
+    id:`pattern-next-${Math.round(random()*1e7)}`,
+    skillId:'position-pattern',
+    type:'pattern-next',
+    prompt:'وش الشكل اللي يكمل النمط؟',
+    spokenPrompt:'شوف النمط، ثم اختر الشكل الذي يكمله.',
+    items:[...selected.items],
+    options:shuffle(selected.options,random),
+    correctAnswer:selected.answer
+  };
+}
+
 export function createKhaledRound({skillId,count=8,random=Math.random}={}){
   const questions=[];
   for(let i=0;i<count;i++){
-    if(skillId==='numbers-0-5')questions.push(createCountQuestion({max:5,random}));
+    if(skillId==='numbers-0-5')questions.push(createCountQuestion({min:0,max:5,random}));
+    else if(skillId==='numbers-6-10')questions.push(createCountQuestion({min:6,max:10,random}));
     else if(skillId==='classify-compare')questions.push(createCompareQuestion({max:5,random}));
+    else if(skillId==='position-pattern')questions.push(i%2===0?createPositionQuestion({random}):createPatternQuestion({random}));
     else throw new Error(`Unsupported Khaled skill: ${skillId}`);
   }
   return questions;
