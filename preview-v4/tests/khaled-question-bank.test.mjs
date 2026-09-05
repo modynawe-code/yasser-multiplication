@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createCountQuestion,
+  createClassifyQuestion,
+  createEqualityQuestion,
   createCompareQuestion,
   createPositionQuestion,
   createPatternQuestion,
@@ -26,6 +28,36 @@ test('count questions stay within requested first-grade range',()=>{
   const large=createCountQuestion({min:11,max:20,random:fixedRandom([.6,.2,.8,.4,.1,.9])});
   assert.ok(large.count>=11&&large.count<=20);
   assert.equal(large.skillId,'numbers-11-20');
+});
+
+test('single-property classification has one option matching the requested shared property',()=>{
+  for(const values of [[.2,.1,.9,.4,.7,.3,.8],[.8,.7,.1,.2,.3,.6,.4]]){
+    const question=createClassifyQuestion({multipleProperties:false,random:fixedRandom(values)});
+    assert.equal(question.type,'classify-one-property');
+    assert.equal(question.options.length,3);
+    assert.ok(question.options.some(option=>option.key===question.correctAnswer));
+    const correct=question.options.find(option=>option.key===question.correctAnswer);
+    if(question.criterion==='color')assert.ok(question.group.every(item=>item.color===correct.color));
+    else assert.ok(question.group.every(item=>item.shape===correct.shape));
+  }
+});
+
+test('two-property classification requires an exact shape and color match',()=>{
+  const question=createClassifyQuestion({multipleProperties:true,random:fixedRandom([.2,.7,.4,.8,.1,.6,.3])});
+  assert.equal(question.type,'classify-two-properties');
+  const correct=question.options.find(option=>option.key===question.correctAnswer);
+  assert.ok(correct);
+  assert.ok(question.group.every(item=>item.shape===correct.shape&&item.color===correct.color));
+  assert.equal(new Set(question.options.map(option=>option.key)).size,3);
+});
+
+test('equality question answer matches whether both groups have the same count',()=>{
+  for(const values of [[.4,.9,.2],[.7,.1,.2,.8]]){
+    const question=createEqualityQuestion({max:5,random:fixedRandom(values)});
+    assert.equal(question.type,'equality-groups');
+    assert.equal(question.correctAnswer,question.left===question.right?'yes':'no');
+    assert.deepEqual(question.options.map(option=>option.value),['yes','no']);
+  }
 });
 
 test('comparison question correct side matches requested relation',()=>{
@@ -69,6 +101,14 @@ test('visual addition combines two non-empty groups with total at most ten',()=>
   assert.equal(question.correctAnswer,question.left+question.right);
   assert.ok(question.correctAnswer<=10);
   assert.ok(question.options.includes(question.correctAnswer));
+});
+
+test('chapter-one round covers all four represented lesson activity families',()=>{
+  const round=createKhaledRound({skillId:'classify-compare',count:8});
+  assert.deepEqual(round.map(question=>question.type),[
+    'classify-one-property','classify-two-properties','equality-groups','compare-groups',
+    'classify-one-property','classify-two-properties','equality-groups','compare-groups'
+  ]);
 });
 
 test('all ready Khaled skills produce eight-question rounds',()=>{

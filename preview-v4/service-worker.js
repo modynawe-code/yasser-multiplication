@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-16`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-17`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-system.css',
@@ -11,7 +11,7 @@ const APP_SHELL=[
   './src/shared/audio/speech-service.js','./src/shared/security/parent-access.js',
   './src/modules/hub/hub-controller.js','./src/modules/hub/learning-shell.js','./src/modules/hub/learning-hub.css',
   './src/modules/khaled/domain/curriculum.js','./src/modules/khaled/domain/question-bank.js','./src/modules/khaled/domain/state-model.js',
-  './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css',
+  './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css','./src/modules/khaled/ui/khaled-activity-types.css',
   './src/modules/parent/family-parent-controller.js','./src/modules/parent/family-parent-renderers.js','./src/modules/parent/family-parent.css',
   './assets/characters/yasser-welcome.webp','./assets/assistant/assistant-welcome.webp',
   './assets/visual/yasser/welcome.b64.txt','./assets/visual/yasser/thinking.b64.txt','./assets/visual/yasser/encourage.b64.txt','./assets/visual/yasser/celebrate.b64.txt','./assets/visual/yasser/mastered.b64.txt',
