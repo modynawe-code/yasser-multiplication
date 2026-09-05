@@ -31,7 +31,7 @@ export function ensureLearningShell(){
           </button>
           <button class="learner-card khaled-card" id="hubKhaled">
             <div class="learner-placeholder khaled" aria-hidden="true"><span>+</span><span>−</span></div>
-            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>عد • مقارنة • أنماط • أعداد</small></div>
+            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>عد • مقارنة • أنماط • أعداد • جمع</small></div>
           </button>
         </div>
       </div>
