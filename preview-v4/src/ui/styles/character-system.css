@@ -1,3 +1,5 @@
+@import url('./character-scale.css');
+
 body.intro-mode{overflow-x:hidden}
 body.intro-mode .topbar{display:none}
 body.intro-mode main{padding-top:max(18px,env(safe-area-inset-top))}
