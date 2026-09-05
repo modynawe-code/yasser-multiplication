@@ -15,14 +15,14 @@ export const KHALED_SKILLS=Object.freeze([
     shortTitle:'تصنيف • يساوي • أكثر وأقل',
     symbol:'◉',
     status:'ready',
-    activityTypes:['compare-groups'],
+    activityTypes:['classify-one-property','classify-two-properties','equality-groups','compare-groups'],
     lessons:[
       'التصنيف وفق خاصية واحدة',
       'التصنيف وفق أكثر من خاصية',
       'يساوي',
       'أكثر من وأقل من'
     ],
-    goals:['يميز المجموعة الأكثر','يميز المجموعة الأقل','يطابق الأشياء المتشابهة','يفهم تساوي مجموعتين']
+    goals:['يصنف وفق خاصية واحدة','يصنف وفق خاصيتين معًا','يفهم تساوي مجموعتين','يميز المجموعة الأكثر','يميز المجموعة الأقل']
   },
   {
     id:'numbers-0-5',
