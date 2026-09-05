@@ -1,21 +1,7 @@
-function shuffle(values,random=Math.random){
-  return [...values].sort(()=>random()-.5);
-}
-
-function uniqueOptions(correct,min,max,random=Math.random){
-  const values=new Set([correct]);
-  while(values.size<3){
-    const candidate=Math.floor(random()*(max-min+1))+min;
-    values.add(candidate);
-  }
-  return shuffle([...values],random);
-}
-
-function numberSkillId(max){
-  if(max<=5)return 'numbers-0-5';
-  if(max<=10)return 'numbers-6-10';
-  return 'numbers-11-20';
-}
+function shuffle(values,random=Math.random){return [...values].sort(()=>random()-.5);}
+function uniqueOptions(correct,min,max,random=Math.random){const values=new Set([correct]);while(values.size<3){values.add(Math.floor(random()*(max-min+1))+min);}return shuffle([...values],random);}
+function numberSkillId(max){if(max<=5)return'numbers-0-5';if(max<=10)return'numbers-6-10';return'numbers-11-20';}
+function randomNumber(min,max,random=Math.random){return Math.floor(random()*(max-min+1))+min;}
 
 const CLASSIFY_SHAPES=Object.freeze(['circle','square','triangle']);
 const CLASSIFY_COLORS=Object.freeze(['orange','blue','green']);
@@ -24,240 +10,100 @@ function different(values,value){return values.filter(item=>item!==value);}
 function token(shape,color){return{shape,color,key:`${shape}-${color}`};}
 
 export function createCountQuestion({min=0,max=5,random=Math.random}={}){
-  const count=Math.floor(random()*(max-min+1))+min;
-  return{
-    id:`count-${min}-${max}-${count}-${Math.round(random()*1e7)}`,
-    skillId:numberSkillId(max),
-    type:'count-select',
-    prompt:'كم دائرة تشوف؟',
-    spokenPrompt:'عد الدوائر، ثم اختر العدد الصحيح.',
-    count,
-    options:uniqueOptions(count,min,max,random),
-    correctAnswer:count
-  };
+  const count=randomNumber(min,max,random);
+  return{id:`count-${min}-${max}-${count}-${Math.round(random()*1e7)}`,skillId:numberSkillId(max),type:'count-select',prompt:'كم دائرة تشوف؟',spokenPrompt:'عد الدوائر، ثم اختر العدد الصحيح.',count,options:uniqueOptions(count,min,max,random),correctAnswer:count};
+}
+
+export function createSpokenNumberQuestion({min=0,max=5,random=Math.random}={}){
+  const correctAnswer=randomNumber(min,max,random);
+  return{id:`spoken-number-${min}-${max}-${correctAnswer}-${Math.round(random()*1e7)}`,skillId:numberSkillId(max),type:'spoken-number-select',prompt:'اسمع واختر العدد',spokenPrompt:`اختر العدد ${correctAnswer}.`,options:uniqueOptions(correctAnswer,min,max,random),correctAnswer};
+}
+
+export function createNumberCompareQuestion({min=1,max=10,random=Math.random}={}){
+  let left=randomNumber(min,max,random),right=randomNumber(min,max,random);
+  if(left===right)right=right===max?Math.max(min,right-1):right+1;
+  const askLarger=random()>=.5;
+  const correctAnswer=askLarger?Math.max(left,right):Math.min(left,right);
+  return{id:`number-compare-${left}-${right}-${askLarger?'larger':'smaller'}-${Math.round(random()*1e7)}`,skillId:numberSkillId(max),type:'number-compare',prompt:askLarger?'أي عدد أكبر؟':'أي عدد أصغر؟',spokenPrompt:askLarger?'اختر العدد الأكبر.':'اختر العدد الأصغر.',left,right,options:[left,right],correctAnswer};
 }
 
 export function createClassifyQuestion({multipleProperties=false,random=Math.random}={}){
-  const targetShape=pick(CLASSIFY_SHAPES,random);
-  const targetColor=pick(CLASSIFY_COLORS,random);
-
+  const targetShape=pick(CLASSIFY_SHAPES,random),targetColor=pick(CLASSIFY_COLORS,random);
   if(multipleProperties){
-    const exact=token(targetShape,targetColor);
-    const sameColor=token(pick(different(CLASSIFY_SHAPES,targetShape),random),targetColor);
-    const sameShape=token(targetShape,pick(different(CLASSIFY_COLORS,targetColor),random));
-    return{
-      id:`classify-two-${exact.key}-${Math.round(random()*1e7)}`,
-      skillId:'classify-compare',
-      type:'classify-two-properties',
-      prompt:'أي شكل يشبه المجموعة في اللون والشكل معًا؟',
-      spokenPrompt:'شوف المجموعة. اختر الشكل الذي يشبهها في اللون والشكل معًا.',
-      group:[exact,exact],
-      options:shuffle([exact,sameColor,sameShape],random),
-      correctAnswer:exact.key
-    };
+    const exact=token(targetShape,targetColor),sameColor=token(pick(different(CLASSIFY_SHAPES,targetShape),random),targetColor),sameShape=token(targetShape,pick(different(CLASSIFY_COLORS,targetColor),random));
+    return{id:`classify-two-${exact.key}-${Math.round(random()*1e7)}`,skillId:'classify-compare',type:'classify-two-properties',prompt:'أي شكل يشبه المجموعة في اللون والشكل معًا؟',spokenPrompt:'شوف المجموعة. اختر الشكل الذي يشبهها في اللون والشكل معًا.',group:[exact,exact],options:shuffle([exact,sameColor,sameShape],random),correctAnswer:exact.key};
   }
-
   const classifyByColor=random()>=.5;
   if(classifyByColor){
-    const group=[
-      token(targetShape,targetColor),
-      token(pick(different(CLASSIFY_SHAPES,targetShape),random),targetColor)
-    ];
-    const remainingShape=CLASSIFY_SHAPES.find(shape=>!group.some(item=>item.shape===shape))||targetShape;
-    const correct=token(remainingShape,targetColor);
-    const distractors=different(CLASSIFY_COLORS,targetColor).map((color,index)=>token(CLASSIFY_SHAPES[index],color));
-    return{
-      id:`classify-one-color-${targetColor}-${Math.round(random()*1e7)}`,
-      skillId:'classify-compare',
-      type:'classify-one-property',
-      criterion:'color',
-      prompt:'أي شكل ينتمي مع المجموعة؟',
-      spokenPrompt:'شوف المجموعة. اختر الشكل الذي له نفس اللون.',
-      group,
-      options:shuffle([correct,...distractors],random),
-      correctAnswer:correct.key
-    };
+    const group=[token(targetShape,targetColor),token(pick(different(CLASSIFY_SHAPES,targetShape),random),targetColor)];
+    const remainingShape=CLASSIFY_SHAPES.find(shape=>!group.some(item=>item.shape===shape))||targetShape,correct=token(remainingShape,targetColor),distractors=different(CLASSIFY_COLORS,targetColor).map((color,index)=>token(CLASSIFY_SHAPES[index],color));
+    return{id:`classify-one-color-${targetColor}-${Math.round(random()*1e7)}`,skillId:'classify-compare',type:'classify-one-property',criterion:'color',prompt:'أي شكل ينتمي مع المجموعة؟',spokenPrompt:'شوف المجموعة. اختر الشكل الذي له نفس اللون.',group,options:shuffle([correct,...distractors],random),correctAnswer:correct.key};
   }
-
-  const group=[
-    token(targetShape,targetColor),
-    token(targetShape,pick(different(CLASSIFY_COLORS,targetColor),random))
-  ];
-  const remainingColor=CLASSIFY_COLORS.find(color=>!group.some(item=>item.color===color))||targetColor;
-  const correct=token(targetShape,remainingColor);
-  const distractors=different(CLASSIFY_SHAPES,targetShape).map((shape,index)=>token(shape,CLASSIFY_COLORS[index]));
-  return{
-    id:`classify-one-shape-${targetShape}-${Math.round(random()*1e7)}`,
-    skillId:'classify-compare',
-    type:'classify-one-property',
-    criterion:'shape',
-    prompt:'أي شكل ينتمي مع المجموعة؟',
-    spokenPrompt:'شوف المجموعة. اختر الشكل الذي له نفس الشكل.',
-    group,
-    options:shuffle([correct,...distractors],random),
-    correctAnswer:correct.key
-  };
+  const group=[token(targetShape,targetColor),token(targetShape,pick(different(CLASSIFY_COLORS,targetColor),random))];
+  const remainingColor=CLASSIFY_COLORS.find(color=>!group.some(item=>item.color===color))||targetColor,correct=token(targetShape,remainingColor),distractors=different(CLASSIFY_SHAPES,targetShape).map((shape,index)=>token(shape,CLASSIFY_COLORS[index]));
+  return{id:`classify-one-shape-${targetShape}-${Math.round(random()*1e7)}`,skillId:'classify-compare',type:'classify-one-property',criterion:'shape',prompt:'أي شكل ينتمي مع المجموعة؟',spokenPrompt:'شوف المجموعة. اختر الشكل الذي له نفس الشكل.',group,options:shuffle([correct,...distractors],random),correctAnswer:correct.key};
 }
 
 export function createEqualityQuestion({max=5,random=Math.random}={}){
-  const left=Math.floor(random()*max)+1;
-  const equal=random()>=.5;
-  let right=left;
-  if(!equal){
-    right=Math.floor(random()*max)+1;
-    if(right===left)right=right===max?Math.max(1,right-1):right+1;
-  }
-  return{
-    id:`equality-${left}-${right}-${Math.round(random()*1e7)}`,
-    skillId:'classify-compare',
-    type:'equality-groups',
-    prompt:'هل المجموعتان متساويتان؟',
-    spokenPrompt:'عد المجموعتين. هل فيهما العدد نفسه؟',
-    left,
-    right,
-    options:[
-      {value:'yes',label:'نعم ✓'},
-      {value:'no',label:'لا ✕'}
-    ],
-    correctAnswer:equal?'yes':'no'
-  };
+  const left=randomNumber(1,max,random),equal=random()>=.5;let right=left;if(!equal){right=randomNumber(1,max,random);if(right===left)right=right===max?Math.max(1,right-1):right+1;}
+  return{id:`equality-${left}-${right}-${Math.round(random()*1e7)}`,skillId:'classify-compare',type:'equality-groups',prompt:'هل المجموعتان متساويتان؟',spokenPrompt:'عد المجموعتين. هل فيهما العدد نفسه؟',left,right,options:[{value:'yes',label:'نعم ✓'},{value:'no',label:'لا ✕'}],correctAnswer:equal?'yes':'no'};
 }
 
 export function createCompareQuestion({max=5,random=Math.random}={}){
-  let left=Math.floor(random()*max)+1;
-  let right=Math.floor(random()*max)+1;
-  if(left===right)right=right===max?right-1:right+1;
-  const askMore=random()>=.5;
-  const correctSide=askMore?(left>right?'left':'right'):(left<right?'left':'right');
-  return{
-    id:`compare-${left}-${right}-${askMore?'more':'less'}-${Math.round(random()*1e7)}`,
-    skillId:'classify-compare',
-    type:'compare-groups',
-    prompt:askMore?'أي مجموعة فيها أكثر؟':'أي مجموعة فيها أقل؟',
-    spokenPrompt:askMore?'اختر المجموعة التي فيها دوائر أكثر.':'اختر المجموعة التي فيها دوائر أقل.',
-    left,
-    right,
-    correctAnswer:correctSide
-  };
+  let left=randomNumber(1,max,random),right=randomNumber(1,max,random);if(left===right)right=right===max?right-1:right+1;const askMore=random()>=.5,correctSide=askMore?(left>right?'left':'right'):(left<right?'left':'right');
+  return{id:`compare-${left}-${right}-${askMore?'more':'less'}-${Math.round(random()*1e7)}`,skillId:'classify-compare',type:'compare-groups',prompt:askMore?'أي مجموعة فيها أكثر؟':'أي مجموعة فيها أقل؟',spokenPrompt:askMore?'اختر المجموعة التي فيها دوائر أكثر.':'اختر المجموعة التي فيها دوائر أقل.',left,right,correctAnswer:correctSide};
 }
 
 const POSITION_SHAPES=Object.freeze(['★','●','▲']);
-
 export function createPositionQuestion({random=Math.random}={}){
   const variant=Math.floor(random()*3);
-  if(variant===0){
-    const askTop=random()>=.5;
-    return{
-      id:`position-above-${Math.round(random()*1e7)}`,
-      skillId:'position-pattern',
-      type:'position-select',
-      layout:'vertical-two',
-      prompt:askTop?'وش الشكل اللي فوق؟':'وش الشكل اللي تحت؟',
-      spokenPrompt:askTop?'اختر الشكل الموجود فوق.':'اختر الشكل الموجود تحت.',
-      items:['★','●'],
-      options:['★','●'],
-      correctAnswer:askTop?'★':'●'
-    };
-  }
-  if(variant===1){
-    const targetIndex=Math.floor(random()*3);
-    const labels=['الأعلى','الأوسط','الأسفل'];
-    return{
-      id:`position-three-${targetIndex}-${Math.round(random()*1e7)}`,
-      skillId:'position-pattern',
-      type:'position-select',
-      layout:'vertical-three',
-      prompt:`وش الشكل ${labels[targetIndex]}؟`,
-      spokenPrompt:`اختر الشكل ${labels[targetIndex]}.`,
-      items:[...POSITION_SHAPES],
-      options:[...POSITION_SHAPES],
-      correctAnswer:POSITION_SHAPES[targetIndex]
-    };
-  }
-
-  const askAfter=random()>=.5;
-  return{
-    id:`position-order-${askAfter?'after':'before'}-${Math.round(random()*1e7)}`,
-    skillId:'position-pattern',
-    type:'position-select',
-    layout:'horizontal-sequence',
-    prompt:askAfter?'أي شكل بعد الدائرة؟':'أي شكل قبل الدائرة؟',
-    spokenPrompt:askAfter?'انظر إلى الترتيب، واختر الشكل الذي يأتي بعد الدائرة.':'انظر إلى الترتيب، واختر الشكل الذي يأتي قبل الدائرة.',
-    items:['★','●','▲'],
-    options:['★','▲'],
-    correctAnswer:askAfter?'▲':'★'
-  };
+  if(variant===0){const askTop=random()>=.5;return{id:`position-above-${Math.round(random()*1e7)}`,skillId:'position-pattern',type:'position-select',layout:'vertical-two',prompt:askTop?'وش الشكل اللي فوق؟':'وش الشكل اللي تحت؟',spokenPrompt:askTop?'اختر الشكل الموجود فوق.':'اختر الشكل الموجود تحت.',items:['★','●'],options:['★','●'],correctAnswer:askTop?'★':'●'};}
+  if(variant===1){const targetIndex=Math.floor(random()*3),labels=['الأعلى','الأوسط','الأسفل'];return{id:`position-three-${targetIndex}-${Math.round(random()*1e7)}`,skillId:'position-pattern',type:'position-select',layout:'vertical-three',prompt:`وش الشكل ${labels[targetIndex]}؟`,spokenPrompt:`اختر الشكل ${labels[targetIndex]}.`,items:[...POSITION_SHAPES],options:[...POSITION_SHAPES],correctAnswer:POSITION_SHAPES[targetIndex]};}
+  const askAfter=random()>=.5;return{id:`position-order-${askAfter?'after':'before'}-${Math.round(random()*1e7)}`,skillId:'position-pattern',type:'position-select',layout:'horizontal-sequence',prompt:askAfter?'أي شكل بعد الدائرة؟':'أي شكل قبل الدائرة؟',spokenPrompt:askAfter?'انظر إلى الترتيب، واختر الشكل الذي يأتي بعد الدائرة.':'انظر إلى الترتيب، واختر الشكل الذي يأتي قبل الدائرة.',items:['★','●','▲'],options:['★','▲'],correctAnswer:askAfter?'▲':'★'};
 }
 
 export function createPatternQuestion({random=Math.random}={}){
-  const patterns=[
-    {items:['●','▲','●','▲'],answer:'●',options:['●','▲','■']},
-    {items:['★','★','●','★','★','●'],answer:'★',options:['★','●','▲']},
-    {items:['■','●','■','●'],answer:'■',options:['■','●','★']}
-  ];
-  const selected=patterns[Math.floor(random()*patterns.length)];
-  return{
-    id:`pattern-next-${Math.round(random()*1e7)}`,
-    skillId:'position-pattern',
-    type:'pattern-next',
-    prompt:'وش الشكل اللي يكمل النمط؟',
-    spokenPrompt:'شوف النمط، ثم اختر الشكل الذي يكمله.',
-    items:[...selected.items],
-    options:shuffle(selected.options,random),
-    correctAnswer:selected.answer
-  };
+  const patterns=[{items:['●','▲','●','▲'],answer:'●',options:['●','▲','■']},{items:['★','★','●','★','★','●'],answer:'★',options:['★','●','▲']},{items:['■','●','■','●'],answer:'■',options:['■','●','★']}],selected=patterns[Math.floor(random()*patterns.length)];
+  return{id:`pattern-next-${Math.round(random()*1e7)}`,skillId:'position-pattern',type:'pattern-next',prompt:'وش الشكل اللي يكمل النمط؟',spokenPrompt:'شوف النمط، ثم اختر الشكل الذي يكمله.',items:[...selected.items],options:shuffle(selected.options,random),correctAnswer:selected.answer};
 }
 
 export function createNumberOrderQuestion({min=11,max=20,random=Math.random}={}){
-  const center=Math.floor(random()*(max-min-1))+min+1;
-  const missingIndex=Math.floor(random()*3);
-  const sequence=[center-1,center,center+1];
-  const correctAnswer=sequence[missingIndex];
-  const items=sequence.map((value,index)=>index===missingIndex?null:value);
-  return{
-    id:`number-order-${center}-${missingIndex}-${Math.round(random()*1e7)}`,
-    skillId:'numbers-11-20',
-    type:'number-order',
-    prompt:'وش العدد الناقص؟',
-    spokenPrompt:'انظر إلى ترتيب الأعداد، ثم اختر العدد الناقص.',
-    items,
-    options:uniqueOptions(correctAnswer,min,max,random),
-    correctAnswer
-  };
+  const center=Math.floor(random()*(max-min-1))+min+1,missingIndex=Math.floor(random()*3),sequence=[center-1,center,center+1],correctAnswer=sequence[missingIndex],items=sequence.map((value,index)=>index===missingIndex?null:value);
+  return{id:`number-order-${min}-${max}-${center}-${missingIndex}-${Math.round(random()*1e7)}`,skillId:numberSkillId(max),type:'number-order',prompt:'وش العدد الناقص؟',spokenPrompt:'انظر إلى ترتيب الأعداد، ثم اختر العدد الناقص.',items,options:uniqueOptions(correctAnswer,min,max,random),correctAnswer};
+}
+
+const ORDINAL_ITEMS=Object.freeze(['★','●','▲','■','◆']);
+const ORDINAL_LABELS=Object.freeze(['الأول','الثاني','الثالث','الرابع','الخامس']);
+export function createOrdinalQuestion({random=Math.random}={}){
+  const targetIndex=Math.floor(random()*ORDINAL_ITEMS.length),correctAnswer=ORDINAL_ITEMS[targetIndex];
+  return{id:`ordinal-${targetIndex+1}-${Math.round(random()*1e7)}`,skillId:'numbers-6-10',type:'ordinal-select',prompt:`وش الشكل ${ORDINAL_LABELS[targetIndex]}؟`,spokenPrompt:`انظر من اليمين إلى اليسار. اختر الشكل ${ORDINAL_LABELS[targetIndex]}.`,items:[...ORDINAL_ITEMS],options:shuffle([...ORDINAL_ITEMS],random),correctAnswer,targetPosition:targetIndex+1};
 }
 
 export function createVisualAdditionQuestion({maxTotal=10,random=Math.random}={}){
-  const left=Math.floor(random()*5)+1;
-  const maxRight=Math.max(1,maxTotal-left);
-  const right=Math.floor(random()*maxRight)+1;
-  const correctAnswer=left+right;
-  return{
-    id:`visual-add-${left}-${right}-${Math.round(random()*1e7)}`,
-    skillId:'addition-foundations',
-    type:'visual-addition',
-    prompt:'كم صار المجموع؟',
-    spokenPrompt:`عندنا ${left} دوائر، وأضفنا ${right} دوائر. كم صار المجموع؟`,
-    left,
-    right,
-    options:uniqueOptions(correctAnswer,2,maxTotal,random),
-    correctAnswer
-  };
+  const left=randomNumber(1,5,random),maxRight=Math.max(1,maxTotal-left),right=randomNumber(1,maxRight,random),correctAnswer=left+right;
+  return{id:`visual-add-${left}-${right}-${Math.round(random()*1e7)}`,skillId:'addition-foundations',type:'visual-addition',prompt:'كم صار المجموع؟',spokenPrompt:`عندنا ${left} دوائر، وأضفنا ${right} دوائر. كم صار المجموع؟`,left,right,options:uniqueOptions(correctAnswer,2,maxTotal,random),correctAnswer};
 }
 
 export function createKhaledRound({skillId,count=8,random=Math.random}={}){
   const questions=[];
   for(let i=0;i<count;i++){
-    if(skillId==='numbers-0-5')questions.push(createCountQuestion({min:0,max:5,random}));
-    else if(skillId==='numbers-6-10')questions.push(createCountQuestion({min:6,max:10,random}));
-    else if(skillId==='numbers-11-20')questions.push(i%2===0?createCountQuestion({min:11,max:20,random}):createNumberOrderQuestion({min:11,max:20,random}));
-    else if(skillId==='classify-compare'){
+    if(skillId==='numbers-0-5')questions.push(i%2===0?createCountQuestion({min:0,max:5,random}):createSpokenNumberQuestion({min:0,max:5,random}));
+    else if(skillId==='numbers-6-10'){
+      const variant=i%5;
+      if(variant===0)questions.push(createCountQuestion({min:6,max:10,random}));
+      else if(variant===1)questions.push(createSpokenNumberQuestion({min:6,max:10,random}));
+      else if(variant===2)questions.push(createNumberCompareQuestion({min:0,max:10,random}));
+      else if(variant===3)questions.push(createNumberOrderQuestion({min:6,max:10,random}));
+      else questions.push(createOrdinalQuestion({random}));
+    }else if(skillId==='numbers-11-20'){
       const variant=i%4;
-      if(variant===0)questions.push(createClassifyQuestion({multipleProperties:false,random}));
-      else if(variant===1)questions.push(createClassifyQuestion({multipleProperties:true,random}));
-      else if(variant===2)questions.push(createEqualityQuestion({max:5,random}));
-      else questions.push(createCompareQuestion({max:5,random}));
-    }
-    else if(skillId==='position-pattern')questions.push(i%2===0?createPositionQuestion({random}):createPatternQuestion({random}));
+      if(variant===0)questions.push(createCountQuestion({min:11,max:20,random}));
+      else if(variant===1)questions.push(createSpokenNumberQuestion({min:11,max:20,random}));
+      else if(variant===2)questions.push(createNumberCompareQuestion({min:11,max:20,random}));
+      else questions.push(createNumberOrderQuestion({min:11,max:20,random}));
+    }else if(skillId==='classify-compare'){
+      const variant=i%4;if(variant===0)questions.push(createClassifyQuestion({multipleProperties:false,random}));else if(variant===1)questions.push(createClassifyQuestion({multipleProperties:true,random}));else if(variant===2)questions.push(createEqualityQuestion({max:5,random}));else questions.push(createCompareQuestion({max:5,random}));
+    }else if(skillId==='position-pattern')questions.push(i%2===0?createPositionQuestion({random}):createPatternQuestion({random}));
     else if(skillId==='addition-foundations')questions.push(createVisualAdditionQuestion({maxTotal:10,random}));
     else throw new Error(`Unsupported Khaled skill: ${skillId}`);
   }
