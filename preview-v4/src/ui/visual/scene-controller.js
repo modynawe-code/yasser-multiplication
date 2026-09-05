@@ -2,6 +2,7 @@ import { getScene } from './scene-manifest.js';
 import { setVisualImage, preloadVisualAssets } from './character-assets.js';
 
 const TARGETS={
+  intro:{yasser:'introYasser',assistant:'introAssistant'},
   home:{yasser:'homeYasser',assistant:'homeAssistant'},
   learn:{yasser:'learnYasser',assistant:'learnAssistant'},
   session:{yasser:'sessionYasser',assistant:'sessionAssistant'},
@@ -10,7 +11,7 @@ const TARGETS={
 
 export function createSceneController({getElement=document.getElementById.bind(document)}={}){
   let timer=null;
-  let current='home';
+  let current='intro';
   let renderToken=0;
 
   function hideOtherTargets(activeTarget){
@@ -84,9 +85,10 @@ export function createSceneController({getElement=document.getElementById.bind(d
 
   function warm(){
     preloadVisualAssets([
-      {character:'yasser',state:'welcome'},
-      {character:'yasser',state:'thinking'},
       {character:'yasser',state:'encourage'},
+      {character:'yasser',state:'thinking'},
+      {character:'yasser',state:'celebrate'},
+      {character:'yasser',state:'mastered'},
       {character:'assistant',state:'idle'},
       {character:'assistant',state:'thinking'},
       {character:'assistant',state:'celebrate'}
