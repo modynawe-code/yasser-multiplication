@@ -10,7 +10,7 @@ function placeParts(number){return{tens:Math.floor(number/10),ones:number%10};}
 export function createPlaceValueModelQuestion({random=Math.random}={}){
   const number=randomNumber(10,99,random);
   const {tens,ones}=placeParts(number);
-  return{id:`place-model-${number}-${Math.round(random()*1e7)}`,skillId:'place-value',type:'place-value-model',prompt:'كم العدد الذي تمثله العشرات والآحاد؟',spokenPrompt:`عد العشرات والآحاد، ثم اختر العدد الصحيح.`,number,tens,ones,options:uniqueOptions(number,10,99,random),correctAnswer:number};
+  return{id:`place-model-${number}-${Math.round(random()*1e7)}`,skillId:'place-value',type:'place-value-model',prompt:'كم العدد الذي تمثله العشرات والآحاد؟',spokenPrompt:'عد العشرات والآحاد، ثم اختر العدد الصحيح.',number,tens,ones,options:uniqueOptions(number,10,99,random),correctAnswer:number};
 }
 
 export function createGuessCheckPlaceValueQuestion({random=Math.random}={}){
@@ -28,10 +28,11 @@ export function createRangeRecognitionQuestion({max=50,random=Math.random}={}){
 export function createEstimateQuestion({random=Math.random}={}){
   const exact=randomNumber(12,94,random);
   const lower=Math.floor(exact/10)*10;
-  const upper=Math.min(100,lower+10);
+  const upper=lower+10;
   const correctAnswer=exact-lower<upper-exact?lower:upper;
-  const third=correctAnswer===lower?Math.min(100,upper+10):Math.max(0,lower-10);
-  const options=shuffle([...new Set([correctAnswer,correctAnswer===lower?upper:lower,third])],random);
+  const other=correctAnswer===lower?upper:lower;
+  const third=correctAnswer===lower?Math.max(0,lower-10):Math.min(100,upper+10);
+  const options=shuffle([correctAnswer,other,third],random);
   return{id:`estimate-${exact}-${Math.round(random()*1e7)}`,skillId:'place-value',type:'estimate-nearest-ten',prompt:'أي تقدير أقرب للعدد؟',spokenPrompt:`العدد هو ${exact}. اختر العشرة الأقرب إليه.`,exact,options,correctAnswer};
 }
 
