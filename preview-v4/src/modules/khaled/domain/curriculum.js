@@ -3,21 +3,30 @@ export const KHALED_CURRICULUM_META=Object.freeze({
   grade:1,
   locale:'ar-SA',
   schoolYear:'1448-1449',
-  verificationStatus:'core-skills-verified; exact current-book ordering remains independently verifiable'
+  sourceStructure:'Saudi Grade 1 mathematics F1 structure cross-checked against Wajibati 1447; current-year official ordering remains separately verifiable',
+  verificationStatus:'early-skill structure verified; current-year official edition verification pending'
 });
 
 export const KHALED_SKILLS=Object.freeze([
   {
     id:'classify-compare',
+    chapter:1,
     title:'المقارنة والتصنيف',
-    shortTitle:'أكثر وأقل',
+    shortTitle:'تصنيف • يساوي • أكثر وأقل',
     symbol:'◉',
     status:'ready',
     activityTypes:['compare-groups'],
-    goals:['يميز المجموعة الأكثر','يميز المجموعة الأقل','يطابق الأشياء المتشابهة']
+    lessons:[
+      'التصنيف وفق خاصية واحدة',
+      'التصنيف وفق أكثر من خاصية',
+      'يساوي',
+      'أكثر من وأقل من'
+    ],
+    goals:['يميز المجموعة الأكثر','يميز المجموعة الأقل','يطابق الأشياء المتشابهة','يفهم تساوي مجموعتين']
   },
   {
     id:'numbers-0-5',
+    chapter:2,
     title:'الأعداد حتى 5',
     shortTitle:'0 إلى 5',
     symbol:'5',
@@ -27,24 +36,34 @@ export const KHALED_SKILLS=Object.freeze([
   },
   {
     id:'position-pattern',
+    chapter:3,
     title:'الموقع والنمط',
-    shortTitle:'الأنماط',
+    shortTitle:'موقع • قبل وبعد • أنماط',
     symbol:'◆',
-    status:'planned',
-    activityTypes:['pattern-next'],
-    goals:['يكمل نمطًا بسيطًا','يميز الموقع بالنسبة للأشياء']
+    status:'ready',
+    activityTypes:['position-select','pattern-next'],
+    lessons:[
+      'فوق وتحت',
+      'أعلى وأوسط وأسفل',
+      'قبل وبعد',
+      'تحديد الأنماط',
+      'إنشاء الأنماط'
+    ],
+    goals:['يميز فوق وتحت','يميز أعلى وأوسط وأسفل','يفهم قبل وبعد','يكمل نمطًا بسيطًا','ينشئ نمطًا بسيطًا']
   },
   {
     id:'numbers-6-10',
+    chapter:4,
     title:'الأعداد حتى 10',
     shortTitle:'6 إلى 10',
     symbol:'10',
-    status:'planned',
+    status:'ready',
     activityTypes:['count-select'],
-    goals:['يعد عناصر مجموعة حتى 10','يرتب الأعداد حتى 10']
+    goals:['يعد عناصر مجموعة حتى 10','يربط الكمية بالعدد الصحيح حتى 10']
   },
   {
     id:'numbers-11-20',
+    chapter:5,
     title:'الأعداد حتى 20',
     shortTitle:'11 إلى 20',
     symbol:'20',
@@ -54,6 +73,7 @@ export const KHALED_SKILLS=Object.freeze([
   },
   {
     id:'addition-foundations',
+    chapter:6,
     title:'الجمع',
     shortTitle:'الجمع',
     symbol:'+',
