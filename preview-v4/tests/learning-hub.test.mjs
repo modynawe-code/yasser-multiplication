@@ -19,6 +19,20 @@ test('hub exposes two learner routes and keeps Khaled images decoupled',async()=
   assert.match(shell,/جدول الضرب 1–10/);
   assert.match(shell,/رياضيات أول ابتدائي/);
   assert.doesNotMatch(shell,/assets\/.*khaled.*\.(png|webp)/i);
+  assert.doesNotMatch(shell,/صور خالد ستضاف لاحقًا/);
+});
+
+test('switching learners closes active module state before showing hub',async()=>{
+  const main=await read('src/main.js');
+  const hub=await read('src/modules/hub/hub-controller.js');
+  const yasser=await read('src/ui/app-controller.js');
+  assert.match(hub,/onBeforeShow\?\.\(\)/);
+  assert.match(main,/onBeforeShow:\(\)=>/);
+  assert.match(main,/yasser\.leave\(\)/);
+  assert.match(main,/khaled\.leave\(\)/);
+  assert.match(yasser,/session\.completed=true/);
+  assert.match(yasser,/enterHome:goHome/);
+  assert.match(yasser,/\n    leave,/);
 });
 
 test('offline shell includes hub, Khaled and speech modules',async()=>{
