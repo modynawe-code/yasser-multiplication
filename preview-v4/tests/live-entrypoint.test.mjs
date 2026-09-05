@@ -23,7 +23,7 @@ test('preview app and install manifest use the shared learner identity',async()=
 
 test('service worker shell includes cloud sync and Khaled device hardening',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-29/);
+  assert.match(worker,/shell-30/);
   for(const path of [
     'shared/data/attempt-ledger.js',
     'shared/config/family-api-config.js',

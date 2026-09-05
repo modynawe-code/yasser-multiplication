@@ -14,7 +14,8 @@ test('repository documents main as the only current source of truth and release 
   const status=await readFile(rootUrl('docs/PROJECT-STATUS.md'),'utf8');
   assert.match(readme,/preview-v4\//);
   assert.match(status,/`main` is the only current source of truth/);
-  assert.match(status,/Original Khaled PNG binaries/);
+  assert.match(status,/Seven approved original Khaled PNG assets/);
+  assert.doesNotMatch(status,/Original Khaled PNG binaries/);
   assert.match(status,/Cloud production deployment/);
   assert.match(status,/Physical Galaxy Tab validation/);
 });

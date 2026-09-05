@@ -22,6 +22,8 @@ const FALLBACK_IDS=Object.freeze({
   result:'khaledResultCharacterFallback'
 });
 
+const WARM_ASSET_KEYS=Object.freeze(['welcome','groupThinking']);
+
 function byId(id){return document.getElementById(id);}
 
 export function createKhaledSceneController(){
@@ -72,7 +74,11 @@ export function createKhaledSceneController(){
     if(pct>=70)return paint('result','mastered',{motion:'nod'});
     return paint('result','encourage');
   }
-  function warm(){Object.values(ASSETS).forEach(src=>canLoad(src));}
 
-  return{ASSETS,warm,hub,home,question,feedback,result,paint};
+  // Preserve original PNG quality without forcing ~9MB of artwork into the initial route.
+  // Only the immediately likely states are warmed; all other states load on first use and
+  // are then handled by the service worker's normal runtime cache.
+  function warm(){WARM_ASSET_KEYS.forEach(key=>canLoad(ASSETS[key]));}
+
+  return{ASSETS,WARM_ASSET_KEYS,warm,hub,home,question,feedback,result,paint};
 }
