@@ -1,14 +1,19 @@
+function ensureStyle(href,key){
+  if(document.querySelector(`link[data-module-style="${key}"]`))return;
+  const link=document.createElement('link');
+  link.rel='stylesheet';
+  link.href=href;
+  link.dataset.moduleStyle=key;
+  document.head.appendChild(link);
+}
+
 export function ensureLearningShell(){
   const main=document.querySelector('main');
   if(!main||document.getElementById('hubView'))return;
 
-  if(!document.querySelector('link[data-learning-hub]')){
-    const link=document.createElement('link');
-    link.rel='stylesheet';
-    link.href='src/modules/hub/learning-hub.css';
-    link.dataset.learningHub='true';
-    document.head.appendChild(link);
-  }
+  ensureStyle('src/modules/hub/learning-hub.css','learning-hub');
+  ensureStyle('src/modules/khaled/ui/khaled-character-system.css','khaled-characters');
+  ensureStyle('src/modules/parent/family-parent.css','family-parent');
 
   const topbar=document.querySelector('.topbar');
   if(topbar&&!document.getElementById('switchLearnerBtn')){
