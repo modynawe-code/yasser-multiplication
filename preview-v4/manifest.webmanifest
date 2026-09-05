@@ -1,0 +1,15 @@
+{
+  "id":"./",
+  "name":"تحدي ياسر V4 — معاينة",
+  "short_name":"تحدي ياسر V4",
+  "description":"نسخة معاينة لمدرب جدول الضرب من 1 إلى 10",
+  "lang":"ar",
+  "dir":"rtl",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "orientation":"any",
+  "background_color":"#f4f6fb",
+  "theme_color":"#3157d5",
+  "categories":["education"]
+}
