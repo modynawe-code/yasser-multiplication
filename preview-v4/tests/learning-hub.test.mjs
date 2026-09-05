@@ -13,13 +13,13 @@ test('main bootstraps hub without replacing Yasser controller',async()=>{
   assert.match(main,/ensureLearningShell/);
 });
 
-test('hub exposes two learner routes and keeps Khaled image paths outside shell markup',async()=>{
+test('hub exposes two learner routes and describes Khaled full curriculum without asset coupling',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
   assert.match(shell,/id="hubYasser"/);
   assert.match(shell,/id="hubKhaled"/);
   assert.match(shell,/جدول الضرب 1–10/);
   assert.match(shell,/رياضيات أول ابتدائي/);
-  assert.match(shell,/عد • مقارنة • أنماط • أعداد • جمع/);
+  assert.match(shell,/أعداد • عمليات • قياس • أشكال • نقود/);
   assert.doesNotMatch(shell,/assets\/.*khaled.*\.(png|webp)/i);
   assert.doesNotMatch(shell,/صور خالد ستضاف لاحقًا/);
 });
@@ -53,25 +53,23 @@ test('Khaled mode hides Yasser chrome and preserves incomplete sessions',async()
   assert.match(khaled,/visuals\.result\(pct\)/);
 });
 
-test('Khaled UI keeps number activities inline and delegates addition to its focused renderer',async()=>{
+test('Khaled UI keeps core activities inline and delegates modular learning families',async()=>{
   const hubCss=await read('src/modules/hub/learning-hub.css');
   const khaled=await read('src/modules/khaled/ui/khaled-controller.js');
   const addition=await read('src/modules/khaled/ui/khaled-addition-renderer.js');
-  const additionCss=await read('src/modules/khaled/ui/khaled-addition.css');
+  const advanced=await read('src/modules/khaled/ui/khaled-advanced-renderer.js');
   assert.match(khaled,/question\.type==='number-order'/);
   assert.match(khaled,/isAdditionQuestion\(question\)/);
-  assert.match(khaled,/renderAdditionQuestion/);
-  assert.match(khaled,/khaled-number-line/);
+  assert.match(khaled,/isAdvancedQuestion\(question\)/);
   assert.match(addition,/visual-addition/);
-  assert.match(addition,/khaled-addition/);
-  assert.match(additionCss,/\.khaled-addition-sentence/);
+  assert.match(advanced,/isMoneyQuestion/);
   assert.match(hubCss,/\.khaled-number-line/);
   assert.match(hubCss,/\.khaled-dot-group\.large/);
 });
 
 test('offline shell includes hub, Khaled, parent and speech modules',async()=>{
   const worker=await read('service-worker.js');
-  for(const path of ['modules/hub/hub-controller.js','modules/hub/learning-shell.js','modules/hub/learning-hub.css','modules/khaled/domain/curriculum.js','modules/khaled/ui/khaled-controller.js','modules/khaled/ui/khaled-scene-controller.js','modules/khaled/ui/khaled-addition-renderer.js','modules/parent/family-parent-controller.js','shared/audio/speech-service.js']){
+  for(const path of ['modules/hub/hub-controller.js','modules/hub/learning-shell.js','modules/hub/learning-hub.css','modules/khaled/domain/curriculum.js','modules/khaled/domain/advanced-question-bank.js','modules/khaled/ui/khaled-controller.js','modules/khaled/ui/khaled-advanced-renderer.js','modules/parent/family-parent-controller.js','shared/audio/speech-service.js']){
     assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   }
 });
