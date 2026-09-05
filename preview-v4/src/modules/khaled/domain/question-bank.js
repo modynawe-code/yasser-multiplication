@@ -17,6 +17,12 @@ function numberSkillId(max){
   return 'numbers-11-20';
 }
 
+const CLASSIFY_SHAPES=Object.freeze(['circle','square','triangle']);
+const CLASSIFY_COLORS=Object.freeze(['orange','blue','green']);
+function pick(values,random=Math.random){return values[Math.floor(random()*values.length)];}
+function different(values,value){return values.filter(item=>item!==value);}
+function token(shape,color){return{shape,color,key:`${shape}-${color}`};}
+
 export function createCountQuestion({min=0,max=5,random=Math.random}={}){
   const count=Math.floor(random()*(max-min+1))+min;
   return{
@@ -28,6 +34,92 @@ export function createCountQuestion({min=0,max=5,random=Math.random}={}){
     count,
     options:uniqueOptions(count,min,max,random),
     correctAnswer:count
+  };
+}
+
+export function createClassifyQuestion({multipleProperties=false,random=Math.random}={}){
+  const targetShape=pick(CLASSIFY_SHAPES,random);
+  const targetColor=pick(CLASSIFY_COLORS,random);
+
+  if(multipleProperties){
+    const exact=token(targetShape,targetColor);
+    const sameColor=token(pick(different(CLASSIFY_SHAPES,targetShape),random),targetColor);
+    const sameShape=token(targetShape,pick(different(CLASSIFY_COLORS,targetColor),random));
+    return{
+      id:`classify-two-${exact.key}-${Math.round(random()*1e7)}`,
+      skillId:'classify-compare',
+      type:'classify-two-properties',
+      prompt:'أي شكل يشبه المجموعة في اللون والشكل معًا؟',
+      spokenPrompt:'شوف المجموعة. اختر الشكل الذي يشبهها في اللون والشكل معًا.',
+      group:[exact,exact],
+      options:shuffle([exact,sameColor,sameShape],random),
+      correctAnswer:exact.key
+    };
+  }
+
+  const classifyByColor=random()>=.5;
+  if(classifyByColor){
+    const group=[
+      token(targetShape,targetColor),
+      token(pick(different(CLASSIFY_SHAPES,targetShape),random),targetColor)
+    ];
+    const remainingShape=CLASSIFY_SHAPES.find(shape=>!group.some(item=>item.shape===shape))||targetShape;
+    const correct=token(remainingShape,targetColor);
+    const distractors=different(CLASSIFY_COLORS,targetColor).map((color,index)=>token(CLASSIFY_SHAPES[index],color));
+    return{
+      id:`classify-one-color-${targetColor}-${Math.round(random()*1e7)}`,
+      skillId:'classify-compare',
+      type:'classify-one-property',
+      criterion:'color',
+      prompt:'أي شكل ينتمي مع المجموعة؟',
+      spokenPrompt:'شوف المجموعة. اختر الشكل الذي له نفس اللون.',
+      group,
+      options:shuffle([correct,...distractors],random),
+      correctAnswer:correct.key
+    };
+  }
+
+  const group=[
+    token(targetShape,targetColor),
+    token(targetShape,pick(different(CLASSIFY_COLORS,targetColor),random))
+  ];
+  const remainingColor=CLASSIFY_COLORS.find(color=>!group.some(item=>item.color===color))||targetColor;
+  const correct=token(targetShape,remainingColor);
+  const distractors=different(CLASSIFY_SHAPES,targetShape).map((shape,index)=>token(shape,CLASSIFY_COLORS[index]));
+  return{
+    id:`classify-one-shape-${targetShape}-${Math.round(random()*1e7)}`,
+    skillId:'classify-compare',
+    type:'classify-one-property',
+    criterion:'shape',
+    prompt:'أي شكل ينتمي مع المجموعة؟',
+    spokenPrompt:'شوف المجموعة. اختر الشكل الذي له نفس الشكل.',
+    group,
+    options:shuffle([correct,...distractors],random),
+    correctAnswer:correct.key
+  };
+}
+
+export function createEqualityQuestion({max=5,random=Math.random}={}){
+  const left=Math.floor(random()*max)+1;
+  const equal=random()>=.5;
+  let right=left;
+  if(!equal){
+    right=Math.floor(random()*max)+1;
+    if(right===left)right=right===max?Math.max(1,right-1):right+1;
+  }
+  return{
+    id:`equality-${left}-${right}-${Math.round(random()*1e7)}`,
+    skillId:'classify-compare',
+    type:'equality-groups',
+    prompt:'هل المجموعتان متساويتان؟',
+    spokenPrompt:'عد المجموعتين. هل فيهما العدد نفسه؟',
+    left,
+    right,
+    options:[
+      {value:'yes',label:'نعم ✓'},
+      {value:'no',label:'لا ✕'}
+    ],
+    correctAnswer:equal?'yes':'no'
   };
 }
 
@@ -158,7 +250,13 @@ export function createKhaledRound({skillId,count=8,random=Math.random}={}){
     if(skillId==='numbers-0-5')questions.push(createCountQuestion({min:0,max:5,random}));
     else if(skillId==='numbers-6-10')questions.push(createCountQuestion({min:6,max:10,random}));
     else if(skillId==='numbers-11-20')questions.push(i%2===0?createCountQuestion({min:11,max:20,random}):createNumberOrderQuestion({min:11,max:20,random}));
-    else if(skillId==='classify-compare')questions.push(createCompareQuestion({max:5,random}));
+    else if(skillId==='classify-compare'){
+      const variant=i%4;
+      if(variant===0)questions.push(createClassifyQuestion({multipleProperties:false,random}));
+      else if(variant===1)questions.push(createClassifyQuestion({multipleProperties:true,random}));
+      else if(variant===2)questions.push(createEqualityQuestion({max:5,random}));
+      else questions.push(createCompareQuestion({max:5,random}));
+    }
     else if(skillId==='position-pattern')questions.push(i%2===0?createPositionQuestion({random}):createPatternQuestion({random}));
     else if(skillId==='addition-foundations')questions.push(createVisualAdditionQuestion({maxTotal:10,random}));
     else throw new Error(`Unsupported Khaled skill: ${skillId}`);
