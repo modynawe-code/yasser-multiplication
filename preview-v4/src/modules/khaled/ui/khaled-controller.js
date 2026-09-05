@@ -8,6 +8,12 @@ function show(id){allViews().forEach(view=>view.classList.toggle('active',view.i
 function byId(id){return document.getElementById(id);}
 function dots(count){return Array.from({length:count},()=>'<span class="khaled-dot" aria-hidden="true"></span>').join('');}
 function shapes(items,className=''){return items.map(item=>`<span class="khaled-shape ${className}" aria-hidden="true">${item}</span>`).join('');}
+function numberTiles(items){
+  return items.map(value=>value===null
+    ?'<span class="khaled-number-missing" aria-hidden="true">؟</span>'
+    :`<span class="khaled-number-tile">${value}</span>`
+  ).join('<span class="khaled-number-arrow" aria-hidden="true">→</span>');
+}
 
 export function createKhaledController({repository,onExitToHub}={}){
   let state=repository.load();
@@ -60,7 +66,8 @@ export function createKhaledController({repository,onExitToHub}={}){
     answers.innerHTML='';
 
     if(question.type==='count-select'){
-      visual.innerHTML=`<div class="khaled-dot-group single">${dots(question.count)}</div>`;
+      const sizeClass=question.count>10?'large':'';
+      visual.innerHTML=`<div class="khaled-dot-group single ${sizeClass}">${dots(question.count)}</div>`;
       question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
     }else if(question.type==='compare-groups'){
       visual.innerHTML=`<div class="khaled-compare"><button class="khaled-group-choice" data-answer="left">${dots(question.left)}</button><button class="khaled-group-choice" data-answer="right">${dots(question.right)}</button></div>`;
@@ -72,6 +79,12 @@ export function createKhaledController({repository,onExitToHub}={}){
     }else if(question.type==='pattern-next'){
       visual.innerHTML=`<div class="khaled-pattern" dir="ltr">${shapes(question.items)}<span class="khaled-pattern-missing" aria-hidden="true">؟</span></div>`;
       question.options.forEach(value=>answers.appendChild(answerButton(value,value)));
+    }else if(question.type==='number-order'){
+      visual.innerHTML=`<div class="khaled-number-line" dir="ltr">${numberTiles(question.items)}</div>`;
+      question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
+    }else if(question.type==='visual-addition'){
+      visual.innerHTML=`<div class="khaled-addition" dir="ltr"><div class="khaled-add-group">${dots(question.left)}</div><span class="khaled-add-sign" aria-hidden="true">+</span><div class="khaled-add-group">${dots(question.right)}</div><span class="khaled-add-sign" aria-hidden="true">=</span><span class="khaled-add-question" aria-hidden="true">؟</span></div>`;
+      question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
     }else{
       visual.innerHTML='';
     }
