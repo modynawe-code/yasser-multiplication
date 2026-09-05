@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-preview-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-3`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-4`;
 const APP_SHELL=['./','./index.html','./style.css','./src/ui/styles/parent-report.css','./manifest.webmanifest','./src/main.js','./src/domain/constants.js','./src/domain/state-model.js','./src/domain/mastery.js','./src/domain/question-bank.js','./src/application/attempt-service.js','./src/application/training-engine.js','./src/application/progress-service.js','./src/infrastructure/storage/local-storage-repository.js','./src/platform/pwa/register-service-worker.js','./src/ui/dom.js','./src/ui/renderers.js','./src/ui/app-controller.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_VERSION).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_VERSION).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
