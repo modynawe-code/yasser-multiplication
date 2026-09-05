@@ -17,25 +17,26 @@ const khaled=createKhaledController({
 });
 let khaledStarted=false;
 
-function showView(id){
-  document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));
-  document.body.classList.remove('hub-mode','intro-mode');
-  window.scrollTo(0,0);
-}
-
 function enterYasser(){
   khaled.leave();
   if(!yasserStarted){yasserStarted=true;yasser.start();return;}
-  showView('homeView');
+  yasser.enterHome();
 }
 
 function enterKhaled(){
-  const session=document.getElementById('sessionView');
-  if(session?.classList.contains('active'))document.getElementById('exitSession')?.click();
+  yasser.leave();
   if(!khaledStarted){khaledStarted=true;khaled.start();return;}
   khaled.enter();
 }
 
-const hub=createHubController({onSelectYasser:enterYasser,onSelectKhaled:enterKhaled});
+const hub=createHubController({
+  onBeforeShow:()=>{
+    yasser.leave();
+    khaled.leave();
+  },
+  onSelectYasser:enterYasser,
+  onSelectKhaled:enterKhaled
+});
+
 hub.start();
 registerServiceWorker();
