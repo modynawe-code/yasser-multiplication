@@ -2,15 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { KHALED_CURRICULUM_META, getKhaledSkill, getReadyKhaledSkills } from '../src/modules/khaled/domain/curriculum.js';
 
-test('curriculum metadata keeps current-year claim conservative',()=>{
+test('curriculum metadata distinguishes verified 1448 chapters from pending later chapters',()=>{
   assert.equal(KHALED_CURRICULUM_META.grade,1);
   assert.equal(KHALED_CURRICULUM_META.locale,'ar-SA');
-  assert.match(KHALED_CURRICULUM_META.verificationStatus,/pending/);
+  assert.equal(KHALED_CURRICULUM_META.schoolYear,'1448-1449');
+  assert.match(KHALED_CURRICULUM_META.sourceStructure,/Chapters 1-6.*1448/);
+  assert.match(KHALED_CURRICULUM_META.verificationStatus,/chapters 1-6 verified.*chapters 7-13 pending/i);
+  assert.match(KHALED_CURRICULUM_META.coverageNote,/Interactive practice/);
 });
 
-test('chapter one lesson structure and activity coverage are represented one-to-one',()=>{
+test('chapter one matches published 1448 lesson structure while keeping four playable activity families',()=>{
   const skill=getKhaledSkill('classify-compare');
-  assert.deepEqual(skill.lessons,['التصنيف وفق خاصية واحدة','التصنيف وفق أكثر من خاصية','يساوي','أكثر من وأقل من']);
+  assert.deepEqual(skill.lessons,['التصنيف وفق خاصية واحدة','أحل المسألة: أمثلها','التصنيف وفق أكثر من خاصية','يساوي','أكثر من وأقل من']);
   assert.deepEqual(skill.activityTypes,['classify-one-property','classify-two-properties','equality-groups','compare-groups']);
 });
 
@@ -20,10 +23,10 @@ test('chapter two includes spoken numeral recognition including zero',()=>{
   assert.deepEqual(skill.activityTypes,['count-select','spoken-number-select']);
 });
 
-test('position and pattern structure covers the five early lessons',()=>{
+test('chapter three matches published 1448 location and pattern structure',()=>{
   const skill=getKhaledSkill('position-pattern');
-  assert.equal(skill.lessons.length,5);
-  for(const lesson of ['فوق وتحت','أعلى وأوسط وأسفل','قبل وبعد','تحديد الأنماط','إنشاء الأنماط'])assert.ok(skill.lessons.includes(lesson));
+  assert.deepEqual(skill.lessons,['فوق وتحت','أعلى وأوسط وأسفل','قبل وبعد','تحديد الأنماط','إنشاء الأنماط','أحل المسألة: أبحث عن نمط']);
+  assert.deepEqual(skill.activityTypes,['position-select','pattern-next']);
 });
 
 test('chapter four maps comparison ordering and ordinal learning',()=>{
@@ -36,6 +39,13 @@ test('chapter five maps recognition comparison and ordering through twenty',()=>
   const skill=getKhaledSkill('numbers-11-20');
   for(const lesson of ['الأعداد 18،19،20','مقارنة الأعداد حتى 20','ترتيب الأعداد حتى 20'])assert.ok(skill.lessons.includes(lesson));
   assert.deepEqual(skill.activityTypes,['count-select','spoken-number-select','number-compare','number-order']);
+});
+
+test('chapter six remains mapped to five addition activity families',()=>{
+  const skill=getKhaledSkill('addition-foundations');
+  assert.equal(skill.chapter,6);
+  assert.ok(skill.lessons.includes('أحل المسألة: أمثلها'));
+  assert.deepEqual(skill.activityTypes,['visual-addition','addition-sentence','zero-addition','number-bond','vertical-addition']);
 });
 
 test('chapter seven maps subtraction stories, zero and whole, and vertical subtraction',()=>{
