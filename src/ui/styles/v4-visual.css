@@ -1,0 +1,56 @@
+:root{
+  --brand-blue:#3157d5;
+  --brand-blue-deep:#1f3da9;
+  --brand-blue-soft:#eef3ff;
+  --brand-gold:#ffc83d;
+  --brand-green:#35a866;
+  --brand-red:#e45858;
+  --brand-surface:#ffffff;
+  --brand-bg:#f5f7fc;
+  --brand-ink:#172033;
+  --brand-muted:#6d7890;
+  --radius-card:24px;
+  --radius-control:16px;
+  --shadow-card:0 16px 38px rgba(27,40,83,.09);
+}
+
+/* V4.2 visual layer: presentation only. Learning logic stays outside CSS/markup. */
+.mission{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff 0%,#fff 62%,#f0f5ff 100%)}
+.mission::after{content:"";position:absolute;inset:auto -90px -100px auto;width:270px;height:270px;border-radius:50%;background:radial-gradient(circle,rgba(49,87,213,.12),rgba(49,87,213,0) 68%);pointer-events:none}
+.mission-copy{position:relative;z-index:2;max-width:66%}
+.character-stage{position:absolute;left:12px;bottom:-10px;width:min(32%,300px);height:88%;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;z-index:1}
+.character-stage img{display:block;max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 18px 20px rgba(31,61,169,.15))}
+.assistant-bubble{display:flex;align-items:center;gap:10px;margin:14px 0 0;padding:10px 12px;border:1px solid #dfe7ff;border-radius:16px;background:rgba(247,249,255,.92);position:relative;z-index:2}
+.assistant-bubble img{width:54px;height:54px;object-fit:contain;flex:0 0 auto}
+.assistant-bubble strong{display:block;font-size:13px;color:var(--brand-blue-deep)}
+.assistant-bubble span{display:block;margin-top:2px;color:var(--brand-muted);font-size:11.5px;line-height:1.55}
+
+.result-card{position:relative;overflow:hidden}
+.result-character{width:150px;margin:0 auto -2px;display:block;filter:drop-shadow(0 14px 16px rgba(31,61,169,.13))}
+.result-assistant{position:absolute;left:20px;top:18px;width:72px;height:72px;object-fit:contain}
+
+.question-card{position:relative;overflow:hidden}
+.session-assistant{position:absolute;left:18px;bottom:16px;width:74px;height:74px;object-fit:contain;opacity:.92;pointer-events:none}
+.question-card.exam-mode .session-assistant{display:none}
+
+@media (max-width:850px){
+  .mission-copy{max-width:100%;padding-left:0}
+  .character-stage{position:relative;left:auto;bottom:auto;width:170px;height:180px;margin:-4px auto 4px}
+  .mission{padding-bottom:18px}
+  .assistant-bubble{margin-top:10px}
+}
+
+@media (max-width:560px){
+  .character-stage{width:138px;height:150px;margin-top:-2px}
+  .assistant-bubble img{width:46px;height:46px}
+  .assistant-bubble{padding:8px 10px}
+  .result-character{width:126px}
+  .result-assistant{width:60px;height:60px;left:12px;top:12px}
+  .session-assistant{width:60px;height:60px;left:10px;bottom:10px}
+}
+
+@media (prefers-reduced-motion:no-preference){
+  .character-stage img,.result-character,.assistant-bubble img{animation:v4-float 4.8s ease-in-out infinite}
+  .result-card .result-character{animation-duration:3.8s}
+}
+@keyframes v4-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
