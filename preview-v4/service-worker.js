@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-21`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-22`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-system.css',
@@ -10,8 +10,8 @@ const APP_SHELL=[
   './src/ui/visual/character-assets.js','./src/ui/visual/scene-manifest.js','./src/ui/visual/scene-controller.js',
   './src/shared/audio/speech-service.js','./src/shared/security/parent-access.js',
   './src/modules/hub/hub-controller.js','./src/modules/hub/learning-shell.js','./src/modules/hub/learning-hub.css',
-  './src/modules/khaled/domain/curriculum.js','./src/modules/khaled/domain/question-bank.js','./src/modules/khaled/domain/addition-question-bank.js','./src/modules/khaled/domain/subtraction-question-bank.js','./src/modules/khaled/domain/add-sub-strategies-question-bank.js','./src/modules/khaled/domain/state-model.js',
-  './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css','./src/modules/khaled/ui/khaled-activity-types.css','./src/modules/khaled/ui/khaled-number-relations.css','./src/modules/khaled/ui/khaled-addition-renderer.js','./src/modules/khaled/ui/khaled-addition.css','./src/modules/khaled/ui/khaled-subtraction-renderer.js','./src/modules/khaled/ui/khaled-subtraction.css','./src/modules/khaled/ui/khaled-strategies-renderer.js','./src/modules/khaled/ui/khaled-strategies.css',
+  './src/modules/khaled/domain/curriculum.js','./src/modules/khaled/domain/question-bank.js','./src/modules/khaled/domain/addition-question-bank.js','./src/modules/khaled/domain/subtraction-question-bank.js','./src/modules/khaled/domain/add-sub-strategies-question-bank.js','./src/modules/khaled/domain/place-value-question-bank.js','./src/modules/khaled/domain/state-model.js',
+  './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css','./src/modules/khaled/ui/khaled-activity-types.css','./src/modules/khaled/ui/khaled-number-relations.css','./src/modules/khaled/ui/khaled-addition-renderer.js','./src/modules/khaled/ui/khaled-addition.css','./src/modules/khaled/ui/khaled-subtraction-renderer.js','./src/modules/khaled/ui/khaled-subtraction.css','./src/modules/khaled/ui/khaled-strategies-renderer.js','./src/modules/khaled/ui/khaled-strategies.css','./src/modules/khaled/ui/khaled-place-value-renderer.js','./src/modules/khaled/ui/khaled-place-value.css',
   './src/modules/parent/family-parent-controller.js','./src/modules/parent/family-parent-renderers.js','./src/modules/parent/family-parent.css',
   './assets/characters/yasser-welcome.webp','./assets/assistant/assistant-welcome.webp',
   './assets/visual/yasser/welcome.b64.txt','./assets/visual/yasser/thinking.b64.txt','./assets/visual/yasser/encourage.b64.txt','./assets/visual/yasser/celebrate.b64.txt','./assets/visual/yasser/mastered.b64.txt',
