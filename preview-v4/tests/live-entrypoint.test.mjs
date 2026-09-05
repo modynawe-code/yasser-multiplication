@@ -21,10 +21,11 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell is current through final chapter thirteen money',async()=>{
+test('service worker shell includes final curriculum and append-only attempt ledger',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-26/);
+  assert.match(worker,/shell-27/);
   for(const path of [
+    'shared/data/attempt-ledger.js',
     'modules/khaled/domain/money-question-bank.js',
     'modules/khaled/ui/khaled-advanced-renderer.js',
     'modules/khaled/ui/khaled-money-renderer.js',
