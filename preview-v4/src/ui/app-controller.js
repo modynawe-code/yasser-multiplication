@@ -18,11 +18,10 @@ import {
 import { createSceneController } from './visual/scene-controller.js';
 import { createFeedbackAudio } from './audio/feedback-audio.js';
 
-const VIEWS=['introView','homeView','learnView','sessionView','resultView','parentView'];
 const PARENT_PIN='2580';
 
 function show(id){
-  VIEWS.forEach(view=>$(view).classList.toggle('active',view===id));
+  all('.view').forEach(view=>view.classList.toggle('active',view.id===id));
   window.scrollTo(0,0);
 }
 
@@ -52,7 +51,7 @@ export function createAppController({repository}){
   const refreshHome=()=>renderHome({state,$,all});
 
   function goHome(){
-    document.body.classList.remove('intro-mode');
+    document.body.classList.remove('intro-mode','hub-mode','khaled-mode');
     session=null;
     refreshHome();
     show('homeView');
@@ -71,7 +70,7 @@ export function createAppController({repository}){
   }
 
   function start(mode,customQuestions=null){
-    document.body.classList.remove('intro-mode');
+    document.body.classList.remove('intro-mode','hub-mode','khaled-mode');
     session=createSession({mode,state,selectedTables:state.selected,customQuestions});
     $('sessionTitle').textContent=mode==='exam'?'الاختبار المكثف':'تدريب اليوم';
     $('questionCard').classList.toggle('exam-mode',mode==='exam');
@@ -170,6 +169,7 @@ export function createAppController({repository}){
 
     const weak=getWeakQuestions(session);
     session.lastWeak=weak;
+    session.completed=true;
     $('weakTags').innerHTML=weak.length
       ?weak.map(item=>`<span class="tag">${item.table}×${item.multiplier} • ${item.count} خطأ</span>`).join('')
       :'<span class="tag">بدون أخطاء ✓</span>';
@@ -180,12 +180,17 @@ export function createAppController({repository}){
     audio.achievement();
   }
 
-  function exitSession(){
-    if(session?.answers.length){
+  function leave(){
+    if(session&&!session.completed&&session.answers.length){
       state.sessions.unshift(buildSessionRecord(session,{incomplete:true}));
       state.sessions=state.sessions.slice(0,100);
       persist();
     }
+    session=null;
+  }
+
+  function exitSession(){
+    leave();
     goHome();
   }
 
@@ -281,10 +286,13 @@ export function createAppController({repository}){
       bind();
       refreshHome();
       visuals.warm();
+      document.body.classList.remove('hub-mode','khaled-mode');
       document.body.classList.add('intro-mode');
       show('introView');
       visuals.render('intro');
     },
+    enterHome:goHome,
+    leave,
     getState(){return state;}
   };
 }
