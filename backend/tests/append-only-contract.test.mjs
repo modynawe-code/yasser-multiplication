@@ -22,10 +22,12 @@ test('Worker exposes immutable baseline plus append/read sync but no attempt mut
   assert.doesNotMatch(worker,/DELETE FROM attempts/);
 });
 
-test('Worker authenticates sync routes and repository contains no live D1 id',async()=>{
-  const worker=await read('src/index.mjs'),config=await read('wrangler.jsonc');
+test('Worker authenticates sync routes and uses the dedicated DB binding',async()=>{
+  const worker=await read('src/index.mjs'),config=JSON.parse(await read('wrangler.jsonc'));
   assert.match(worker,/const auth=await authenticate/);
   assert.match(worker,/if\(!auth\)return response\(request,env,401/);
   assert.match(worker,/env\.DB/);
-  assert.match(config,/REPLACE_WITH_D1_DATABASE_ID/);
+  assert.equal(config.d1_databases?.[0]?.binding,'DB');
+  assert.equal(config.d1_databases?.[0]?.database_name,'yasser-khaled-family');
+  assert.doesNotMatch(JSON.stringify(config),/REPLACE_WITH_D1_DATABASE_ID/);
 });

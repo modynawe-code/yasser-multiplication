@@ -3,6 +3,7 @@
   "name": "yasser-khaled-family-api",
   "main": "src/index.mjs",
   "compatibility_date": "2026-08-01",
+  "account_id": "cb1e4fe9d46768f7400d427eaecceb49",
   "workers_dev": true,
   "vars": {
     "ALLOWED_ORIGINS": "https://modynawe-code.github.io,http://127.0.0.1:4173,http://localhost:4173",
@@ -12,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "yasser-khaled-family",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "843c2084-7857-45a7-9b61-7ce064a9f7a0",
       "migrations_dir": "migrations"
     }
   ]
