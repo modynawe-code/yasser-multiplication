@@ -5,6 +5,7 @@ import { createSpeechService } from '../../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../../ui/audio/feedback-audio.js';
 import { createKhaledSceneController } from './khaled-scene-controller.js';
 import { isAdditionQuestion, renderAdditionQuestion } from './khaled-addition-renderer.js';
+import { isSubtractionQuestion, renderSubtractionQuestion } from './khaled-subtraction-renderer.js';
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -61,6 +62,8 @@ export function createKhaledController({repository,onExitToHub}={}){
       visual.innerHTML=`<div class="khaled-number-line" dir="ltr">${numberTiles(question.items)}</div>`;question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
     }else if(isAdditionQuestion(question)){
       renderAdditionQuestion({question,visual,answers,createAnswerButton:answerButton});
+    }else if(isSubtractionQuestion(question)){
+      renderSubtractionQuestion({question,visual,answers,createAnswerButton:answerButton});
     }else visual.innerHTML='';
     speakQuestion(question);
   }

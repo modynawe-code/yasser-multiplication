@@ -1,4 +1,5 @@
 import { createAdditionRoundQuestion } from './addition-question-bank.js';
+import { createSubtractionRoundQuestion } from './subtraction-question-bank.js';
 
 function shuffle(values,random=Math.random){return [...values].sort(()=>random()-.5);}
 function uniqueOptions(correct,min,max,random=Math.random){const values=new Set([correct]);while(values.size<3){values.add(Math.floor(random()*(max-min+1))+min);}return shuffle([...values],random);}
@@ -45,6 +46,7 @@ export function createKhaledRound({skillId,count=8,random=Math.random}={}){
     else if(skillId==='classify-compare'){const variant=i%4;if(variant===0)questions.push(createClassifyQuestion({multipleProperties:false,random}));else if(variant===1)questions.push(createClassifyQuestion({multipleProperties:true,random}));else if(variant===2)questions.push(createEqualityQuestion({max:5,random}));else questions.push(createCompareQuestion({max:5,random}));}
     else if(skillId==='position-pattern')questions.push(i%2===0?createPositionQuestion({random}):createPatternQuestion({random}));
     else if(skillId==='addition-foundations')questions.push(createAdditionRoundQuestion(i,{random}));
+    else if(skillId==='subtraction-foundations')questions.push(createSubtractionRoundQuestion(i,{random}));
     else throw new Error(`Unsupported Khaled skill: ${skillId}`);
   }
   return questions;

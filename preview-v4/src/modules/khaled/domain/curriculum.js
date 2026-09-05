@@ -3,8 +3,8 @@ export const KHALED_CURRICULUM_META=Object.freeze({
   grade:1,
   locale:'ar-SA',
   schoolYear:'1448-1449',
-  sourceStructure:'Saudi Grade 1 mathematics F1 structure cross-checked against Wajibati 1447; current-year official ordering remains separately verifiable',
-  verificationStatus:'early-skill structure verified; current-year official edition verification pending'
+  sourceStructure:'Saudi Grade 1 mathematics structure cross-checked against Wajibati 1447; current-year official ordering remains separately verifiable',
+  verificationStatus:'core lesson structure verified against 1447 reference; current-year official edition verification pending'
 });
 
 export const KHALED_SKILLS=Object.freeze([
@@ -13,13 +13,8 @@ export const KHALED_SKILLS=Object.freeze([
   {id:'position-pattern',chapter:3,title:'الموقع والنمط',shortTitle:'موقع • قبل وبعد • أنماط',symbol:'◆',status:'ready',activityTypes:['position-select','pattern-next'],lessons:['فوق وتحت','أعلى وأوسط وأسفل','قبل وبعد','تحديد الأنماط','إنشاء الأنماط'],goals:['يميز فوق وتحت','يميز أعلى وأوسط وأسفل','يفهم قبل وبعد','يكمل نمطًا بسيطًا','ينشئ نمطًا بسيطًا']},
   {id:'numbers-6-10',chapter:4,title:'الأعداد حتى 10',shortTitle:'6 إلى 10 • مقارنة وترتيب',symbol:'10',status:'ready',activityTypes:['count-select','spoken-number-select','number-compare','number-order','ordinal-select'],lessons:['الأعداد 6،7،8','قراءة الأعداد 6،7،8 وكتابتها','العددان 9،10','قراءة العددين 9،10 وكتابتهما','أحل المسألة: أرسم صورة','مقارنة الأعداد حتى 10','ترتيب الأعداد حتى 10','العدد الترتيبي'],goals:['يعد عناصر مجموعة حتى 10','يتعرف الأرقام 6 إلى 10 عند سماعها','يقارن عددين حتى 10','يكمل ترتيبًا عدديًا حتى 10','يميز الموضع الترتيبي']},
   {id:'numbers-11-20',chapter:5,title:'الأعداد حتى 20',shortTitle:'11 إلى 20 • مقارنة وترتيب',symbol:'20',status:'ready',activityTypes:['count-select','spoken-number-select','number-compare','number-order'],lessons:['العددان 11،12','الأعداد 13،14،15','العددان 16،17','أحل المسألة: أبحث عن نمط','الأعداد 18،19،20','مقارنة الأعداد حتى 20','ترتيب الأعداد حتى 20'],goals:['يعد عناصر من 11 إلى 20','يتعرف الأعداد حتى 20 عند سماعها','يقارن عددين حتى 20','يكمل ترتيبًا عدديًا ضمن 20']},
-  {
-    id:'addition-foundations',chapter:6,title:'الجمع',shortTitle:'قصص • جمل • تكوين • جمع رأسي',symbol:'+',status:'ready',
-    activityTypes:['visual-addition','addition-sentence','zero-addition','number-bond','vertical-addition'],
-    lessons:['قصص الجمع','تمثيل الجمع','جمل الجمع','الجمع إلى الصفر','أحل المسألة: أمثلها','تكوين الأعداد 4،5،6','تكوين الأعداد 7،8،9','تكوين الأعداد 10،11،12','الجمع الرأسي'],
-    goals:['يفهم ضم مجموعتين','يربط الصورة بجملة جمع','يفهم أن إضافة الصفر لا تغير العدد','يكمل جزءًا مفقودًا لتكوين عدد','يقرأ الجمع الرأسي ويجد الناتج']
-  },
-  {id:'subtraction-foundations',title:'الطرح',shortTitle:'الطرح',symbol:'−',status:'later',activityTypes:['visual-subtraction'],goals:['يفهم الأخذ من مجموعة','يجد ناتج طرح بسيط ضمن المهارات الأساسية']}
+  {id:'addition-foundations',chapter:6,title:'الجمع',shortTitle:'قصص • جمل • تكوين • جمع رأسي',symbol:'+',status:'ready',activityTypes:['visual-addition','addition-sentence','zero-addition','number-bond','vertical-addition'],lessons:['قصص الجمع','تمثيل الجمع','جمل الجمع','الجمع إلى الصفر','أحل المسألة: أمثلها','تكوين الأعداد 4،5،6','تكوين الأعداد 7،8،9','تكوين الأعداد 10،11،12','الجمع الرأسي'],goals:['يفهم ضم مجموعتين','يربط الصورة بجملة جمع','يفهم أن إضافة الصفر لا تغير العدد','يكمل جزءًا مفقودًا لتكوين عدد','يقرأ الجمع الرأسي ويجد الناتج']},
+  {id:'subtraction-foundations',chapter:7,title:'الطرح',shortTitle:'قصص • جمل • صفر والكل • طرح رأسي',symbol:'−',status:'ready',activityTypes:['visual-subtraction','subtraction-sentence','zero-whole-subtraction','vertical-subtraction'],lessons:['قصص الطرح','تمثيل الطرح','جمل الطرح','طرح الصفر والكل','أحل المسألة: أرسم صورة','الطرح من الأعداد 4،5،6','الطرح من الأعداد 7،8،9','الطرح من الأعداد 10،11،12','الطرح الرأسي'],goals:['يفهم الأخذ من مجموعة','يربط قصة الطرح بجملة عددية','يفهم طرح الصفر وطرح الكل','يطرح ضمن 12','يقرأ الطرح الرأسي ويجد الناتج']}
 ]);
 
 export function getKhaledSkill(id){return KHALED_SKILLS.find(skill=>skill.id===id)||null;}
