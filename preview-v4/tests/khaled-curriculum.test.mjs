@@ -46,7 +46,26 @@ test('chapter seven maps subtraction stories, zero and whole, and vertical subtr
   assert.deepEqual(skill.activityTypes,['visual-subtraction','subtraction-sentence','zero-whole-subtraction','vertical-subtraction']);
 });
 
-test('seven core Khaled skill groups are playable through subtraction',()=>{
+test('chapter eight maps the five addition and subtraction strategies one-to-one',()=>{
+  const skill=getKhaledSkill('add-sub-strategies');
+  assert.equal(skill.chapter,8);
+  assert.deepEqual(skill.lessons,[
+    'الجمع بالعد التصاعدي',
+    'الجمع باستعمال خط الأعداد',
+    'الطرح بالعد التنازلي',
+    'أحل المسألة: أكتب جملة عددية',
+    'الطرح باستعمال خط الأعداد'
+  ]);
+  assert.deepEqual(skill.activityTypes,[
+    'count-on-addition',
+    'number-line-addition',
+    'count-back-subtraction',
+    'number-sentence',
+    'number-line-subtraction'
+  ]);
+});
+
+test('eight core Khaled skill groups are playable through arithmetic strategies',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations']);
+  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies']);
 });

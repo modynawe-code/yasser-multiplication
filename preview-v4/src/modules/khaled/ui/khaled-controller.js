@@ -6,6 +6,7 @@ import { createFeedbackAudio } from '../../../ui/audio/feedback-audio.js';
 import { createKhaledSceneController } from './khaled-scene-controller.js';
 import { isAdditionQuestion, renderAdditionQuestion } from './khaled-addition-renderer.js';
 import { isSubtractionQuestion, renderSubtractionQuestion } from './khaled-subtraction-renderer.js';
+import { isStrategiesQuestion, renderStrategiesQuestion } from './khaled-strategies-renderer.js';
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -38,7 +39,7 @@ export function createKhaledController({repository,onExitToHub}={}){
     byId('khaledSessionMeta').textContent=`${session.index+1} من ${session.questions.length}`;
     byId('khaledSessionProgress').style.width=`${session.index/session.questions.length*100}%`;
     byId('khaledPrompt').textContent=question.prompt;byId('khaledFeedback').textContent='';
-    const visual=byId('khaledVisual'),answers=byId('khaledAnswers');answers.innerHTML='';answers.classList.remove('khaled-visual-answers');visuals.question();
+    const visual=byId('khaledVisual'),answers=byId('khaledAnswers');answers.innerHTML='';answers.classList.remove('khaled-visual-answers','khaled-equation-answers');visuals.question();
 
     if(question.type==='count-select'){
       visual.innerHTML=`<div class="khaled-dot-group single ${question.count>10?'large':''}">${dots(question.count)}</div>`;question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
@@ -64,6 +65,8 @@ export function createKhaledController({repository,onExitToHub}={}){
       renderAdditionQuestion({question,visual,answers,createAnswerButton:answerButton});
     }else if(isSubtractionQuestion(question)){
       renderSubtractionQuestion({question,visual,answers,createAnswerButton:answerButton});
+    }else if(isStrategiesQuestion(question)){
+      renderStrategiesQuestion({question,visual,answers,createAnswerButton:answerButton});
     }else visual.innerHTML='';
     speakQuestion(question);
   }

@@ -112,7 +112,7 @@ test('chapter-one round covers all four represented lesson activity families',()
 });
 
 test('all ready Khaled skills produce eight-question rounds',()=>{
-  for(const skillId of ['numbers-0-5','numbers-6-10','numbers-11-20','classify-compare','position-pattern','addition-foundations']){
+  for(const skillId of ['numbers-0-5','numbers-6-10','numbers-11-20','classify-compare','position-pattern','addition-foundations','subtraction-foundations','add-sub-strategies']){
     const round=createKhaledRound({skillId,count:8});
     assert.equal(round.length,8);
     assert.ok(round.every(question=>question.skillId===skillId));
