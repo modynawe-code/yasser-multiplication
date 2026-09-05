@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-8`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-9`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-system.css',
@@ -31,8 +31,13 @@ self.addEventListener('install',event=>{
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
     const keys=await caches.keys();
-    await Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_VERSION).map(key=>caches.delete(key)));
+    const oldKeys=keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_VERSION);
+    await Promise.all(oldKeys.map(key=>caches.delete(key)));
     await self.clients.claim();
+    if(oldKeys.length){
+      const windows=await self.clients.matchAll({type:'window'});
+      await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null)));
+    }
   })());
 });
 
