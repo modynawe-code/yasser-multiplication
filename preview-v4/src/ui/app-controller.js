@@ -170,6 +170,7 @@ export function createAppController({repository}){
 
     const weak=getWeakQuestions(session);
     session.lastWeak=weak;
+    session.completed=true;
     $('weakTags').innerHTML=weak.length
       ?weak.map(item=>`<span class="tag">${item.table}×${item.multiplier} • ${item.count} خطأ</span>`).join('')
       :'<span class="tag">بدون أخطاء ✓</span>';
@@ -180,12 +181,17 @@ export function createAppController({repository}){
     audio.achievement();
   }
 
-  function exitSession(){
-    if(session?.answers.length){
+  function leave(){
+    if(session&&!session.completed&&session.answers.length){
       state.sessions.unshift(buildSessionRecord(session,{incomplete:true}));
       state.sessions=state.sessions.slice(0,100);
       persist();
     }
+    session=null;
+  }
+
+  function exitSession(){
+    leave();
     goHome();
   }
 
@@ -285,6 +291,8 @@ export function createAppController({repository}){
       show('introView');
       visuals.render('intro');
     },
+    enterHome:goHome,
+    leave,
     getState(){return state;}
   };
 }
