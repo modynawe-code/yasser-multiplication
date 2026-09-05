@@ -10,6 +10,18 @@ const FACT_LEVEL_LABELS={
   review:'يحتاج مراجعة'
 };
 
+function getTableStatus(state,table){
+  const data=state.tables[table],mastery=getTableMastery(state,table);
+  if(data.attempts===0)return{label:'لم يبدأ',className:'none'};
+  if(mastery>=80)return{label:'متقن',className:'master'};
+  if(mastery>=40)return{label:'يتقدم',className:'practice'};
+  return{label:'يحتاج تدريب',className:'practice'};
+}
+
+function formatSessionDate(value){
+  try{return new Date(value).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'});}catch{return new Date(value).toLocaleString('ar-SA');}
+}
+
 export function selectedText(selected){return selected.map(n=>`جدول ${n}`).join(' + ');}
 
 export function renderHome({state,$,all}){
@@ -50,27 +62,37 @@ export function renderParentOverview(state){
 
 export function renderReportTable(state){
   const rows=TABLES.map(table=>{
-    const data=state.tables[table],mastery=getTableMastery(state,table),accuracy=getTableAccuracy(state,table);
-    const status=data.attempts===0?['لم يبدأ','none']:mastery>=80?['متقن','master']:mastery>=40?['يتقدم','practice']:['يحتاج تدريب','practice'];
-    return`<tr><td><b>جدول ${table}</b></td><td>${data.attempts}</td><td>${data.wrong}</td><td>${accuracy}%</td><td>${mastery}%</td><td class="level ${status[1]}">${status[0]}</td></tr>`;
+    const data=state.tables[table],mastery=getTableMastery(state,table),accuracy=getTableAccuracy(state,table),status=getTableStatus(state,table);
+    return`<tr><td><b>جدول ${table}</b></td><td>${data.attempts}</td><td>${data.wrong}</td><td>${accuracy}%</td><td>${mastery}%</td><td class="level ${status.className}">${status.label}</td></tr>`;
   }).join('');
-  return`<div class="table-scroll"><table class="table-report"><thead><tr><th>الجدول</th><th>المحاولات</th><th>الأخطاء</th><th>الدقة الحالية</th><th>الإتقان المؤكد</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const cards=TABLES.map(table=>{
+    const data=state.tables[table],mastery=getTableMastery(state,table),accuracy=getTableAccuracy(state,table),status=getTableStatus(state,table);
+    return`<article class="mobile-table-card">
+      <div class="mobile-table-head"><strong>جدول ${table}</strong><span class="level ${status.className}">${status.label}</span></div>
+      <div class="mobile-table-metrics"><span>محاولات <b>${data.attempts}</b></span><span>أخطاء <b>${data.wrong}</b></span><span>دقة <b>${accuracy}%</b></span><span>إتقان <b>${mastery}%</b></span></div>
+    </article>`;
+  }).join('');
+  return`<div class="table-scroll report-table-desktop"><table class="table-report"><thead><tr><th>الجدول</th><th>المحاولات</th><th>الأخطاء</th><th>الدقة الحالية</th><th>الإتقان المؤكد</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table></div><div class="mobile-table-list">${cards}</div>`;
 }
 
 export function renderParentDetails(state){
+  const startedTables=TABLES.filter(table=>state.tables[table].attempts>0);
+  const unstartedTables=TABLES.filter(table=>state.tables[table].attempts===0);
+  const startedMarkup=startedTables.length?startedTables.map(table=>{
+    const mastery=getTableMastery(state,table);
+    const facts=Array.from({length:10},(_,i)=>{
+      const multiplier=i+1,fact=state.tables[table].facts[multiplier],level=getFactMasteryLevel(fact),label=FACT_LEVEL_LABELS[level];
+      return`<article class="fact-status-card ${level}">
+        <div class="fact-status-head"><strong>${table} × ${multiplier}</strong><span>${label}</span></div>
+        <div class="fact-status-meta"><span>${fact.attempts} محاولة</span><span>${fact.wrong} خطأ تاريخي</span></div>
+      </article>`;
+    }).join('');
+    return`<section class="table-detail-section"><div class="table-detail-title"><h3>جدول ${table}</h3><span>إتقان مؤكد ${mastery}%</span></div><div class="fact-status-grid">${facts}</div></section>`;
+  }).join(''):'<div class="empty-report-note">لم يبدأ ياسر التدريب على أي جدول حتى الآن.</div>';
+  const unstartedMarkup=unstartedTables.length?`<section class="unstarted-tables"><strong>جداول لم يبدأ بها بعد</strong><div>${unstartedTables.map(table=>`<span>جدول ${table}</span>`).join('')}</div></section>`:'';
   return`<h2>تفاصيل الجداول</h2>
-    <p class="muted">كل مسألة لها سجل مستقل. الأخطاء التاريخية لا تُحذف عندما تصبح الإجابات صحيحة لاحقًا.</p>
-    ${TABLES.map(table=>{
-      const mastery=getTableMastery(state,table);
-      const facts=Array.from({length:10},(_,i)=>{
-        const multiplier=i+1,fact=state.tables[table].facts[multiplier],level=getFactMasteryLevel(fact),label=FACT_LEVEL_LABELS[level];
-        return`<article class="fact-status-card ${level}">
-          <div class="fact-status-head"><strong>${table} × ${multiplier}</strong><span>${label}</span></div>
-          <div class="fact-status-meta"><span>${fact.attempts} محاولة</span><span>${fact.wrong} خطأ تاريخي</span></div>
-        </article>`;
-      }).join('');
-      return`<section class="table-detail-section"><div class="table-detail-title"><h3>جدول ${table}</h3><span>إتقان مؤكد ${mastery}%</span></div><div class="fact-status-grid">${facts}</div></section>`;
-    }).join('')}`;
+    <p class="muted">نعرض هنا الجداول التي تدرب عليها ياسر بالتفصيل. الأخطاء التاريخية لا تُحذف عندما تصبح الإجابات صحيحة لاحقًا.</p>
+    ${startedMarkup}${unstartedMarkup}`;
 }
 
 export function renderSessions(state){
@@ -82,9 +104,18 @@ export function renderSessions(state){
   const recentAccuracy=totalAnswers?Math.round((totalCorrect/totalAnswers)*100):0;
   const rows=recent.map(session=>{
     const accuracy=session.completed?Math.round((session.correct/session.completed)*100):0,type=session.mode==='exam'?'اختبار':'تدريب';
-    return`<tr><td>${new Date(session.endedAt).toLocaleString('ar-SA')}</td><td>${type}${session.incomplete?' • غير مكتمل':''}</td><td>${(session.selected||[]).join(' + ')}</td><td>${session.completed}</td><td>${session.correct}</td><td>${session.wrong}</td><td>${accuracy}%</td></tr>`;
+    return`<tr><td>${formatSessionDate(session.endedAt)}</td><td>${type}${session.incomplete?' • غير مكتمل':''}</td><td>${selectedText(session.selected||[])}</td><td>${session.completed}</td><td>${session.correct}</td><td>${session.wrong}</td><td>${accuracy}%</td></tr>`;
+  }).join('');
+  const cards=recent.map(session=>{
+    const accuracy=session.completed?Math.round((session.correct/session.completed)*100):0,type=session.mode==='exam'?'اختبار':'تدريب';
+    return`<article class="session-card-mobile">
+      <div class="session-card-head"><strong>${type}</strong><span>${accuracy}%</span></div>
+      <div class="session-card-date">${formatSessionDate(session.endedAt)}${session.incomplete?' • غير مكتمل':''}</div>
+      <div class="session-card-tables">${selectedText(session.selected||[])}</div>
+      <div class="session-card-stats"><span>محاولات <b>${session.completed}</b></span><span>صحيح <b>${session.correct}</b></span><span>أخطاء <b>${session.wrong}</b></span></div>
+    </article>`;
   }).join('');
   return`<h2>آخر الجلسات</h2>
     <div class="session-overview"><div><span>الجلسات المعروضة</span><strong>${recent.length}</strong></div><div><span>المكتملة</span><strong>${completed}</strong></div><div><span>دقة هذه الجلسات</span><strong>${recentAccuracy}%</strong></div></div>
-    <div class="table-scroll"><table class="table-report"><thead><tr><th>الوقت</th><th>النوع</th><th>الجداول</th><th>محاولات</th><th>صحيح</th><th>أخطاء</th><th>الدقة</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <div class="table-scroll sessions-table-desktop"><table class="table-report"><thead><tr><th>الوقت</th><th>النوع</th><th>الجداول</th><th>محاولات</th><th>صحيح</th><th>أخطاء</th><th>الدقة</th></tr></thead><tbody>${rows}</tbody></table></div><div class="session-list-mobile">${cards}</div>`;
 }
