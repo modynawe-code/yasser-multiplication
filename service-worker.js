@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-7`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-8`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-system.css',
@@ -8,9 +8,47 @@ const APP_SHELL=[
   './src/infrastructure/storage/local-storage-repository.js','./src/platform/pwa/register-service-worker.js',
   './src/ui/dom.js','./src/ui/renderers.js','./src/ui/app-controller.js',
   './src/ui/visual/character-assets.js','./src/ui/visual/scene-manifest.js','./src/ui/visual/scene-controller.js',
+  './assets/characters/yasser-welcome.webp','./assets/assistant/assistant-welcome.webp',
   './assets/visual/yasser/welcome.b64.txt','./assets/visual/yasser/thinking.b64.txt','./assets/visual/yasser/encourage.b64.txt','./assets/visual/yasser/celebrate.b64.txt','./assets/visual/yasser/mastered.b64.txt',
   './assets/visual/assistant/idle.b64.txt','./assets/visual/assistant/thinking.b64.txt','./assets/visual/assistant/celebrate.b64.txt'
 ];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_VERSION).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()));});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_VERSION).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{if(!response||response.status!==200||response.type==='opaque')return response;const copy=response.clone();caches.open(CACHE_VERSION).then(cache=>cache.put(event.request,copy));return response;}).catch(()=>event.request.mode==='navigate'?caches.match('./index.html'):Promise.reject(new Error('offline')))));});
+
+function absolute(path){return new URL(path,self.location.href).href;}
+
+self.addEventListener('install',event=>{
+  event.waitUntil((async()=>{
+    const cache=await caches.open(CACHE_VERSION);
+    for(const path of APP_SHELL){
+      const request=new Request(absolute(path),{cache:'reload'});
+      const response=await fetch(request);
+      if(!response.ok)throw new Error(`Precache failed: ${path} ${response.status}`);
+      await cache.put(request,response);
+    }
+    await self.skipWaiting();
+  })());
+});
+
+self.addEventListener('activate',event=>{
+  event.waitUntil((async()=>{
+    const keys=await caches.keys();
+    await Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_VERSION).map(key=>caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch',event=>{
+  if(event.request.method!=='GET')return;
+  event.respondWith((async()=>{
+    const cache=await caches.open(CACHE_VERSION);
+    try{
+      const response=await fetch(event.request,{cache:'no-store'});
+      if(response&&response.status===200&&response.type!=='opaque')await cache.put(event.request,response.clone());
+      return response;
+    }catch{
+      const cached=await cache.match(event.request)||await caches.match(event.request);
+      if(cached)return cached;
+      if(event.request.mode==='navigate')return cache.match(absolute('./index.html'));
+      return Response.error();
+    }
+  })());
+});
