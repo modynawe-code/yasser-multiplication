@@ -13,8 +13,9 @@ export function createSceneController({getElement=document.getElementById.bind(d
   let current='home';
   let renderToken=0;
 
-  function hideAll(){
-    for(const target of Object.values(TARGETS)){
+  function hideOtherTargets(activeTarget){
+    for(const [targetName,target] of Object.entries(TARGETS)){
+      if(targetName===activeTarget)continue;
       for(const id of Object.values(target)){
         const image=getElement(id);
         if(image)image.hidden=true;
@@ -22,13 +23,30 @@ export function createSceneController({getElement=document.getElementById.bind(d
     }
   }
 
-  function showImage(target,character,state,token){
+  function hideCharacter(target,character){
     const id=TARGETS[target]?.[character];
     const image=id?getElement(id):null;
-    if(!image||!state)return;
-    image.hidden=false;
+    if(image)image.hidden=true;
+  }
+
+  async function showImage(target,character,state,token){
+    const id=TARGETS[target]?.[character];
+    const image=id?getElement(id):null;
+    if(!image||!state)return false;
+
     image.dataset.visualToken=String(token);
-    setVisualImage(image,{character,state,token});
+    const hadVisibleSource=!image.hidden&&Boolean(image.getAttribute('src'));
+    const loaded=await setVisualImage(image,{character,state,token});
+
+    if(image.dataset.visualToken!==String(token))return false;
+
+    if(loaded||hadVisibleSource||image.getAttribute('src')){
+      image.hidden=false;
+      return true;
+    }
+
+    image.hidden=true;
+    return false;
   }
 
   function render(name){
@@ -37,14 +55,25 @@ export function createSceneController({getElement=document.getElementById.bind(d
     clearTimeout(timer);
     renderToken+=1;
     const token=renderToken;
-    hideAll();
-    if(scene.target){
-      showImage(scene.target,'yasser',scene.yasser,token);
-      showImage(scene.target,'assistant',scene.assistant,token);
+
+    if(!scene.target){
+      hideOtherTargets(null);
+      return 0;
     }
+
+    hideOtherTargets(scene.target);
+
+    if(scene.yasser)showImage(scene.target,'yasser',scene.yasser,token);
+    else hideCharacter(scene.target,'yasser');
+
+    if(scene.assistant)showImage(scene.target,'assistant',scene.assistant,token);
+    else hideCharacter(scene.target,'assistant');
+
     if(scene.duration&&scene.returnTo){
       timer=setTimeout(()=>render(scene.returnTo),scene.duration);
     }
+
+    return scene.duration||0;
   }
 
   function result(score){
@@ -56,8 +85,11 @@ export function createSceneController({getElement=document.getElementById.bind(d
   function warm(){
     preloadVisualAssets([
       {character:'yasser',state:'welcome'},
+      {character:'yasser',state:'thinking'},
+      {character:'yasser',state:'encourage'},
       {character:'assistant',state:'idle'},
-      {character:'assistant',state:'thinking'}
+      {character:'assistant',state:'thinking'},
+      {character:'assistant',state:'celebrate'}
     ]);
   }
 
