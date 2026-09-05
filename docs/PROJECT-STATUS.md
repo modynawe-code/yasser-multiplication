@@ -2,7 +2,7 @@
 
 Updated: 2026-09-05
 
-## Complete in `main`
+## Complete in `main` after the current asset PR merges
 
 - Shared learner hub for Yasser and Khaled.
 - Yasser multiplication 1–10 training, exam, mastery, feedback audio, parent reporting, and PWA support.
@@ -13,6 +13,8 @@ Updated: 2026-09-05
 - Append-only local attempt ledger with stable attempt IDs and migration baselines.
 - Cloudflare Worker + D1 backend source with real parent authentication, idempotent sync/restore, login throttling, and database-level UPDATE/DELETE protection for attempt history.
 - CI for the learning app and backend contracts.
+- Seven approved original Khaled PNG assets committed byte-for-byte with SHA-256 regression checks; no resizing, recompression, cropping, or re-encoding.
+- Khaled artwork is loaded by scene: only welcome and thinking are warmed initially, while result/celebration states load on first use and enter the normal runtime cache.
 
 ## Curriculum verification
 
@@ -22,9 +24,8 @@ Updated: 2026-09-05
 
 ## Pending release gates
 
-1. **Original Khaled PNG binaries** — seven source images are catalogued externally with semantic names/checksums, but the original binary files are not yet committed because the current GitHub connector cannot upload local binary files directly. Do not substitute compressed/re-encoded images.
-2. **Cloud production deployment** — create the real D1 database/binding, run migrations, deploy the Worker, configure exact allowed origins, then configure the frontend API URL. Until this is done, browser storage is still the only live persistence layer.
-3. **Physical Galaxy Tab validation** — manually verify portrait/landscape, audio, touch, PWA install, offline/reconnect, learner switching, interrupted-session persistence, and all Khaled curriculum groups on the actual Samsung tablet. CI only provides automated guards.
+1. **Cloud production deployment** — create the real D1 database/binding, run migrations, deploy the Worker, configure exact allowed origins, then configure the frontend API URL. Until this is done, browser storage is still the only live persistence layer.
+2. **Physical Galaxy Tab validation** — manually verify portrait/landscape, audio, touch, PWA install, offline/reconnect, learner switching, interrupted-session persistence, and all Khaled curriculum groups on the actual Samsung tablet. CI only provides automated guards.
 
 ## Repository rule
 
