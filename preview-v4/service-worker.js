@@ -1,12 +1,12 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-11`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-12`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-system.css',
   './src/main.js','./src/domain/constants.js','./src/domain/state-model.js','./src/domain/mastery.js','./src/domain/question-bank.js',
   './src/application/attempt-service.js','./src/application/training-engine.js','./src/application/progress-service.js',
   './src/infrastructure/storage/local-storage-repository.js','./src/platform/pwa/register-service-worker.js',
-  './src/ui/dom.js','./src/ui/renderers.js','./src/ui/app-controller.js',
+  './src/ui/dom.js','./src/ui/renderers.js','./src/ui/app-controller.js','./src/ui/audio/feedback-audio.js',
   './src/ui/visual/character-assets.js','./src/ui/visual/scene-manifest.js','./src/ui/visual/scene-controller.js',
   './assets/characters/yasser-welcome.webp','./assets/assistant/assistant-welcome.webp',
   './assets/visual/yasser/welcome.b64.txt','./assets/visual/yasser/thinking.b64.txt','./assets/visual/yasser/encourage.b64.txt','./assets/visual/yasser/celebrate.b64.txt','./assets/visual/yasser/mastered.b64.txt',
