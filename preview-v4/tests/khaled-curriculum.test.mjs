@@ -67,7 +67,14 @@ test('chapter ten maps length, nonstandard units, mass and capacity',()=>{
   assert.deepEqual(skill.activityTypes,['length-compare','nonstandard-length','measurement-guess-check','mass-compare','capacity-compare']);
 });
 
-test('ten Khaled skill groups are playable through measurement',()=>{
+test('chapter eleven maps tens, hundred chart and skip counting',()=>{
+  const skill=getKhaledSkill('number-patterns');
+  assert.equal(skill.chapter,11);
+  assert.deepEqual(skill.lessons,['العد بالعشرات','أحل المسألة: أبحث عن نمط','لوحة المئة','العد القفزي: اثنينات، خمسات، عشرات']);
+  assert.deepEqual(skill.activityTypes,['count-by-tens','find-number-pattern','hundred-chart','skip-count']);
+});
+
+test('eleven Khaled skill groups are playable through number patterns',()=>{
   const ready=getReadyKhaledSkills().map(skill=>skill.id);
-  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value','measurement']);
+  assert.deepEqual(ready,['classify-compare','numbers-0-5','position-pattern','numbers-6-10','numbers-11-20','addition-foundations','subtraction-foundations','add-sub-strategies','place-value','measurement','number-patterns']);
 });
