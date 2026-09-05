@@ -18,7 +18,7 @@ test('hub exposes two learner routes and keeps Khaled images decoupled',async()=
   assert.match(shell,/id="hubKhaled"/);
   assert.match(shell,/جدول الضرب 1–10/);
   assert.match(shell,/رياضيات أول ابتدائي/);
-  assert.match(shell,/عد • مقارنة • أنماط • أعداد/);
+  assert.match(shell,/عد • مقارنة • أنماط • أعداد • جمع/);
   assert.doesNotMatch(shell,/assets\/.*khaled.*\.(png|webp)/i);
   assert.doesNotMatch(shell,/صور خالد ستضاف لاحقًا/);
 });
@@ -46,6 +46,18 @@ test('Khaled mode hides Yasser chrome and preserves incomplete sessions',async()
   assert.match(khaled,/classList\.remove\('khaled-mode'\)/);
   assert.match(khaled,/session\.completed=true/);
   assert.match(khaled,/storeSession\(\{incomplete:true\}\)/);
+});
+
+test('Khaled UI renders number-order and visual-addition activities responsively',async()=>{
+  const css=await read('src/modules/hub/learning-hub.css');
+  const khaled=await read('src/modules/khaled/ui/khaled-controller.js');
+  assert.match(khaled,/question\.type==='number-order'/);
+  assert.match(khaled,/question\.type==='visual-addition'/);
+  assert.match(khaled,/khaled-number-line/);
+  assert.match(khaled,/khaled-addition/);
+  assert.match(css,/\.khaled-number-line/);
+  assert.match(css,/\.khaled-addition/);
+  assert.match(css,/\.khaled-dot-group\.large/);
 });
 
 test('offline shell includes hub, Khaled and speech modules',async()=>{
