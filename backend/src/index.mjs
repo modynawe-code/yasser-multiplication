@@ -78,6 +78,16 @@ async function logout(request,env,auth){
   return response(request,env,200,{ok:true});
 }
 
+async function syncBaseline(request,env,auth){
+  const body=await readJson(request),learnerId=String(body?.learnerId||''),state=body?.state;
+  if(!['yasser','khaled'].includes(learnerId)||!state||typeof state!=='object')return response(request,env,400,{error:'invalid_baseline'});
+  let stateJson;try{stateJson=JSON.stringify(state);}catch{return response(request,env,400,{error:'invalid_baseline'});}
+  if(stateJson.length>2000000)return response(request,env,413,{error:'baseline_too_large'});
+  const learners=await learnerMap(env,auth.parent_id),ownedId=learners[learnerId];
+  if(!ownedId)return response(request,env,403,{error:'learner_not_owned'});
+  await env.DB.prepare('INSERT OR IGNORE INTO learner_baselines(learner_id,state_json,created_at) VALUES(?,?,?)').bind(ownedId,stateJson,nowIso()).run();
+  return response(request,env,200,{ok:true});
+}
 async function syncAttempts(request,env,auth){
   const parsed=validateAttemptBatch(await readJson(request));if(!parsed.ok)return response(request,env,400,{error:parsed.error});
   const learners=await learnerMap(env,auth.parent_id),receivedAt=nowIso(),statements=[];
@@ -95,9 +105,11 @@ async function syncSession(request,env,auth){
   return response(request,env,200,{ok:true});
 }
 async function snapshot(request,env,auth){
+  const baselines=await env.DB.prepare(`SELECT l.slug AS learnerId,b.state_json AS stateJson FROM learner_baselines b JOIN learners l ON l.id=b.learner_id WHERE l.parent_id=?`).bind(auth.parent_id).all();
   const attempts=await env.DB.prepare(`SELECT a.attempt_id AS attemptId,l.slug AS learnerId,a.skill_id AS skillId,a.table_number AS "table",a.multiplier,a.question_id AS questionId,a.question_type AS questionType,a.answer_json AS answerJson,a.correct_answer_json AS correctAnswerJson,a.is_correct AS isCorrect,a.response_ms AS responseMs,a.client_created_at AS createdAt FROM attempts a JOIN learners l ON l.id=a.learner_id WHERE l.parent_id=? ORDER BY a.client_created_at ASC LIMIT 10000`).bind(auth.parent_id).all();
   const sessions=await env.DB.prepare(`SELECT s.session_id AS sessionId,l.slug AS learnerId,s.skill_id AS skillId,s.mode,s.started_at AS startedAt,s.ended_at AS endedAt,s.correct,s.wrong,s.total,s.incomplete FROM learning_sessions s JOIN learners l ON l.id=s.learner_id WHERE l.parent_id=? ORDER BY COALESCE(s.ended_at,s.started_at) DESC LIMIT 500`).bind(auth.parent_id).all();
-  return response(request,env,200,{attempts:(attempts.results||[]).map(item=>({...item,answer:JSON.parse(item.answerJson||'null'),correctAnswer:JSON.parse(item.correctAnswerJson||'null'),isCorrect:Boolean(item.isCorrect)})),sessions:sessions.results||[]});
+  const baselineMap={};for(const item of baselines.results||[]){try{baselineMap[item.learnerId]=JSON.parse(item.stateJson);}catch{}}
+  return response(request,env,200,{baselines:baselineMap,attempts:(attempts.results||[]).map(item=>({...item,answer:JSON.parse(item.answerJson||'null'),correctAnswer:JSON.parse(item.correctAnswerJson||'null'),isCorrect:Boolean(item.isCorrect)})),sessions:sessions.results||[]});
 }
 
 export default{
@@ -110,6 +122,7 @@ export default{
     const auth=await authenticate(request,env);if(!auth)return response(request,env,401,{error:'unauthorized'});
     if(path==='/v1/auth/logout'&&request.method==='POST')return logout(request,env,auth);
     if(path==='/v1/me'&&request.method==='GET')return response(request,env,200,{parent:{email:auth.email},learners:await learnersForParent(env,auth.parent_id)});
+    if(path==='/v1/sync/baseline'&&request.method==='POST')return syncBaseline(request,env,auth);
     if(path==='/v1/sync/attempts'&&request.method==='POST')return syncAttempts(request,env,auth);
     if(path==='/v1/sync/session'&&request.method==='POST')return syncSession(request,env,auth);
     if(path==='/v1/sync/snapshot'&&request.method==='GET')return snapshot(request,env,auth);
