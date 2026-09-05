@@ -1,5 +1,5 @@
 import { DATA_SCHEMA_VERSION, DEFAULT_SELECTED_TABLES, TABLES } from './constants.js';
-import { createLedgerBaseline, normalizeAttemptLog, normalizeLedgerBaseline, summarizeAttemptLedger } from '../shared/data/attempt-ledger.js';
+import { appendAttemptEvent, createLedgerBaseline, normalizeAttemptLog, normalizeLedgerBaseline, summarizeAttemptLedger } from '../shared/data/attempt-ledger.js';
 
 export function createBlankFact(){
   return {attempts:0,correct:0,wrong:0,recent:[],last:null,lastResponseMs:null,responseTimes:[]};
@@ -62,4 +62,16 @@ export function normalizeState(candidate){
   state.totalWrong=Math.max(state.totalWrong,ledgerTotals.wrong);
   state.schemaVersion=DATA_SCHEMA_VERSION;
   return state;
+}
+
+export function applyYasserAttemptEvent(state,event){
+  if(!event?.attemptId||state.attemptLog?.some(item=>item.attemptId===event.attemptId))return false;
+  const tableNumber=Number(event.table),multiplier=Number(event.multiplier);
+  if(!TABLES.includes(tableNumber)||!Number.isInteger(multiplier)||multiplier<1||multiplier>10)return false;
+  const table=state.tables[tableNumber],fact=table.facts[multiplier],isCorrect=Boolean(event.isCorrect),createdAt=event.createdAt||new Date().toISOString();
+  table.attempts++;state.totalAttempts++;fact.attempts++;fact.last=createdAt;fact.recent=[...fact.recent,isCorrect].slice(-5);
+  const responseMs=Number.isFinite(Number(event.responseMs))?Math.max(0,Number(event.responseMs)):null;
+  fact.lastResponseMs=responseMs;if(responseMs!==null)fact.responseTimes=[...fact.responseTimes,responseMs].slice(-20);
+  if(isCorrect){table.correct++;state.totalCorrect++;fact.correct++;}else{table.wrong++;state.totalWrong++;fact.wrong++;}
+  return appendAttemptEvent(state,{...event,table:tableNumber,multiplier,learnerId:'yasser',isCorrect,createdAt});
 }
