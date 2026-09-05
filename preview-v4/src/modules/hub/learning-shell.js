@@ -34,7 +34,6 @@ export function ensureLearningShell(){
             <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>عد • مقارنة • أنماط • جمع</small></div>
           </button>
         </div>
-        <p class="hub-footnote">صور خالد ستضاف لاحقًا بدون تغيير هيكل المسار.</p>
       </div>
     </section>
 
