@@ -7,6 +7,7 @@ function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
 function byId(id){return document.getElementById(id);}
 function dots(count){return Array.from({length:count},()=>'<span class="khaled-dot" aria-hidden="true"></span>').join('');}
+function shapes(items,className=''){return items.map(item=>`<span class="khaled-shape ${className}" aria-hidden="true">${item}</span>`).join('');}
 
 export function createKhaledController({repository,onExitToHub}={}){
   let state=repository.load();
@@ -63,6 +64,15 @@ export function createKhaledController({repository,onExitToHub}={}){
     }else if(question.type==='compare-groups'){
       visual.innerHTML=`<div class="khaled-compare"><button class="khaled-group-choice" data-answer="left">${dots(question.left)}</button><button class="khaled-group-choice" data-answer="right">${dots(question.right)}</button></div>`;
       visual.querySelectorAll('[data-answer]').forEach(button=>button.onclick=()=>submit(button.dataset.answer,button));
+    }else if(question.type==='position-select'){
+      const layout=question.layout==='horizontal-sequence'?'horizontal':'vertical';
+      visual.innerHTML=`<div class="khaled-position ${layout}">${shapes(question.items)}</div>`;
+      question.options.forEach(value=>answers.appendChild(answerButton(value,value)));
+    }else if(question.type==='pattern-next'){
+      visual.innerHTML=`<div class="khaled-pattern" dir="ltr">${shapes(question.items)}<span class="khaled-pattern-missing" aria-hidden="true">؟</span></div>`;
+      question.options.forEach(value=>answers.appendChild(answerButton(value,value)));
+    }else{
+      visual.innerHTML='';
     }
   }
 
