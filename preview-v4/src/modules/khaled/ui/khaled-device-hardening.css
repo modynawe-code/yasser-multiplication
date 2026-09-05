@@ -1,0 +1,33 @@
+/* Tablet/device hardening for Khaled. Kept separate from curriculum/activity styles. */
+body.khaled-mode{overscroll-behavior-y:contain}
+body.khaled-mode button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body.khaled-mode button:disabled{cursor:default}
+.khaled-answer:disabled,.khaled-group-choice:disabled{opacity:.56}
+.khaled-zero-visual{min-width:210px;min-height:170px;padding:18px 22px;border:2px dashed #cbd5ef;border-radius:24px;background:#f8faff;display:grid;grid-template-columns:auto auto;grid-template-areas:'number icon' 'label label';place-content:center;align-items:center;gap:4px 12px}
+.khaled-zero-visual strong{grid-area:number;font-size:64px;line-height:1;color:var(--primary)}
+.khaled-zero-visual>span{grid-area:icon;font-size:46px;line-height:1;color:var(--muted)}
+.khaled-zero-visual small{grid-area:label;margin-top:8px;font-size:16px;font-weight:900;color:var(--muted)}
+.khaled-feedback[aria-live]{max-width:620px}
+.khaled-answer,.khaled-group-choice,.hear-question,.khaled-skill,.learner-card{min-inline-size:48px}
+.khaled-answer,.khaled-group-choice,.hear-question{touch-action:manipulation}
+
+@media (orientation:landscape) and (min-width:700px) and (max-height:900px){
+  .khaled-session-wrap{max-width:1040px}
+  .khaled-question-card{min-height:calc(100dvh - 150px);padding:14px 22px}
+  .khaled-question-card h3{font-size:24px;margin:10px 0}
+  .khaled-visual{min-height:125px;max-height:300px}
+  .khaled-answers{grid-template-columns:repeat(3,minmax(110px,1fr));max-width:640px}
+  .khaled-answer{min-height:64px;font-size:26px}
+  .khaled-feedback{margin-top:10px}
+  .khaled-session-character{max-height:118px}
+}
+
+@media (max-width:700px){
+  .khaled-zero-visual{min-width:180px;min-height:145px}
+  .khaled-zero-visual strong{font-size:54px}
+  .khaled-zero-visual>span{font-size:40px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  body.khaled-mode .khaled-answer,body.khaled-mode .khaled-group-choice,body.khaled-mode .learner-card{transition:none!important;animation:none!important}
+}
