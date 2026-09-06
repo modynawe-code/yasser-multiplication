@@ -46,7 +46,9 @@ export function createKhaledController({repository}={}){
     byId('khaledSessionMeta').textContent=`${session.index+1} من ${session.questions.length}`;
     byId('khaledSessionProgress').style.width=`${session.index/session.questions.length*100}%`;
     byId('khaledPrompt').textContent=question.prompt;byId('khaledFeedback').textContent='';
-    const visual=byId('khaledVisual'),answers=byId('khaledAnswers');answers.innerHTML='';answers.classList.remove('khaled-visual-answers','khaled-equation-answers','khaled-order-answers');visuals.question();
+    const visual=byId('khaledVisual'),answers=byId('khaledAnswers'),card=visual?.closest('.khaled-question-card');
+    if(card)card.dataset.questionType=question.type||'default';
+    answers.innerHTML='';answers.classList.remove('khaled-visual-answers','khaled-equation-answers','khaled-order-answers');visuals.question();
 
     if(question.type==='count-select'){
       visual.innerHTML=countVisual(question.count,question.count>10);question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
