@@ -4,8 +4,9 @@ import { readFile } from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('Khaled learning flow exposes explicit back and learner-home navigation',async()=>{
+test('Khaled learning flow exposes intro, skill-back, and learner-home navigation',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
+  assert.match(shell,/id="khaledIntroStart"[^>]*>ابدأ التعلم<\/button>/);
   assert.match(shell,/id="khaledHomeToHub"[^>]*>اختيار الطفل<\/button>/);
   assert.match(shell,/id="khaledExitSession"[^>]*>رجوع للمهارات<\/button>/);
   assert.match(shell,/id="khaledSessionToHub"[^>]*>اختيار الطفل<\/button>/);
@@ -20,7 +21,7 @@ test('cross-learner Khaled exits are wired only at the composition root',async()
   assert.match(main,/\['khaledHomeToHub','khaledSessionToHub','khaledResultToHub'\]/);
   assert.doesNotMatch(controller,/khaledSessionToHub/);
   assert.doesNotMatch(controller,/khaledResultToHub/);
-  assert.match(controller,/function exitSession\(\)\{leave\(\);enter\(\);\}/);
+  assert.match(controller,/function exitSession\(\)\{leave\(\);enterHome\(\);\}/);
   assert.match(controller,/storeSession\(\{incomplete:true\}\)/);
   assert.match(hub,/classList\.remove\('intro-mode','family-parent-mode','khaled-mode'\)/);
 });
