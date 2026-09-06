@@ -13,13 +13,18 @@ body.khaled-mode button:disabled{cursor:default}
 
 @media (orientation:landscape) and (min-width:700px) and (max-height:900px){
   .khaled-session-wrap{max-width:1040px}
-  .khaled-question-card{min-height:calc(100dvh - 150px);padding:14px 22px}
-  .khaled-question-card h3{font-size:24px;margin:10px 0}
-  .khaled-visual{min-height:125px;max-height:300px}
-  .khaled-answers{grid-template-columns:repeat(3,minmax(110px,1fr));max-width:640px}
-  .khaled-answer{min-height:64px;font-size:26px}
-  .khaled-feedback{margin-top:10px}
-  .khaled-session-character{max-height:118px}
+  .khaled-question-card{min-height:calc(100dvh - 150px);max-height:720px}
+  .khaled-question-content{min-height:0}
+  .khaled-session-character{min-height:0}
+  .khaled-visual{overflow:visible}
+}
+
+@media (orientation:landscape) and (min-width:700px) and (max-height:720px){
+  .khaled-question-card{min-height:calc(100dvh - 128px);padding-block:10px}
+  .khaled-question-card h3{font-size:22px}
+  .khaled-visual{min-height:104px;max-height:230px}
+  .khaled-answer{min-height:56px;font-size:23px}
+  .khaled-feedback{min-height:26px;font-size:15px}
 }
 
 @media (max-width:700px){
