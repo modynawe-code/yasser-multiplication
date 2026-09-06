@@ -38,7 +38,9 @@ function leaveLearningAreas(){
   yasser.leave();khaled.leave();familyParent.leave();
 }
 function enterYasser(){
-  games?.leave();khaled.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode','games-mode');
+  games?.leave();khaled.leave();familyParent.leave();
+  document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode');
+  document.body.classList.remove('games-mode');
   if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();
 }
 function enterKhaled(){
