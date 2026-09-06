@@ -61,6 +61,21 @@ test('XO controller uses online room and learning boundaries without learner-con
   assert.doesNotMatch(controller,/local-storage-repository/);
 });
 
+test('RPS is lazy-loaded as an independent fun-game module',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  const shell=await read('src/modules/games/rps/rps-shell.js');
+  assert.match(catalog,/rock-paper-scissors/);
+  assert.match(catalog,/load:\(\)=>import\('\.\/rps\/rps-controller\.js'\)/);
+  assert.match(controller,/gameRegistry\.get\('rock-paper-scissors'\)/);
+  assert.match(controller,/rpsController\.start\(\)/);
+  assert.match(shell,/id="rpsGameView"/);
+  assert.match(shell,/أول واحد يوصل 3 يفوز/);
+  assert.match(shell,/data-rps-choice="rock"/);
+  assert.match(shell,/data-rps-choice="paper"/);
+  assert.match(shell,/data-rps-choice="scissors"/);
+});
+
 test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet heights',async()=>{
   const css=await read('src/modules/games/ui/games.css');
   assert.match(css,/body\.games-mode \.topbar\{display:none\}/);
@@ -72,9 +87,9 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
   assert.match(css,/\.xo-local-choice/);
 });
 
-test('PWA shell includes resumable online games modules',async()=>{
+test('PWA shell includes resumable online games and lazy RPS modules',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-46/);
+  assert.match(serviceWorker,/shell-47/);
   for(const path of [
     'src/modules/games/games-controller.js',
     'src/modules/games/learning/game-learning-providers.js',
@@ -83,6 +98,10 @@ test('PWA shell includes resumable online games modules',async()=>{
     'src/modules/games/xo/xo-online-session.js',
     'src/modules/games/ui/games-shell.js',
     'src/modules/games/ui/games.css',
-    'src/modules/games/xo/xo-engine.js'
+    'src/modules/games/xo/xo-engine.js',
+    'src/modules/games/rps/rps-engine.js',
+    'src/modules/games/rps/rps-controller.js',
+    'src/modules/games/rps/rps-shell.js',
+    'src/modules/games/rps/rps.css'
   ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
 });
