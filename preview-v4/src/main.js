@@ -49,7 +49,7 @@ hub=createHubController({
   onAfterShow:()=>hubVisuals.hub(),onSelectYasser:enterYasser,onSelectKhaled:enterKhaled
 });
 
-for(const id of ['khaledHomeToHub','khaledSessionToHub','khaledResultToHub']){
+for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub']){
   document.getElementById(id)?.addEventListener('click',exitKhaledToHub);
 }
 
