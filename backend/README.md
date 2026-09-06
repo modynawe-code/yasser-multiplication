@@ -8,6 +8,10 @@ The browser is not authoritative for historical attempts. New attempts are ident
 
 The local four-digit PIN remains only a device UI lock. Cloud sync, restore, and account operations require a server-issued parent bearer session. Passwords are stored as PBKDF2-SHA256 hashes with unique salts; raw session tokens are never stored in D1.
 
+Temporary online game rooms use a separate trust boundary. A room receives a six-digit code and each device receives a random room-player token; only the SHA-256 hash of that token is stored in D1. The server is authoritative for XO turn order, cells, win/draw state, rematches and optimistic room versions. Rooms expire after 30 minutes and do not contain learner progress or parent credentials.
+
+The current preview keeps the educational question gate on the child's device. This is suitable for family/friendly play, but it is not a server-verifiable anti-cheat proof. Ranked leaderboards must remain disabled until challenge completion is server-verifiable.
+
 ## Cloudflare project isolation
 
 This backend is intentionally isolated from other Cloudflare projects:
@@ -26,7 +30,7 @@ Do not accept Wrangler's automatic D1 snippet if it proposes a different binding
    `npx wrangler auth activate family-learning .`
 2. Verify the active account/profile:
    `npx wrangler whoami --profile family-learning`
-3. Apply migrations to the dedicated remote D1 database:
+3. Apply all migrations, including the game-room migration, to the dedicated remote D1 database:
    `npx wrangler d1 migrations apply yasser-khaled-family --remote --profile family-learning --config wrangler.jsonc`
 4. Deploy only this Worker:
    `npx wrangler deploy --profile family-learning --config wrangler.jsonc`
@@ -34,7 +38,9 @@ Do not accept Wrangler's automatic D1 snippet if it proposes a different binding
 
 ## API
 
-Public: `GET /health`, `POST /v1/auth/register`, `POST /v1/auth/login`.
+Public account endpoints: `GET /health`, `POST /v1/auth/register`, `POST /v1/auth/login`.
+
+Temporary game-room endpoints: `POST /v1/games/rooms`, `POST /v1/games/rooms/join`, `GET /v1/games/rooms/:code`, `POST /v1/games/rooms/:code/actions`. Reading/updating an existing room requires its temporary `x-game-token`.
 
 Authenticated parent only: `POST /v1/auth/logout`, `GET /v1/me`, `POST /v1/sync/baseline`, `POST /v1/sync/attempts`, `POST /v1/sync/session`, `GET /v1/sync/snapshot`.
 
