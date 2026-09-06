@@ -26,7 +26,7 @@ test('Khaled has a dedicated intro route without merging his curriculum into Yas
   assert.match(shell,/id="khaledIntroStart"/);
   assert.match(controller,/function showIntro\(\)/);
   assert.match(controller,/function enterHome\(\)/);
-  assert.match(controller,/return\{start\(\)\{bind\(\);visuals\.warm\(\);showIntro\(\);\},enter\(\)\{bind\(\);visuals\.warm\(\);showIntro\(\);\}/);
+  assert.match(controller,/return\{start\(\)\{bind\(\);visuals\.warm\(\);showIntro\(\);\},enter\(\)\{bind\(\);visuals\.warm\(\);enterHome\(\);\}/);
   assert.match(css,/\.khaled-intro-shell/);
 });
 
