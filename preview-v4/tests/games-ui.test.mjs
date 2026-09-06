@@ -13,10 +13,14 @@ test('games platform is composed as an isolated feature module',async()=>{
   assert.match(main,/games\?\.leave\(\)/);
 });
 
-test('games shell exposes games home and educational local XO without changing learner screens',async()=>{
+test('games shell exposes XO lobby, online room entry, and educational play without changing learner screens',async()=>{
   const shell=await read('src/modules/games/ui/games-shell.js');
   assert.match(shell,/gamesOpenBtn/);
   assert.match(shell,/id="gamesHomeView"/);
+  assert.match(shell,/id="xoLobbyView"/);
+  assert.match(shell,/id="xoOnlineCreate"/);
+  assert.match(shell,/id="xoOnlineJoin"/);
+  assert.match(shell,/maxlength="6"/);
   assert.match(shell,/id="xoGameView"/);
   assert.match(shell,/class="xo-layout"/);
   assert.match(shell,/id="xoChallenge"/);
@@ -26,12 +30,15 @@ test('games shell exposes games home and educational local XO without changing l
   assert.doesNotMatch(shell,/تُحفظ المحاولات التعليمية/);
 });
 
-test('XO controller depends on platform boundaries and native-aware shared audio, not learner controllers',async()=>{
+test('XO controller uses online room and learning boundaries without learner-controller coupling',async()=>{
   const controller=await read('src/modules/games/games-controller.js');
   assert.match(controller,/createPlayerContext/);
   assert.match(controller,/createXoState/);
   assert.match(controller,/passXoTurn/);
   assert.match(controller,/playXoMove/);
+  assert.match(controller,/createGameRoomClient/);
+  assert.match(controller,/createXoOnlineSession/);
+  assert.match(controller,/normalizeOnlineXoRoom/);
   assert.match(controller,/createSpeechService/);
   assert.match(controller,/learningAdapter\?\.recordChallenge/);
   assert.match(controller,/xo-game-mode/);
@@ -52,12 +59,14 @@ test('XO tablet landscape is one-screen and hides learner chrome',async()=>{
   assert.match(css,/\.xo-token\{width:82%;height:82%/);
 });
 
-test('PWA shell includes games platform and learning adapter modules',async()=>{
+test('PWA shell includes local and online games modules',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-44/);
+  assert.match(serviceWorker,/shell-45/);
   for(const path of [
     'src/modules/games/games-controller.js',
     'src/modules/games/learning/game-learning-providers.js',
+    'src/modules/games/online/game-room-client.js',
+    'src/modules/games/xo/xo-online-session.js',
     'src/modules/games/ui/games-shell.js',
     'src/modules/games/ui/games.css',
     'src/modules/games/xo/xo-engine.js'
