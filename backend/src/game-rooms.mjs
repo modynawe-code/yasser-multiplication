@@ -2,6 +2,9 @@ import { randomId, randomSessionToken, sha256Base64Url } from './security.mjs';
 
 const ROOM_TTL_MINUTES=30;
 const MAX_RECENT_ROOMS_PER_IP=10;
+const MAX_JOIN_ATTEMPTS=20;
+const JOIN_WINDOW_MINUTES=10;
+const JOIN_BLOCK_MINUTES=15;
 const DISPLAY_NAMES=Object.freeze({yasser:'ياسر',khaled:'خالد'});
 const WIN_LINES=Object.freeze([[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]);
 
@@ -21,12 +24,12 @@ export function generateRoomCode(){
 }
 
 export function createInitialXoRoomState(hostPlayerId){
-  return Object.freeze({gameId:'xo',status:'waiting',players:Object.freeze([hostPlayerId]),board:Object.freeze(Array(9).fill(null)),currentPlayerId:null,winner:null,winningLine:Object.freeze([]),moveCount:0,round:1});
+  return Object.freeze({gameId:'xo',status:'waiting',players:Object.freeze([hostPlayerId]),board:Object.freeze(Array(9).fill(null)),currentPlayerId:null,winner:null,winningLine:Object.freeze([]),rematchReady:Object.freeze([]),moveCount:0,round:1});
 }
 
 export function addXoRoomGuest(state,guestPlayerId){
   if(state?.gameId!=='xo'||state.status!=='waiting'||state.players.length!==1)return{ok:false,reason:'room-not-waiting'};
-  const next=clone(state);next.players.push(guestPlayerId);next.status='playing';next.currentPlayerId=next.players[0];
+  const next=clone(state);next.players.push(guestPlayerId);next.status='playing';next.currentPlayerId=next.players[0];next.rematchReady=[];
   return{ok:true,state:next};
 }
 
@@ -35,8 +38,12 @@ export function applyXoRoomAction(state,{playerId,type,cell}={}){
   if(type==='reset'){
     if(!['won','draw'].includes(state.status))return{ok:false,reason:'game-not-finished'};
     if(!state.players.includes(playerId))return{ok:false,reason:'player-not-in-room'};
-    const next=clone(state),nextRound=Number(next.round||1)+1;
-    next.status='playing';next.board=Array(9).fill(null);next.moveCount=0;next.winner=null;next.winningLine=[];next.round=nextRound;next.currentPlayerId=next.players[(nextRound-1)%next.players.length];
+    const next=clone(state),ready=new Set(next.rematchReady||[]);
+    if(ready.has(playerId))return{ok:false,reason:'rematch-already-ready'};
+    ready.add(playerId);next.rematchReady=[...ready];
+    if(ready.size<next.players.length)return{ok:true,state:next};
+    const nextRound=Number(next.round||1)+1;
+    next.status='playing';next.board=Array(9).fill(null);next.moveCount=0;next.winner=null;next.winningLine=[];next.rematchReady=[];next.round=nextRound;next.currentPlayerId=next.players[(nextRound-1)%next.players.length];
     return{ok:true,state:next};
   }
   if(state.status!=='playing')return{ok:false,reason:'game-not-playing'};
@@ -50,8 +57,8 @@ export function applyXoRoomAction(state,{playerId,type,cell}={}){
   if(state.board[index])return{ok:false,reason:'occupied-cell'};
   const next=clone(state);next.board[index]=playerId;next.moveCount+=1;
   const line=winningLine(next.board,playerId);
-  if(line){next.status='won';next.winner=playerId;next.winningLine=line;next.currentPlayerId=null;return{ok:true,state:next};}
-  if(next.moveCount>=9){next.status='draw';next.currentPlayerId=null;return{ok:true,state:next};}
+  if(line){next.status='won';next.winner=playerId;next.winningLine=line;next.rematchReady=[];next.currentPlayerId=null;return{ok:true,state:next};}
+  if(next.moveCount>=9){next.status='draw';next.rematchReady=[];next.currentPlayerId=null;return{ok:true,state:next};}
   next.currentPlayerId=otherPlayer(next,playerId);return{ok:true,state:next};
 }
 
@@ -75,6 +82,19 @@ async function allowCreate(request,env){
   const row=await env.DB.prepare('SELECT COUNT(*) AS count FROM game_rooms WHERE creator_key=? AND created_at>?').bind(key,since).first();
   return{ok:Number(row?.count||0)<MAX_RECENT_ROOMS_PER_IP,key};
 }
+async function joinThrottleKey(request){return sha256Base64Url(`game-room-join|${clientIp(request)}`);}
+async function joinThrottleStatus(env,key){
+  const row=await env.DB.prepare('SELECT attempts,window_started_at,blocked_until FROM game_room_join_throttle WHERE throttle_key=?').bind(key).first();
+  if(!row)return{blocked:false,row:null};
+  return{blocked:Boolean(row.blocked_until&&Date.parse(row.blocked_until)>Date.now()),row};
+}
+async function recordJoinFailure(env,key){
+  const current=await joinThrottleStatus(env,key),now=Date.now();let attempts=1,windowStarted=new Date(now).toISOString();
+  if(current.row&&now-Date.parse(current.row.window_started_at)<JOIN_WINDOW_MINUTES*60000){attempts=Number(current.row.attempts||0)+1;windowStarted=current.row.window_started_at;}
+  const blockedUntil=attempts>=MAX_JOIN_ATTEMPTS?new Date(now+JOIN_BLOCK_MINUTES*60000).toISOString():null;
+  await env.DB.prepare('INSERT INTO game_room_join_throttle(throttle_key,attempts,window_started_at,blocked_until) VALUES(?,?,?,?) ON CONFLICT(throttle_key) DO UPDATE SET attempts=excluded.attempts,window_started_at=excluded.window_started_at,blocked_until=excluded.blocked_until').bind(key,attempts,windowStarted,blockedUntil).run();
+}
+async function clearJoinThrottle(env,key){await env.DB.prepare('DELETE FROM game_room_join_throttle WHERE throttle_key=?').bind(key).run().catch(()=>null);}
 
 async function createRoom(request,env,respond,readJson){
   const body=await readJson(request),gameId=String(body?.gameId||''),learnerId=String(body?.learnerId||'');
@@ -99,18 +119,21 @@ async function createRoom(request,env,respond,readJson){
 async function joinRoom(request,env,respond,readJson){
   const body=await readJson(request),code=normalizeCode(body?.code),learnerId=String(body?.learnerId||'');
   if(code.length!==6||!validLearner(learnerId))return respond(400,{error:'invalid_join_request'});
-  const row=await roomByCode(env,code);if(!row||Date.parse(row.expires_at)<=Date.now())return respond(404,{error:'room_not_found'});
-  if(row.status!=='waiting')return respond(409,{error:'room_not_waiting',room:await roomPayload(env,row)});
-  const existing=await playersForRoom(env,row.id);if(existing.some(item=>item.learner_id===learnerId))return respond(409,{error:'learner_already_in_room'});
+  const throttleKey=await joinThrottleKey(request),throttle=await joinThrottleStatus(env,throttleKey);if(throttle.blocked)return respond(429,{error:'too_many_join_attempts'});
+  const fail=async(status,error,extra={})=>{await recordJoinFailure(env,throttleKey);return respond(status,{error,...extra});};
+  const row=await roomByCode(env,code);if(!row||Date.parse(row.expires_at)<=Date.now())return fail(404,'room_not_found');
+  if(row.status!=='waiting')return fail(409,'room_not_waiting',{room:await roomPayload(env,row)});
+  const existing=await playersForRoom(env,row.id);if(existing.some(item=>item.learner_id===learnerId))return fail(409,'learner_already_in_room');
   let state;try{state=JSON.parse(row.state_json);}catch{return respond(500,{error:'invalid_room_state'});}
-  const playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso(),next=addXoRoomGuest(state,playerId);if(!next.ok)return respond(409,{error:next.reason});
+  const playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso(),next=addXoRoomGuest(state,playerId);if(!next.ok)return fail(409,next.reason);
   const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,DISPLAY_NAMES[learnerId],tokenHash,1,joinedAt,joinedAt).run();
-  if(Number(insert?.meta?.changes||0)!==1)return respond(409,{error:'room_full'});
+  if(Number(insert?.meta?.changes||0)!==1)return fail(409,'room_full');
   const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind('playing',JSON.stringify(next.state),joinedAt,futureIso(ROOM_TTL_MINUTES),row.id,row.version).run();
   if(Number(update?.meta?.changes||0)!==1){
     await env.DB.prepare('DELETE FROM game_room_players WHERE room_id=? AND player_id=?').bind(row.id,playerId).run().catch(()=>null);
-    return respond(409,{error:'room_changed'});
+    return fail(409,'room_changed');
   }
+  await clearJoinThrottle(env,throttleKey);
   const fresh=await roomByCode(env,code);return respond(200,{playerToken,room:await roomPayload(env,fresh,playerId)});
 }
 
