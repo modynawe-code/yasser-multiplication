@@ -68,7 +68,7 @@ export function createKhaledSceneController(){
   }
 
   function hub(){return paint('hub','welcome');}
-  function intro(){return paint('intro','welcome');}
+  function intro(){return paint('intro','groupThinking');}
   function home(){return paint('home','welcome');}
   function question(){return paint('session','groupThinking');}
   function feedback(isCorrect){return paint('session',isCorrect?'encourage':'groupThinking',{motion:isCorrect?'nod':'none'});}
