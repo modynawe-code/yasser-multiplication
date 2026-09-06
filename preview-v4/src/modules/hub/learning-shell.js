@@ -36,15 +36,17 @@ export function ensureLearningShell(){
         </div>
         <div class="learner-grid">
           <button class="learner-card yasser-card" id="hubYasser">
-            <div class="learner-placeholder" aria-hidden="true"><span>×</span><span>÷</span></div>
-            <div><strong>ياسر</strong><span>جدول الضرب 1–10</span><small>تدريب • اختبار • إتقان</small></div>
+            <div class="learner-character-shell hub-yasser-character" aria-hidden="true">
+              <img class="learner-yasser-image" src="assets/visual/original/yasser/welcome.png" alt="" width="1049" height="1499" decoding="async" fetchpriority="high" />
+            </div>
+            <div class="learner-card-copy"><strong>ياسر</strong><span>جدول الضرب 1–10</span><small>تدريب • اختبار • إتقان</small></div>
           </button>
           <button class="learner-card khaled-card" id="hubKhaled">
             <div class="learner-character-shell hub-khaled-character" aria-hidden="true">
               <img id="hubKhaledCharacter" class="khaled-character-image" alt="" width="1086" height="1448" decoding="async" hidden />
               <div class="learner-placeholder khaled" id="hubKhaledFallback"><span>+</span><span>−</span></div>
             </div>
-            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>أعداد • عمليات • قياس • أشكال • نقود</small></div>
+            <div class="learner-card-copy"><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>أعداد • عمليات • قياس • أشكال • نقود</small></div>
           </button>
         </div>
       </div>
@@ -74,11 +76,13 @@ export function ensureLearningShell(){
             <img id="khaledSessionCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" hidden />
             <div class="khaled-character-fallback compact" id="khaledSessionCharacterFallback">+ −</div>
           </div>
-          <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال">🔊 اسمع السؤال</button>
-          <h3 id="khaledPrompt">اختر الإجابة</h3>
-          <div class="khaled-visual" id="khaledVisual"></div>
-          <div class="khaled-answers" id="khaledAnswers"></div>
-          <div class="khaled-feedback" id="khaledFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
+          <div class="khaled-question-content">
+            <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال">🔊 اسمع السؤال</button>
+            <h3 id="khaledPrompt">اختر الإجابة</h3>
+            <div class="khaled-visual" id="khaledVisual"></div>
+            <div class="khaled-answers" id="khaledAnswers"></div>
+            <div class="khaled-feedback" id="khaledFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
+          </div>
         </div>
       </div>
     </section>
