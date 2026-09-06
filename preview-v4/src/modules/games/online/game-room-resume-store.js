@@ -26,7 +26,9 @@ export function createGameRoomResumeStore({sessionStorage=globalThis.sessionStor
   }
   function clear(record){
     const learnerId=record?.selfLearnerId||normalize(safeParse(get(sessionStorage,SESSION_KEY)))?.selfLearnerId;
-    remove(sessionStorage,SESSION_KEY);if(LEARNERS.includes(learnerId))remove(localStorage,`${LOCAL_PREFIX}${learnerId}`);
+    remove(sessionStorage,SESSION_KEY);
+    if(LEARNERS.includes(learnerId))remove(localStorage,`${LOCAL_PREFIX}${learnerId}`);
+    else LEARNERS.forEach(id=>remove(localStorage,`${LOCAL_PREFIX}${id}`));
   }
   return Object.freeze({save,load,clear,has(){return Boolean(load());}});
 }
