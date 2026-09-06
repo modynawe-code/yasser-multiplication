@@ -18,10 +18,12 @@ test('games shell exposes games home and educational local XO without changing l
   assert.match(shell,/gamesOpenBtn/);
   assert.match(shell,/id="gamesHomeView"/);
   assert.match(shell,/id="xoGameView"/);
+  assert.match(shell,/class="xo-layout"/);
   assert.match(shell,/id="xoChallenge"/);
   assert.match(shell,/id="xoHearChallenge"/);
   assert.match(shell,/assets\/visual\/original\/yasser\/welcome\.png/);
   assert.match(shell,/assets\/visual\/original\/khaled\/khaled-point-thumbsup\.png/);
+  assert.doesNotMatch(shell,/تُحفظ المحاولات التعليمية/);
 });
 
 test('XO controller depends on platform boundaries and native-aware shared audio, not learner controllers',async()=>{
@@ -32,9 +34,22 @@ test('XO controller depends on platform boundaries and native-aware shared audio
   assert.match(controller,/playXoMove/);
   assert.match(controller,/createSpeechService/);
   assert.match(controller,/learningAdapter\?\.recordChallenge/);
+  assert.match(controller,/xo-game-mode/);
+  assert.match(controller,/yasser\/celebrate\.png/);
+  assert.match(controller,/khaled\/khaled-celebration\.png/);
+  assert.match(controller,/xoPlayAgain/);
   assert.doesNotMatch(controller,/khaled-controller/);
   assert.doesNotMatch(controller,/app-controller/);
   assert.doesNotMatch(controller,/local-storage-repository/);
+});
+
+test('XO tablet landscape is one-screen and hides learner chrome',async()=>{
+  const css=await read('src/modules/games/ui/games.css');
+  assert.match(css,/body\.games-mode \.topbar\{display:none\}/);
+  assert.match(css,/body\.xo-game-mode\{overflow:hidden\}/);
+  assert.match(css,/height:100dvh/);
+  assert.match(css,/grid-template-columns:minmax\(340px/);
+  assert.match(css,/\.xo-token\{width:82%;height:82%/);
 });
 
 test('PWA shell includes games platform and learning adapter modules',async()=>{
