@@ -47,7 +47,12 @@ test('XO controller uses online room and learning boundaries without learner-con
   assert.match(controller,/normalizeOnlineXoRoom/);
   assert.match(controller,/createSpeechService/);
   assert.match(controller,/learningAdapter\?\.recordChallenge/);
-  assert.match(controller,/xo-game-mode/);
+  assert.match(controller,/onlineSession\.hasResume\(\)/);
+  assert.match(controller,/onlineSession\.resume\(\)/);
+  assert.match(controller,/بانتظار اللاعب الثاني…/);
+  assert.match(controller,/انتظر شوي…/);
+  assert.match(controller,/rematchReady/);
+  assert.match(controller,/xoReset.*hidden/);
   assert.match(controller,/yasser\/celebrate\.png/);
   assert.match(controller,/khaled\/khaled-celebration\.png/);
   assert.match(controller,/xoPlayAgain/);
@@ -67,13 +72,14 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
   assert.match(css,/\.xo-local-choice/);
 });
 
-test('PWA shell includes local and online games modules',async()=>{
+test('PWA shell includes resumable online games modules',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-45/);
+  assert.match(serviceWorker,/shell-46/);
   for(const path of [
     'src/modules/games/games-controller.js',
     'src/modules/games/learning/game-learning-providers.js',
     'src/modules/games/online/game-room-client.js',
+    'src/modules/games/online/game-room-resume-store.js',
     'src/modules/games/xo/xo-online-session.js',
     'src/modules/games/ui/games-shell.js',
     'src/modules/games/ui/games.css',
