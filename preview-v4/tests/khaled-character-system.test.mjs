@@ -23,8 +23,8 @@ test('Khaled scene controller maps learning states without requiring image binar
   const controller=await read('src/modules/khaled/ui/khaled-scene-controller.js');
   assert.match(controller,/groupThinking/);
   assert.match(controller,/groupCelebration/);
-  assert.match(controller,/pct>=90/);
-  assert.match(controller,/pct>=70/);
+  assert.match(controller,/pct>=80/);
+  assert.match(controller,/pct>=60/);
   assert.match(controller,/image\.onerror=\(\)=>resolve\(false\)/);
   assert.match(controller,/fallback\.hidden=false/);
 });
@@ -35,9 +35,10 @@ test('learning shell has stable Khaled image slots with non-image fallbacks',asy
   for(const id of ['hubKhaledFallback','khaledHomeCharacterFallback','khaledSessionCharacterFallback','khaledResultCharacterFallback'])assert.match(shell,new RegExp(`id="${id}"`));
 });
 
-test('Khaled character CSS preserves aspect ratio and reduced motion preference',async()=>{
+test('Khaled character CSS preserves aspect ratio, containment, and reduced motion preference',async()=>{
   const css=await read('src/modules/khaled/ui/khaled-character-system.css');
   assert.match(css,/object-fit:contain/);
+  assert.match(css,/khaled-session-character\{[^}]*overflow:hidden/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/khaledCelebrate/);
 });
