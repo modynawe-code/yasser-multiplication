@@ -53,3 +53,9 @@ test('online room storage keeps temporary player tokens hashed and uses six-digi
   assert.match(index,/x-game-token/);
   assert.match(index,/handleGameRoomRequest/);
 });
+
+test('a losing concurrent join removes its temporary seat before returning conflict',async()=>{
+  const source=await read('src/game-rooms.mjs');
+  assert.match(source,/DELETE FROM game_room_players WHERE room_id=\? AND player_id=\?/);
+  assert.match(source,/return respond\(409,\{error:'room_changed'\}\)/);
+});
