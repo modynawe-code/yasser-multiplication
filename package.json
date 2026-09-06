@@ -1,12 +1,13 @@
 {
   "name": "yasser-khaled-mobile",
   "private": true,
-  "version": "0.1.1",
-  "description": "Android wrapper tooling for the shared Yasser and Khaled learning web app.",
+  "version": "0.2.0",
+  "description": "Android wrapper tooling for the shared Yasser and Khaled learning and games app.",
   "scripts": {
     "mobile:prepare": "node tools/build-mobile.mjs",
     "android:add": "npx cap add android",
     "android:sync": "npm run mobile:prepare && npx cap sync android",
+    "android:assets": "npx @capacitor/assets generate --android --assetPath mobile-assets --iconBackgroundColor '#ffffff' --iconBackgroundColorDark '#111827' --splashBackgroundColor '#ffffff' --splashBackgroundColorDark '#111827'",
     "android:open": "npx cap open android"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "@capacitor-community/text-to-speech": "8.0.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.1"
   }
 }
