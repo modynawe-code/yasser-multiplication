@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createXoState, playXoMove } from '../src/modules/games/xo/xo-engine.js';
+import { createXoState, passXoTurn, playXoMove } from '../src/modules/games/xo/xo-engine.js';
 
 function move(state,playerId,cell){
   const result=playXoMove(state,{playerId,cell});
@@ -45,6 +45,17 @@ test('XO detects a full-board draw',()=>{
   assert.equal(state.status,'draw');
   assert.equal(state.winner,null);
   assert.equal(state.moveCount,9);
+});
+
+test('XO can pass a turn after a failed learning gate without changing the board',()=>{
+  const initial=createXoState({players:['yasser','khaled']});
+  const passed=passXoTurn(initial,{playerId:'yasser'});
+  assert.equal(passed.ok,true);
+  assert.equal(passed.state.currentPlayer,'khaled');
+  assert.equal(passed.state.passCount,1);
+  assert.deepEqual(passed.state.board,initial.board);
+  assert.equal(passed.state.moveCount,0);
+  assert.equal(passXoTurn(initial,{playerId:'khaled'}).reason,'not-your-turn');
 });
 
 test('XO state updates are immutable for safe realtime synchronization',()=>{
