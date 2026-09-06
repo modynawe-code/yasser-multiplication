@@ -14,35 +14,20 @@ body.khaled-mode button:disabled{cursor:default}
 /* Hidden fallback nodes must never compete with successfully loaded character artwork. */
 .khaled-character-fallback[hidden],.learner-placeholder[hidden],.khaled-result-symbol[hidden]{display:none!important}
 
-/*
-  Landscape is the primary Galaxy Tab/laptop learning surface.
-  Force a physical LTR grid only for column placement, then restore Arabic RTL
-  inside the task. This prevents RTL auto-placement from shrinking the task lane
-  and pushing answer buttons outside the card.
-*/
+/* Device rules only constrain viewport usage; column ownership lives in the shared scene layout. */
 @media (orientation:landscape) and (min-width:700px){
-  :root{
-    --character-khaled-session:min(34dvh,220px);
-    --character-khaled-intro:min(38dvh,340px);
-  }
   .khaled-session-wrap{max-width:min(1120px,calc(100vw - 48px))}
-  .khaled-question-card{
-    direction:ltr;
-    grid-template-columns:minmax(0,1fr) clamp(190px,24vw,280px);
-    min-height:calc(100dvh - 150px);
-    max-height:720px;
-  }
-  .khaled-question-content{direction:rtl;width:100%;min-width:0;min-height:0}
-  .khaled-session-character{direction:rtl;min-width:0;min-height:0}
-  .khaled-session-character .khaled-character-image{max-height:var(--character-khaled-session);max-width:100%}
-  .khaled-visual{width:min(100%,680px);overflow:visible}
-  .khaled-answers{width:min(100%,680px);grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  .khaled-question-card{min-height:calc(100dvh - 150px);max-height:720px}
+  .khaled-question-content{width:100%;min-width:0;min-height:0}
+  .khaled-session-character{min-width:0;min-height:0}
+  .khaled-visual{width:min(100%,720px);overflow:visible}
+  .khaled-answers{width:min(100%,720px)}
 
-  /* Intro art scales from the real viewport height instead of a fixed laptop/tablet size. */
+  /* Intro scales from viewport height while preserving the original 4:3 group artwork. */
   .khaled-intro-shell{min-height:0;height:calc(100dvh - 34px);padding:6px 0 10px}
   .khaled-intro-card{max-height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;align-items:center;padding-block:16px 18px}
-  .khaled-intro-character{height:var(--character-khaled-intro);min-height:0;max-height:100%;margin-block:0}
-  .khaled-intro-character .khaled-character-image{height:100%;max-height:100%;width:auto;max-width:100%}
+  .khaled-intro-character{width:min(100%,calc(var(--character-khaled-intro) * 1.3334));aspect-ratio:4/3;height:auto;min-height:0;max-height:100%;margin-block:0}
+  .khaled-intro-character .khaled-character-image{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}
 }
 
 @media (orientation:landscape) and (min-width:700px) and (max-height:900px){
@@ -50,14 +35,9 @@ body.khaled-mode button:disabled{cursor:default}
 }
 
 @media (orientation:landscape) and (min-width:700px) and (max-height:720px){
-  :root{
-    --character-khaled-session:min(30dvh,190px);
-    --character-khaled-intro:min(34dvh,280px);
-  }
-  .khaled-question-card{min-height:calc(100dvh - 128px);padding-block:10px;grid-template-columns:minmax(0,1fr) clamp(170px,23vw,240px)}
+  .khaled-question-card{min-height:calc(100dvh - 128px);padding-block:10px}
   .khaled-question-card h3{font-size:22px}
   .khaled-visual{min-height:104px;max-height:230px}
-  .khaled-answers{grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px}
   .khaled-answer{min-height:56px;font-size:23px}
   .khaled-feedback{min-height:26px;font-size:15px}
   .khaled-intro-card{padding-block:10px 12px}
