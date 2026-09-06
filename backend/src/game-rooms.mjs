@@ -107,7 +107,10 @@ async function joinRoom(request,env,respond,readJson){
   const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,DISPLAY_NAMES[learnerId],tokenHash,1,joinedAt,joinedAt).run();
   if(Number(insert?.meta?.changes||0)!==1)return respond(409,{error:'room_full'});
   const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind('playing',JSON.stringify(next.state),joinedAt,futureIso(ROOM_TTL_MINUTES),row.id,row.version).run();
-  if(Number(update?.meta?.changes||0)!==1)return respond(409,{error:'room_changed'});
+  if(Number(update?.meta?.changes||0)!==1){
+    await env.DB.prepare('DELETE FROM game_room_players WHERE room_id=? AND player_id=?').bind(row.id,playerId).run().catch(()=>null);
+    return respond(409,{error:'room_changed'});
+  }
   const fresh=await roomByCode(env,code);return respond(200,{playerToken,room:await roomPayload(env,fresh,playerId)});
 }
 
