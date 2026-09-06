@@ -4,7 +4,7 @@ export function createHubController({getElement=document.getElementById.bind(doc
   function showHub(){
     onBeforeShow?.();
     document.body.classList.add('hub-mode');
-    document.body.classList.remove('intro-mode','family-parent-mode');
+    document.body.classList.remove('intro-mode','family-parent-mode','khaled-mode');
     document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='hubView'));
     window.scrollTo(0,0);
     onAfterShow?.();
