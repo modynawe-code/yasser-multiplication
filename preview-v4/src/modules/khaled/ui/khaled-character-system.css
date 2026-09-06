@@ -6,6 +6,8 @@
 .khaled-character-fallback{display:grid;place-items:center;width:132px;height:132px;border-radius:34px;background:linear-gradient(145deg,#fff4e8,#fff);border:1px solid #f0c79f;color:#ea7b18;font-size:34px;font-weight:950;box-shadow:0 12px 24px rgba(204,112,28,.10)}
 .khaled-character-fallback.compact{width:104px;height:82px;border-radius:24px;font-size:28px}
 
+.khaled-intro-character{display:grid;place-items:center;width:min(100%,420px);height:calc(var(--character-khaled-intro) + 8px);margin:0 auto;overflow:hidden;pointer-events:none}
+.khaled-intro-character .khaled-character-image{height:var(--character-khaled-intro);width:auto;max-width:100%}
 .khaled-home-character{display:grid;place-items:center;width:min(250px,28vw);height:calc(var(--character-khaled-home) + 4px);overflow:hidden}
 .khaled-home-character .khaled-character-image{max-height:var(--character-khaled-home);max-width:100%}
 
@@ -47,6 +49,7 @@
 }
 
 @media(max-width:700px){
+  .khaled-intro-character{width:min(330px,84vw);height:calc(var(--character-khaled-intro) + 6px)}
   .khaled-home-character{width:min(240px,72vw);height:calc(var(--character-khaled-home) + 4px)}
   .khaled-session-character{width:min(330px,84vw);height:calc(var(--character-khaled-session) + 6px);min-height:0;align-self:center}
   .khaled-result-character{width:min(520px,96%)}
