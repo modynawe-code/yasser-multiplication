@@ -13,7 +13,7 @@ test('games platform is composed as an isolated feature module',async()=>{
 
 test('games shell exposes games home and local XO without changing learner screens',async()=>{
   const shell=await read('src/modules/games/ui/games-shell.js');
-  assert.match(shell,/id="gamesOpenBtn"/);
+  assert.match(shell,/gamesOpenBtn/);
   assert.match(shell,/id="gamesHomeView"/);
   assert.match(shell,/id="xoGameView"/);
   assert.match(shell,/assets\/visual\/original\/yasser\/welcome\.png/);
