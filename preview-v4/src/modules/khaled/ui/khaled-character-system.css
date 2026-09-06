@@ -1,19 +1,18 @@
 @import url('./khaled-activity-types.css');
 
-.learner-character-shell{display:grid;place-items:center;width:var(--character-khaled-hub);height:var(--character-khaled-hub)}
-.hub-khaled-character .khaled-character-image{max-height:var(--character-khaled-hub)}
+.learner-character-shell{display:grid;place-items:center;max-width:100%;overflow:hidden}
+.hub-khaled-character .khaled-character-image{max-height:var(--character-khaled-hub);max-width:100%}
 .khaled-character-image{display:block;max-width:100%;max-height:100%;object-fit:contain;object-position:center;filter:drop-shadow(0 12px 16px rgba(45,55,85,.10));user-select:none;-webkit-user-drag:none}
 .khaled-character-fallback{display:grid;place-items:center;width:132px;height:132px;border-radius:34px;background:linear-gradient(145deg,#fff4e8,#fff);border:1px solid #f0c79f;color:#ea7b18;font-size:34px;font-weight:950;box-shadow:0 12px 24px rgba(204,112,28,.10)}
 .khaled-character-fallback.compact{width:104px;height:82px;border-radius:24px;font-size:28px}
 
-.khaled-home-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,32%) auto;align-items:center;gap:16px}
-.khaled-home-character{display:grid;place-items:center;height:calc(var(--character-khaled-home) + 8px)}
-.khaled-home-character .khaled-character-image{max-height:var(--character-khaled-home)}
+.khaled-home-character{display:grid;place-items:center;width:min(250px,28vw);height:calc(var(--character-khaled-home) + 4px);overflow:hidden}
+.khaled-home-character .khaled-character-image{max-height:var(--character-khaled-home);max-width:100%}
 
-.khaled-session-character{width:min(440px,86vw);height:calc(var(--character-khaled-session) + 8px);display:grid;place-items:center;margin:0 auto 8px}
-.khaled-session-character .khaled-character-image{max-height:var(--character-khaled-session);max-width:420px}
+.khaled-session-character{width:100%;height:100%;min-height:calc(var(--character-khaled-session) + 8px);display:grid;place-items:center;margin:0;overflow:hidden;align-self:stretch}
+.khaled-session-character .khaled-character-image{max-height:var(--character-khaled-session);max-width:100%;width:auto}
 
-.khaled-result-character{width:min(620px,96%);height:calc(var(--character-khaled-result) + 8px);display:grid;place-items:center;margin:0 auto 10px}
+.khaled-result-character{width:min(620px,96%);min-height:calc(var(--character-khaled-result) + 8px);display:grid;place-items:center;margin:0 auto 8px;overflow:hidden}
 .khaled-result-character .khaled-character-image{max-height:var(--character-khaled-result);max-width:600px}
 .khaled-result-character .khaled-result-symbol{margin:0}
 
@@ -23,9 +22,8 @@
 @keyframes khaledCelebrate{0%{transform:translateY(16px) scale(.92);opacity:.65}42%{transform:translateY(-18px) scale(1.035) rotate(-1.5deg);opacity:1}72%{transform:translateY(3px) scale(.99) rotate(1deg)}100%{transform:none;opacity:1}}
 
 @media(max-width:700px){
-  .khaled-home-hero{grid-template-columns:1fr auto}
-  .khaled-home-character{grid-column:1/-1;grid-row:2}
-  .khaled-session-character{width:min(360px,88vw)}
+  .khaled-home-character{width:min(240px,72vw);height:calc(var(--character-khaled-home) + 4px)}
+  .khaled-session-character{width:min(330px,84vw);height:calc(var(--character-khaled-session) + 6px);min-height:0;align-self:center}
   .khaled-result-character{width:min(520px,96%)}
 }
 
