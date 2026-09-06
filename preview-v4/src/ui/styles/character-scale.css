@@ -45,17 +45,18 @@
 
 @media (orientation:landscape) and (min-width:850px) and (max-height:720px){
   :root{
+    --character-yasser-hub:230px;
     --character-yasser-intro:280px;
     --character-assistant-intro:142px;
     --character-yasser-home:210px;
     --character-assistant-home:96px;
-    --character-yasser-learn:165px;
-    --character-assistant-learn:80px;
+    --character-yasser-learn:185px;
+    --character-assistant-learn:90px;
     --character-yasser-session:165px;
     --character-assistant-session:86px;
     --character-yasser-result:245px;
     --character-assistant-result:126px;
-    --character-khaled-hub:190px;
+    --character-khaled-hub:230px;
     --character-khaled-intro:280px;
     --character-khaled-home:165px;
     --character-khaled-session:136px;
