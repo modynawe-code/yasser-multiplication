@@ -31,6 +31,22 @@ test('Khaled scene warmup does not preload all high-resolution artwork',async()=
   assert.doesNotMatch(source,/Object\.values\(ASSETS\)\.forEach/);
 });
 
+test('Khaled feedback keeps full group artwork inside the stable session stage',async()=>{
+  const controller=await readText('src/modules/khaled/ui/khaled-scene-controller.js');
+  const css=await readText('src/modules/khaled/ui/khaled-character-system.css');
+  assert.match(controller,/function feedback\(isCorrect\)\{return paint\('session',isCorrect\?'groupCelebration':'groupThinking'/);
+  assert.doesNotMatch(controller,/function feedback\(isCorrect\).*?'encourage'/s);
+  assert.match(css,/\.khaled-session-character\{[^}]*aspect-ratio:4\/3/s);
+  assert.match(css,/\.khaled-session-character \.khaled-character-image\{[^}]*object-fit:contain/s);
+});
+
+test('Khaled result stage contains both group and portrait artwork without cropping',async()=>{
+  const css=await readText('src/modules/khaled/ui/khaled-character-system.css');
+  assert.match(css,/\.khaled-result-character\{[^}]*aspect-ratio:4\/3/s);
+  assert.match(css,/\.khaled-result-character \.khaled-character-image\{[^}]*object-fit:contain/s);
+  assert.match(css,/\.khaled-result-character \.khaled-character-image\{[^}]*object-position:center/s);
+});
+
 test('PWA keeps original Khaled PNGs runtime-cached instead of blocking install on them',async()=>{
   const worker=await readText('service-worker.js');
   assert.match(worker,/shell-\d+/);
