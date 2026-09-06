@@ -55,6 +55,12 @@ test('Yasser practice uses a height-aware side-by-side question scene in landsca
   assert.match(css,/\.question-card:not\(\.exam-mode\) \.session-visuals\{grid-area:visual/);
 });
 
+test('Yasser intro and result use height-aware landscape layouts rather than forcing vertical scroll',async()=>{
+  const css=await read('src/ui/styles/character-system.css');
+  assert.match(css,/\.result-card\{[\s\S]*grid-template-areas:[\s\S]*"kicker visual"[\s\S]*"weak weak"[\s\S]*"actions actions"/);
+  assert.match(css,/@media \(orientation:landscape\) and \(min-width:850px\) and \(max-height:720px\)\{[\s\S]*\.intro-shell\{min-height:0;padding:8px 0 14px\}/);
+});
+
 test('character scale distinguishes chooser, intro, review, practice, and result roles',async()=>{
   const scale=await read('src/ui/styles/character-scale.css');
   for(const token of ['--character-yasser-hub','--character-yasser-learn','--character-yasser-session','--character-yasser-result','--character-khaled-hub','--character-khaled-intro','--character-khaled-session','--character-khaled-result'])assert.match(scale,new RegExp(token));
