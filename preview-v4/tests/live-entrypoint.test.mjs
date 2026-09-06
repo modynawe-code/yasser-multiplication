@@ -24,7 +24,7 @@ test('preview app and install manifest use the shared learner identity',async()=
 
 test('service worker shell includes cloud sync, shared UI contracts, currency assets, and Khaled device hardening',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-34/);
+  assert.match(worker,/shell-35/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
