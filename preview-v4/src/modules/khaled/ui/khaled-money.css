@@ -1,13 +1,9 @@
-.khaled-money-stage,.khaled-money-equality{
-  display:flex;align-items:center;justify-content:center;gap:18px;min-height:140px;margin:4px auto 12px;width:100%
-}
+.khaled-money-stage{display:flex;align-items:center;justify-content:center;gap:16px;min-height:128px;margin:4px auto 10px;width:100%}
+.khaled-money-equality{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;min-height:128px;margin:4px auto 10px;width:100%}
 .khaled-money-set{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
-.khaled-money-piece{
-  position:relative;display:inline-grid;place-items:center;overflow:hidden;flex:0 0 auto;
-  background:#fff;border:0;box-shadow:none
-}
-.khaled-money-piece.coin{width:80px;height:80px;border-radius:50%}
-.khaled-money-piece.note{width:142px;height:68px;border-radius:8px}
+.khaled-money-piece{position:relative;display:inline-grid;place-items:center;overflow:hidden;flex:0 0 auto;background:#fff;border:0;box-shadow:none}
+.khaled-money-piece.coin{width:78px;height:78px;border-radius:50%}
+.khaled-money-piece.note{width:150px;height:72px;border-radius:8px}
 .khaled-money-photo{position:absolute;display:block;max-width:none;height:auto;user-select:none;-webkit-user-drag:none}
 .khaled-money-piece.coin .khaled-money-photo{width:100%;left:0;bottom:0}
 .khaled-money-piece.note .khaled-money-photo{width:100%;left:0;top:0}
@@ -17,21 +13,43 @@
 .khaled-money-piece.value-2 .khaled-money-fallback{background:radial-gradient(circle at 50% 50%,#e9c65e 0 46%,#d8dde4 47% 100%)}
 .khaled-money-piece.value-5 .khaled-money-fallback{background:#f2e6f5;border-color:#b28bb8}.khaled-money-piece.value-10 .khaled-money-fallback{background:#f5eadc;border-color:#c8a67f}
 
-.khaled-money-target,.khaled-price-tag{display:flex;align-items:baseline;justify-content:center;gap:7px;margin:4px auto 12px;padding:12px 22px;border-radius:20px;background:#fff5e4;border:3px solid #ffbd67;width:max-content;max-width:100%}
+.khaled-money-target,.khaled-price-tag{display:flex;align-items:baseline;justify-content:center;gap:7px;margin:4px auto 10px;padding:11px 20px;border-radius:20px;background:#fff5e4;border:3px solid #ffbd67;width:max-content;max-width:100%}
 .khaled-money-target small,.khaled-price-tag small{display:block;align-self:center;font-weight:900;color:#7c6a52;margin-inline-end:5px}.khaled-money-target strong,.khaled-price-tag strong{font-size:38px;color:#ff7b00}.khaled-money-target span,.khaled-price-tag span{font-weight:900;color:#8a5a22}
-.khaled-money-option{min-height:104px;padding:8px}.khaled-money-option .khaled-money-piece{transform:scale(.78);margin:-7px -5px}
-.khaled-money-equality section{min-width:190px;min-height:116px;display:grid;place-items:center;background:#f8fbff;border:2px solid #dce7f4;border-radius:20px;padding:9px}.khaled-money-equality>b{font-size:34px;color:#ff7b00}.khaled-price-tag{background:#e8f7ff;border-color:#8dc8eb}.khaled-price-tag strong{color:#2075a9}
+.khaled-money-option{min-height:126px;padding:10px;display:grid;place-items:center}.khaled-money-option .khaled-money-set{max-width:190px;margin:auto}.khaled-money-option .khaled-money-piece{transform:scale(.78);margin:-7px -5px}
+.khaled-money-equality section{min-width:0;min-height:118px;display:grid;place-items:center;background:#f8fbff;border:2px solid #dce7f4;border-radius:20px;padding:9px}.khaled-money-equality>b{font-size:34px;color:#ff7b00}.khaled-price-tag{background:#e8f7ff;border-color:#8dc8eb}.khaled-price-tag strong{color:#2075a9}
+
+/* Money question types get semantic layouts; no one-size-fits-all answer grid. */
+.khaled-question-card[data-question-type="money-recognition"] .khaled-answers,
+.khaled-question-card[data-question-type="count-money"] .khaled-answers{width:min(520px,100%);grid-template-columns:repeat(2,minmax(150px,1fr))}
+.khaled-question-card[data-question-type="money-model"] .khaled-answers,
+.khaled-question-card[data-question-type="use-money"] .khaled-answers{width:min(760px,100%);grid-template-columns:repeat(3,minmax(160px,1fr));align-items:stretch}
+.khaled-question-card[data-question-type="equal-money-amounts"] .khaled-answers{width:min(440px,100%);grid-template-columns:repeat(2,minmax(150px,1fr))}
+.khaled-question-card[data-question-type="money-model"] .khaled-visual,
+.khaled-question-card[data-question-type="use-money"] .khaled-visual{min-height:auto}
+.khaled-question-card[data-question-type="equal-money-amounts"] .khaled-visual{width:min(760px,100%)}
 
 @media (orientation:landscape) and (min-width:700px) and (max-height:900px){
-  .khaled-money-stage,.khaled-money-equality{min-height:112px;margin-bottom:8px;gap:14px}
-  .khaled-money-piece.coin{width:70px;height:70px}.khaled-money-piece.note{width:124px;height:60px}
-  .khaled-money-option{min-height:86px;padding:6px}.khaled-money-option .khaled-money-piece{transform:scale(.72);margin:-9px -7px}
-  .khaled-money-equality section{min-width:170px;min-height:100px;padding:7px}
-  .khaled-money-target,.khaled-price-tag{padding:9px 18px;margin-bottom:8px}.khaled-money-target strong,.khaled-price-tag strong{font-size:34px}
+  .khaled-money-stage,.khaled-money-equality{min-height:104px;margin-bottom:6px;gap:12px}
+  .khaled-money-piece.coin{width:68px;height:68px}.khaled-money-piece.note{width:130px;height:62px}
+  .khaled-money-option{min-height:102px;padding:6px}.khaled-money-option .khaled-money-set{max-width:170px}.khaled-money-option .khaled-money-piece{transform:scale(.74);margin:-9px -7px}
+  .khaled-money-equality section{min-height:96px;padding:7px}
+  .khaled-money-target,.khaled-price-tag{padding:8px 17px;margin-bottom:6px}.khaled-money-target strong,.khaled-price-tag strong{font-size:34px}
+  .khaled-question-card[data-question-type="money-model"] .khaled-answers,.khaled-question-card[data-question-type="use-money"] .khaled-answers{grid-template-columns:repeat(3,minmax(145px,1fr));gap:9px}
+}
+
+@media (orientation:landscape) and (min-width:850px) and (max-height:720px){
+  .khaled-money-stage,.khaled-money-equality{min-height:88px}
+  .khaled-money-piece.coin{width:62px;height:62px}.khaled-money-piece.note{width:118px;height:56px}
+  .khaled-money-option{min-height:92px}.khaled-money-option .khaled-money-piece{transform:scale(.70);margin:-10px -8px}
+  .khaled-money-equality section{min-height:88px}
+  .khaled-question-card[data-question-type="money-model"] .khaled-answers,.khaled-question-card[data-question-type="use-money"] .khaled-answers{grid-template-columns:repeat(3,minmax(132px,1fr))}
 }
 
 @media(max-width:620px){
-  .khaled-money-stage,.khaled-money-equality{gap:8px;min-height:125px}
+  .khaled-money-stage{gap:8px;min-height:112px}.khaled-money-equality{gap:8px;min-height:118px}
   .khaled-money-set{gap:7px}.khaled-money-piece.coin{width:66px;height:66px}.khaled-money-piece.note{width:112px;height:54px}.khaled-money-fallback b{font-size:21px}
-  .khaled-money-option{min-height:92px;grid-column:1/-1}.khaled-money-equality section{min-width:0;flex:1;padding:7px}.khaled-money-equality .khaled-money-piece{transform:scale(.76);margin:-7px}.khaled-money-target strong,.khaled-price-tag strong{font-size:32px}
+  .khaled-money-option{min-height:96px}.khaled-money-equality section{min-width:0;padding:7px}.khaled-money-equality .khaled-money-piece{transform:scale(.76);margin:-7px}.khaled-money-target strong,.khaled-price-tag strong{font-size:32px}
+  .khaled-question-card[data-question-type="money-recognition"] .khaled-answers,.khaled-question-card[data-question-type="count-money"] .khaled-answers{grid-template-columns:repeat(2,minmax(120px,1fr))}
+  .khaled-question-card[data-question-type="money-model"] .khaled-answers,.khaled-question-card[data-question-type="use-money"] .khaled-answers{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
+  .khaled-question-card[data-question-type="equal-money-amounts"] .khaled-answers{grid-template-columns:repeat(2,minmax(120px,1fr))}
 }
