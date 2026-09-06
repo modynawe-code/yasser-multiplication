@@ -1,4 +1,5 @@
 @import url('./khaled-activity-types.css');
+@import url('./khaled-home.css');
 
 .learner-character-shell{display:grid;place-items:center;max-width:100%;overflow:hidden}
 .hub-khaled-character .khaled-character-image{max-height:var(--character-khaled-hub);max-width:100%}
@@ -39,9 +40,9 @@
       "metrics character"
       "actions actions";
     align-items:center;
-    column-gap:24px;
+    column-gap:28px;
     row-gap:8px;
-    padding:24px 28px;
+    padding:24px 30px 28px;
   }
   .khaled-result-character{grid-area:character;width:min(100%,calc(var(--character-khaled-result) * 1.3334));aspect-ratio:4/3;height:auto;min-height:0;margin:0;align-self:center;justify-self:center;overflow:visible}
   .khaled-result .result-card>h2{grid-area:title;margin:0;align-self:end}
@@ -49,7 +50,7 @@
   .khaled-result .score-ring{grid-area:score;margin:8px auto;width:132px;height:132px;border-width:11px}
   .khaled-result .score-ring strong{font-size:34px}
   .khaled-result .result-metrics{grid-area:metrics;width:100%;margin:6px 0}
-  .khaled-result .result-actions{grid-area:actions;margin-top:10px;grid-template-columns:1.1fr 1fr}
+  .khaled-result .result-actions{grid-area:actions;margin-top:12px;grid-template-columns:1.1fr 1fr}
 }
 
 @media(max-width:700px){
