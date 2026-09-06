@@ -29,31 +29,40 @@ export function ensureGamesShell(){
           <button class="icon-btn" id="gamesBackToHub" data-nav="back">اختيار الطفل</button>
           <div><div class="kicker">منطقة الألعاب</div><h1>نلعب ونتعلم معًا</h1><p>ألعاب فردية ومشتركة، تعليمية وللمرح.</p></div>
         </header>
-        <div class="games-filter-note">البداية بثلاثة أنماط مختلفة حتى يبقى النظام قابلًا للتوسع.</div>
+        <div class="games-filter-note">اختر اللعبة اللي تبغاها وابدأ التحدي ⭐</div>
         <div class="games-grid" id="gamesCatalog"></div>
       </div>
     </section>
 
     <section id="xoLobbyView" class="view">
       <div class="games-shell xo-lobby-shell">
-        <header class="games-header">
+        <header class="games-header xo-lobby-header">
           <button class="icon-btn" id="xoLobbyBack" data-nav="back">الألعاب</button>
           <div><div class="kicker">إكس أو</div><h1>اختاروا طريقة اللعب</h1><p>على نفس الجهاز أو بين جهازين أونلاين.</p></div>
         </header>
+
         <div class="xo-lobby-card">
-          <div class="xo-lobby-copy"><h2>مين يلعب من هذا الجهاز؟</h2><p>الاختيار مطلوب للأونلاين فقط.</p></div>
-          <div class="xo-lobby-players" role="group" aria-label="اختيار اللاعب">
-            <button class="xo-lobby-player yasser" data-xo-learner="yasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><strong>ياسر</strong></button>
-            <button class="xo-lobby-player khaled" data-xo-learner="khaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><strong>خالد</strong></button>
-          </div>
-          <div class="xo-lobby-actions">
-            <button class="btn primary" id="xoLocalStart">على نفس الجهاز</button>
-            <button class="btn secondary" id="xoOnlineCreate">إنشاء غرفة أونلاين</button>
-          </div>
-          <div class="xo-room-join">
-            <label for="xoRoomCodeInput">عندك رمز غرفة؟</label>
-            <div><input id="xoRoomCodeInput" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><button class="btn secondary" id="xoOnlineJoin">دخول</button></div>
-          </div>
+          <section class="xo-local-choice" aria-label="اللعب على نفس الجهاز">
+            <div><strong>على نفس الجهاز</strong><span>ياسر وخالد يتناوبون على هذا الجهاز.</span></div>
+            <button class="btn primary" id="xoLocalStart">ابدأ اللعب</button>
+          </section>
+
+          <div class="xo-lobby-divider"><span>أو</span></div>
+
+          <section class="xo-online-choice" aria-label="اللعب أونلاين">
+            <div class="xo-lobby-copy"><h2>بين جهازين أونلاين</h2><p>اختر صاحب هذا الجهاز أولًا.</p></div>
+            <div class="xo-lobby-players" role="group" aria-label="اختيار اللاعب لهذا الجهاز">
+              <button class="xo-lobby-player yasser" data-xo-learner="yasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><strong>ياسر</strong></button>
+              <button class="xo-lobby-player khaled" data-xo-learner="khaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><strong>خالد</strong></button>
+            </div>
+            <button class="btn secondary xo-create-room" id="xoOnlineCreate">إنشاء غرفة أونلاين</button>
+
+            <div class="xo-room-join">
+              <label for="xoRoomCodeInput">أو اكتب رمز الغرفة</label>
+              <div><input id="xoRoomCodeInput" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><button class="btn secondary" id="xoOnlineJoin">دخول</button></div>
+            </div>
+          </section>
+
           <div class="xo-room-code-box" id="xoRoomCodeBox" hidden><span>رمز الغرفة</span><strong id="xoRoomCode">------</strong><small>افتح التطبيق في الجهاز الثاني واكتب هذا الرمز.</small></div>
           <div class="xo-lobby-status" id="xoLobbyStatus" role="status" aria-live="polite"></div>
         </div>
