@@ -31,6 +31,18 @@ test('Khaled scene warmup does not preload all high-resolution artwork',async()=
   assert.doesNotMatch(source,/Object\.values\(ASSETS\)\.forEach/);
 });
 
+test('all seven approved Khaled artworks have distinct semantic roles',async()=>{
+  const controller=await readText('src/modules/khaled/ui/khaled-scene-controller.js');
+  assert.match(controller,/function hub\(\)\{return paint\('hub','welcome'\);\}/);
+  assert.match(controller,/function home\(\)\{return paint\('home','thinking'\);\}/);
+  assert.match(controller,/function question\(\)\{return paint\('session','groupThinking'\);\}/);
+  assert.match(controller,/isCorrect\?'groupCelebration':'groupThinking'/);
+  assert.match(controller,/pct===100.*?'celebrate'/s);
+  assert.match(controller,/pct>=80.*?'groupCelebration'/s);
+  assert.match(controller,/pct>=60.*?'mastered'/s);
+  assert.match(controller,/paint\('result','encourage'\)/);
+});
+
 test('Khaled feedback keeps full group artwork inside the stable session stage',async()=>{
   const controller=await readText('src/modules/khaled/ui/khaled-scene-controller.js');
   const css=await readText('src/modules/khaled/ui/khaled-character-system.css');
@@ -38,6 +50,13 @@ test('Khaled feedback keeps full group artwork inside the stable session stage',
   assert.doesNotMatch(controller,/function feedback\(isCorrect\)\{return paint\('session',isCorrect\?'encourage'/);
   assert.match(css,/\.khaled-session-character\{[^}]*aspect-ratio:4\/3/s);
   assert.match(css,/\.khaled-session-character \.khaled-character-image\{[^}]*object-fit:contain/s);
+});
+
+test('Khaled home hero gives the standalone thinking pose a responsive visual stage',async()=>{
+  const css=await readText('src/modules/khaled/ui/khaled-home.css');
+  assert.match(css,/\.khaled-home-hero\{[^}]*grid-template-areas:/s);
+  assert.match(css,/\.khaled-home-hero \.khaled-home-character\{[^}]*width:min\(100%,320px\)/s);
+  assert.match(css,/\.khaled-home-hero \.khaled-home-character \.khaled-character-image\{[^}]*object-fit:contain/s);
 });
 
 test('Khaled result stage contains both group and portrait artwork without cropping',async()=>{
