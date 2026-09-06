@@ -61,6 +61,14 @@ test('Yasser intro and result use height-aware landscape layouts rather than for
   assert.match(css,/@media \(orientation:landscape\) and \(min-width:850px\) and \(max-height:720px\)\{[\s\S]*\.intro-shell\{min-height:0;padding:8px 0 14px\}/);
 });
 
+test('Yasser home prioritizes the learning mission over the progress sidebar and uses dynamic viewport height',async()=>{
+  const css=await read('style.css');
+  assert.match(css,/\.home-grid\{[^}]*grid-template-columns:minmax\(0,1\.45fr\) minmax\(280px,\.55fr\)/);
+  assert.match(css,/body\{min-height:100dvh\}/);
+  assert.match(css,/\.mission,\.parent-summary\{min-height:calc\(100dvh - 96px\)/);
+  assert.match(css,/\.icon-btn\{min-height:48px/);
+});
+
 test('character scale distinguishes chooser, intro, review, practice, and result roles',async()=>{
   const scale=await read('src/ui/styles/character-scale.css');
   for(const token of ['--character-yasser-hub','--character-yasser-learn','--character-yasser-session','--character-yasser-result','--character-khaled-hub','--character-khaled-intro','--character-khaled-session','--character-khaled-result'])assert.match(scale,new RegExp(token));
