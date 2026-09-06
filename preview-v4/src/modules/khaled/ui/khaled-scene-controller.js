@@ -30,6 +30,7 @@ function byId(id){return document.getElementById(id);}
 
 export function createKhaledSceneController(){
   const cache=new Map();
+  const paintEpoch=new Map();
 
   function canLoad(src){
     if(cache.has(src))return cache.get(src);
@@ -47,8 +48,12 @@ export function createKhaledSceneController(){
     const image=byId(SLOT_IDS[slot]);
     const fallback=byId(FALLBACK_IDS[slot]);
     if(!image)return false;
+    const epoch=(paintEpoch.get(slot)||0)+1;
+    paintEpoch.set(slot,epoch);
     const src=ASSETS[key];
     const ok=src?await canLoad(src):false;
+    // A slower previous image request must never overwrite a newer scene state.
+    if(paintEpoch.get(slot)!==epoch)return false;
     if(ok){
       image.src=src;
       image.hidden=false;
