@@ -54,6 +54,12 @@ body.hub-mode .topbar,body.khaled-mode .topbar{display:none}
   .khaled-group-choice{min-height:145px;padding:14px}
 }
 
+@media (orientation:landscape) and (min-width:850px) and (max-height:720px){
+  .learner-hub{min-height:0;justify-content:flex-start;padding:8px 0 12px}
+  .hub-heading{margin-bottom:12px}.hub-heading-actions{margin-bottom:5px}.hub-heading .kicker{padding:5px 10px;margin-bottom:6px}.hub-heading h1{font-size:34px;margin:0 0 4px}.hub-heading p{font-size:14px}
+  .learner-grid{gap:16px}.learner-card{min-height:350px;grid-template-rows:230px auto;padding:12px 18px 16px;gap:6px}.learner-card strong{font-size:28px}.learner-card span{font-size:16px}.learner-card small{font-size:12px;margin-top:4px}.learner-character-shell{align-self:center}
+}
+
 @media(max-width:700px){
   .learner-hub{padding:16px 0}.learner-grid{grid-template-columns:1fr}.learner-card{min-height:300px;grid-template-rows:minmax(165px,1fr) auto;padding:18px}.hub-heading h1{font-size:32px}.learner-placeholder{width:126px;height:126px}
   .khaled-intro-shell{padding:10px 0 18px}.khaled-intro-card{padding:18px 16px 20px;border-radius:24px}.khaled-intro-copy h1{font-size:34px}.khaled-intro-copy p{font-size:15px;line-height:1.65;margin-bottom:15px}.khaled-intro-start{min-height:58px;font-size:20px}
