@@ -55,7 +55,11 @@ export function ensureLearningShell(){
     <section id="khaledIntroView" class="view">
       <div class="khaled-intro-shell">
         <article class="card khaled-intro-card">
-          <div class="khaled-intro-badge">رياضيات أول ابتدائي</div>
+          <div class="khaled-intro-toolbar">
+            <button class="icon-btn" id="khaledIntroBack" data-nav="back" aria-label="العودة لاختيار الطفل">رجوع</button>
+            <div class="khaled-intro-badge">رياضيات أول ابتدائي</div>
+            <span class="khaled-intro-toolbar-spacer" aria-hidden="true"></span>
+          </div>
           <div class="khaled-intro-character" aria-hidden="true">
             <img id="khaledIntroCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" fetchpriority="high" hidden />
             <div class="khaled-character-fallback" id="khaledIntroCharacterFallback">+ −</div>
@@ -86,7 +90,7 @@ export function ensureLearningShell(){
 
     <section id="khaledSessionView" class="view">
       <div class="khaled-session-wrap">
-        <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><div class="learning-nav-actions"><button class="icon-btn" id="khaledExitSession" data-nav="back">رجوع للمهارات</button><button class="icon-btn" id="khaledSessionToHub" data-nav="home">اختيار الطفل</button></div></div>
+        <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><div class="learning-nav-actions"><button class="icon-btn" id="khaledExitSession" data-nav="back" aria-label="العودة لمهارات خالد">رجوع</button></div></div>
         <div class="progress-line"><i id="khaledSessionProgress" style="width:0%"></i></div>
         <div class="card khaled-question-card">
           <div class="khaled-session-character" aria-hidden="true">
@@ -113,7 +117,7 @@ export function ensureLearningShell(){
         <h2 id="khaledResultTitle">أحسنت يا خالد</h2><p id="khaledResultSkill"></p>
         <div class="score-ring"><strong id="khaledResultPct">0%</strong></div>
         <div class="result-metrics"><div class="result-metric"><span>صحيح</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>أخطاء</span><strong id="khaledResultWrong">0</strong></div></div>
-        <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="btn secondary" id="khaledResultToHub">اختيار الطفل</button></div>
+        <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="khaled-result-link" id="khaledResultToHub">اختيار الطفل</button></div>
       </div></div>
     </section>
 
