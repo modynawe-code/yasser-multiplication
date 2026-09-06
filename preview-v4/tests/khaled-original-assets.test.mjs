@@ -33,6 +33,6 @@ test('Khaled scene warmup does not preload all high-resolution artwork',async()=
 
 test('PWA keeps original Khaled PNGs runtime-cached instead of blocking install on them',async()=>{
   const worker=await readText('service-worker.js');
-  assert.match(worker,/shell-33/);
+  assert.match(worker,/shell-34/);
   assert.doesNotMatch(worker,/assets\/visual\/original\/khaled\/.*\.png/);
 });

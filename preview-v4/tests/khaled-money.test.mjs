@@ -2,24 +2,27 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMoneyRecognitionQuestion,createCountMoneyQuestion,createMoneyModelQuestion,createEqualAmountsQuestion,createUseMoneyQuestion,createMoneyRoundQuestion } from '../src/modules/khaled/domain/money-question-bank.js';
 import { createAdvancedKhaledRound } from '../src/modules/khaled/domain/advanced-question-bank.js';
+import { SAUDI_MONEY_ASSETS } from '../src/modules/khaled/ui/saudi-money-assets.js';
 import { readFile } from 'node:fs/promises';
 
 function fixedRandom(values){let i=0;return()=>values[i++%values.length];}
 const sum=values=>values.reduce((a,b)=>a+b,0);
 
-test('money recognition only uses lesson-introduction amounts 1, 2, 5 and 10',()=>{
-  for(const seed of [[.01,.3,.7,.2],[.3,.8,.1,.6],[.6,.1,.9,.4],[.99,.2,.8,.5]]){
-    const question=createMoneyRecognitionQuestion({random:fixedRandom(seed)});
-    assert.ok([1,2,5,10].includes(question.correctAnswer));
-    assert.equal(sum(question.coins),question.correctAnswer);
-    assert.ok(question.options.includes(question.correctAnswer));
-  }
+test('money recognition uses the textbook denominations as physical pieces: 1, 2, 5 and 10',()=>{
+  const expected=[1,2,5,10];
+  expected.forEach((value,index)=>{
+    const question=createMoneyRecognitionQuestion({random:fixedRandom([index/4+.01,.2,.7,.4,.8])});
+    assert.deepEqual(question.coins,[value]);
+    assert.equal(question.correctAnswer,value);
+    assert.ok(question.options.includes(value));
+  });
 });
 
-test('count-money questions match the visible total',()=>{
+test('count-money questions match the visible total and use only textbook denominations',()=>{
   const question=createCountMoneyQuestion({random:fixedRandom([.5,.2,.8,.4,.1,.9])});
   assert.equal(question.correctAnswer,sum(question.coins));
   assert.ok(question.options.includes(question.correctAnswer));
+  assert.ok(question.coins.every(value=>[1,2,5,10].includes(value)));
 });
 
 test('money modeling and buying have exactly one option with the target amount',()=>{
@@ -28,6 +31,7 @@ test('money modeling and buying have exactly one option with the target amount',
     const matching=question.options.filter(option=>sum(option.coins)===target);
     assert.equal(matching.length,1);
     assert.equal(matching[0].value,question.correctAnswer);
+    assert.ok(question.options.flatMap(option=>option.coins).every(value=>[1,2,5,10].includes(value)));
   }
 });
 
@@ -47,8 +51,30 @@ test('advanced dispatcher returns final money rounds',()=>{
   assert.equal(round.length,8);assert.ok(round.every(question=>question.skillId==='money'));
 });
 
-test('money renderer uses original CSS visuals instead of textbook images',async()=>{
+test('currency asset registry uses official Saudi currency imagery for the four textbook denominations',()=>{
+  assert.deepEqual(Object.keys(SAUDI_MONEY_ASSETS),['1','2','5','10']);
+  for(const asset of Object.values(SAUDI_MONEY_ASSETS)){
+    assert.ok(['coin','note'].includes(asset.kind));
+    assert.ok(asset.sources.length>=1);
+    assert.ok(asset.sources.every(url=>url.startsWith('https://www.sama.gov.sa/ar-sa/Currency/PublishingImages/')));
+  }
+});
+
+test('money renderer is image-first with a non-blocking educational fallback',async()=>{
   const renderer=await readFile(new URL('../src/modules/khaled/ui/khaled-money-renderer.js',import.meta.url),'utf8');
   const css=await readFile(new URL('../src/modules/khaled/ui/khaled-money.css',import.meta.url),'utf8');
-  assert.match(renderer,/khaled-money-piece/);assert.doesNotMatch(renderer,/<img/i);assert.match(css,/\.khaled-money-piece/);
+  assert.match(renderer,/data-saudi-money-value/);
+  assert.match(renderer,/<img class="khaled-money-photo"/);
+  assert.match(renderer,/hydrateSaudiMoneyImages/);
+  assert.match(css,/\.khaled-money-photo/);
+  assert.match(css,/\.khaled-money-fallback/);
+});
+
+test('PWA caches official SAMA currency images after first successful load without coupling install to them',async()=>{
+  const worker=await readFile(new URL('../service-worker.js',import.meta.url),'utf8');
+  assert.match(worker,/shell-34/);
+  assert.match(worker,/isSaudiCurrencyImage/);
+  assert.match(worker,/www\.sama\.gov\.sa/);
+  assert.match(worker,/response\.type==='opaque'/);
+  assert.doesNotMatch(worker,/Sixth%20Issue%2010%20Riyal%20Note\.png/);
 });

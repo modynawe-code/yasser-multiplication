@@ -17,6 +17,7 @@ const ASSETS=Object.freeze({
 });
 
 const readText=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
+const escapeRegExp=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 
 test('Yasser approved originals remain byte-identical and are never silently recompressed',async()=>{
   for(const [path,expected] of Object.entries(ASSETS)){
@@ -37,12 +38,12 @@ test('visual registry points at original Yasser artwork and all approved group s
     'original/group/yasser-assistant-welcome.png',
     'original/group/yasser-assistant-thinking.png',
     'original/group/yasser-assistant-celebration.png'
-  ])assert.match(registry,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  ])assert.match(registry,new RegExp(escapeRegExp(path)));
 });
 
 test('large Yasser originals remain runtime-cached rather than blocking PWA installation',async()=>{
   const worker=await readText('service-worker.js');
-  assert.match(worker,/shell-33/);
+  assert.match(worker,/shell-34/);
   assert.doesNotMatch(worker,/assets\/visual\/original\/yasser\/.*\.png/);
   assert.doesNotMatch(worker,/assets\/visual\/original\/group\/yasser-assistant-.*\.png/);
 });
