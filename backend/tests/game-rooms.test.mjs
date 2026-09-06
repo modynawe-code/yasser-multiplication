@@ -26,7 +26,7 @@ test('server room action enforces turn and immutable board ownership',()=>{
   assert.equal(first.state.currentPlayerId,'guest');
 });
 
-test('server detects XO winner and rejects moves after completion',()=>{
+test('server detects XO winner, freezes play, and allows a rematch',()=>{
   let state=addXoRoomGuest(createInitialXoRoomState('a'),'b').state;
   for(const [playerId,cell] of [['a',0],['b',3],['a',1],['b',4],['a',2]]){
     const result=applyXoRoomAction(state,{playerId,type:'move',cell});assert.equal(result.ok,true);state=result.state;
@@ -35,6 +35,12 @@ test('server detects XO winner and rejects moves after completion',()=>{
   assert.equal(state.winner,'a');
   assert.deepEqual(state.winningLine,[0,1,2]);
   assert.equal(applyXoRoomAction(state,{playerId:'b',type:'move',cell:5}).reason,'game-not-playing');
+  const rematch=applyXoRoomAction(state,{playerId:'a',type:'reset'});
+  assert.equal(rematch.ok,true);
+  assert.equal(rematch.state.status,'playing');
+  assert.equal(rematch.state.round,2);
+  assert.equal(rematch.state.currentPlayerId,'b');
+  assert.deepEqual(rematch.state.board,Array(9).fill(null));
 });
 
 test('online room storage keeps temporary player tokens hashed and uses six-digit codes',async()=>{
