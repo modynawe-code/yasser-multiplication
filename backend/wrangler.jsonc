@@ -6,7 +6,7 @@
   "account_id": "cb1e4fe9d46768f7400d427eaecceb49",
   "workers_dev": true,
   "vars": {
-    "ALLOWED_ORIGINS": "https://modynawe-code.github.io,http://127.0.0.1:4173,http://localhost:4173",
+    "ALLOWED_ORIGINS": "https://modynawe-code.github.io,http://127.0.0.1:4173,http://localhost:4173,http://localhost,capacitor://localhost",
     "SESSION_TTL_DAYS": "30"
   },
   "d1_databases": [
