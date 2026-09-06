@@ -10,6 +10,7 @@ const ASSETS=Object.freeze({
 
 const SLOT_IDS=Object.freeze({
   hub:'hubKhaledCharacter',
+  intro:'khaledIntroCharacter',
   home:'khaledHomeCharacter',
   session:'khaledSessionCharacter',
   result:'khaledResultCharacter'
@@ -17,6 +18,7 @@ const SLOT_IDS=Object.freeze({
 
 const FALLBACK_IDS=Object.freeze({
   hub:'hubKhaledFallback',
+  intro:'khaledIntroCharacterFallback',
   home:'khaledHomeCharacterFallback',
   session:'khaledSessionCharacterFallback',
   result:'khaledResultCharacterFallback'
@@ -66,6 +68,7 @@ export function createKhaledSceneController(){
   }
 
   function hub(){return paint('hub','welcome');}
+  function intro(){return paint('intro','welcome');}
   function home(){return paint('home','welcome');}
   function question(){return paint('session','groupThinking');}
   function feedback(isCorrect){return paint('session',isCorrect?'encourage':'groupThinking',{motion:isCorrect?'nod':'none'});}
@@ -80,5 +83,5 @@ export function createKhaledSceneController(){
   // are then handled by the service worker's normal runtime cache.
   function warm(){WARM_ASSET_KEYS.forEach(key=>canLoad(ASSETS[key]));}
 
-  return{ASSETS,WARM_ASSET_KEYS,warm,hub,home,question,feedback,result,paint};
+  return{ASSETS,WARM_ASSET_KEYS,warm,hub,intro,home,question,feedback,result,paint};
 }
