@@ -15,7 +15,7 @@
   --character-khaled-hub:clamp(205px,27vw,270px);
   --character-khaled-intro:clamp(300px,39vw,400px);
   --character-khaled-home:clamp(180px,24vw,235px);
-  --character-khaled-session:clamp(150px,20vw,205px);
+  --character-khaled-session:clamp(165px,22vw,220px);
   --character-khaled-result:clamp(250px,33vw,340px);
 
   --character-gap-large:clamp(18px,2.5vw,34px);
@@ -36,9 +36,9 @@
     --character-yasser-result:clamp(270px,40dvh,340px);
     --character-assistant-result:clamp(140px,21dvh,176px);
     --character-khaled-hub:clamp(205px,31dvh,260px);
-    --character-khaled-intro:clamp(300px,46dvh,390px);
+    --character-khaled-intro:clamp(290px,45dvh,390px);
     --character-khaled-home:clamp(175px,27dvh,225px);
-    --character-khaled-session:clamp(145px,22dvh,190px);
+    --character-khaled-session:clamp(175px,27dvh,215px);
     --character-khaled-result:clamp(250px,38dvh,325px);
   }
 }
@@ -57,9 +57,9 @@
     --character-yasser-result:245px;
     --character-assistant-result:126px;
     --character-khaled-hub:230px;
-    --character-khaled-intro:280px;
+    --character-khaled-intro:270px;
     --character-khaled-home:165px;
-    --character-khaled-session:136px;
+    --character-khaled-session:180px;
     --character-khaled-result:225px;
   }
 }
