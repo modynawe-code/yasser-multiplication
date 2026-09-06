@@ -34,6 +34,32 @@ export function ensureGamesShell(){
       </div>
     </section>
 
+    <section id="xoLobbyView" class="view">
+      <div class="games-shell xo-lobby-shell">
+        <header class="games-header">
+          <button class="icon-btn" id="xoLobbyBack" data-nav="back">الألعاب</button>
+          <div><div class="kicker">إكس أو</div><h1>اختاروا طريقة اللعب</h1><p>على نفس الجهاز أو بين جهازين أونلاين.</p></div>
+        </header>
+        <div class="xo-lobby-card">
+          <div class="xo-lobby-copy"><h2>مين يلعب من هذا الجهاز؟</h2><p>الاختيار مطلوب للأونلاين فقط.</p></div>
+          <div class="xo-lobby-players" role="group" aria-label="اختيار اللاعب">
+            <button class="xo-lobby-player yasser" data-xo-learner="yasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><strong>ياسر</strong></button>
+            <button class="xo-lobby-player khaled" data-xo-learner="khaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><strong>خالد</strong></button>
+          </div>
+          <div class="xo-lobby-actions">
+            <button class="btn primary" id="xoLocalStart">على نفس الجهاز</button>
+            <button class="btn secondary" id="xoOnlineCreate">إنشاء غرفة أونلاين</button>
+          </div>
+          <div class="xo-room-join">
+            <label for="xoRoomCodeInput">عندك رمز غرفة؟</label>
+            <div><input id="xoRoomCodeInput" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"><button class="btn secondary" id="xoOnlineJoin">دخول</button></div>
+          </div>
+          <div class="xo-room-code-box" id="xoRoomCodeBox" hidden><span>رمز الغرفة</span><strong id="xoRoomCode">------</strong><small>افتح التطبيق في الجهاز الثاني واكتب هذا الرمز.</small></div>
+          <div class="xo-lobby-status" id="xoLobbyStatus" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
     <section id="xoGameView" class="view">
       <div class="games-shell xo-shell">
         <header class="games-header xo-header">
