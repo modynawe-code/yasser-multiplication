@@ -21,12 +21,14 @@ test('learner chooser has a dedicated short-landscape contract so its heading is
 test('Khaled has a dedicated intro route without merging his curriculum into Yasser flow',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
   const controller=await read('src/modules/khaled/ui/khaled-controller.js');
+  const scenes=await read('src/modules/khaled/ui/khaled-scene-controller.js');
   const css=await read('src/modules/hub/learning-hub.css');
   assert.match(shell,/id="khaledIntroView"/);
-  assert.match(shell,/id="khaledIntroStart"/);
+  assert.match(shell,/id="khaledIntroStart"[^>]*>يلا نبدأ<\/button>/);
   assert.match(controller,/function showIntro\(\)/);
   assert.match(controller,/function enterHome\(\)/);
   assert.match(controller,/return\{start\(\)\{bind\(\);visuals\.warm\(\);showIntro\(\);\},enter\(\)\{bind\(\);visuals\.warm\(\);enterHome\(\);\}/);
+  assert.match(scenes,/function intro\(\)\{return paint\('intro','groupThinking'\);\}/);
   assert.match(css,/\.khaled-intro-shell/);
 });
 
