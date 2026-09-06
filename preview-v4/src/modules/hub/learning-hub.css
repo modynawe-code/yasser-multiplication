@@ -13,6 +13,14 @@ body.hub-mode .topbar,body.khaled-mode .topbar{display:none}
 .hub-khaled-character{width:min(100%,290px);height:var(--character-khaled-hub)}
 .learner-placeholder{width:150px;height:150px;border-radius:38px;display:grid;grid-template-columns:1fr 1fr;place-items:center;background:linear-gradient(145deg,#eef3ff,#fff7e7);border:1px solid #dce4ff}.learner-placeholder span{font-size:48px;color:var(--primary);margin:0}.learner-placeholder.khaled{background:linear-gradient(145deg,#effaf4,#fff8e8);border-color:#d7eadf}.learner-placeholder.khaled span:first-child{color:var(--green)}.learner-placeholder.khaled span:last-child{color:var(--gold)}
 
+/* Khaled gets his own intro route, parallel to Yasser but not sharing the learning flow. */
+.khaled-intro-shell{min-height:calc(100dvh - 42px);display:grid;place-items:center;padding:18px 0 24px}
+.khaled-intro-card{width:min(100%,760px);padding:24px 26px 28px;text-align:center;overflow:hidden;background:linear-gradient(145deg,#fff 0%,#fff7ed 58%,#f4fbf7 100%);border-color:#f0d6bd}
+.khaled-intro-badge{display:inline-flex;align-items:center;justify-content:center;padding:8px 13px;border-radius:999px;background:#fff2e4;color:#d96813;font-weight:900;margin-bottom:6px}
+.khaled-intro-copy h1{font-size:42px;margin:4px 0 8px}.khaled-intro-copy p{max-width:570px;margin:0 auto 18px;color:#66728a;font-size:18px;line-height:1.7}
+.khaled-intro-start{width:min(100%,420px);min-height:64px;background:#ef8124;color:#fff;font-size:22px;box-shadow:0 10px 22px rgba(239,129,36,.20)}
+.khaled-intro-start:active{background:#d96f18}
+
 /* Khaled home: hero and progress never share visual space. */
 .khaled-wrap{max-width:980px;margin:auto}.khaled-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px}.khaled-head h2{font-size:28px;margin:0}.khaled-head p{margin:6px 0 0;color:var(--muted)}
 .khaled-home-hero{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:18px;min-height:calc(var(--character-khaled-home) + 30px);padding:10px 0 14px}
@@ -35,6 +43,7 @@ body.hub-mode .topbar,body.khaled-mode .topbar{display:none}
 .khaled-addition{width:min(620px,100%);display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(120px,1fr) auto 72px;align-items:center;gap:12px}.khaled-add-group{min-height:150px;padding:16px;border:2px solid var(--border);border-radius:22px;background:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:9px}.khaled-add-group .khaled-dot{width:42px;height:42px}.khaled-add-sign{font-size:38px;font-weight:950;color:var(--text)}.khaled-add-question{width:72px;height:72px;border:2px dashed #9eabd0;border-radius:20px;display:grid;place-items:center;background:#fff;color:var(--primary);font-size:36px;font-weight:950}
 
 @media (orientation:landscape) and (min-width:760px) and (max-height:900px){
+  .khaled-intro-shell{min-height:calc(100dvh - 28px);padding:8px 0 14px}.khaled-intro-card{width:min(92vw,820px);padding:18px 24px 20px}.khaled-intro-copy h1{font-size:38px}.khaled-intro-copy p{font-size:16px;margin-bottom:14px}.khaled-intro-start{min-height:58px;font-size:20px}
   .khaled-question-card{padding:14px 20px;grid-template-columns:minmax(0,1fr) minmax(165px,24%);gap:18px}
   .khaled-question-card h3{font-size:24px;margin:8px 0}
   .khaled-visual{min-height:118px;max-height:280px}
@@ -47,6 +56,7 @@ body.hub-mode .topbar,body.khaled-mode .topbar{display:none}
 
 @media(max-width:700px){
   .learner-hub{padding:16px 0}.learner-grid{grid-template-columns:1fr}.learner-card{min-height:300px;grid-template-rows:minmax(165px,1fr) auto;padding:18px}.hub-heading h1{font-size:32px}.learner-placeholder{width:126px;height:126px}
+  .khaled-intro-shell{padding:10px 0 18px}.khaled-intro-card{padding:18px 16px 20px;border-radius:24px}.khaled-intro-copy h1{font-size:34px}.khaled-intro-copy p{font-size:15px;line-height:1.65;margin-bottom:15px}.khaled-intro-start{min-height:58px;font-size:20px}
   .khaled-home-hero{grid-template-columns:minmax(0,1fr) auto;gap:12px}.khaled-home-character{grid-column:1/-1;grid-row:2;justify-self:center}.khaled-home-hero>.icon-btn{grid-column:2;grid-row:1}.khaled-skill-list{grid-template-columns:1fr}
   .khaled-question-card{display:flex;flex-direction:column;align-items:center;padding:16px;gap:8px}.khaled-question-content{width:100%}.khaled-session-character{order:0}.khaled-question-content{order:1}.khaled-visual{min-height:130px}.khaled-dot{width:50px;height:50px}.khaled-dot-group.large .khaled-dot{width:36px;height:36px}.khaled-compare{gap:10px}.khaled-group-choice{min-height:150px;padding:14px}.khaled-head{align-items:center}.khaled-head h2{font-size:23px}.khaled-shape,.khaled-pattern-missing{width:62px;height:62px;font-size:35px}.khaled-position,.khaled-pattern{gap:12px;padding:14px}.khaled-number-tile,.khaled-number-missing{width:62px;height:62px;font-size:25px}.khaled-number-line{gap:8px;padding:16px}.khaled-number-arrow{font-size:22px}.khaled-addition{grid-template-columns:minmax(90px,1fr) auto minmax(90px,1fr) auto 58px;gap:8px}.khaled-add-group{min-height:125px;padding:10px}.khaled-add-group .khaled-dot{width:34px;height:34px}.khaled-add-question{width:58px;height:58px;font-size:30px}
 }
