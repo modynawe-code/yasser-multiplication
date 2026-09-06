@@ -57,14 +57,14 @@ export function ensureLearningShell(){
         <article class="card khaled-intro-card">
           <div class="khaled-intro-badge">رياضيات أول ابتدائي</div>
           <div class="khaled-intro-character" aria-hidden="true">
-            <img id="khaledIntroCharacter" class="khaled-character-image" alt="" width="1086" height="1448" decoding="async" fetchpriority="high" hidden />
+            <img id="khaledIntroCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" fetchpriority="high" hidden />
             <div class="khaled-character-fallback" id="khaledIntroCharacterFallback">+ −</div>
           </div>
           <div class="khaled-intro-copy">
             <h1>جاهز يا خالد؟</h1>
-            <p>نعدّ ونقارن ونجمع ونتعلم بالنقود والصور خطوة خطوة.</p>
+            <p>نعدّ ونقارن ونجمع ونتعلم بالصور والنقود خطوة خطوة.</p>
           </div>
-          <button class="btn khaled-intro-start" id="khaledIntroStart">ابدأ التعلم</button>
+          <button class="btn khaled-intro-start" id="khaledIntroStart">يلا نبدأ</button>
         </article>
       </div>
     </section>
