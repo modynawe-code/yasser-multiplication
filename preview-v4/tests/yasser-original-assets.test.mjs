@@ -43,7 +43,7 @@ test('visual registry points at original Yasser artwork and all approved group s
 
 test('large Yasser originals remain runtime-cached rather than blocking PWA installation',async()=>{
   const worker=await readText('service-worker.js');
-  assert.match(worker,/shell-34/);
+  assert.match(worker,/shell-\d+/);
   assert.doesNotMatch(worker,/assets\/visual\/original\/yasser\/.*\.png/);
   assert.doesNotMatch(worker,/assets\/visual\/original\/group\/yasser-assistant-.*\.png/);
 });

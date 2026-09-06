@@ -20,11 +20,12 @@ function shapes(items,className=''){return items.map(item=>`<span class="khaled-
 function classifyToken(item){return `<span class="khaled-classify-token shape-${item.shape} color-${item.color}" aria-hidden="true"></span>`;}
 function numberTiles(items){return items.map(value=>value===null?'<span class="khaled-number-missing" aria-hidden="true">؟</span>':`<span class="khaled-number-tile">${value}</span>`).join('<span class="khaled-number-arrow" aria-hidden="true">→</span>');}
 
-export function createKhaledController({repository,onExitToHub}={}){
+export function createKhaledController({repository}={}){
   let state=repository.load(),session=null,bound=false,feedbackPending=false,feedbackTimer=null;
   const speech=createSpeechService(),audio=createFeedbackAudio(),visuals=createKhaledSceneController();
   function persist(){repository.save(state);}
   function clearFeedbackTimer(){if(feedbackTimer){clearTimeout(feedbackTimer);feedbackTimer=null;}feedbackPending=false;}
+  function activateKhaledMode(){document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');document.body.classList.add('khaled-mode');}
 
   function renderHome(){
     const list=byId('khaledSkillList');if(!list)return;
@@ -33,18 +34,26 @@ export function createKhaledController({repository,onExitToHub}={}){
     document.querySelectorAll('[data-khaled-skill]').forEach(button=>button.onclick=()=>startSkill(button.dataset.khaledSkill));
   }
 
-  function enter(){clearFeedbackTimer();document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');document.body.classList.add('khaled-mode');renderHome();show('khaledHomeView');visuals.home();}
+  function showIntro(){clearFeedbackTimer();speech.stop();activateKhaledMode();show('khaledIntroView');visuals.intro();}
+  function enterHome(){clearFeedbackTimer();speech.stop();activateKhaledMode();renderHome();show('khaledHomeView');visuals.home();}
   function startSkill(skillId){const skill=getKhaledSkill(skillId);if(!skill||skill.status!=='ready')return;clearFeedbackTimer();speech.stop();const questions=createAdvancedKhaledRound({skillId,count:8})||createKhaledRound({skillId,count:8});session={skillId,questions,index:0,correct:0,wrong:0,answers:[],completed:false,retryCount:0};byId('khaledSessionTitle').textContent=skill.title;show('khaledSessionView');renderQuestion();}
 
   function speakQuestion(question){const id=question?.id;setTimeout(()=>{const active=session?.questions?.[session.index];if(!feedbackPending&&active?.id===id)speech.speak(question.spokenPrompt||'');},220);}
+  function finalizeAnswerLayout(answers){const count=answers?.children?.length||0;if(count)answers.dataset.optionCount=String(count);else delete answers.dataset.optionCount;}
 
   function renderQuestion(){
     if(!session||session.index>=session.questions.length)return finish();
     const question=session.questions[session.index];
     byId('khaledSessionMeta').textContent=`${session.index+1} من ${session.questions.length}`;
     byId('khaledSessionProgress').style.width=`${session.index/session.questions.length*100}%`;
-    byId('khaledPrompt').textContent=question.prompt;byId('khaledFeedback').textContent='';
-    const visual=byId('khaledVisual'),answers=byId('khaledAnswers');answers.innerHTML='';answers.classList.remove('khaled-visual-answers','khaled-equation-answers','khaled-order-answers');visuals.question();
+    byId('khaledPrompt').textContent=question.prompt;
+    byId('khaledFeedback').textContent='';
+    const visual=byId('khaledVisual'),answers=byId('khaledAnswers'),card=visual?.closest('.khaled-question-card');
+    if(card)card.dataset.questionType=question.type||'default';
+    answers.innerHTML='';
+    delete answers.dataset.optionCount;
+    answers.classList.remove('khaled-visual-answers','khaled-equation-answers','khaled-order-answers');
+    visuals.question();
 
     if(question.type==='count-select'){
       visual.innerHTML=countVisual(question.count,question.count>10);question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
@@ -72,6 +81,7 @@ export function createKhaledController({repository,onExitToHub}={}){
     else if(isPlaceValueQuestion(question))renderPlaceValueQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
     else if(isAdvancedQuestion(question))renderAdvancedQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
     else visual.innerHTML='';
+    finalizeAnswerLayout(answers);
     speakQuestion(question);
   }
 
@@ -100,9 +110,9 @@ export function createKhaledController({repository,onExitToHub}={}){
   }
 
   function storeSession({incomplete=false}={}){if(!session||!session.answers.length)return;const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0;state.sessions.unshift({at:new Date().toISOString(),skillId:session.skillId,correct:session.correct,wrong:session.wrong,total:completed,pct,incomplete});state.sessions=state.sessions.slice(0,100);persist();}
-  function finish(){if(!session)return;clearFeedbackTimer();const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0,skill=getKhaledSkill(session.skillId);storeSession();session.completed=true;byId('khaledResultTitle').textContent=pct>=90?'أبدعت يا خالد ⭐':pct>=70?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';byId('khaledResultPct').textContent=`${pct}%`;byId('khaledResultSkill').textContent=skill?.title||'';byId('khaledResultCorrect').textContent=session.correct;byId('khaledResultWrong').textContent=session.wrong;show('khaledResultView');visuals.result(pct);audio.achievement();}
+  function finish(){if(!session)return;clearFeedbackTimer();const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0,skill=getKhaledSkill(session.skillId);storeSession();session.completed=true;byId('khaledResultTitle').textContent=pct>=80?'أبدعت يا خالد ⭐':pct>=60?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';byId('khaledResultPct').textContent=`${pct}%`;byId('khaledResultSkill').textContent=skill?.title||'';byId('khaledResultCorrect').textContent=session.correct;byId('khaledResultWrong').textContent=session.wrong;show('khaledResultView');visuals.result(pct);audio.achievement();}
   function leave(){clearFeedbackTimer();if(session&&!session.completed&&session.answers.length)storeSession({incomplete:true});speech.stop();document.body.classList.remove('khaled-mode');session=null;}
-  function exitSession(){leave();enter();}
-  function bind(){if(bound)return;bound=true;byId('khaledHomeToHub')?.addEventListener('click',()=>onExitToHub?.());byId('khaledExitSession')?.addEventListener('click',exitSession);byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enter();});byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));byId('hearKhaledQuestion')?.addEventListener('click',()=>{if(feedbackPending)return;const question=session?.questions?.[session.index];speech.speak(question?.spokenPrompt||'');});}
-  return{start(){bind();visuals.warm();enter();},enter(){bind();visuals.warm();enter();},leave,getState(){return state;}};
+  function exitSession(){leave();enterHome();}
+  function bind(){if(bound)return;bound=true;byId('khaledIntroStart')?.addEventListener('click',enterHome);byId('khaledExitSession')?.addEventListener('click',exitSession);byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enterHome();});byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));byId('hearKhaledQuestion')?.addEventListener('click',()=>{if(feedbackPending)return;const question=session?.questions?.[session.index];speech.speak(question?.spokenPrompt||'');});}
+  return{start(){bind();visuals.warm();showIntro();},enter(){bind();visuals.warm();enterHome();},leave,getState(){return state;}};
 }

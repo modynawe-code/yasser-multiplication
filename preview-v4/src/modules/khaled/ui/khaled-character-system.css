@@ -1,20 +1,26 @@
 @import url('./khaled-activity-types.css');
+@import url('./khaled-home.css');
 
-.learner-character-shell{display:grid;place-items:center;width:var(--character-khaled-hub);height:var(--character-khaled-hub)}
-.hub-khaled-character .khaled-character-image{max-height:var(--character-khaled-hub)}
+.learner-character-shell{display:grid;place-items:center;max-width:100%;overflow:hidden}
+.hub-khaled-character .khaled-character-image{max-height:var(--character-khaled-hub);max-width:100%}
 .khaled-character-image{display:block;max-width:100%;max-height:100%;object-fit:contain;object-position:center;filter:drop-shadow(0 12px 16px rgba(45,55,85,.10));user-select:none;-webkit-user-drag:none}
 .khaled-character-fallback{display:grid;place-items:center;width:132px;height:132px;border-radius:34px;background:linear-gradient(145deg,#fff4e8,#fff);border:1px solid #f0c79f;color:#ea7b18;font-size:34px;font-weight:950;box-shadow:0 12px 24px rgba(204,112,28,.10)}
+.khaled-character-fallback[hidden],.khaled-result-symbol[hidden]{display:none!important}
 .khaled-character-fallback.compact{width:104px;height:82px;border-radius:24px;font-size:28px}
 
-.khaled-home-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,32%) auto;align-items:center;gap:16px}
-.khaled-home-character{display:grid;place-items:center;height:calc(var(--character-khaled-home) + 8px)}
-.khaled-home-character .khaled-character-image{max-height:var(--character-khaled-home)}
+/* Group artwork is 4:3. Size the scene box by aspect ratio so no child/calculator crop can occur. */
+.khaled-intro-character{display:grid;place-items:center;width:min(100%,calc(var(--character-khaled-intro) * 1.3334));aspect-ratio:4/3;height:auto;margin:0 auto;overflow:hidden;pointer-events:none}
+.khaled-intro-character .khaled-character-image{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}
+.khaled-home-character{display:grid;place-items:center;width:min(250px,28vw);height:calc(var(--character-khaled-home) + 4px);overflow:hidden}
+.khaled-home-character .khaled-character-image{max-height:var(--character-khaled-home);max-width:100%}
 
-.khaled-session-character{width:min(440px,86vw);height:calc(var(--character-khaled-session) + 8px);display:grid;place-items:center;margin:0 auto 8px}
-.khaled-session-character .khaled-character-image{max-height:var(--character-khaled-session);max-width:420px}
+/* The session stage never changes geometry when feedback artwork changes. */
+.khaled-session-character{width:min(100%,calc(var(--character-khaled-session) * 1.3334));aspect-ratio:4/3;height:auto;min-height:0;display:grid;place-items:center;margin:0;overflow:hidden;align-self:center;justify-self:center}
+.khaled-session-character .khaled-character-image{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}
 
-.khaled-result-character{width:min(620px,96%);height:calc(var(--character-khaled-result) + 8px);display:grid;place-items:center;margin:0 auto 10px}
-.khaled-result-character .khaled-character-image{max-height:var(--character-khaled-result);max-width:600px}
+/* Result artwork can be group (4:3) or portrait. A 4:3 contain-stage keeps every source fully visible. */
+.khaled-result-character{width:min(100%,calc(var(--character-khaled-result) * 1.3334));aspect-ratio:4/3;height:auto;min-height:0;display:grid;place-items:center;margin:0 auto 8px;overflow:visible}
+.khaled-result-character .khaled-character-image{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center}
 .khaled-result-character .khaled-result-symbol{margin:0}
 
 .khaled-character-image[data-motion="nod"]{animation:khaledNod .62s ease-out}
@@ -22,11 +28,36 @@
 @keyframes khaledNod{0%{transform:translateY(0) rotate(0)}35%{transform:translateY(-8px) rotate(-1.5deg)}70%{transform:translateY(2px) rotate(1deg)}100%{transform:none}}
 @keyframes khaledCelebrate{0%{transform:translateY(16px) scale(.92);opacity:.65}42%{transform:translateY(-18px) scale(1.035) rotate(-1.5deg);opacity:1}72%{transform:translateY(3px) scale(.99) rotate(1deg)}100%{transform:none;opacity:1}}
 
+@media (orientation:landscape) and (min-width:760px){
+  .khaled-result{max-width:980px}
+  .khaled-result .result-card{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(340px,44%);
+    grid-template-areas:
+      "title character"
+      "skill character"
+      "score character"
+      "metrics character"
+      "actions actions";
+    align-items:center;
+    column-gap:28px;
+    row-gap:8px;
+    padding:24px 30px 28px;
+  }
+  .khaled-result-character{grid-area:character;width:min(100%,calc(var(--character-khaled-result) * 1.3334));aspect-ratio:4/3;height:auto;min-height:0;margin:0;align-self:center;justify-self:center;overflow:visible}
+  .khaled-result .result-card>h2{grid-area:title;margin:0;align-self:end}
+  .khaled-result .result-card>#khaledResultSkill{grid-area:skill;margin:0;color:var(--muted)}
+  .khaled-result .score-ring{grid-area:score;margin:8px auto;width:132px;height:132px;border-width:11px}
+  .khaled-result .score-ring strong{font-size:34px}
+  .khaled-result .result-metrics{grid-area:metrics;width:100%;margin:6px 0}
+  .khaled-result .result-actions{grid-area:actions;margin-top:12px;grid-template-columns:1.1fr 1fr}
+}
+
 @media(max-width:700px){
-  .khaled-home-hero{grid-template-columns:1fr auto}
-  .khaled-home-character{grid-column:1/-1;grid-row:2}
-  .khaled-session-character{width:min(360px,88vw)}
-  .khaled-result-character{width:min(520px,96%)}
+  .khaled-intro-character{width:min(100%,calc(var(--character-khaled-intro) * 1.3334))}
+  .khaled-home-character{width:min(240px,72vw);height:calc(var(--character-khaled-home) + 4px)}
+  .khaled-session-character{width:min(84vw,calc(var(--character-khaled-session) * 1.3334));min-height:0;align-self:center}
+  .khaled-result-character{width:min(94vw,calc(var(--character-khaled-result) * 1.3334))}
 }
 
 @media(max-width:420px){
