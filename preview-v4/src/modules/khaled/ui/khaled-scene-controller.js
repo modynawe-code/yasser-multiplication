@@ -70,8 +70,8 @@ export function createKhaledSceneController(){
   function question(){return paint('session','groupThinking');}
   function feedback(isCorrect){return paint('session',isCorrect?'encourage':'groupThinking',{motion:isCorrect?'nod':'none'});}
   function result(pct){
-    if(pct>=90)return paint('result','groupCelebration',{motion:'celebrate'});
-    if(pct>=70)return paint('result','mastered',{motion:'nod'});
+    if(pct>=80)return paint('result','groupCelebration',{motion:'celebrate'});
+    if(pct>=60)return paint('result','mastered',{motion:'nod'});
     return paint('result','encourage');
   }
 
