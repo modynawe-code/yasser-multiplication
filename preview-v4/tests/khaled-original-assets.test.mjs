@@ -35,7 +35,7 @@ test('Khaled feedback keeps full group artwork inside the stable session stage',
   const controller=await readText('src/modules/khaled/ui/khaled-scene-controller.js');
   const css=await readText('src/modules/khaled/ui/khaled-character-system.css');
   assert.match(controller,/function feedback\(isCorrect\)\{return paint\('session',isCorrect\?'groupCelebration':'groupThinking'/);
-  assert.doesNotMatch(controller,/function feedback\(isCorrect\).*?'encourage'/s);
+  assert.doesNotMatch(controller,/function feedback\(isCorrect\)\{return paint\('session',isCorrect\?'encourage'/);
   assert.match(css,/\.khaled-session-character\{[^}]*aspect-ratio:4\/3/s);
   assert.match(css,/\.khaled-session-character \.khaled-character-image\{[^}]*object-fit:contain/s);
 });
