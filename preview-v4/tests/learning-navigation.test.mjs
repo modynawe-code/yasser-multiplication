@@ -37,3 +37,10 @@ test('shared navigation controls keep a child-friendly touch target and secondar
   assert.match(css,/\.khaled-intro-toolbar/);
   assert.match(css,/\.khaled-result-link/);
 });
+
+test('Khaled session back control occupies the physical RTL-leading edge',async()=>{
+  const css=await read('src/ui/styles/learning-navigation.css');
+  assert.match(css,/#khaledSessionView \.session-head\{[^}]*direction:ltr[^}]*grid-template-columns:minmax\(0,1fr\) auto/s);
+  assert.match(css,/#khaledSessionView \.session-head>div:first-child\{[^}]*direction:rtl[^}]*text-align:right/s);
+  assert.match(css,/#khaledSessionView \.session-head \.learning-nav-actions\{[^}]*direction:rtl/s);
+});
