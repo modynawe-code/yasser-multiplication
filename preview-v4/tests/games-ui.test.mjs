@@ -13,11 +13,17 @@ test('games platform is composed as an isolated feature module',async()=>{
   assert.match(main,/games\?\.leave\(\)/);
 });
 
-test('games shell exposes XO lobby, online room entry, and educational play without changing learner screens',async()=>{
+test('games shell exposes a clear local vs online XO lobby without changing learner screens',async()=>{
   const shell=await read('src/modules/games/ui/games-shell.js');
   assert.match(shell,/gamesOpenBtn/);
   assert.match(shell,/id="gamesHomeView"/);
+  assert.match(shell,/اختر اللعبة اللي تبغاها وابدأ التحدي/);
+  assert.doesNotMatch(shell,/النظام قابلًا للتوسع/);
   assert.match(shell,/id="xoLobbyView"/);
+  assert.match(shell,/على نفس الجهاز/);
+  assert.match(shell,/بين جهازين أونلاين/);
+  assert.match(shell,/اختر صاحب هذا الجهاز أولًا/);
+  assert.match(shell,/id="xoLocalStart"/);
   assert.match(shell,/id="xoOnlineCreate"/);
   assert.match(shell,/id="xoOnlineJoin"/);
   assert.match(shell,/maxlength="6"/);
@@ -50,13 +56,15 @@ test('XO controller uses online room and learning boundaries without learner-con
   assert.doesNotMatch(controller,/local-storage-repository/);
 });
 
-test('XO tablet landscape is one-screen and hides learner chrome',async()=>{
+test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet heights',async()=>{
   const css=await read('src/modules/games/ui/games.css');
   assert.match(css,/body\.games-mode \.topbar\{display:none\}/);
   assert.match(css,/body\.xo-game-mode\{overflow:hidden\}/);
   assert.match(css,/height:100dvh/);
   assert.match(css,/grid-template-columns:minmax\(340px/);
   assert.match(css,/\.xo-token\{width:82%;height:82%/);
+  assert.match(css,/\.xo-lobby-shell\{height:100dvh/);
+  assert.match(css,/\.xo-local-choice/);
 });
 
 test('PWA shell includes local and online games modules',async()=>{
