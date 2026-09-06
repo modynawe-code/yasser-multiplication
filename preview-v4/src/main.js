@@ -20,7 +20,7 @@ const yasser=createAppController({repository:yasserRepository});
 let yasserStarted=false;
 let hub;
 
-const khaled=createKhaledController({repository:khaledRepository,onExitToHub:()=>hub?.show()});
+const khaled=createKhaledController({repository:khaledRepository});
 let khaledStarted=false;
 const hubVisuals=createKhaledSceneController();
 
@@ -49,7 +49,8 @@ hub=createHubController({
   onAfterShow:()=>hubVisuals.hub(),onSelectYasser:enterYasser,onSelectKhaled:enterKhaled
 });
 
-document.getElementById('khaledSessionToHub')?.addEventListener('click',exitKhaledToHub);
-document.getElementById('khaledResultToHub')?.addEventListener('click',exitKhaledToHub);
+for(const id of ['khaledHomeToHub','khaledSessionToHub','khaledResultToHub']){
+  document.getElementById(id)?.addEventListener('click',exitKhaledToHub);
+}
 
 familyParent.start();hubVisuals.warm();hub.start();registerServiceWorker();
