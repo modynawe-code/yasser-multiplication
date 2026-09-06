@@ -7,6 +7,7 @@ on:
       - 'feature/**'
     paths:
       - 'preview-v4/**'
+      - 'mobile-assets/**'
       - 'tools/build-mobile.mjs'
       - 'package.json'
       - 'capacitor.config.json'
@@ -46,6 +47,9 @@ jobs:
 
       - name: Sync bundled web app
         run: npx cap sync android
+
+      - name: Generate Android launcher icon
+        run: npm run android:assets
 
       - name: Build debug APK
         run: |
