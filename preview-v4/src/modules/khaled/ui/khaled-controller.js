@@ -39,16 +39,21 @@ export function createKhaledController({repository}={}){
   function startSkill(skillId){const skill=getKhaledSkill(skillId);if(!skill||skill.status!=='ready')return;clearFeedbackTimer();speech.stop();const questions=createAdvancedKhaledRound({skillId,count:8})||createKhaledRound({skillId,count:8});session={skillId,questions,index:0,correct:0,wrong:0,answers:[],completed:false,retryCount:0};byId('khaledSessionTitle').textContent=skill.title;show('khaledSessionView');renderQuestion();}
 
   function speakQuestion(question){const id=question?.id;setTimeout(()=>{const active=session?.questions?.[session.index];if(!feedbackPending&&active?.id===id)speech.speak(question.spokenPrompt||'');},220);}
+  function finalizeAnswerLayout(answers){const count=answers?.children?.length||0;if(count)answers.dataset.optionCount=String(count);else delete answers.dataset.optionCount;}
 
   function renderQuestion(){
     if(!session||session.index>=session.questions.length)return finish();
     const question=session.questions[session.index];
     byId('khaledSessionMeta').textContent=`${session.index+1} من ${session.questions.length}`;
     byId('khaledSessionProgress').style.width=`${session.index/session.questions.length*100}%`;
-    byId('khaledPrompt').textContent=question.prompt;byId('khaledFeedback').textContent='';
+    byId('khaledPrompt').textContent=question.prompt;
+    byId('khaledFeedback').textContent='';
     const visual=byId('khaledVisual'),answers=byId('khaledAnswers'),card=visual?.closest('.khaled-question-card');
     if(card)card.dataset.questionType=question.type||'default';
-    answers.innerHTML='';answers.classList.remove('khaled-visual-answers','khaled-equation-answers','khaled-order-answers');visuals.question();
+    answers.innerHTML='';
+    delete answers.dataset.optionCount;
+    answers.classList.remove('khaled-visual-answers','khaled-equation-answers','khaled-order-answers');
+    visuals.question();
 
     if(question.type==='count-select'){
       visual.innerHTML=countVisual(question.count,question.count>10);question.options.forEach(value=>answers.appendChild(answerButton(value,String(value))));
@@ -76,6 +81,7 @@ export function createKhaledController({repository}={}){
     else if(isPlaceValueQuestion(question))renderPlaceValueQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
     else if(isAdvancedQuestion(question))renderAdvancedQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
     else visual.innerHTML='';
+    finalizeAnswerLayout(answers);
     speakQuestion(question);
   }
 
