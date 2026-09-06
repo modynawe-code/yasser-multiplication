@@ -1,7 +1,7 @@
 {
   "name": "yasser-khaled-mobile",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Android wrapper tooling for the shared Yasser and Khaled learning web app.",
   "scripts": {
     "mobile:prepare": "node tools/build-mobile.mjs",
@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@capacitor/android": "8.5.1",
-    "@capacitor/core": "8.5.1"
+    "@capacitor/core": "8.5.1",
+    "@capacitor-community/text-to-speech": "8.0.2"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.1"
