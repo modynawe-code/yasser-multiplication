@@ -29,7 +29,7 @@ function gameIcon(id){return id==='xo'?'⭕':id==='rock-paper-scissors'?'✊':id
 function now(){return globalThis.performance?.now?.()??Date.now();}
 
 export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,nextStarter='yasser',challengeState=null,challengeRequest=0,passTimer=null;
+  let bound=false,xoState=null,nextStarter='yasser',challengeState=null,challengeRequest=0,passTimer=null,rpsController=null;
   let playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
   const speech=createSpeechService(),audio=createFeedbackAudio();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -42,34 +42,45 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode');document.body.classList.add('games-mode');}
 
   function leave(){
-    document.body.classList.remove('games-mode','xo-game-mode');
+    document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode');
     clearChallenge();onlineSession.forget();
     xoState=null;playMode='local';onlineTurnVersion=-1;onlineCelebrated='';
   }
 
   function enterHome(){
     onBeforeEnter?.();
-    onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);
+    onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode');
     enterGamesChrome();renderCatalog();show('gamesHomeView');
   }
 
   function renderCatalog(){
     const host=byId('gamesCatalog');if(!host)return;
     host.innerHTML=gameRegistry.list().map(game=>{
-      const ready=game.id==='xo';
+      const ready=game.id==='xo'||game.id==='rock-paper-scissors';
+      const availability=game.id==='xo'?'محلي + أونلاين':game.id==='rock-paper-scissors'?'محلي الآن':'قريبًا';
       return `<button class="game-card ${ready?'ready':'locked'}" data-game-id="${game.id}" ${ready?'':'disabled'}>
         <span class="game-card-status">${ready?'جاهزة للتجربة':'قريبًا'}</span>
         <span class="game-card-icon" aria-hidden="true">${gameIcon(game.id)}</span>
         <strong>${game.title}</strong>
         <p>${game.metadata.description||''}</p>
-        <span class="game-card-meta"><span class="game-chip">${categoryLabel(game.category)}</span><span class="game-chip">${learningLabel(game.learningMode)}</span><span class="game-chip">${ready?'محلي + أونلاين':'قريبًا'}</span></span>
+        <span class="game-card-meta"><span class="game-chip">${categoryLabel(game.category)}</span><span class="game-chip">${learningLabel(game.learningMode)}</span><span class="game-chip">${availability}</span></span>
       </button>`;
     }).join('');
     host.querySelector('[data-game-id="xo"]')?.addEventListener('click',openXoLobby);
+    host.querySelector('[data-game-id="rock-paper-scissors"]')?.addEventListener('click',openRps);
+  }
+
+  async function openRps(){
+    clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);enterGamesChrome();
+    const game=gameRegistry.get('rock-paper-scissors');if(!game?.load)return;
+    try{
+      if(!rpsController){const module=await game.load();rpsController=module.createRpsController({showView:show,onBack:()=>{document.body.classList.remove('rps-game-mode');renderCatalog();show('gamesHomeView');}});}
+      rpsController.start();
+    }catch{renderCatalog();show('gamesHomeView');}
   }
 
   function openXoLobby(){
-    clearChallenge();onlineSession.forget();xoState=null;setXoMode(false);playMode='local';selectedOnlineLearner=null;onlineTurnVersion=-1;onlineCelebrated='';
+    clearChallenge();onlineSession.forget();xoState=null;setXoMode(false);document.body.classList.remove('rps-game-mode');playMode='local';selectedOnlineLearner=null;onlineTurnVersion=-1;onlineCelebrated='';
     document.querySelectorAll('[data-xo-learner]').forEach(button=>button.classList.remove('selected'));
     const input=byId('xoRoomCodeInput');if(input)input.value='';setRoomCode('');lobbyStatus('');show('xoLobbyView');
   }
