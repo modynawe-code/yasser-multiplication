@@ -8,6 +8,7 @@ import { createKhaledController } from './modules/khaled/ui/khaled-controller.js
 import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
 import { createGamesController } from './modules/games/games-controller.js';
+import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 
@@ -24,6 +25,13 @@ let hub,games;
 const khaled=createKhaledController({repository:khaledRepository});
 let khaledStarted=false;
 const hubVisuals=createKhaledSceneController();
+
+const gameLearning=createGameLearningAdapter({
+  getYasserState:()=>yasser.getState(),
+  saveYasserState:state=>yasserRepository.save(state),
+  getKhaledState:()=>khaled.getState(),
+  saveKhaledState:state=>khaledRepository.save(state)
+});
 
 const familyParent=createFamilyParentController({
   getYasserState:()=>yasser.getState(),
@@ -56,6 +64,7 @@ hub=createHubController({
 });
 
 games=createGamesController({
+  learningAdapter:gameLearning,
   onBeforeEnter:leaveLearningAreas,
   onExitToHub:()=>hub?.show()
 });
