@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-41`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-42`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css',
@@ -43,7 +43,7 @@ self.addEventListener('activate',event=>{event.waitUntil((async()=>{
   await self.clients.claim();
   if(oldKeys.length){
     const windows=await self.clients.matchAll({type:'window'});
-    await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null)));
+    await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null));
   }
 })());});
 
