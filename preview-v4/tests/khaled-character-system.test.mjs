@@ -22,7 +22,7 @@ test('Khaled source asset manifest preserves all seven uploaded masters',async()
 test('Khaled scene controller maps intro and learning states without requiring image binaries to boot',async()=>{
   const controller=await read('src/modules/khaled/ui/khaled-scene-controller.js');
   assert.match(controller,/intro:'khaledIntroCharacter'/);
-  assert.match(controller,/function intro\(\)\{return paint\('intro','welcome'\);\}/);
+  assert.match(controller,/function intro\(\)\{return paint\('intro','groupThinking'\);\}/);
   assert.match(controller,/groupThinking/);
   assert.match(controller,/groupCelebration/);
   assert.match(controller,/pct>=80/);
