@@ -32,30 +32,34 @@ test('Khaled has a dedicated intro route without merging his curriculum into Yas
   assert.match(css,/\.khaled-intro-shell/);
 });
 
-test('Khaled question character and task content occupy separate structural regions',async()=>{
+test('Khaled question character and task content occupy explicit physical grid regions',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
   const css=await read('src/modules/hub/learning-hub.css');
   assert.match(shell,/khaled-session-character[\s\S]*khaled-question-content/);
-  assert.match(css,/\.khaled-question-card\{[^}]*display:grid/);
-  assert.match(css,/\.khaled-question-content\{[^}]*display:flex/);
-  assert.match(css,/grid-template-columns:minmax\(0,1fr\) minmax\(180px,27%\)/);
+  assert.match(css,/\.khaled-question-card\{[^}]*direction:ltr[^}]*grid-template-areas:"guide task"/);
+  assert.match(css,/\.khaled-session-character\{grid-area:guide;direction:rtl/);
+  assert.match(css,/\.khaled-question-content\{grid-area:task;direction:rtl/);
+  assert.match(css,/--khaled-guide-column:minmax\(220px,31%\)/);
+  assert.match(css,/grid-template-columns:repeat\(auto-fit,minmax\(150px,1fr\)\)/);
 });
 
-test('Khaled tablet hardening never shrinks the character container with overflow-visible max-height hacks',async()=>{
+test('Khaled device hardening constrains viewport without overriding shared column ownership',async()=>{
   const hardening=await read('src/modules/khaled/ui/khaled-device-hardening.css');
   const characters=await read('src/modules/khaled/ui/khaled-character-system.css');
+  assert.doesNotMatch(hardening,/khaled-question-card\{[^}]*grid-template-columns:/);
   assert.doesNotMatch(hardening,/khaled-session-character\{[^}]*max-height:/);
-  assert.match(characters,/\.khaled-session-character\{[^}]*overflow:hidden/);
+  assert.match(characters,/\.khaled-session-character\{[^}]*aspect-ratio:4\/3[^}]*overflow:hidden/);
+  assert.match(characters,/\.khaled-character-fallback\[hidden\][^}]*display:none!important/);
+  assert.match(hardening,/\.khaled-intro-character\{[^}]*aspect-ratio:4\/3[^}]*height:auto/);
 });
 
-test('Khaled landscape adapts to viewport height and RTL cannot collapse the task lane',async()=>{
-  const hardening=await read('src/modules/khaled/ui/khaled-device-hardening.css');
-  assert.match(hardening,/--character-khaled-session:min\(34dvh,220px\)/);
-  assert.match(hardening,/--character-khaled-intro:min\(38dvh,340px\)/);
-  assert.match(hardening,/\.khaled-question-card\{[\s\S]*direction:ltr;[\s\S]*grid-template-columns:minmax\(0,1fr\) clamp\(190px,24vw,280px\)/);
-  assert.match(hardening,/\.khaled-question-content\{direction:rtl;width:100%;min-width:0/);
-  assert.match(hardening,/repeat\(auto-fit,minmax\(120px,1fr\)\)/);
-  assert.match(hardening,/\.khaled-character-fallback\[hidden\][\s\S]*display:none!important/);
+test('Khaled renderer exposes semantic question type for activity-specific responsive layouts',async()=>{
+  const controller=await read('src/modules/khaled/ui/khaled-controller.js');
+  const money=await read('src/modules/khaled/ui/khaled-money.css');
+  assert.match(controller,/card\.dataset\.questionType=question\.type\|\|'default'/);
+  for(const type of ['money-recognition','count-money','money-model','equal-money-amounts','use-money'])assert.match(money,new RegExp(`data-question-type="${type}"`));
+  assert.match(money,/money-model[\s\S]*grid-template-columns:repeat\(3,minmax\(160px,1fr\)\)/);
+  assert.match(money,/equal-money-amounts[\s\S]*grid-template-columns:repeat\(2,minmax\(150px,1fr\)\)/);
 });
 
 test('Yasser practice uses a height-aware side-by-side question scene in landscape',async()=>{
@@ -82,6 +86,7 @@ test('Yasser home prioritizes the learning mission over the progress sidebar and
 test('character scale distinguishes chooser, intro, review, practice, and result roles',async()=>{
   const scale=await read('src/ui/styles/character-scale.css');
   for(const token of ['--character-yasser-hub','--character-yasser-learn','--character-yasser-session','--character-yasser-result','--character-khaled-hub','--character-khaled-intro','--character-khaled-session','--character-khaled-result'])assert.match(scale,new RegExp(token));
+  assert.match(scale,/--character-khaled-session:180px/);
 });
 
 test('strong Khaled round completion exposes the approved group celebration',async()=>{
