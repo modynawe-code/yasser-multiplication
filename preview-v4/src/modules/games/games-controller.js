@@ -9,6 +9,10 @@ const PLAYER_ASSETS=Object.freeze({
   yasser:'assets/visual/original/yasser/welcome.png',
   khaled:'assets/visual/original/khaled/khaled-point-thumbsup.png'
 });
+const CELEBRATION_ASSETS=Object.freeze({
+  yasser:'assets/visual/original/yasser/celebrate.png',
+  khaled:'assets/visual/original/khaled/khaled-celebration.png'
+});
 
 const PLAYERS=Object.freeze({
   yasser:createPlayerContext({playerId:'yasser',learnerId:'yasser',displayName:'ياسر',theme:'yasser'}),
@@ -29,16 +33,17 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
 
   function clearPassTimer(){if(passTimer){clearTimeout(passTimer);passTimer=null;}}
   function clearChallenge(){challengeRequest+=1;challengeState=null;clearPassTimer();speech.stop();}
+  function setXoMode(active){document.body.classList.toggle('xo-game-mode',Boolean(active));}
 
   function leave(){
-    document.body.classList.remove('games-mode');
+    document.body.classList.remove('games-mode','xo-game-mode');
     clearChallenge();
     xoState=null;
   }
 
   function enterHome(){
     onBeforeEnter?.();
-    document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode');
+    document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode','xo-game-mode');
     document.body.classList.add('games-mode');
     renderCatalog();
     show('gamesHomeView');
@@ -62,7 +67,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   function startLocalXo(){
     nextStarter=nextStarter==='yasser'?'khaled':'yasser';
     xoState=createXoState({players:['yasser','khaled'],startingPlayer:nextStarter});
-    clearChallenge();
+    clearChallenge();setXoMode(true);
     show('xoGameView');
     renderXo();
     beginTurnChallenge();
@@ -71,7 +76,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   function resetXo(){
     nextStarter=nextStarter==='yasser'?'khaled':'yasser';
     xoState=createXoState({players:['yasser','khaled'],startingPlayer:nextStarter});
-    clearChallenge();
+    clearChallenge();setXoMode(true);
     renderXo();
     beginTurnChallenge();
   }
@@ -109,10 +114,19 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   }
 
   function renderFinishedChallenge(){
-    const box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback');
-    box?.classList.remove('unlocked');
-    if(prompt)prompt.textContent=xoState?.status==='won'?`🎉 ${PLAYERS[xoState.winner]?.displayName||''} فاز بالجولة`:'🤝 تعادل جميل';
-    if(visual)visual.innerHTML='';if(options)options.innerHTML='';if(feedback)feedback.textContent='اضغط «جولة جديدة» للعب مرة ثانية.';
+    const box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');
+    box?.classList.remove('unlocked');box?.classList.add('finished');if(hear)hear.hidden=true;
+    if(xoState?.status==='won'){
+      const winner=PLAYERS[xoState.winner],asset=CELEBRATION_ASSETS[xoState.winner];
+      if(prompt)prompt.textContent=`${winner?.displayName||''} فاز بالجولة 🎉`;
+      if(visual)visual.innerHTML=`<div class="xo-finish-art"><img src="${asset}" alt="" decoding="async"></div>`;
+      if(feedback)feedback.textContent='ممتاز! جاهزين لجولة ثانية؟';
+    }else{
+      if(prompt)prompt.textContent='تعادل جميل 🤝';
+      if(visual)visual.innerHTML=`<div class="xo-finish-art dual"><img src="${CELEBRATION_ASSETS.yasser}" alt="" decoding="async"><img src="${CELEBRATION_ASSETS.khaled}" alt="" decoding="async"></div>`;
+      if(feedback)feedback.textContent='جولة قوية من الاثنين.';
+    }
+    if(options){options.innerHTML='<button class="btn primary xo-play-again" id="xoPlayAgain">العبوا مرة ثانية</button>';byId('xoPlayAgain')?.addEventListener('click',resetXo);}
   }
 
   function challengeVisualMarkup(challenge){
@@ -124,8 +138,8 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
 
   function renderChallenge(){
     if(!challengeState)return;
-    const {challenge,unlocked}=challengeState,box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback');
-    box?.classList.toggle('unlocked',Boolean(unlocked));
+    const {challenge,unlocked}=challengeState,box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');
+    box?.classList.remove('finished');box?.classList.toggle('unlocked',Boolean(unlocked));if(hear)hear.hidden=false;
     if(prompt)prompt.textContent=challenge.prompt;
     if(visual)visual.innerHTML=challengeVisualMarkup(challenge);
     if(options){
@@ -140,8 +154,8 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
     if(!xoState||xoState.status!=='playing')return;
     const playerId=xoState.currentPlayer,player=PLAYERS[playerId],requestId=++challengeRequest;
     challengeState=null;
-    const prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback');
-    byId('xoChallenge')?.classList.remove('unlocked');
+    const prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');
+    byId('xoChallenge')?.classList.remove('unlocked','finished');if(hear)hear.hidden=false;
     if(prompt)prompt.textContent=`نجهز سؤال ${player.displayName}…`;
     if(visual)visual.innerHTML='';if(options)options.innerHTML='';if(feedback)feedback.textContent='';
     renderXo();
@@ -195,7 +209,12 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
     const playerId=xoState.currentPlayer,result=playXoMove(xoState,{playerId,cell});
     if(!result.ok)return;
     xoState=result.state;clearChallenge();renderXo();
-    if(xoState.status==='playing')beginTurnChallenge();else audio.achievement();
+    if(xoState.status==='playing')beginTurnChallenge();
+    else{
+      audio.achievement();
+      const message=xoState.status==='won'?`${PLAYERS[xoState.winner]?.displayName||''} فاز بالجولة. أحسنتم.`:'تعادل جميل. أحسنتم.';
+      speech.speak(message);
+    }
   }
 
   function bind(){
@@ -203,7 +222,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
     ensureGamesShell();
     byId('gamesOpenBtn')?.addEventListener('click',enterHome);
     byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});
-    byId('xoBackToGames')?.addEventListener('click',()=>{clearChallenge();xoState=null;renderCatalog();show('gamesHomeView');});
+    byId('xoBackToGames')?.addEventListener('click',()=>{clearChallenge();xoState=null;setXoMode(false);renderCatalog();show('gamesHomeView');});
     byId('xoReset')?.addEventListener('click',resetXo);
     byId('xoHearChallenge')?.addEventListener('click',()=>{const challenge=challengeState?.challenge;if(challenge)speech.speak(challenge.spokenPrompt||challenge.prompt||'');});
   }
