@@ -25,6 +25,7 @@ export function createKhaledController({repository}={}){
   const speech=createSpeechService(),audio=createFeedbackAudio(),visuals=createKhaledSceneController();
   function persist(){repository.save(state);}
   function clearFeedbackTimer(){if(feedbackTimer){clearTimeout(feedbackTimer);feedbackTimer=null;}feedbackPending=false;}
+  function activateKhaledMode(){document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');document.body.classList.add('khaled-mode');}
 
   function renderHome(){
     const list=byId('khaledSkillList');if(!list)return;
@@ -33,7 +34,8 @@ export function createKhaledController({repository}={}){
     document.querySelectorAll('[data-khaled-skill]').forEach(button=>button.onclick=()=>startSkill(button.dataset.khaledSkill));
   }
 
-  function enter(){clearFeedbackTimer();document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');document.body.classList.add('khaled-mode');renderHome();show('khaledHomeView');visuals.home();}
+  function showIntro(){clearFeedbackTimer();speech.stop();activateKhaledMode();show('khaledIntroView');visuals.intro();}
+  function enterHome(){clearFeedbackTimer();speech.stop();activateKhaledMode();renderHome();show('khaledHomeView');visuals.home();}
   function startSkill(skillId){const skill=getKhaledSkill(skillId);if(!skill||skill.status!=='ready')return;clearFeedbackTimer();speech.stop();const questions=createAdvancedKhaledRound({skillId,count:8})||createKhaledRound({skillId,count:8});session={skillId,questions,index:0,correct:0,wrong:0,answers:[],completed:false,retryCount:0};byId('khaledSessionTitle').textContent=skill.title;show('khaledSessionView');renderQuestion();}
 
   function speakQuestion(question){const id=question?.id;setTimeout(()=>{const active=session?.questions?.[session.index];if(!feedbackPending&&active?.id===id)speech.speak(question.spokenPrompt||'');},220);}
@@ -102,7 +104,7 @@ export function createKhaledController({repository}={}){
   function storeSession({incomplete=false}={}){if(!session||!session.answers.length)return;const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0;state.sessions.unshift({at:new Date().toISOString(),skillId:session.skillId,correct:session.correct,wrong:session.wrong,total:completed,pct,incomplete});state.sessions=state.sessions.slice(0,100);persist();}
   function finish(){if(!session)return;clearFeedbackTimer();const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0,skill=getKhaledSkill(session.skillId);storeSession();session.completed=true;byId('khaledResultTitle').textContent=pct>=80?'أبدعت يا خالد ⭐':pct>=60?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';byId('khaledResultPct').textContent=`${pct}%`;byId('khaledResultSkill').textContent=skill?.title||'';byId('khaledResultCorrect').textContent=session.correct;byId('khaledResultWrong').textContent=session.wrong;show('khaledResultView');visuals.result(pct);audio.achievement();}
   function leave(){clearFeedbackTimer();if(session&&!session.completed&&session.answers.length)storeSession({incomplete:true});speech.stop();document.body.classList.remove('khaled-mode');session=null;}
-  function exitSession(){leave();enter();}
-  function bind(){if(bound)return;bound=true;byId('khaledExitSession')?.addEventListener('click',exitSession);byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enter();});byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));byId('hearKhaledQuestion')?.addEventListener('click',()=>{if(feedbackPending)return;const question=session?.questions?.[session.index];speech.speak(question?.spokenPrompt||'');});}
-  return{start(){bind();visuals.warm();enter();},enter(){bind();visuals.warm();enter();},leave,getState(){return state;}};
+  function exitSession(){leave();enterHome();}
+  function bind(){if(bound)return;bound=true;byId('khaledIntroStart')?.addEventListener('click',enterHome);byId('khaledExitSession')?.addEventListener('click',exitSession);byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enterHome();});byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));byId('hearKhaledQuestion')?.addEventListener('click',()=>{if(feedbackPending)return;const question=session?.questions?.[session.index];speech.speak(question?.spokenPrompt||'');});}
+  return{start(){bind();visuals.warm();showIntro();},enter(){bind();visuals.warm();showIntro();},leave,getState(){return state;}};
 }
