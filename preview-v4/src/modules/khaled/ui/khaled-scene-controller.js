@@ -71,7 +71,9 @@ export function createKhaledSceneController(){
   function intro(){return paint('intro','groupThinking');}
   function home(){return paint('home','welcome');}
   function question(){return paint('session','groupThinking');}
-  function feedback(isCorrect){return paint('session',isCorrect?'encourage':'groupThinking',{motion:isCorrect?'nod':'none'});}
+  // Feedback changes the artwork inside the same 4:3 session stage. This keeps the
+  // child and calculator full-size and prevents portrait artwork from collapsing/cropping the scene.
+  function feedback(isCorrect){return paint('session',isCorrect?'groupCelebration':'groupThinking',{motion:isCorrect?'nod':'none'});}
   function result(pct){
     if(pct>=80)return paint('result','groupCelebration',{motion:'celebrate'});
     if(pct>=60)return paint('result','mastered',{motion:'nod'});
