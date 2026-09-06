@@ -2,12 +2,12 @@
 .khaled-home-hero{
   direction:ltr;
   display:grid;
-  grid-template-columns:minmax(250px,.82fr) minmax(0,1.18fr);
+  grid-template-columns:minmax(220px,.68fr) minmax(0,1.32fr);
   grid-template-areas:
     "character copy"
     "character action";
   align-items:center;
-  gap:clamp(12px,2.4vw,30px);
+  gap:clamp(10px,1.5vw,18px);
   min-height:clamp(220px,34dvh,292px);
   padding:clamp(18px,2.4vw,28px);
   margin-bottom:14px;
@@ -17,16 +17,16 @@
   box-shadow:0 12px 28px rgba(81,57,33,.06);
   overflow:hidden;
 }
-.khaled-home-copy{grid-area:copy;direction:rtl;align-self:end;min-width:0}
+.khaled-home-copy{grid-area:copy;direction:rtl;align-self:end;justify-self:start;width:min(100%,520px);min-width:0}
 .khaled-home-copy .kicker{margin-bottom:8px}
 .khaled-home-copy h2{font-size:clamp(28px,3vw,36px);line-height:1.25;margin:0}
 .khaled-home-copy p{font-size:clamp(14px,1.4vw,17px);line-height:1.65;margin:6px 0 0;color:var(--muted)}
 .khaled-home-hero .khaled-home-character{
   grid-area:character;
-  width:min(100%,320px);
+  width:min(100%,300px);
   height:min(100%,calc(var(--character-khaled-home) + 8px));
   align-self:center;
-  justify-self:center;
+  justify-self:end;
   overflow:hidden;
 }
 .khaled-home-hero .khaled-home-character .khaled-character-image{width:100%;height:100%;object-fit:contain;object-position:center}
@@ -40,16 +40,25 @@
   background:#fff;
 }
 
+/* Skill cards stay readable on tablet without making the list visually heavy. */
+.khaled-skill{min-height:96px}
+.khaled-skill strong{font-size:17px;line-height:1.35}
+.khaled-skill small{font-size:13.5px;line-height:1.45;margin-top:4px}
+.khaled-skill em{font-size:13px}
+.khaled-stats span{font-size:13px}
+
 @media (orientation:landscape) and (min-width:760px) and (max-height:720px){
   .khaled-home-hero{
-    grid-template-columns:minmax(220px,.75fr) minmax(0,1.25fr);
+    grid-template-columns:minmax(200px,.64fr) minmax(0,1.36fr);
     min-height:210px;
     padding:14px 20px;
-    gap:16px;
+    gap:12px;
   }
-  .khaled-home-hero .khaled-home-character{width:min(100%,285px)}
+  .khaled-home-hero .khaled-home-character{width:min(100%,270px)}
+  .khaled-home-copy{width:min(100%,500px)}
   .khaled-home-copy h2{font-size:30px}
   .khaled-home-copy p{font-size:14px}
+  .khaled-skill{min-height:92px}
 }
 
 @media(max-width:700px){
@@ -63,11 +72,13 @@
     padding:16px;
     gap:12px;
   }
-  .khaled-home-copy{align-self:center}
+  .khaled-home-copy{align-self:center;justify-self:stretch;width:auto}
   .khaled-home-copy h2{font-size:26px}
   .khaled-home-copy p{font-size:14px}
   .khaled-home-hero>.icon-btn{justify-self:end;align-self:start}
   .khaled-home-hero .khaled-home-character{width:min(76vw,270px);height:var(--character-khaled-home);justify-self:center}
+  .khaled-skill strong{font-size:16.5px}
+  .khaled-skill small{font-size:13px}
 }
 
 @media(max-width:420px){
