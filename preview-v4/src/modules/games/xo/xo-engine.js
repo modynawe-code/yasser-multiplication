@@ -19,6 +19,8 @@ function winningLine(board){
   return null;
 }
 
+function nextPlayer(state,player){return state.players[0]===player?state.players[1]:state.players[0];}
+
 export function createXoState({players,startingPlayer}={}){
   const [first,second]=normalizePlayers(players);
   const current=startingPlayer?String(startingPlayer):first;
@@ -31,7 +33,8 @@ export function createXoState({players,startingPlayer}={}){
     status:'playing',
     winner:null,
     winningLine:null,
-    moveCount:0
+    moveCount:0,
+    passCount:0
   });
 }
 
@@ -48,18 +51,28 @@ export function playXoMove(state,{playerId,cell}={}){
   const line=winningLine(board);
   const moveCount=state.moveCount+1;
   const isDraw=!line&&moveCount===9;
-  const nextPlayer=state.players[0]===player?state.players[1]:state.players[0];
 
   const nextState=Object.freeze({
     ...state,
     board:Object.freeze(board),
-    currentPlayer:line||isDraw?null:nextPlayer,
+    currentPlayer:line||isDraw?null:nextPlayer(state,player),
     status:line?'won':isDraw?'draw':'playing',
     winner:line?player:null,
     winningLine:line?Object.freeze([...line]):null,
     moveCount
   });
   return{ok:true,reason:null,state:nextState};
+}
+
+export function passXoTurn(state,{playerId}={}){
+  if(!state||state.status!=='playing')return{ok:false,reason:'game-finished',state};
+  const player=String(playerId||'');
+  if(player!==state.currentPlayer)return{ok:false,reason:'not-your-turn',state};
+  return{
+    ok:true,
+    reason:null,
+    state:Object.freeze({...state,currentPlayer:nextPlayer(state,player),passCount:Number(state.passCount||0)+1})
+  };
 }
 
 export function getXoWinningLines(){return WINNING_LINES;}
