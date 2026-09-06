@@ -106,5 +106,5 @@ export function createKhaledController({repository}={}){
   function leave(){clearFeedbackTimer();if(session&&!session.completed&&session.answers.length)storeSession({incomplete:true});speech.stop();document.body.classList.remove('khaled-mode');session=null;}
   function exitSession(){leave();enterHome();}
   function bind(){if(bound)return;bound=true;byId('khaledIntroStart')?.addEventListener('click',enterHome);byId('khaledExitSession')?.addEventListener('click',exitSession);byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enterHome();});byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));byId('hearKhaledQuestion')?.addEventListener('click',()=>{if(feedbackPending)return;const question=session?.questions?.[session.index];speech.speak(question?.spokenPrompt||'');});}
-  return{start(){bind();visuals.warm();showIntro();},enter(){bind();visuals.warm();showIntro();},leave,getState(){return state;}};
+  return{start(){bind();visuals.warm();showIntro();},enter(){bind();visuals.warm();enterHome();},leave,getState(){return state;}};
 }
