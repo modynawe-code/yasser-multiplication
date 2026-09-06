@@ -40,10 +40,16 @@ function enterYasser(){
 function enterKhaled(){
   yasser.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();
 }
+function exitKhaledToHub(){
+  khaled.leave();hub?.show();
+}
 
 hub=createHubController({
   onBeforeShow:()=>{yasser.leave();khaled.leave();familyParent.leave();},
   onAfterShow:()=>hubVisuals.hub(),onSelectYasser:enterYasser,onSelectKhaled:enterKhaled
 });
+
+document.getElementById('khaledSessionToHub')?.addEventListener('click',exitKhaledToHub);
+document.getElementById('khaledResultToHub')?.addEventListener('click',exitKhaledToHub);
 
 familyParent.start();hubVisuals.warm();hub.start();registerServiceWorker();

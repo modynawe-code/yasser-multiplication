@@ -11,6 +11,7 @@ export function ensureLearningShell(){
   const main=document.querySelector('main');
   if(!main||document.getElementById('hubView'))return;
 
+  ensureStyle('src/ui/styles/learning-navigation.css','learning-navigation');
   ensureStyle('src/modules/hub/learning-hub.css','learning-hub');
   ensureStyle('src/modules/khaled/ui/khaled-character-system.css','khaled-characters');
   ensureStyle('src/modules/khaled/ui/khaled-device-hardening.css','khaled-device-hardening');
@@ -66,7 +67,7 @@ export function ensureLearningShell(){
 
     <section id="khaledSessionView" class="view">
       <div class="khaled-session-wrap">
-        <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><button class="icon-btn" id="khaledExitSession">خروج</button></div>
+        <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><div class="learning-nav-actions"><button class="icon-btn" id="khaledExitSession" data-nav="back">رجوع للمهارات</button><button class="icon-btn" id="khaledSessionToHub" data-nav="home">اختيار الطفل</button></div></div>
         <div class="progress-line"><i id="khaledSessionProgress" style="width:0%"></i></div>
         <div class="card khaled-question-card">
           <div class="khaled-session-character" aria-hidden="true">
@@ -91,7 +92,7 @@ export function ensureLearningShell(){
         <h2 id="khaledResultTitle">أحسنت يا خالد</h2><p id="khaledResultSkill"></p>
         <div class="score-ring"><strong id="khaledResultPct">0%</strong></div>
         <div class="result-metrics"><div class="result-metric"><span>صحيح</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>أخطاء</span><strong id="khaledResultWrong">0</strong></div></div>
-        <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button></div>
+        <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="btn secondary" id="khaledResultToHub">اختيار الطفل</button></div>
       </div></div>
     </section>
 

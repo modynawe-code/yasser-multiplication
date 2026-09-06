@@ -16,6 +16,8 @@ export const VISUAL_ASSETS={
     celebrate:asset('assets/visual/original/assistant/celebrate.png','assets/visual/assistant/celebrate.b64.txt')
   },
   composite:{
+    welcome:asset('assets/visual/original/group/yasser-assistant-welcome.png'),
+    thinking:asset('assets/visual/original/group/yasser-assistant-thinking.png'),
     celebration:asset('assets/visual/original/group/yasser-assistant-celebration.png')
   }
 };
