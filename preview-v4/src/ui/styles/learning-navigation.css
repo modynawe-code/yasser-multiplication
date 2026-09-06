@@ -2,6 +2,11 @@
 .learning-nav-actions .icon-btn,.session-head>.icon-btn{min-height:48px;min-width:48px;padding-inline:14px}
 .learning-nav-actions .icon-btn[data-nav="home"]{background:var(--primary-soft);border-color:#d5defc;color:var(--primary)}
 
+/* Khaled session navigation follows RTL expectations: back lives on the physical right edge. */
+#khaledSessionView .session-head{direction:ltr;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px}
+#khaledSessionView .session-head>div:first-child{direction:rtl;text-align:right;min-width:0}
+#khaledSessionView .session-head .learning-nav-actions{direction:rtl;justify-content:flex-start}
+
 .khaled-intro-toolbar{width:100%;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
 .khaled-intro-toolbar .icon-btn{justify-self:start;min-height:48px;min-width:48px;padding-inline:14px}
 .khaled-intro-toolbar .khaled-intro-badge{justify-self:center;margin:0}
@@ -14,6 +19,7 @@
 @media(max-width:700px){
   .khaled-result .result-actions{grid-template-columns:1fr}
   .khaled-result-link{grid-column:auto;margin-top:0}
+  #khaledSessionView .session-head{gap:8px}
 }
 
 @media(max-width:560px){
