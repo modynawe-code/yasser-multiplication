@@ -55,7 +55,7 @@ test('Khaled feedback keeps full group artwork inside the stable session stage',
 test('Khaled home hero gives the standalone thinking pose a responsive visual stage',async()=>{
   const css=await readText('src/modules/khaled/ui/khaled-home.css');
   assert.match(css,/\.khaled-home-hero\{[^}]*grid-template-areas:/s);
-  assert.match(css,/\.khaled-home-hero \.khaled-home-character\{[^}]*width:min\(100%,320px\)/s);
+  assert.match(css,/\.khaled-home-hero \.khaled-home-character\{[^}]*width:min\(100%,300px\)[^}]*justify-self:end/s);
   assert.match(css,/\.khaled-home-hero \.khaled-home-character \.khaled-character-image\{[^}]*object-fit:contain/s);
 });
 
