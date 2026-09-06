@@ -1,5 +1,6 @@
 import { hashPassword, normalizeEmail, randomId, randomSessionToken, SECURITY_DEFAULTS, sha256Base64Url, validatePassword, verifyPassword } from './security.mjs';
 import { validateAttemptBatch, validateSessionPayload } from './validation.mjs';
+import { handleGameRoomRequest } from './game-rooms.mjs';
 
 const JSON_HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
 const nowIso=()=>new Date().toISOString();
@@ -114,11 +115,15 @@ async function snapshot(request,env,auth){
 
 export default{
   async fetch(request,env){
-    if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...corsHeaders(request,env),'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type,authorization','access-control-max-age':'86400'}});
+    if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...corsHeaders(request,env),'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type,authorization,x-game-token','access-control-max-age':'86400'}});
     const url=new URL(request.url),path=url.pathname;
     if(path==='/health'&&request.method==='GET')return response(request,env,200,{ok:true,service:'family-learning-api'});
     if(path==='/v1/auth/register'&&request.method==='POST')return register(request,env);
     if(path==='/v1/auth/login'&&request.method==='POST')return login(request,env);
+    if(path.startsWith('/v1/games/rooms')){
+      const handled=await handleGameRoomRequest({request,env,readJson,respond:(status,body,extra)=>response(request,env,status,body,extra)});
+      if(handled)return handled;
+    }
     const auth=await authenticate(request,env);if(!auth)return response(request,env,401,{error:'unauthorized'});
     if(path==='/v1/auth/logout'&&request.method==='POST')return logout(request,env,auth);
     if(path==='/v1/me'&&request.method==='GET')return response(request,env,200,{parent:{email:auth.email},learners:await learnersForParent(env,auth.parent_id)});
