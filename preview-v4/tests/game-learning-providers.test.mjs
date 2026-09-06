@@ -5,6 +5,11 @@ import { createInitialKhaledState } from '../src/modules/khaled/domain/state-mod
 import { createPlayerContext } from '../src/modules/games/core/player-context.js';
 import { createGameLearningAdapter } from '../src/modules/games/learning/game-learning-providers.js';
 
+function cyclingRandom(){
+  const values=[.11,.37,.73,.22,.58,.91,.44,.67,.29];let index=0;
+  return()=>values[index++%values.length];
+}
+
 function setup(){
   const yasserState=createInitialState(),khaledState=createInitialKhaledState();
   let yasserSaves=0,khaledSaves=0;
@@ -13,7 +18,7 @@ function setup(){
     saveYasserState:()=>{yasserSaves+=1;},
     getKhaledState:()=>khaledState,
     saveKhaledState:()=>{khaledSaves+=1;},
-    random:()=>0.37
+    random:cyclingRandom()
   });
   return{adapter,yasserState,khaledState,getSaves:()=>({yasserSaves,khaledSaves})};
 }
