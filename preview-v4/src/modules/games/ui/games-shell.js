@@ -38,7 +38,7 @@ export function ensureGamesShell(){
       <div class="games-shell xo-shell">
         <header class="games-header xo-header">
           <button class="icon-btn" id="xoBackToGames" data-nav="back">الألعاب</button>
-          <div><div class="kicker">إكس أو</div><h1>ياسر ضد خالد</h1><p id="xoModeLabel">نسخة محلية أولية — جهاز واحد</p></div>
+          <div><div class="kicker">إكس أو التعليمية</div><h1>ياسر ضد خالد</h1><p id="xoModeLabel">نسخة محلية أولية — جهاز واحد</p></div>
           <button class="btn secondary xo-reset" id="xoReset">جولة جديدة</button>
         </header>
 
@@ -50,7 +50,7 @@ export function ensureGamesShell(){
           <div class="xo-turn-panel" role="status" aria-live="polite">
             <small>الدور الآن</small>
             <strong id="xoTurnName">ياسر</strong>
-            <span id="xoStatusText">اختر مربعًا</span>
+            <span id="xoStatusText">جاوب ثم اختر مربعًا</span>
           </div>
           <article class="xo-player-card khaled" id="xoPlayerKhaled">
             <div class="xo-player-avatar"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt="" decoding="async"></div>
@@ -58,8 +58,16 @@ export function ensureGamesShell(){
           </article>
         </div>
 
-        <div class="xo-board" id="xoBoard" role="grid" aria-label="لوحة إكس أو"></div>
-        <p class="xo-learning-note">الخطوة التالية: السؤال المناسب لكل طفل يفتح له الحركة، ثم نربط نفس اللعبة بالغرفة الأونلاين.</p>
+        <section class="xo-challenge" id="xoChallenge" aria-live="polite">
+          <div class="xo-challenge-head"><span>🎯 سؤال الدور</span><button class="hear-question" id="xoHearChallenge">🔊 اسمع</button></div>
+          <h2 id="xoChallengePrompt">لحظة… نجهز السؤال</h2>
+          <div class="xo-challenge-visual" id="xoChallengeVisual"></div>
+          <div class="xo-challenge-options" id="xoChallengeOptions"></div>
+          <div class="xo-challenge-feedback" id="xoChallengeFeedback" role="status"></div>
+        </section>
+
+        <div class="xo-board locked" id="xoBoard" role="grid" aria-label="لوحة إكس أو"></div>
+        <p class="xo-learning-note">الإجابة الصحيحة تفتح الحركة. بعد محاولتين غير صحيحتين ينتقل الدور، وتُحفظ المحاولات التعليمية في مسار الطفل نفسه.</p>
       </div>
     </section>`;
 
