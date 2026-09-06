@@ -14,8 +14,8 @@ function multiplicationOptions(correct,random=Math.random){
   const values=new Set([correct]);
   const nearby=[correct-1,correct+1,correct-2,correct+2,correct-5,correct+5].filter(value=>value>0);
   for(const value of shuffle(nearby,random)){values.add(value);if(values.size===3)break;}
-  while(values.size<3)values.add(Math.max(1,correct+Math.floor(random()*9)-4));
-  return shuffle([...values],random);
+  for(let delta=3;values.size<3;delta+=1){values.add(correct+delta);}
+  return shuffle([...values].slice(0,3),random);
 }
 
 export function createGameLearningAdapter({
