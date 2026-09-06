@@ -23,7 +23,8 @@ export const gameRegistry=createGameRegistry([
     minPlayers:1,
     maxPlayers:2,
     version:1,
-    metadata:{accent:'duo',description:'لعبة مرح سريعة مع إمكانية مكافآت تعليمية اختيارية.'}
+    load:()=>import('./rps/rps-controller.js'),
+    metadata:{accent:'duo',description:'لعبة مرح سريعة. الاختيار سري، وأول واحد يوصل 3 يفوز.'}
   },
   {
     id:'number-race',
