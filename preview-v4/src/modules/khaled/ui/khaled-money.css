@@ -22,6 +22,7 @@
 /* Money question types get semantic layouts; no one-size-fits-all answer grid. */
 .khaled-question-card[data-question-type="money-recognition"] .khaled-answers,
 .khaled-question-card[data-question-type="count-money"] .khaled-answers{width:min(520px,100%);grid-template-columns:repeat(2,minmax(150px,1fr))}
+.khaled-question-card[data-question-type="count-money"] .khaled-answers[data-option-count="3"]{width:min(660px,100%);grid-template-columns:repeat(3,minmax(140px,1fr))}
 .khaled-question-card[data-question-type="money-model"] .khaled-answers,
 .khaled-question-card[data-question-type="use-money"] .khaled-answers{width:min(760px,100%);grid-template-columns:repeat(3,minmax(160px,1fr));align-items:stretch}
 .khaled-question-card[data-question-type="equal-money-amounts"] .khaled-answers{width:min(440px,100%);grid-template-columns:repeat(2,minmax(150px,1fr))}
@@ -57,6 +58,8 @@
   .khaled-money-set{gap:7px}.khaled-money-piece.coin{width:66px;height:66px}.khaled-money-piece.note{width:112px;height:54px}.khaled-money-fallback b{font-size:21px}
   .khaled-money-option{min-height:96px}.khaled-money-equality section{min-width:0;padding:7px}.khaled-money-equality .khaled-money-piece{transform:scale(.76);margin:-7px}.khaled-money-target strong,.khaled-price-tag strong{font-size:32px}
   .khaled-question-card[data-question-type="money-recognition"] .khaled-answers,.khaled-question-card[data-question-type="count-money"] .khaled-answers{grid-template-columns:repeat(2,minmax(120px,1fr))}
+  .khaled-question-card[data-question-type="count-money"] .khaled-answers[data-option-count="3"]{width:min(100%,520px);grid-template-columns:repeat(2,minmax(120px,1fr))}
+  .khaled-question-card[data-question-type="count-money"] .khaled-answers[data-option-count="3"]>:last-child{grid-column:1/-1;width:min(100%,240px);justify-self:center}
   .khaled-question-card[data-question-type="money-model"] .khaled-answers,.khaled-question-card[data-question-type="use-money"] .khaled-answers{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
   .khaled-question-card[data-question-type="equal-money-amounts"] .khaled-answers{grid-template-columns:repeat(2,minmax(120px,1fr))}
 }
