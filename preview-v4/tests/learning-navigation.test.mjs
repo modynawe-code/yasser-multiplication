@@ -6,7 +6,7 @@ const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
 test('Khaled learning flow exposes intro, skill-back, and learner-home navigation',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
-  assert.match(shell,/id="khaledIntroStart"[^>]*>ابدأ التعلم<\/button>/);
+  assert.match(shell,/id="khaledIntroStart"[^>]*>يلا نبدأ<\/button>/);
   assert.match(shell,/id="khaledHomeToHub"[^>]*>اختيار الطفل<\/button>/);
   assert.match(shell,/id="khaledExitSession"[^>]*>رجوع للمهارات<\/button>/);
   assert.match(shell,/id="khaledSessionToHub"[^>]*>اختيار الطفل<\/button>/);
