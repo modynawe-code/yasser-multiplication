@@ -72,7 +72,7 @@ test('money renderer is image-first with a non-blocking educational fallback',as
 
 test('PWA caches official SAMA currency images after first successful load without coupling install to them',async()=>{
   const worker=await readFile(new URL('../service-worker.js',import.meta.url),'utf8');
-  assert.match(worker,/shell-34/);
+  assert.match(worker,/shell-35/);
   assert.match(worker,/isSaudiCurrencyImage/);
   assert.match(worker,/www\.sama\.gov\.sa/);
   assert.match(worker,/response\.type==='opaque'/);
