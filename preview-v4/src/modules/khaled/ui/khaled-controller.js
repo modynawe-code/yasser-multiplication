@@ -20,7 +20,7 @@ function shapes(items,className=''){return items.map(item=>`<span class="khaled-
 function classifyToken(item){return `<span class="khaled-classify-token shape-${item.shape} color-${item.color}" aria-hidden="true"></span>`;}
 function numberTiles(items){return items.map(value=>value===null?'<span class="khaled-number-missing" aria-hidden="true">؟</span>':`<span class="khaled-number-tile">${value}</span>`).join('<span class="khaled-number-arrow" aria-hidden="true">→</span>');}
 
-export function createKhaledController({repository,onExitToHub}={}){
+export function createKhaledController({repository}={}){
   let state=repository.load(),session=null,bound=false,feedbackPending=false,feedbackTimer=null;
   const speech=createSpeechService(),audio=createFeedbackAudio(),visuals=createKhaledSceneController();
   function persist(){repository.save(state);}
@@ -100,10 +100,9 @@ export function createKhaledController({repository,onExitToHub}={}){
   }
 
   function storeSession({incomplete=false}={}){if(!session||!session.answers.length)return;const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0;state.sessions.unshift({at:new Date().toISOString(),skillId:session.skillId,correct:session.correct,wrong:session.wrong,total:completed,pct,incomplete});state.sessions=state.sessions.slice(0,100);persist();}
-  function finish(){if(!session)return;clearFeedbackTimer();const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0,skill=getKhaledSkill(session.skillId);storeSession();session.completed=true;byId('khaledResultTitle').textContent=pct>=90?'أبدعت يا خالد ⭐':pct>=70?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';byId('khaledResultPct').textContent=`${pct}%`;byId('khaledResultSkill').textContent=skill?.title||'';byId('khaledResultCorrect').textContent=session.correct;byId('khaledResultWrong').textContent=session.wrong;show('khaledResultView');visuals.result(pct);audio.achievement();}
+  function finish(){if(!session)return;clearFeedbackTimer();const completed=session.correct+session.wrong,pct=completed?Math.round(session.correct/completed*100):0,skill=getKhaledSkill(session.skillId);storeSession();session.completed=true;byId('khaledResultTitle').textContent=pct>=80?'أبدعت يا خالد ⭐':pct>=60?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';byId('khaledResultPct').textContent=`${pct}%`;byId('khaledResultSkill').textContent=skill?.title||'';byId('khaledResultCorrect').textContent=session.correct;byId('khaledResultWrong').textContent=session.wrong;show('khaledResultView');visuals.result(pct);audio.achievement();}
   function leave(){clearFeedbackTimer();if(session&&!session.completed&&session.answers.length)storeSession({incomplete:true});speech.stop();document.body.classList.remove('khaled-mode');session=null;}
   function exitSession(){leave();enter();}
-  function exitToHub(){leave();onExitToHub?.();}
-  function bind(){if(bound)return;bound=true;byId('khaledHomeToHub')?.addEventListener('click',exitToHub);byId('khaledExitSession')?.addEventListener('click',exitSession);byId('khaledSessionToHub')?.addEventListener('click',exitToHub);byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enter();});byId('khaledResultToHub')?.addEventListener('click',exitToHub);byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));byId('hearKhaledQuestion')?.addEventListener('click',()=>{if(feedbackPending)return;const question=session?.questions?.[session.index];speech.speak(question?.spokenPrompt||'');});}
+  function bind(){if(bound)return;bound=true;byId('khaledExitSession')?.addEventListener('click',exitSession);byId('khaledResultHome')?.addEventListener('click',()=>{session=null;enter();});byId('khaledRetry')?.addEventListener('click',()=>session&&startSkill(session.skillId));byId('hearKhaledQuestion')?.addEventListener('click',()=>{if(feedbackPending)return;const question=session?.questions?.[session.index];speech.speak(question?.spokenPrompt||'');});}
   return{start(){bind();visuals.warm();enter();},enter(){bind();visuals.warm();enter();},leave,getState(){return state;}};
 }
