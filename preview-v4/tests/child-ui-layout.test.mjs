@@ -11,6 +11,25 @@ test('learner chooser uses approved Yasser artwork instead of a placeholder',asy
   assert.doesNotMatch(shell,/yasser-card[\s\S]*learner-placeholder[\s\S]*×/);
 });
 
+test('learner chooser has a dedicated short-landscape contract so its heading is never centered offscreen',async()=>{
+  const css=await read('src/modules/hub/learning-hub.css');
+  assert.match(css,/@media \(orientation:landscape\) and \(min-width:850px\) and \(max-height:720px\)/);
+  assert.match(css,/\.learner-hub\{min-height:0;justify-content:flex-start/);
+  assert.match(css,/\.learner-card\{min-height:350px;grid-template-rows:230px auto/);
+});
+
+test('Khaled has a dedicated intro route without merging his curriculum into Yasser flow',async()=>{
+  const shell=await read('src/modules/hub/learning-shell.js');
+  const controller=await read('src/modules/khaled/ui/khaled-controller.js');
+  const css=await read('src/modules/hub/learning-hub.css');
+  assert.match(shell,/id="khaledIntroView"/);
+  assert.match(shell,/id="khaledIntroStart"/);
+  assert.match(controller,/function showIntro\(\)/);
+  assert.match(controller,/function enterHome\(\)/);
+  assert.match(controller,/return\{start\(\)\{bind\(\);visuals\.warm\(\);showIntro\(\);\},enter\(\)\{bind\(\);visuals\.warm\(\);showIntro\(\);\}/);
+  assert.match(css,/\.khaled-intro-shell/);
+});
+
 test('Khaled question character and task content occupy separate structural regions',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
   const css=await read('src/modules/hub/learning-hub.css');
@@ -34,9 +53,9 @@ test('Yasser practice uses a height-aware side-by-side question scene in landsca
   assert.match(css,/\.question-card:not\(\.exam-mode\) \.session-visuals\{grid-area:visual/);
 });
 
-test('character scale distinguishes review, practice, result, and learner chooser roles',async()=>{
+test('character scale distinguishes chooser, intro, review, practice, and result roles',async()=>{
   const scale=await read('src/ui/styles/character-scale.css');
-  for(const token of ['--character-yasser-hub','--character-yasser-learn','--character-yasser-session','--character-yasser-result','--character-khaled-hub','--character-khaled-session','--character-khaled-result'])assert.match(scale,new RegExp(token));
+  for(const token of ['--character-yasser-hub','--character-yasser-learn','--character-yasser-session','--character-yasser-result','--character-khaled-hub','--character-khaled-intro','--character-khaled-session','--character-khaled-result'])assert.match(scale,new RegExp(token));
 });
 
 test('strong Khaled round completion exposes the approved group celebration',async()=>{
