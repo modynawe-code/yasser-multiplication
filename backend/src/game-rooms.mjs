@@ -31,7 +31,15 @@ export function addXoRoomGuest(state,guestPlayerId){
 }
 
 export function applyXoRoomAction(state,{playerId,type,cell}={}){
-  if(state?.gameId!=='xo'||state.status!=='playing')return{ok:false,reason:'game-not-playing'};
+  if(state?.gameId!=='xo')return{ok:false,reason:'invalid-game-state'};
+  if(type==='reset'){
+    if(!['won','draw'].includes(state.status))return{ok:false,reason:'game-not-finished'};
+    if(!state.players.includes(playerId))return{ok:false,reason:'player-not-in-room'};
+    const next=clone(state),nextRound=Number(next.round||1)+1;
+    next.status='playing';next.board=Array(9).fill(null);next.moveCount=0;next.winner=null;next.winningLine=[];next.round=nextRound;next.currentPlayerId=next.players[(nextRound-1)%next.players.length];
+    return{ok:true,state:next};
+  }
+  if(state.status!=='playing')return{ok:false,reason:'game-not-playing'};
   if(state.currentPlayerId!==playerId)return{ok:false,reason:'not-your-turn'};
   if(type==='pass'){
     const next=clone(state),other=otherPlayer(next,playerId);if(!other)return{ok:false,reason:'missing-opponent'};
