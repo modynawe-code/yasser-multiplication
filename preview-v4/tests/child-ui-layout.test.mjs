@@ -48,6 +48,16 @@ test('Khaled tablet hardening never shrinks the character container with overflo
   assert.match(characters,/\.khaled-session-character\{[^}]*overflow:hidden/);
 });
 
+test('Khaled landscape adapts to viewport height and RTL cannot collapse the task lane',async()=>{
+  const hardening=await read('src/modules/khaled/ui/khaled-device-hardening.css');
+  assert.match(hardening,/--character-khaled-session:min\(34dvh,220px\)/);
+  assert.match(hardening,/--character-khaled-intro:min\(38dvh,340px\)/);
+  assert.match(hardening,/\.khaled-question-card\{[\s\S]*direction:ltr;[\s\S]*grid-template-columns:minmax\(0,1fr\) clamp\(190px,24vw,280px\)/);
+  assert.match(hardening,/\.khaled-question-content\{direction:rtl;width:100%;min-width:0/);
+  assert.match(hardening,/repeat\(auto-fit,minmax\(120px,1fr\)\)/);
+  assert.match(hardening,/\.khaled-character-fallback\[hidden\][\s\S]*display:none!important/);
+});
+
 test('Yasser practice uses a height-aware side-by-side question scene in landscape',async()=>{
   const css=await read('src/ui/styles/character-system.css');
   assert.match(css,/@media \(orientation:landscape\) and \(min-width:760px\)/);
