@@ -76,13 +76,14 @@ test('RPS is lazy-loaded as an independent fun-game module',async()=>{
   assert.match(shell,/data-rps-choice="scissors"/);
 });
 
-test('RPS presentation exposes match intro, player handoff and battle reveal states',async()=>{
+test('RPS presentation is a full arena rather than a page card',async()=>{
   const shell=await read('src/modules/games/rps/rps-shell.js');
   const controller=await read('src/modules/games/rps/rps-controller.js');
   const css=await read('src/modules/games/rps/rps.css');
-  assert.match(shell,/id="rpsIntro"/);
-  assert.match(shell,/id="rpsCurrentAvatar"/);
-  assert.match(shell,/id="rpsHandoffAvatar"/);
+  assert.match(shell,/class="rps-hud"/);
+  assert.match(shell,/class="rps-arena-grid"/);
+  assert.match(shell,/class="rps-turn-player"/);
+  assert.match(shell,/class="rps-handoff-visual"/);
   assert.match(shell,/class="rps-battle"/);
   assert.match(shell,/id="rpsPointPop"/);
   assert.match(shell,/id="rpsFinalScore"/);
@@ -91,6 +92,9 @@ test('RPS presentation exposes match intro, player handoff and battle reveal sta
   assert.match(controller,/setStageState\('reveal'\)/);
   assert.match(controller,/setStageState\('finish'\)/);
   assert.match(controller,/createRpsAudio/);
+  assert.doesNotMatch(controller,/createSpeechService/);
+  assert.match(css,/height:100dvh/);
+  assert.match(css,/width:min\(1180px,100%\)/);
   assert.match(css,/rpsMoveInLeft/);
   assert.match(css,/rpsMoveInRight/);
   assert.match(css,/rpsImpact/);
@@ -109,7 +113,7 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
 
 test('PWA shell includes resumable online games and lazy RPS modules',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-49/);
+  assert.match(serviceWorker,/shell-50/);
   for(const path of [
     'src/modules/games/games-controller.js',
     'src/modules/games/learning/game-learning-providers.js',
