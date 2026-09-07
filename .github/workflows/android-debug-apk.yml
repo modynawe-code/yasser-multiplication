@@ -33,7 +33,8 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Restore stable debug signing key
+      # The first successful build creates this key; later builds restore the same signer.
+      - name: Restore stable Android debug signing key
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
