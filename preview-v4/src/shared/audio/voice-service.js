@@ -11,10 +11,12 @@ export function createVoiceService({
   nativeTts=resolveNativeTts(),
   synth=globalThis.speechSynthesis,
   Utterance=globalThis.SpeechSynthesisUtterance,
+  neuralProvider=null,
   providers=null
 }={}){
   const chain=(providers||[
     createLocalAudioProvider({manifest,AudioClass}),
+    neuralProvider,
     createNativeTtsProvider({nativeTts}),
     createBrowserTtsProvider({synth,Utterance})
   ]).filter(provider=>provider&&typeof provider.speak==='function');
