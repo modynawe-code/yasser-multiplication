@@ -27,6 +27,19 @@ test('speaker identity is constrained to one source recording plus diarized spea
   }});
   assert.equal(row.recordingId,'6k_SBA_107_0');
   assert.equal(row.durationSeconds,3.2);
+  assert.equal(row.audioSrc,'https://example.test/audio.wav');
+});
+
+test('normalization accepts bilingual labels and nested viewer audio URLs',()=>{
+  const row=normalizeSadaRow({row:{
+    SegmentID:'recA-seg_1',ProcessedText:'نص',Speaker:'Speaker1',SegmentLength:'4',
+    SpeakerAge:'Adult -- بالغ',SpeakerGender:'Male -- ذكر',SpeakerDialect:'Khaliji -- خليجي',Environment:'Clean -- نظيف',
+    audio:[{value:{url:'https://example.test/nested.wav'}}]
+  }});
+  const groups=rankSadaSpeakerGroups([row]);
+  assert.equal(row.audioSrc,'https://example.test/nested.wav');
+  assert.equal(groups.length,1);
+  assert.equal(groups[0].speakerDialect,'Khaliji -- خليجي');
 });
 
 test('ranking keeps recordings isolated and prioritizes Najdi over Saudi fallbacks',()=>{
