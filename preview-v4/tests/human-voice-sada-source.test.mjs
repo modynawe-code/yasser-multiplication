@@ -37,11 +37,12 @@ test('ranking never mixes different recordings or ineligible clips',()=>{
   assert.equal(groups[0].clipCount,2);
 });
 
-test('SADA acquisition tool scans bounded row metadata and downloads only selected audio, never bulk corpus files',async()=>{
+test('SADA acquisition tool searches Najdi metadata in slices and downloads only selected audio',async()=>{
   const tool=await read('tools/sada-human-source.mjs');
   assert.match(tool,/datasets-server\.huggingface\.co|viewerApi/);
-  assert.match(tool,/new URL\('\/rows'/);
-  assert.doesNotMatch(tool,/new URL\('\/filter'/);
+  assert.match(tool,/new URL\('\/search'/);
+  assert.match(tool,/query:SADA_FILTER\.SpeakerDialect/);
+  assert.match(tool,/start-offset/);
   assert.match(tool,/PAGE_LENGTH=100/);
   assert.match(tool,/num_rows_total/);
   assert.match(tool,/max-mb/);
