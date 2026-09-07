@@ -10,7 +10,7 @@ export function createLocalAudioProvider({manifest,AudioClass=globalThis.Audio}=
   }
 
   async function speak(request={}){
-    const src=resolveVoiceAsset(request.id,manifest);
+    const src=resolveVoiceAsset(request.id,manifest,request.text);
     if(!src||typeof AudioClass!=='function'||request.isCurrent?.()===false)return false;
     stop();
     let audio;
