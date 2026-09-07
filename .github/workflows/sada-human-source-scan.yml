@@ -1,0 +1,35 @@
+name: SADA Human Source Scan
+
+on:
+  push:
+    branches:
+      - 'feature/games-platform-v1'
+    paths:
+      - '.github/workflows/sada-human-source-scan.yml'
+      - 'preview-v4/tools/sada-human-source.mjs'
+      - 'preview-v4/tools/voice/sada-source-config.mjs'
+      - 'preview-v4/package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Scan SADA metadata only
+        run: npm run voice:sada:scan
+        working-directory: preview-v4
+      - name: Upload scan result
+        uses: actions/upload-artifact@v4
+        with:
+          name: sada-human-source-scan
+          path: preview-v4/build/voice/sada/scan.json
+          if-no-files-found: error
+          retention-days: 7
