@@ -56,10 +56,12 @@ test('RPS voice uses shared human-first voice service while gameplay SFX stay in
   assert.match(audio,/playSfx/);
 });
 
-test('PWA shell caches the RPS graphics and shared voice modules',async()=>{
+test('PWA shell caches the RPS graphics and shared human voice modules',async()=>{
   const sw=await read('service-worker.js');
-  assert.match(sw,/shell-51/);
+  assert.match(sw,/shell-52/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-graphics\.js/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-audio\.js/);
+  assert.match(sw,/src\/shared\/audio\/human-voice-assets\.js/);
+  assert.match(sw,/src\/shared\/audio\/human-voice-policy\.js/);
   assert.match(sw,/src\/shared\/audio\/voice-service\.js/);
 });
