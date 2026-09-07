@@ -11,7 +11,7 @@ export function createLocalAudioProvider({manifest,AudioClass=globalThis.Audio}=
 
   async function speak(request={}){
     const src=resolveVoiceAsset(request.id,manifest);
-    if(!src||typeof AudioClass!=='function')return false;
+    if(!src||typeof AudioClass!=='function'||request.isCurrent?.()===false)return false;
     stop();
     let audio;
     try{audio=new AudioClass(src);}catch{return false;}
@@ -22,6 +22,7 @@ export function createLocalAudioProvider({manifest,AudioClass=globalThis.Audio}=
     audio.addEventListener?.('ended',cleanup,{once:true});
     audio.addEventListener?.('error',cleanup,{once:true});
     try{
+      if(request.isCurrent?.()===false){cleanup();return false;}
       await audio.play?.();
       return true;
     }catch{
