@@ -16,7 +16,7 @@ export function ensureRpsShell(){
         <p class="rps-rules">حجر ورق مقص — أول لاعب يجمع 3 نقاط يفوز بالمباراة.</p>
 
         <header class="rps-hud">
-          <button class="rps-hud-btn" id="rpsBackToGames" data-nav="back">الألعاب</button>
+          <button class="rps-hud-btn" id="rpsBackToGames" data-nav="back" aria-label="رجوع إلى قائمة الألعاب">↩ رجوع للألعاب</button>
 
           <div class="rps-scoreboard" aria-label="النتيجة">
             <article class="rps-score-card yasser" id="rpsScoreCardYasser">
@@ -94,6 +94,7 @@ export function ensureRpsShell(){
               <h2 id="rpsFinishTitle"></h2>
               <div class="rps-final-score" id="rpsFinalScore"></div>
               <button class="rps-action-btn" id="rpsPlayAgain">العبوا مرة ثانية</button>
+              <button class="rps-action-btn" id="rpsFinishBackToGames">↩ رجوع للألعاب</button>
             </div>
             <div class="rps-finish-art" id="rpsFinishArt"></div>
           </div>
