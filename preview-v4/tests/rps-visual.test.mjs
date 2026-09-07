@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { rpsChoiceGraphic } from '../src/modules/games/rps/rps-graphics.js';
+import { RPS_AUDIO_CLIPS } from '../src/modules/games/rps/rps-audio.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -44,9 +45,19 @@ test('RPS typography uses a modern offline-safe Arabic font stack',async()=>{
   assert.doesNotMatch(css,/font-weight:950/);
 });
 
-test('PWA shell caches the RPS graphics and game-feel audio modules',async()=>{
+test('RPS audio boundary is ready for real recorded clips and contains no oscillator synthesis',async()=>{
+  const audio=await read('src/modules/games/rps/rps-audio.js');
+  for(const key of ['turnYasser','turnKhaled','draw','pointYasser','pointKhaled','winYasser','winKhaled']){
+    assert.ok(RPS_AUDIO_CLIPS[key]?.endsWith('.mp3'),`missing recorded clip path for ${key}`);
+  }
+  assert.doesNotMatch(audio,/createOscillator/);
+  assert.doesNotMatch(audio,/frequency:/);
+  assert.doesNotMatch(audio,/AudioContext/);
+});
+
+test('PWA shell caches the RPS graphics and recorded-audio player modules',async()=>{
   const sw=await read('service-worker.js');
-  assert.match(sw,/shell-49/);
+  assert.match(sw,/shell-50/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-graphics\.js/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-audio\.js/);
 });
