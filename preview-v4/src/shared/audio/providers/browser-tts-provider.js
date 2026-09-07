@@ -1,18 +1,20 @@
-function scoreVoice(voice,lang){
-  const candidate=String(voice?.lang||'').toLowerCase(),wanted=String(lang||'ar-SA').toLowerCase(),name=String(voice?.name||'').toLowerCase();
-  let score=0;
-  if(candidate===wanted)score+=100;
-  else if(candidate.startsWith('ar-'))score+=70;
-  else if(candidate==='ar')score+=60;
-  if(voice?.localService)score+=10;
-  if(/natural|neural|enhanced|premium/.test(name))score+=18;
-  if(voice?.default)score+=3;
-  return score;
+import { NATURAL_VOICE_PROFILE,scoreArabicVoice } from '../natural-voice-profile.js';
+
+export function pickBrowserVoice(voices=[],lang=NATURAL_VOICE_PROFILE.locale){
+  if(!Array.isArray(voices)||!voices.length)return null;
+  return voices.reduce((best,voice)=>scoreArabicVoice(voice,lang)>scoreArabicVoice(best,lang)?voice:best,null);
 }
 
-export function pickBrowserVoice(voices=[],lang='ar-SA'){
-  if(!Array.isArray(voices)||!voices.length)return null;
-  return voices.reduce((best,voice)=>scoreVoice(voice,lang)>scoreVoice(best,lang)?voice:best,null);
+function waitForVoices(synth,waitMs){
+  const initial=synth?.getVoices?.()||[];
+  if(initial.length)return Promise.resolve(initial);
+  if(!synth?.addEventListener||!waitMs)return Promise.resolve(initial);
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=()=>{if(done)return;done=true;try{synth.removeEventListener?.('voiceschanged',finish);}catch{}resolve(synth.getVoices?.()||[]);};
+    synth.addEventListener('voiceschanged',finish,{once:true});
+    setTimeout(finish,waitMs);
+  });
 }
 
 export function createBrowserTtsProvider({synth=globalThis.speechSynthesis,Utterance=globalThis.SpeechSynthesisUtterance}={}){
@@ -22,11 +24,12 @@ export function createBrowserTtsProvider({synth=globalThis.speechSynthesis,Utter
     if(!request.text||!synth||!Utterance||request.isCurrent?.()===false)return false;
     try{
       const utterance=new Utterance(String(request.text));
-      utterance.lang=request.lang||'ar-SA';
-      utterance.rate=Number(request.rate??.88);
-      utterance.pitch=Number(request.pitch??1);
-      utterance.volume=Number(request.volume??1);
-      const voice=pickBrowserVoice(synth.getVoices?.()||[],utterance.lang);
+      utterance.lang=request.lang||NATURAL_VOICE_PROFILE.locale;
+      utterance.rate=Number(request.rate??NATURAL_VOICE_PROFILE.rate);
+      utterance.pitch=Number(request.pitch??NATURAL_VOICE_PROFILE.pitch);
+      utterance.volume=Number(request.volume??NATURAL_VOICE_PROFILE.volume);
+      const voices=await waitForVoices(synth,NATURAL_VOICE_PROFILE.browserVoiceWaitMs);
+      const voice=pickBrowserVoice(voices,utterance.lang);
       if(voice)utterance.voice=voice;
       if(request.isCurrent?.()===false)return false;
       synth.speak(utterance);
