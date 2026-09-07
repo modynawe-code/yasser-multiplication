@@ -70,10 +70,30 @@ test('RPS is lazy-loaded as an independent fun-game module',async()=>{
   assert.match(controller,/gameRegistry\.get\('rock-paper-scissors'\)/);
   assert.match(controller,/rpsController\.start\(\)/);
   assert.match(shell,/id="rpsGameView"/);
-  assert.match(shell,/أول واحد يوصل 3 يفوز/);
+  assert.match(shell,/أول لاعب يجمع 3 نقاط يفوز/);
   assert.match(shell,/data-rps-choice="rock"/);
   assert.match(shell,/data-rps-choice="paper"/);
   assert.match(shell,/data-rps-choice="scissors"/);
+});
+
+test('RPS presentation exposes match intro, player handoff and battle reveal states',async()=>{
+  const shell=await read('src/modules/games/rps/rps-shell.js');
+  const controller=await read('src/modules/games/rps/rps-controller.js');
+  const css=await read('src/modules/games/rps/rps.css');
+  assert.match(shell,/id="rpsIntro"/);
+  assert.match(shell,/id="rpsCurrentAvatar"/);
+  assert.match(shell,/id="rpsHandoffAvatar"/);
+  assert.match(shell,/class="rps-battle"/);
+  assert.match(shell,/id="rpsPointPop"/);
+  assert.match(shell,/id="rpsFinalScore"/);
+  assert.match(controller,/setStageState\('choosing'\)/);
+  assert.match(controller,/setStageState\('handoff'\)/);
+  assert.match(controller,/setStageState\('reveal'\)/);
+  assert.match(controller,/setStageState\('finish'\)/);
+  assert.match(controller,/createRpsAudio/);
+  assert.match(css,/rpsMoveInLeft/);
+  assert.match(css,/rpsMoveInRight/);
+  assert.match(css,/rpsImpact/);
 });
 
 test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet heights',async()=>{
@@ -89,7 +109,7 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
 
 test('PWA shell includes resumable online games and lazy RPS modules',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-48/);
+  assert.match(serviceWorker,/shell-49/);
   for(const path of [
     'src/modules/games/games-controller.js',
     'src/modules/games/learning/game-learning-providers.js',
@@ -101,6 +121,7 @@ test('PWA shell includes resumable online games and lazy RPS modules',async()=>{
     'src/modules/games/xo/xo-engine.js',
     'src/modules/games/rps/rps-engine.js',
     'src/modules/games/rps/rps-graphics.js',
+    'src/modules/games/rps/rps-audio.js',
     'src/modules/games/rps/rps-controller.js',
     'src/modules/games/rps/rps-shell.js',
     'src/modules/games/rps/rps.css'
