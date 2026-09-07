@@ -7,9 +7,10 @@ export function createSpeechService({
   AudioClass=globalThis.Audio,
   manifest,
   neuralProvider=null,
+  mode,
   voiceService=null
 }={}){
-  const voice=voiceService||createVoiceService({synth,Utterance,nativeTts,AudioClass,manifest,neuralProvider});
+  const voice=voiceService||createVoiceService({synth,Utterance,nativeTts,AudioClass,manifest,neuralProvider,mode});
 
   function speak(input,options={}){
     if(typeof input==='string')return voice.say({text:input,...options});
@@ -19,5 +20,5 @@ export function createSpeechService({
 
   function stop(){voice.stop();}
 
-  return Object.freeze({speak,stop});
+  return Object.freeze({speak,stop,mode:voice.mode});
 }
