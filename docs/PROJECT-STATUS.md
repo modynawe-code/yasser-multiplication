@@ -1,8 +1,8 @@
 # Project Status
 
-Updated: 2026-09-05
+Updated: 2026-09-07
 
-## Complete in `main` after the current asset PR merges
+## Verified on `feature/games-platform-v1`
 
 - Shared learner hub for Yasser and Khaled.
 - Yasser multiplication 1–10 training, exam, mastery, feedback audio, parent reporting, and PWA support.
@@ -11,10 +11,13 @@ Updated: 2026-09-05
 - Explicit zero counting visual, Arabic speech prompts, touch-target and landscape hardening for tablet use.
 - Combined parent report for both learners.
 - Append-only local attempt ledger with stable attempt IDs and migration baselines.
-- Cloudflare Worker + D1 backend source with real parent authentication, idempotent sync/restore, login throttling, and database-level UPDATE/DELETE protection for attempt history.
-- CI for the learning app and backend contracts.
-- Seven approved original Khaled PNG assets committed byte-for-byte with SHA-256 regression checks; no resizing, recompression, cropping, or re-encoding.
-- Khaled artwork is loaded by scene: only welcome and thinking are warmed initially, while result/celebration states load on first use and enter the normal runtime cache.
+- Cloudflare Worker + D1 production backend is live at `https://yasser-khaled-family-api.modynawe.workers.dev`.
+- Production smoke verification covers `/health`, Capacitor CORS, protected cloud-sync boundary, XO room creation, a second learner joining from another device context, and authenticated room reads.
+- Android ignores stale development API overrides stored by older previews and uses the production family API unless an explicit runtime injection is supplied.
+- XO local and online room flows are implemented; production two-player room lifecycle is verified from an external GitHub runner.
+- CI covers the learning app, family backend contracts, launcher-icon contract, rewards/challenges, and Android APK build.
+- Android launcher icon uses the approved Yasser + Khaled + calculator composition with split orange/blue identity and no text.
+- Seven approved original Khaled PNG assets are protected against unintended resizing/recompression/re-encoding.
 
 ## Curriculum verification
 
@@ -22,11 +25,15 @@ Updated: 2026-09-05
 - Chapters 7–13: interactive content is implemented, but current-year 1448 metadata remains explicitly pending until the current edition is available/verified.
 - The app implements original interactive practice and does not reproduce textbook pages.
 
-## Pending release gates
+## Remaining release gate
 
-1. **Cloud production deployment** — create the real D1 database/binding, run migrations, deploy the Worker, configure exact allowed origins, then configure the frontend API URL. Until this is done, browser storage is still the only live persistence layer.
-2. **Physical Galaxy Tab validation** — manually verify portrait/landscape, audio, touch, PWA install, offline/reconnect, learner switching, interrupted-session persistence, and all Khaled curriculum groups on the actual Samsung tablet. CI only provides automated guards.
+1. **Physical Galaxy Tab validation** — verify the latest APK on the actual Samsung tablet: online XO from two physical devices, parent cloud account/sync using the family account, portrait/landscape, touch, offline/reconnect, learner switching, interrupted-session persistence, and the full curriculum flows. Automated CI and production smoke are guards but do not replace the device check.
+
+## Deployment rule
+
+- Production backend deployment is explicit/manual through `.github/workflows/backend-production-deploy.yml` and requires the repository secret `CLOUDFLARE_API_TOKEN` only when a future backend deployment is intentionally requested.
+- `.github/workflows/backend-production-smoke.yml` is the non-destructive production verification gate and does not require Cloudflare credentials.
 
 ## Repository rule
 
-`main` is the only current source of truth. Superseded draft PRs must not be merged. New work should use focused branches/PRs with green CI before merge.
+`main` remains the release source of truth after verified feature work is merged. Superseded draft PRs must not be merged. New work should use focused branches/PRs with green CI and device validation where applicable.
