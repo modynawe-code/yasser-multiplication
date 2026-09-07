@@ -1,5 +1,6 @@
 import { summarizeLearningAttempts,summarizeLearningWindows,learningLevel } from '../progress/learning-metrics.js';
 import { summarizeLearningTrends } from '../progress/learning-trends.js';
+import { deriveChallengeProgress } from '../challenges/challenge-engine.js';
 import { createRewardRepository } from './reward-repository.js';
 import { deriveLearningRewardCandidates,applyRewardCandidates,rewardSummary } from './reward-engine.js';
 
@@ -9,14 +10,14 @@ function skillLevels(attemptLog,learnerId){
 }
 
 export function createLearningRewardService({repository=createRewardRepository()}={}){
-  function evaluate(learnerId,state,{now=new Date(),streakDays=null,weeklyChallengeComplete=false,improvementPct=null}={}){
+  function evaluate(learnerId,state,{now=new Date(),streakDays=null,weeklyChallengeComplete=null,improvementPct=null}={}){
     const id=String(learnerId||''),attemptLog=Array.isArray(state?.attemptLog)?state.attemptLog:[];
-    const windows=summarizeLearningWindows(attemptLog,{learnerId:id,now}),levels=skillLevels(attemptLog,id),trends=summarizeLearningTrends(attemptLog,{learnerId:id,now}),ledger=repository.load(id);
-    const effectiveStreak=streakDays===null?trends.streakDays:Number(streakDays),effectiveImprovement=improvementPct===null?trends.improvementPct:Number(improvementPct);
-    const candidates=deriveLearningRewardCandidates({learnerId:id,windows,skillLevels:levels,streakDays:effectiveStreak,weeklyChallengeComplete,improvementPct:effectiveImprovement,totalQuestions:windows.all.questions,now});
+    const windows=summarizeLearningWindows(attemptLog,{learnerId:id,now}),levels=skillLevels(attemptLog,id),trends=summarizeLearningTrends(attemptLog,{learnerId:id,now}),challenges=deriveChallengeProgress(attemptLog,{learnerId:id,now}),ledger=repository.load(id);
+    const effectiveStreak=streakDays===null?trends.streakDays:Number(streakDays),effectiveImprovement=improvementPct===null?trends.improvementPct:Number(improvementPct),effectiveWeeklyChallenge=weeklyChallengeComplete===null?challenges.weeklyComplete:Boolean(weeklyChallengeComplete);
+    const candidates=deriveLearningRewardCandidates({learnerId:id,windows,skillLevels:levels,streakDays:effectiveStreak,weeklyChallengeComplete:effectiveWeeklyChallenge,improvementPct:effectiveImprovement,totalQuestions:windows.all.questions,now});
     const added=applyRewardCandidates(ledger,candidates,{at:now});
     if(added)repository.save(ledger);
-    return Object.freeze({added,windows,trends,skillLevels:Object.freeze(levels),summary:rewardSummary(ledger)});
+    return Object.freeze({added,windows,trends,challenges,skillLevels:Object.freeze(levels),summary:rewardSummary(ledger)});
   }
   function getSummary(learnerId){return rewardSummary(repository.load(String(learnerId||'')));}
   return Object.freeze({evaluate,getSummary});
