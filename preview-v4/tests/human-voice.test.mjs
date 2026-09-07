@@ -23,11 +23,11 @@ test('voice manifest keeps semantic recordings and gives every dynamic prompt a 
   assert.equal(dynamic,humanVoiceAssetPath('اختر العدد 7.'));
 });
 
-test('human-only mode contains no neural native or browser speech provider',()=>{
+test('human-only mode still contains no neural native or browser speech provider',()=>{
   const voice=createVoiceService({
     mode:'human-only',
     AudioClass:null,
-    neuralProvider:{kind:'neural',async speak(){return true;}},
+    neuralProvider:{kind:'cloud-tts',async speak(){return true;}},
     nativeTts:{async speak(){},async stop(){}},
     synth:{speak(){},cancel(){},getVoices(){return[];}},
     Utterance:class{}
@@ -36,13 +36,14 @@ test('human-only mode contains no neural native or browser speech provider',()=>
   assert.deepEqual(voice.providers,['local-audio']);
 });
 
-test('release policy is human-only while migration keeps current app audible until recordings are complete',()=>{
-  assert.equal(HUMAN_VOICE_POLICY.releaseMode,'human-only');
-  assert.equal(HUMAN_VOICE_POLICY.runtimeMode,'migration');
-  assert.equal(HUMAN_VOICE_POLICY.requireCompleteHumanCoverageForRelease,true);
+test('release policy now prefers natural TTS while preserving optional recorded audio',()=>{
+  assert.equal(HUMAN_VOICE_POLICY.releaseMode,'natural-tts');
+  assert.equal(HUMAN_VOICE_POLICY.runtimeMode,'natural-tts');
+  assert.equal(HUMAN_VOICE_POLICY.preferredProvider,'cloud-tts');
+  assert.equal(HUMAN_VOICE_POLICY.requireCompleteHumanCoverageForRelease,false);
 });
 
-test('recording inventory covers Yasser Khaled and games and exposes a strict release gate',async()=>{
+test('recording inventory remains available as an optional future source and release gate follows policy',async()=>{
   const tool=await read('tools/build-human-voice-corpus.mjs');
   const pkg=JSON.parse(await read('package.json'));
   assert.match(tool,/for\(let table=1;table<=10;table\+\+\)/);
@@ -50,7 +51,7 @@ test('recording inventory covers Yasser Khaled and games and exposes a strict re
   assert.match(tool,/createAdvancedKhaledRound/);
   assert.match(tool,/games\.rps\.turn\.yasser/);
   assert.match(tool,/games:xo/);
-  assert.match(tool,/--strict/);
+  assert.match(tool,/requireCompleteHumanCoverageForRelease/);
   assert.equal(pkg.scripts['voice:inventory'],'node tools/build-human-voice-corpus.mjs');
   assert.equal(pkg.scripts['voice:release-check'],'node tools/build-human-voice-corpus.mjs --strict');
 });
