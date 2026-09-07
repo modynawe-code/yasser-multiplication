@@ -19,9 +19,8 @@ export function createBrowserTtsProvider({synth=globalThis.speechSynthesis,Utter
   function stop(){try{synth?.cancel?.();}catch{}}
 
   async function speak(request={}){
-    if(!request.text||!synth||!Utterance)return false;
+    if(!request.text||!synth||!Utterance||request.isCurrent?.()===false)return false;
     try{
-      stop();
       const utterance=new Utterance(String(request.text));
       utterance.lang=request.lang||'ar-SA';
       utterance.rate=Number(request.rate??.88);
@@ -29,6 +28,7 @@ export function createBrowserTtsProvider({synth=globalThis.speechSynthesis,Utter
       utterance.volume=Number(request.volume??1);
       const voice=pickBrowserVoice(synth.getVoices?.()||[],utterance.lang);
       if(voice)utterance.voice=voice;
+      if(request.isCurrent?.()===false)return false;
       synth.speak(utterance);
       return true;
     }catch{return false;}
