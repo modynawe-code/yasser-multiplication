@@ -1,6 +1,7 @@
 import { hashPassword, normalizeEmail, randomId, randomSessionToken, SECURITY_DEFAULTS, sha256Base64Url, validatePassword, verifyPassword } from './security.mjs';
 import { validateAttemptBatch, validateSessionPayload } from './validation.mjs';
 import { handleGameRoomRequest } from './game-rooms.mjs';
+import { handleVoiceRequest } from './voice.mjs';
 
 const JSON_HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
 const nowIso=()=>new Date().toISOString();
@@ -125,6 +126,9 @@ export default{
       if(handled)return handled;
     }
     const auth=await authenticate(request,env);if(!auth)return response(request,env,401,{error:'unauthorized'});
+    if(path==='/v1/voice/synthesize'&&request.method==='POST'){
+      return handleVoiceRequest({request,env,auth,readJson,corsHeaders,respond:(status,body,extra)=>response(request,env,status,body,extra)});
+    }
     if(path==='/v1/auth/logout'&&request.method==='POST')return logout(request,env,auth);
     if(path==='/v1/me'&&request.method==='GET')return response(request,env,200,{parent:{email:auth.email},learners:await learnersForParent(env,auth.parent_id)});
     if(path==='/v1/sync/baseline'&&request.method==='POST')return syncBaseline(request,env,auth);
