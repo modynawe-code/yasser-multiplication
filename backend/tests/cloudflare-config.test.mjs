@@ -9,6 +9,7 @@ test('Cloudflare config is pinned to the dedicated family-learning resources',as
   const config=await readConfig();
   assert.equal(config.name,'yasser-khaled-family-api');
   assert.equal(config.account_id,'cb1e4fe9d46768f7400d427eaecceb49');
+  assert.equal(config.ai?.binding,'AI');
   assert.equal(config.d1_databases?.length,1);
   const db=config.d1_databases[0];
   assert.equal(db.binding,'DB');
@@ -17,8 +18,10 @@ test('Cloudflare config is pinned to the dedicated family-learning resources',as
   assert.doesNotMatch(JSON.stringify(config),/REPLACE_WITH_D1_DATABASE_ID/);
 });
 
-test('backend source continues to use env.DB so Wrangler auto-binding must not replace it',async()=>{
+test('backend source continues to use isolated DB and AI bindings',async()=>{
   const source=await readFile(new URL('../src/index.mjs',import.meta.url),'utf8');
+  const voice=await readFile(new URL('../src/voice.mjs',import.meta.url),'utf8');
   assert.match(source,/env\.DB\.prepare/);
+  assert.match(voice,/env\.AI\.run/);
   assert.doesNotMatch(source,/env\.yasser_khaled_family/);
 });
