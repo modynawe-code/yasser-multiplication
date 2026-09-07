@@ -18,18 +18,23 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        offset: [0, 800, 1600, 2400, 3200, 4000, 4800, 5600]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Scan bounded SADA metadata only
-        run: node tools/sada-human-source.mjs --max-rows 800
+      - name: Scan bounded SADA metadata slice
+        run: node tools/sada-human-source.mjs --start-offset ${{ matrix.offset }} --max-rows 800
         working-directory: preview-v4
       - name: Upload scan result
         uses: actions/upload-artifact@v4
         with:
-          name: sada-human-source-scan
-          path: preview-v4/build/voice/sada/scan.json
+          name: sada-human-source-scan-${{ matrix.offset }}
+          path: preview-v4/build/voice/sada/scan-${{ matrix.offset }}.json
           if-no-files-found: error
           retention-days: 7
