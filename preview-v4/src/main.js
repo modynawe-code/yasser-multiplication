@@ -12,14 +12,16 @@ import { createGameLearningAdapter } from './modules/games/learning/game-learnin
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
+import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
 
 ensureLearningShell();
 
 const rewardService=createLearningRewardService();
+function presentLearningStatus(learnerId,result){renderLearningMotivation({learnerId,status:result});}
 const yasserBaseRepository=createLocalStorageRepository();
 const khaledBaseRepository=createKhaledRepository();
-const yasserRepository=createRewardingRepository({learnerId:'yasser',repository:yasserBaseRepository,rewardService});
-const khaledRepository=createRewardingRepository({learnerId:'khaled',repository:khaledBaseRepository,rewardService});
+const yasserRepository=createRewardingRepository({learnerId:'yasser',repository:yasserBaseRepository,rewardService,onEvaluated:(learnerId,_state,result)=>presentLearningStatus(learnerId,result)});
+const khaledRepository=createRewardingRepository({learnerId:'khaled',repository:khaledBaseRepository,rewardService,onEvaluated:(learnerId,_state,result)=>presentLearningStatus(learnerId,result)});
 const cloudAuth=createFamilyAuthClient();
 const cloudSync=createFamilySyncService({authClient:cloudAuth,yasserRepository,khaledRepository});
 const yasser=createAppController({repository:yasserRepository});
@@ -77,6 +79,6 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub']){
   document.getElementById(id)?.addEventListener('click',exitKhaledToHub);
 }
 
-rewardService.evaluate('yasser',yasser.getState());
-rewardService.evaluate('khaled',khaled.getState());
+presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
+presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
 familyParent.start();games.start();hubVisuals.warm();hub.start();registerServiceWorker();

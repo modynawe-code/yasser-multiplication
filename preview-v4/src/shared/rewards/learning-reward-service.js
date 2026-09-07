@@ -23,9 +23,16 @@ export function createLearningRewardService({repository=createRewardRepository()
   return Object.freeze({evaluate,getSummary});
 }
 
-export function createRewardingRepository({learnerId,repository,rewardService}={}){
+export function createRewardingRepository({learnerId,repository,rewardService,onEvaluated=null}={}){
   if(!repository?.load||!repository?.save)throw new Error('Learning repository is required');
   if(!rewardService?.evaluate)throw new Error('Reward service is required');
   const id=String(learnerId||'');
-  return Object.freeze({...repository,save(state){const saved=repository.save(state);if(saved)rewardService.evaluate(id,state);return saved;}});
+  return Object.freeze({...repository,save(state){
+    const saved=repository.save(state);
+    if(saved){
+      const result=rewardService.evaluate(id,state);
+      if(typeof onEvaluated==='function'){try{onEvaluated(id,state,result);}catch{}}
+    }
+    return saved;
+  }});
 }
