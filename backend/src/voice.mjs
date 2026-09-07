@@ -1,12 +1,14 @@
 const VOICE_MODEL='xai/grok-tts';
 const VOICE_ID='ara';
 const VOICE_LANGUAGE='ar-SA';
+const VOICE_GATEWAY_ID='default';
 const MAX_TEXT_LENGTH=280;
 
 export const NATURAL_TTS_BACKEND=Object.freeze({
   model:VOICE_MODEL,
   voiceId:VOICE_ID,
   language:VOICE_LANGUAGE,
+  gatewayId:VOICE_GATEWAY_ID,
   maxTextLength:MAX_TEXT_LENGTH
 });
 
@@ -46,6 +48,8 @@ export async function handleVoiceRequest({request,env,auth,readJson,respond,cors
       language:VOICE_LANGUAGE,
       text_normalization:true,
       output_format:{codec:'mp3',sample_rate:44100,bit_rate:128000}
+    },{
+      gateway:{id:String(env.AI_GATEWAY_ID||VOICE_GATEWAY_ID)}
     });
     const audioUrl=audioUrlFromResult(generated);
     if(!audioUrl)return respond(502,{error:'voice_generation_failed'});
