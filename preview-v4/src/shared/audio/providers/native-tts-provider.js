@@ -44,8 +44,8 @@ export function createNativeTtsProvider({nativeTts=resolveNativeTts()}={}){
     if(!request.text||!nativeTts?.speak)return false;
     const lang=request.lang||'ar-SA';
     try{
-      await stop();
       const voice=await getVoiceIndex(lang);
+      if(request.isCurrent&&request.isCurrent()===false)return false;
       const options={
         text:String(request.text),
         lang,
