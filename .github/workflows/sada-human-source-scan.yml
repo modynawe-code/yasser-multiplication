@@ -1,14 +1,6 @@
 name: SADA Human Source Selection
 
 on:
-  push:
-    branches:
-      - 'feature/games-platform-v1'
-    paths:
-      - '.github/workflows/sada-human-source-scan.yml'
-      - 'preview-v4/tools/sada-human-source.mjs'
-      - 'preview-v4/tools/voice/sada-source-config.mjs'
-      - 'preview-v4/package.json'
   workflow_dispatch:
 
 permissions:
@@ -27,9 +19,10 @@ jobs:
         run: node tools/sada-human-source.mjs --start-offset 0 --max-rows 6100 --download --target-minutes 8 --max-mb 180
         working-directory: preview-v4
       - name: Upload selected human source
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: sada-human-source-selection
           path: preview-v4/build/voice/sada/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
