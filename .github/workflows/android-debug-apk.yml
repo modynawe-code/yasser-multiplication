@@ -9,6 +9,7 @@ on:
       - 'preview-v4/**'
       - 'mobile-assets/**'
       - 'tools/build-mobile.mjs'
+      - 'tools/prepare-mobile-assets.mjs'
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/android-debug-apk.yml'
