@@ -50,7 +50,7 @@ test('Khaled mode hides Yasser chrome and preserves incomplete sessions',async()
   assert.match(khaled,/session\.completed=true/);
   assert.match(khaled,/storeSession\(\{incomplete:true\}\)/);
   assert.match(khaled,/visuals\.question\(\)/);
-  assert.match(khaled,/visuals\.result\(pct\)/);
+  assert.match(khaled,/visuals\.result\(summary\.masteryScore\)/);
 });
 
 test('Khaled UI keeps core activities inline and delegates modular learning families',async()=>{

@@ -1,6 +1,6 @@
 import { appendAttemptEvent, createAttemptId } from '../shared/data/attempt-ledger.js';
 
-export function recordAttempt(state,{question,answer,responseMs,createdAt=new Date().toISOString()}){
+export function recordAttempt(state,{question,answer,responseMs,learningCycleId=null,attemptNumber=1,usedHint=false,questionCompleted=false,createdAt=new Date().toISOString()}){
   const correctAnswer=question.table*question.multiplier,
     isCorrect=Number(answer)===correctAnswer,
     table=state.tables[question.table],
@@ -15,12 +15,16 @@ export function recordAttempt(state,{question,answer,responseMs,createdAt=new Da
 
   const event={
     attemptId:createAttemptId('yas'),
-    schemaVersion:1,
+    schemaVersion:2,
     learnerId:'yasser',
     skillId:`table-${question.table}`,
     table:question.table,
     multiplier:question.multiplier,
     questionId:`${question.table}x${question.multiplier}`,
+    learningCycleId:learningCycleId||question.learningCycleId||`${question.table}x${question.multiplier}`,
+    attemptNumber:Math.max(1,Number(attemptNumber||question.attemptNumber||1)),
+    usedHint:Boolean(usedHint),
+    questionCompleted:Boolean(questionCompleted),
     answer:Number(answer),
     correctAnswer,
     isCorrect,

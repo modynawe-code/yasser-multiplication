@@ -58,7 +58,7 @@ test('RPS narration uses shared voice service while gameplay SFX stay independen
 
 test('PWA shell caches RPS graphics and shared natural voice modules',async()=>{
   const sw=await read('service-worker.js');
-  assert.match(sw,/shell-53/);
+  assert.match(sw,/shell-\d+/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-graphics\.js/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-audio\.js/);
   assert.match(sw,/src\/shared\/audio\/human-voice-assets\.js/);

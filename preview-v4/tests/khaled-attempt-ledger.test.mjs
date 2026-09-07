@@ -22,7 +22,7 @@ test('legacy Khaled totals survive schema migration as a baseline',()=>{
   delete legacy.ledgerBaseline;
   legacy.totalAttempts=12;legacy.totalCorrect=7;legacy.totalWrong=5;
   const migrated=normalizeKhaledState(legacy);
-  assert.equal(migrated.schemaVersion,2);
+  assert.equal(migrated.schemaVersion,3);
   assert.deepEqual(migrated.attemptLog,[]);
   assert.equal(migrated.ledgerBaseline.attempts,12);
   recordKhaledAttempt(migrated,{skillId:'numbers-0-5',isCorrect:true,question:{id:'q-2',type:'count-select',correctAnswer:4},answer:4,createdAt:'2026-09-05T01:02:00Z'});

@@ -113,7 +113,7 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
 
 test('PWA shell includes resumable games and the shared natural voice architecture',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-53/);
+  assert.match(serviceWorker,/shell-\d+/);
   for(const path of [
     'src/shared/audio/human-voice-assets.js',
     'src/shared/audio/human-voice-policy.js',

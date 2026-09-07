@@ -19,8 +19,9 @@ test('Khaled skill cards retain readable tablet typography',async()=>{
   assert.match(css,/\.khaled-skill em\{font-size:13px/);
 });
 
-test('money equality groups use denser piece sizing instead of crowding a comparison card',async()=>{
+test('money equality groups stay denser than the enlarged primary currency stage',async()=>{
   const css=await read('src/modules/khaled/ui/khaled-money.css');
   assert.match(css,/\.khaled-money-equality section \.khaled-money-set\{[^}]*gap:7px 9px/s);
-  assert.match(css,/@media \(orientation:landscape\) and \(min-width:700px\) and \(max-height:900px\)[\s\S]*\.khaled-money-equality section \.khaled-money-piece\.note\{width:118px;height:56px\}/);
+  assert.match(css,/@media \(orientation:landscape\) and \(min-width:700px\) and \(max-height:900px\)[\s\S]*\.khaled-money-stage \.khaled-money-piece\.note\{width:210px;height:100px\}/);
+  assert.match(css,/@media \(orientation:landscape\) and \(min-width:700px\) and \(max-height:900px\)[\s\S]*\.khaled-money-piece\.note\{width:148px;height:71px\}/);
 });

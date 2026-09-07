@@ -21,12 +21,14 @@ test('family shell exposes overview, learner and session report tabs',async()=>{
   assert.match(shell,/id="familyPinInput"/);
 });
 
-test('family renderers combine Yasser and Khaled without erasing historical errors',async()=>{
+test('family renderers use shared learning metrics for both learners without erasing historical errors',async()=>{
   const renderers=await read('src/modules/parent/family-parent-renderers.js');
-  assert.match(renderers,/getOverallProgress/);
+  assert.match(renderers,/summarizeLearningWindows/);
+  assert.match(renderers,/summarizeLearningAttempts/);
   assert.match(renderers,/KHALED_SKILLS/);
   assert.match(renderers,/الأخطاء التاريخية/);
-  assert.match(renderers,/متقن مبدئيًا/);
+  assert.match(renderers,/صح من أول مرة/);
+  assert.match(renderers,/النجاح النهائي/);
   assert.match(renderers,/sort\(\(a,b\)=>new Date\(b\.at\)-new Date\(a\.at\)\)/);
 });
 
