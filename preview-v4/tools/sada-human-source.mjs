@@ -37,13 +37,13 @@ async function fetchCandidates(startOffset,maxRows){
   let total=null;
   const endOffset=startOffset+maxRows;
   for(let offset=startOffset;offset<endOffset;offset+=PAGE_LENGTH){
-    const url=new URL('/rows',SADA_SOURCE.viewerApi);
-    url.search=new URLSearchParams({dataset:SADA_SOURCE.dataset,config:SADA_SOURCE.config,split:SADA_SOURCE.split,offset:String(offset),length:String(Math.min(PAGE_LENGTH,endOffset-offset))});
+    const url=new URL('/search',SADA_SOURCE.viewerApi);
+    url.search=new URLSearchParams({dataset:SADA_SOURCE.dataset,config:SADA_SOURCE.config,split:SADA_SOURCE.split,query:SADA_FILTER.SpeakerDialect,offset:String(offset),length:String(Math.min(PAGE_LENGTH,endOffset-offset))});
     const payload=await fetchJson(url);
     if(Number.isFinite(Number(payload.num_rows_total)))total=Number(payload.num_rows_total);
     const page=(payload.rows||[]).map(normalizeSadaRow);
     rows.push(...page);
-    console.log(`Metadata offset ${startOffset}: ${rows.length}${total?` / ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
+    console.log(`Najdi metadata offset ${startOffset}: ${rows.length}${total!==null?` / ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
     if(page.length<PAGE_LENGTH||(total!==null&&offset+page.length>=total))break;
   }
   return {rows,total};
@@ -77,11 +77,11 @@ async function main(){
   const maxRows=Math.max(100,Math.min(7000,numArg('max-rows',7000)));
   const targetMinutes=Math.max(1,Math.min(30,numArg('target-minutes',8)));
   const maxMb=Math.max(25,Math.min(500,numArg('max-mb',180)));
-  console.log(`Scanning SADA row metadata only — offset ${startOffset}, max ${maxRows}; no corpus audio download.`);
+  console.log(`Searching SADA Najdi metadata only — offset ${startOffset}, max ${maxRows}; no corpus audio download.`);
   const fetched=await fetchCandidates(startOffset,maxRows),groups=rankSadaSpeakerGroups(fetched.rows);
   const summary=groups.slice(0,10).map(({rows:clips,...group})=>({...group,minutes:Number((group.totalSeconds/60).toFixed(2))}));
   const scanName=startOffset?`scan-${startOffset}.json`:'scan-0.json';
-  const scan={source:SADA_SOURCE,filter:SADA_FILTER,startOffset,scannedRows:fetched.rows.length,totalRows:fetched.total,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
+  const scan={source:SADA_SOURCE,searchQuery:SADA_FILTER.SpeakerDialect,filter:SADA_FILTER,startOffset,scannedRows:fetched.rows.length,totalRows:fetched.total,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
   await saveJson(scanName,scan);
   if(startOffset===0)await saveJson('scan.json',scan);
   console.table(summary.map(g=>({group:g.key,clips:g.clipCount,minutes:g.minutes,show:g.showName})));
