@@ -9,6 +9,9 @@
     "ALLOWED_ORIGINS": "https://modynawe-code.github.io,http://127.0.0.1:4173,http://localhost:4173,http://localhost,capacitor://localhost",
     "SESSION_TTL_DAYS": "30"
   },
+  "ai": {
+    "binding": "AI"
+  },
   "d1_databases": [
     {
       "binding": "DB",
