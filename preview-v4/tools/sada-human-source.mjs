@@ -13,7 +13,7 @@ function numArg(name,fallback){const n=Number(arg(name,fallback));return Number.
 function headers(){return process.env.HF_TOKEN?{Authorization:`Bearer ${process.env.HF_TOKEN}`}:{}}
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
-async function fetchJson(url,{attempts=4}={}){
+async function fetchJson(url,{attempts=6}={}){
   let lastError=null;
   for(let attempt=1;attempt<=attempts;attempt++){
     try{
@@ -27,7 +27,7 @@ async function fetchJson(url,{attempts=4}={}){
       lastError=error;
       if(attempt===attempts)throw error;
     }
-    await sleep(700*attempt);
+    await sleep(Math.min(10000,1200*attempt));
   }
   throw lastError||new Error('Hugging Face API request failed');
 }
@@ -37,13 +37,14 @@ async function fetchCandidates(startOffset,maxRows){
   let total=null;
   const endOffset=startOffset+maxRows;
   for(let offset=startOffset;offset<endOffset;offset+=PAGE_LENGTH){
-    const url=new URL('/search',SADA_SOURCE.viewerApi);
-    url.search=new URLSearchParams({dataset:SADA_SOURCE.dataset,config:SADA_SOURCE.config,split:SADA_SOURCE.split,query:SADA_FILTER.SpeakerDialect,offset:String(offset),length:String(Math.min(PAGE_LENGTH,endOffset-offset))});
+    const url=new URL('/rows',SADA_SOURCE.viewerApi);
+    url.search=new URLSearchParams({dataset:SADA_SOURCE.dataset,config:SADA_SOURCE.config,split:SADA_SOURCE.split,offset:String(offset),length:String(Math.min(PAGE_LENGTH,endOffset-offset))});
     const payload=await fetchJson(url);
     if(Number.isFinite(Number(payload.num_rows_total)))total=Number(payload.num_rows_total);
     const page=(payload.rows||[]).map(normalizeSadaRow);
     rows.push(...page);
-    console.log(`Najdi metadata offset ${startOffset}: ${rows.length}${total!==null?` / ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
+    const scanned=Math.min(rows.length,maxRows);
+    console.log(`SADA metadata scanned: ${scanned}${total!==null?` / ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
     if(page.length<PAGE_LENGTH||(total!==null&&offset+page.length>=total))break;
   }
   return {rows,total};
@@ -68,7 +69,7 @@ async function downloadGroup(group,{targetMinutes,maxMb}){
   }
   const attribution=`# SADA human voice source\n\nSource: ${SADA_SOURCE.sourceUrl}\n\nLicense: ${SADA_SOURCE.license}\n\nSelected group: ${group.key}\n\nThis raw material is used only as a human-recorded source for the personal, non-commercial learning app. Do not commit this raw corpus directory.\n`;
   await writeFile(resolve(OUT,'ATTRIBUTION.md'),attribution,'utf8');
-  await saveJson('selected-speaker.json',{source:SADA_SOURCE,group:{key:group.key,recordingId:group.recordingId,speaker:group.speaker,showName:group.showName},downloaded:{count,seconds,megabytes:Number((bytes/1024/1024).toFixed(2)),files}});
+  await saveJson('selected-speaker.json',{source:SADA_SOURCE,filter:SADA_FILTER,group:{key:group.key,recordingId:group.recordingId,speaker:group.speaker,showName:group.showName},downloaded:{count,seconds,megabytes:Number((bytes/1024/1024).toFixed(2)),files}});
   return {count,seconds,bytes};
 }
 
@@ -77,16 +78,16 @@ async function main(){
   const maxRows=Math.max(100,Math.min(7000,numArg('max-rows',7000)));
   const targetMinutes=Math.max(1,Math.min(30,numArg('target-minutes',8)));
   const maxMb=Math.max(25,Math.min(500,numArg('max-mb',180)));
-  console.log(`Searching SADA Najdi metadata only — offset ${startOffset}, max ${maxRows}; no corpus audio download.`);
+  console.log(`Scanning SADA row metadata — offset ${startOffset}, max ${maxRows}; audio is not downloaded during the scan.`);
   const fetched=await fetchCandidates(startOffset,maxRows),groups=rankSadaSpeakerGroups(fetched.rows);
   const summary=groups.slice(0,10).map(({rows:clips,...group})=>({...group,minutes:Number((group.totalSeconds/60).toFixed(2))}));
   const scanName=startOffset?`scan-${startOffset}.json`:'scan-0.json';
-  const scan={source:SADA_SOURCE,searchQuery:SADA_FILTER.SpeakerDialect,filter:SADA_FILTER,startOffset,scannedRows:fetched.rows.length,totalRows:fetched.total,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
+  const scan={source:SADA_SOURCE,filter:SADA_FILTER,startOffset,scannedRows:fetched.rows.length,totalRows:fetched.total,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
   await saveJson(scanName,scan);
   if(startOffset===0)await saveJson('scan.json',scan);
   console.table(summary.map(g=>({group:g.key,clips:g.clipCount,minutes:g.minutes,show:g.showName})));
   if(!groups.length){
-    console.log('No clean adult male Najdi speaker group in this metadata slice.');
+    console.log('No clean adult male Najdi speaker group found in scanned SADA rows.');
     if(flag('require-candidate'))process.exitCode=2;
     return;
   }
@@ -94,6 +95,7 @@ async function main(){
   const requested=arg('group');const group=requested?groups.find(item=>item.key===requested):groups[0];
   if(!group)throw new Error(`Requested group not found: ${requested}`);
   const result=await downloadGroup(group,{targetMinutes,maxMb});
+  if(!result.count)throw new Error('Selected SADA speaker had no downloadable audio clips.');
   console.log(`Downloaded ${result.count} clips, ${(result.seconds/60).toFixed(1)} min, ${(result.bytes/1024/1024).toFixed(1)} MB.`);
 }
 
