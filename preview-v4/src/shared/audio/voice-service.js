@@ -1,4 +1,5 @@
 import { VOICE_MANIFEST } from './voice-manifest.js';
+import { HUMAN_VOICE_POLICY,isHumanOnlyVoiceMode } from './human-voice-policy.js';
 import { createLocalAudioProvider } from './providers/local-audio-provider.js';
 import { createNativeTtsProvider,resolveNativeTts } from './providers/native-tts-provider.js';
 import { createBrowserTtsProvider } from './providers/browser-tts-provider.js';
@@ -12,14 +13,14 @@ export function createVoiceService({
   synth=globalThis.speechSynthesis,
   Utterance=globalThis.SpeechSynthesisUtterance,
   neuralProvider=null,
+  mode=HUMAN_VOICE_POLICY.runtimeMode,
   providers=null
 }={}){
-  const chain=(providers||[
-    createLocalAudioProvider({manifest,AudioClass}),
-    neuralProvider,
-    createNativeTtsProvider({nativeTts}),
-    createBrowserTtsProvider({synth,Utterance})
-  ]).filter(provider=>provider&&typeof provider.speak==='function');
+  const local=createLocalAudioProvider({manifest,AudioClass});
+  const defaultChain=isHumanOnlyVoiceMode(mode)
+    ?[local]
+    :[local,neuralProvider,createNativeTtsProvider({nativeTts}),createBrowserTtsProvider({synth,Utterance})];
+  const chain=(providers||defaultChain).filter(provider=>provider&&typeof provider.speak==='function');
   let generation=0;
 
   async function run(request,token){
@@ -41,7 +42,7 @@ export function createVoiceService({
     if(request.interrupt!==false)chain.forEach(provider=>{void stopProvider(provider);});
     const normalized={
       ...request,
-      lang:request.lang||'ar-SA',
+      lang:request.lang||HUMAN_VOICE_POLICY.locale,
       rate:Number(request.rate??.88),
       pitch:Number(request.pitch??1),
       volume:Number(request.volume??1),
@@ -56,5 +57,11 @@ export function createVoiceService({
     chain.forEach(provider=>{void stopProvider(provider);});
   }
 
-  return Object.freeze({say,speak:say,stop,providers:Object.freeze(chain.map(provider=>provider.kind||'custom'))});
+  return Object.freeze({
+    say,
+    speak:say,
+    stop,
+    mode,
+    providers:Object.freeze(chain.map(provider=>provider.kind||'custom'))
+  });
 }
