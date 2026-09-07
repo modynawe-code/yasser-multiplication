@@ -13,11 +13,13 @@ import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
 import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
+import { createRewardCabinetController } from './shared/ui/reward-cabinet.js';
 
 ensureLearningShell();
 
 const rewardService=createLearningRewardService();
-function presentLearningStatus(learnerId,result){renderLearningMotivation({learnerId,status:result});}
+let cabinet=null;
+function presentLearningStatus(learnerId,result){renderLearningMotivation({learnerId,status:result});cabinet?.refresh(learnerId,result);}
 const yasserBaseRepository=createLocalStorageRepository();
 const khaledBaseRepository=createKhaledRepository();
 const yasserRepository=createRewardingRepository({learnerId:'yasser',repository:yasserBaseRepository,rewardService,onEvaluated:(learnerId,_state,result)=>presentLearningStatus(learnerId,result)});
@@ -31,6 +33,11 @@ let hub,games;
 const khaled=createKhaledController({repository:khaledRepository});
 let khaledStarted=false;
 const hubVisuals=createKhaledSceneController();
+
+cabinet=createRewardCabinetController({
+  getStatus:learnerId=>learnerId==='khaled'?rewardService.evaluate('khaled',khaled.getState()):rewardService.evaluate('yasser',yasser.getState()),
+  onExit:learnerId=>learnerId==='khaled'?khaled.enter():yasser.enterHome()
+});
 
 const gameLearning=createGameLearningAdapter({
   getYasserState:()=>yasser.getState(),
@@ -49,16 +56,16 @@ const familyParent=createFamilyParentController({
 });
 
 function leaveLearningAreas(){
-  yasser.leave();khaled.leave();familyParent.leave();
+  cabinet?.leave();yasser.leave();khaled.leave();familyParent.leave();
 }
 function enterYasser(){
-  games?.leave();khaled.leave();familyParent.leave();
+  games?.leave();cabinet?.leave();khaled.leave();familyParent.leave();
   document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode');
   document.body.classList.remove('games-mode');
   if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();
 }
 function enterKhaled(){
-  games?.leave();yasser.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();
+  games?.leave();cabinet?.leave();yasser.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();
 }
 function exitKhaledToHub(){
   khaled.leave();hub?.show();
@@ -81,4 +88,4 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub']){
 
 presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
 presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
-familyParent.start();games.start();hubVisuals.warm();hub.start();registerServiceWorker();
+cabinet.start();familyParent.start();games.start();hubVisuals.warm();hub.start();registerServiceWorker();
