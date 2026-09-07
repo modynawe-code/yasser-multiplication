@@ -12,6 +12,16 @@
   "ai": {
     "binding": "AI"
   },
+  "ratelimits": [
+    {
+      "name": "VOICE_RATE_LIMITER",
+      "namespace_id": "2609071",
+      "simple": {
+        "limit": 90,
+        "period": 60
+      }
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
