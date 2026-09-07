@@ -14,9 +14,16 @@ export const SADA_FILTER=Object.freeze({
   Environment:'Clean -- نظيف'
 });
 
+// Hugging Face's filter parser rejects the bilingual values containing `--`.
+// Narrow remotely with parser-safe predicates, then enforce age/environment locally.
+export const SADA_SERVER_FILTER=Object.freeze({
+  SpeakerGender:SADA_FILTER.SpeakerGender,
+  SpeakerDialect:SADA_FILTER.SpeakerDialect
+});
+
 function sqlString(value){return `'${String(value).replaceAll("'","''")}'`;}
 
-export function sadaWhereClause(filter=SADA_FILTER){
+export function sadaWhereClause(filter=SADA_SERVER_FILTER){
   return Object.entries(filter).map(([column,value])=>`"${column}"=${sqlString(value)}`).join(' AND ');
 }
 
