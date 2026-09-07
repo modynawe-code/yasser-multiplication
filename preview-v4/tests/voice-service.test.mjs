@@ -31,7 +31,7 @@ test('default natural TTS chain puts cloud before native and browser fallbacks',
   assert.deepEqual(voice.providers,['local-audio','cloud-tts','native-tts','browser-tts']);
 });
 
-test('cloud TTS uses the authenticated family API and plays returned audio',async()=>{
+test('cloud TTS uses parent bearer token when available and plays returned audio',async()=>{
   let request=null;
   const storage={getItem(){return JSON.stringify({token:'test-token'});}};
   const audioInstances=[];
@@ -55,14 +55,17 @@ test('cloud TTS uses the authenticated family API and plays returned audio',asyn
   assert.equal(audioInstances[0].volume,.8);
 });
 
-test('cloud TTS quietly falls back when no parent cloud session exists',async()=>{
-  let fetched=false;
+test('cloud TTS works without parent login and relies on backend app-origin rate limiting',async()=>{
+  let request=null;
+  class AudioMock{constructor(){}addEventListener(){}async play(){return true;}pause(){}}
   const provider=createCloudTtsProvider({
-    baseUrl:'https://family.example',storage:{getItem(){return null;}},AudioClass:class{},URLClass:{createObjectURL(){return'blob:x';}},
-    fetchFn:async()=>{fetched=true;return{ok:true};}
+    baseUrl:'https://family.example',storage:{getItem(){return null;}},AudioClass:AudioMock,
+    URLClass:{createObjectURL(){return'blob:x';},revokeObjectURL(){}},
+    fetchFn:async(url,options)=>{request={url,options};return{ok:true,async blob(){return{type:'audio/mpeg'};}};}
   });
-  assert.equal(await provider.speak({text:'مرحبا',isCurrent:()=>true}),false);
-  assert.equal(fetched,false);
+  assert.equal(await provider.speak({text:'مرحبا',isCurrent:()=>true}),true);
+  assert.equal(request.url,'https://family.example/v1/voice/synthesize');
+  assert.equal('authorization' in request.options.headers,false);
 });
 
 test('native Arabic voice selection prefers exact language and higher-quality names',()=>{
