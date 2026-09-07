@@ -8,8 +8,13 @@ export const VOICE_MANIFEST=Object.freeze({
   'games.rps.win.khaled':'assets/audio/rps/win-khaled.mp3'
 });
 
-export function resolveVoiceAsset(id,manifest=VOICE_MANIFEST){
-  if(!id)return null;
-  const src=manifest?.[id];
+export function voiceTextKey(text){
+  const normalized=String(text||'').trim().replace(/\s+/g,' ');
+  return normalized?`text:${normalized}`:null;
+}
+
+export function resolveVoiceAsset(id,manifest=VOICE_MANIFEST,text=''){
+  const textKey=voiceTextKey(text);
+  const src=(id&&manifest?.[id])||(textKey&&manifest?.[textKey]);
   return typeof src==='string'&&src.trim()?src:null;
 }
