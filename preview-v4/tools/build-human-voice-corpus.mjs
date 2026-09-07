@@ -5,6 +5,7 @@ import { KHALED_SKILLS } from '../src/modules/khaled/domain/curriculum.js';
 import { createKhaledRound } from '../src/modules/khaled/domain/question-bank.js';
 import { createAdvancedKhaledRound } from '../src/modules/khaled/domain/advanced-question-bank.js';
 import { humanVoiceAssetPath,normalizeVoiceText } from '../src/shared/audio/human-voice-assets.js';
+import { HUMAN_VOICE_POLICY } from '../src/shared/audio/human-voice-policy.js';
 import { VOICE_MANIFEST } from '../src/shared/audio/voice-manifest.js';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
@@ -99,7 +100,9 @@ async function writeInventory(corpus){
   await mkdir(OUT_DIR,{recursive:true});
   const payload={
     schemaVersion:1,
-    locale:'ar-SA',
+    locale:HUMAN_VOICE_POLICY.locale,
+    runtimeMode:HUMAN_VOICE_POLICY.runtimeMode,
+    releaseMode:HUMAN_VOICE_POLICY.releaseMode,
     generatedAt:new Date().toISOString(),
     sampleSeeds:SAMPLE_SEEDS,
     count:corpus.length,
@@ -119,6 +122,11 @@ async function checkCoverage(corpus,{strict=false}={}){
   console.log(`Human voice corpus: ${corpus.length}`);
   console.log(`Recorded clips: ${corpus.length-missing.length}`);
   console.log(`Missing clips: ${missing.length}`);
+  console.log(`Runtime voice mode: ${HUMAN_VOICE_POLICY.runtimeMode}`);
+  if(strict&&HUMAN_VOICE_POLICY.runtimeMode!=='human-only'){
+    console.error('Human-only release gate failed: runtimeMode must be human-only before release.');
+    process.exitCode=1;
+  }
   if(strict&&missing.length){
     console.error('Human-only release gate failed: recorded voice coverage is incomplete.');
     process.exitCode=1;
