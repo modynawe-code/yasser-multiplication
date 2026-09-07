@@ -1,4 +1,4 @@
-name: SADA Human Source Scan
+name: SADA Human Source Selection
 
 on:
   push:
@@ -15,26 +15,21 @@ permissions:
   contents: read
 
 jobs:
-  scan:
+  select-source:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        offset: [0, 800, 1600, 2400, 3200, 4000, 4800, 5600]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Scan bounded SADA metadata slice
-        run: node tools/sada-human-source.mjs --start-offset ${{ matrix.offset }} --max-rows 800
+      - name: Select one clean adult male Najdi source and download bounded clips
+        run: npm run voice:sada:download
         working-directory: preview-v4
-      - name: Upload scan result
+      - name: Upload selected human source
         uses: actions/upload-artifact@v4
         with:
-          name: sada-human-source-scan-${{ matrix.offset }}
-          path: preview-v4/build/voice/sada/scan-${{ matrix.offset }}.json
+          name: sada-human-source-selection
+          path: preview-v4/build/voice/sada/
           if-no-files-found: error
           retention-days: 7
