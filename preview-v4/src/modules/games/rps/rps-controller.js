@@ -8,6 +8,8 @@ const PLAYERS=Object.freeze({
   khaled:{name:'خالد',theme:'khaled',avatar:'assets/visual/original/khaled/khaled-point-thumbsup.png',celebrate:'assets/visual/original/khaled/khaled-celebration.png'}
 });
 const CHOICES=RPS_CHOICE_META;
+const RPS_INTRO_DURATION_MS=2200;
+const RPS_INTRO_REDUCED_MOTION_DURATION_MS=1800;
 const byId=id=>document.getElementById(id);
 
 export function createRpsController({showView,onBack}={}){
@@ -43,7 +45,7 @@ export function createRpsController({showView,onBack}={}){
     clearTimers();gameAudio.stop();hideSections();syncScore();setStageState('intro');applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);
     const intro=byId('rpsIntro');if(intro)intro.hidden=false;
     const reduced=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    introTimer=setTimeout(()=>{introTimer=null;renderChoosing({announce:true});},reduced?250:900);
+    introTimer=setTimeout(()=>{introTimer=null;renderChoosing({announce:true});},reduced?RPS_INTRO_REDUCED_MOTION_DURATION_MS:RPS_INTRO_DURATION_MS);
   }
 
   function renderChoosing({announce=false}={}){
