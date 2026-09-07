@@ -1,7 +1,6 @@
+import { createVoiceService } from '../../../shared/audio/voice-service.js';
+
 export const RPS_AUDIO_CLIPS=Object.freeze({
-  choose:'assets/audio/rps/sfx-choose.mp3',
-  reveal:'assets/audio/rps/sfx-reveal.mp3',
-  point:'assets/audio/rps/sfx-point.mp3',
   turnYasser:'assets/audio/rps/turn-yasser.mp3',
   turnKhaled:'assets/audio/rps/turn-khaled.mp3',
   draw:'assets/audio/rps/draw.mp3',
@@ -11,45 +10,63 @@ export const RPS_AUDIO_CLIPS=Object.freeze({
   winKhaled:'assets/audio/rps/win-khaled.mp3'
 });
 
-const VOICE_KEYS=new Set(['turnYasser','turnKhaled','draw','pointYasser','pointKhaled','winYasser','winKhaled']);
+const SFX=Object.freeze({
+  choose:[{frequency:360,duration:.045,gain:.014},{frequency:470,duration:.055,gain:.017,delay:.035}],
+  reveal:[{frequency:260,duration:.05,gain:.015},{frequency:520,duration:.07,gain:.022,delay:.045},{frequency:760,duration:.08,gain:.024,delay:.095}],
+  point:[{frequency:580,duration:.055,gain:.020},{frequency:760,duration:.075,gain:.024,delay:.045}]
+});
 
-export function createRpsAudio({AudioClass=globalThis.Audio}={}){
-  const unavailable=new Set();
-  let currentVoice=null;
+function defaultContextFactory(){
+  const AudioContextClass=globalThis.AudioContext||globalThis.webkitAudioContext;
+  return AudioContextClass?new AudioContextClass():null;
+}
 
-  function play(key,{volume=1,interruptVoice=false}={}){
-    const src=RPS_AUDIO_CLIPS[key];
-    if(!src||unavailable.has(src)||typeof AudioClass!=='function')return false;
-    if(interruptVoice&&currentVoice){try{currentVoice.pause();currentVoice.currentTime=0;}catch{}currentVoice=null;}
-    let audio;
-    try{audio=new AudioClass(src);}catch{unavailable.add(src);return false;}
-    audio.preload='auto';audio.volume=volume;
-    if(VOICE_KEYS.has(key))currentVoice=audio;
-    const cleanup=()=>{if(currentVoice===audio)currentVoice=null;};
-    audio.addEventListener?.('ended',cleanup,{once:true});
-    audio.addEventListener?.('error',()=>{unavailable.add(src);cleanup();},{once:true});
-    try{
-      const result=audio.play?.();
-      result?.catch?.(()=>{unavailable.add(src);cleanup();});
-      return true;
-    }catch{unavailable.add(src);cleanup();return false;}
+export function createRpsAudio({voiceService=createVoiceService(),contextFactory=defaultContextFactory}={}){
+  let context=null;
+
+  function getContext(){
+    if(context)return context;
+    try{context=contextFactory();}catch{return null;}
+    return context;
   }
 
-  function stop(){
-    if(!currentVoice)return;
-    try{currentVoice.pause();currentVoice.currentTime=0;}catch{}
-    currentVoice=null;
+  function playSfx(name){
+    const pattern=SFX[name],audio=getContext();
+    if(!pattern||!audio)return false;
+    if(audio.state==='suspended')audio.resume?.().catch?.(()=>null);
+    const start=audio.currentTime+.008;
+    for(const note of pattern){
+      const oscillator=audio.createOscillator(),gain=audio.createGain();
+      const noteStart=start+(note.delay||0),noteEnd=noteStart+note.duration;
+      oscillator.type='sine';
+      oscillator.frequency.setValueAtTime(note.frequency,noteStart);
+      gain.gain.setValueAtTime(.0001,noteStart);
+      gain.gain.exponentialRampToValueAtTime(note.gain,noteStart+.01);
+      gain.gain.exponentialRampToValueAtTime(.0001,noteEnd);
+      oscillator.connect(gain);gain.connect(audio.destination);
+      oscillator.start(noteStart);oscillator.stop(noteEnd+.01);
+    }
+    return true;
   }
+
+  function say(id,text){return voiceService.say({id,text,lang:'ar-SA',rate:.9,pitch:1,volume:1});}
 
   return Object.freeze({
-    choose:()=>play('choose',{volume:.75}),
-    reveal:()=>play('reveal',{volume:.85}),
-    point:playerId=>play(playerId==='yasser'?'pointYasser':'pointKhaled',{interruptVoice:true}),
-    draw:()=>play('draw',{interruptVoice:true}),
-    turn:playerId=>play(playerId==='yasser'?'turnYasser':'turnKhaled',{interruptVoice:true}),
-    win:playerId=>play(playerId==='yasser'?'winYasser':'winKhaled',{interruptVoice:true}),
-    pointSfx:()=>play('point',{volume:.85}),
-    stop,
-    get unavailable(){return new Set(unavailable);}
+    choose:()=>playSfx('choose'),
+    reveal:()=>playSfx('reveal'),
+    pointSfx:()=>playSfx('point'),
+    turn:playerId=>playerId==='yasser'
+      ?say('games.rps.turn.yasser','دور ياسر. حجر، ورق، مقص. اختر حركتك.')
+      :say('games.rps.turn.khaled','دور خالد. حجر، ورق، مقص. اختر حركتك.'),
+    point:playerId=>playerId==='yasser'
+      ?say('games.rps.point.yasser','ياسر أخذ نقطة.')
+      :say('games.rps.point.khaled','خالد أخذ نقطة.'),
+    draw:()=>say('games.rps.draw','تعادل. نفس الحركة.'),
+    win:playerId=>playerId==='yasser'
+      ?say('games.rps.win.yasser','ياسر بطل المباراة. مبروك.')
+      :say('games.rps.win.khaled','خالد بطل المباراة. مبروك.'),
+    stop:()=>voiceService.stop()
   });
 }
+
+export { SFX as RPS_SOUND_PATTERNS };
