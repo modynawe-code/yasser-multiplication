@@ -36,4 +36,4 @@ Updated: 2026-09-07
 
 ## Repository rule
 
-`main` remains the release source of truth after verified feature work is merged. Superseded draft PRs must not be merged. New work should use focused branches/PRs with green CI and device validation where applicable.
+`main` is the only current source of truth after verified feature work is merged. Superseded draft PRs must not be merged. New work should use focused branches/PRs with green CI and device validation where applicable.
