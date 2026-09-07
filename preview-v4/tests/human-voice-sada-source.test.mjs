@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { SADA_FILTER,SADA_SOURCE,normalizeSadaRow,rankSadaSpeakerGroups,recordingIdFromSegmentId,sadaWhereClause } from '../tools/voice/sada-source-config.mjs';
+import { SADA_FILTER,SADA_SERVER_FILTER,SADA_SOURCE,normalizeSadaRow,rankSadaSpeakerGroups,recordingIdFromSegmentId,sadaWhereClause } from '../tools/voice/sada-source-config.mjs';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -11,8 +11,11 @@ test('SADA selector targets clean adult male Najdi speech only',()=>{
   assert.equal(SADA_FILTER.SpeakerGender,'Male');
   assert.equal(SADA_FILTER.SpeakerDialect,'Najdi');
   assert.equal(SADA_FILTER.Environment,'Clean -- نظيف');
+  assert.deepEqual(SADA_SERVER_FILTER,{SpeakerGender:'Male',SpeakerDialect:'Najdi'});
   const where=sadaWhereClause();
-  for(const column of ['SpeakerAge','SpeakerGender','SpeakerDialect','Environment'])assert.match(where,new RegExp(`"${column}"`));
+  for(const column of ['SpeakerGender','SpeakerDialect'])assert.match(where,new RegExp(`"${column}"`));
+  for(const column of ['SpeakerAge','Environment'])assert.doesNotMatch(where,new RegExp(`"${column}"`));
+  assert.doesNotMatch(where,/--/);
 });
 
 test('speaker identity is constrained to one source recording plus diarized speaker',()=>{
