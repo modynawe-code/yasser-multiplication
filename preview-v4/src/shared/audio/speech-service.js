@@ -6,9 +6,10 @@ export function createSpeechService({
   nativeTts,
   AudioClass=globalThis.Audio,
   manifest,
+  neuralProvider=null,
   voiceService=null
 }={}){
-  const voice=voiceService||createVoiceService({synth,Utterance,nativeTts,AudioClass,manifest});
+  const voice=voiceService||createVoiceService({synth,Utterance,nativeTts,AudioClass,manifest,neuralProvider});
 
   function speak(input,options={}){
     if(typeof input==='string')return voice.say({text:input,...options});
