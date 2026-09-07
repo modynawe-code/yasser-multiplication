@@ -1,3 +1,5 @@
+import { humanVoiceAssetPath,normalizeVoiceText } from './human-voice-assets.js';
+
 export const VOICE_MANIFEST=Object.freeze({
   'games.rps.turn.yasser':'assets/audio/rps/turn-yasser.mp3',
   'games.rps.turn.khaled':'assets/audio/rps/turn-khaled.mp3',
@@ -9,12 +11,13 @@ export const VOICE_MANIFEST=Object.freeze({
 });
 
 export function voiceTextKey(text){
-  const normalized=String(text||'').trim().replace(/\s+/g,' ');
+  const normalized=normalizeVoiceText(text);
   return normalized?`text:${normalized}`:null;
 }
 
 export function resolveVoiceAsset(id,manifest=VOICE_MANIFEST,text=''){
   const textKey=voiceTextKey(text);
-  const src=(id&&manifest?.[id])||(textKey&&manifest?.[textKey]);
-  return typeof src==='string'&&src.trim()?src:null;
+  const explicit=(id&&manifest?.[id])||(textKey&&manifest?.[textKey]);
+  if(typeof explicit==='string'&&explicit.trim())return explicit;
+  return humanVoiceAssetPath(text);
 }
