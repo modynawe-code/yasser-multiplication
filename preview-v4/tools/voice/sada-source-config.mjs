@@ -15,8 +15,8 @@ export const SADA_FILTER=Object.freeze({
   Environment:'Clean -- نظيف'
 });
 
-// Hugging Face's filter parser rejects the bilingual values containing `--`.
-// Narrow remotely with parser-safe predicates when used, then enforce age/environment locally.
+// Keep server-side filtering parser-safe. Bilingual values containing `--`
+// are normalized and enforced locally.
 export const SADA_SERVER_FILTER=Object.freeze({
   SpeakerGender:SADA_FILTER.SpeakerGender
 });
@@ -32,10 +32,37 @@ function numberOrZero(value){
   return Number.isFinite(parsed)?parsed:0;
 }
 
+function labelHead(value){
+  return String(value||'').split('--',1)[0].trim().toLowerCase();
+}
+
+function sameLabel(value,expected){
+  return labelHead(value)===labelHead(expected);
+}
+
 function dialectRank(value){
-  const order=[SADA_FILTER.SpeakerDialect,...SADA_FILTER.SpeakerDialectFallbacks];
-  const index=order.indexOf(String(value||'').trim());
+  const normalized=labelHead(value);
+  const order=[SADA_FILTER.SpeakerDialect,...SADA_FILTER.SpeakerDialectFallbacks].map(labelHead);
+  const index=order.indexOf(normalized);
   return index===-1?Number.POSITIVE_INFINITY:index;
+}
+
+function firstHttpUrl(value,seen=new Set()){
+  if(value==null)return'';
+  if(typeof value==='string')return /^https?:\/\//i.test(value.trim())?value.trim():'';
+  if(typeof value!=='object'||seen.has(value))return'';
+  seen.add(value);
+  if(Array.isArray(value)){
+    for(const item of value){const found=firstHttpUrl(item,seen);if(found)return found;}
+    return'';
+  }
+  for(const key of ['src','url','download_url','downloadUrl']){
+    const found=firstHttpUrl(value[key],seen);if(found)return found;
+  }
+  for(const nested of Object.values(value)){
+    const found=firstHttpUrl(nested,seen);if(found)return found;
+  }
+  return'';
 }
 
 export function recordingIdFromSegmentId(segmentId=''){
@@ -48,7 +75,6 @@ export function recordingIdFromSegmentId(segmentId=''){
 export function normalizeSadaRow(input={}){
   const row=input?.row&&typeof input.row==='object'?input.row:input;
   const segmentId=String(row?.SegmentID||'').trim();
-  const audio=row?.audio&&typeof row.audio==='object'?row.audio:null;
   return Object.freeze({
     rowIndex:Number.isInteger(input?.row_idx)?input.row_idx:null,
     segmentId,
@@ -62,17 +88,17 @@ export function normalizeSadaRow(input={}){
     environment:String(row?.Environment||'').trim(),
     category:String(row?.Category||'').trim(),
     durationSeconds:numberOrZero(row?.SegmentLength),
-    audioSrc:String(audio?.src||'').trim()
+    audioSrc:firstHttpUrl(row?.audio)
   });
 }
 
 export function isEligibleSadaRow(row,{minSeconds=.7,maxSeconds=14}={}){
   return Boolean(
     row&&
-    row.speakerAge===SADA_FILTER.SpeakerAge&&
-    row.speakerGender===SADA_FILTER.SpeakerGender&&
+    sameLabel(row.speakerAge,SADA_FILTER.SpeakerAge)&&
+    sameLabel(row.speakerGender,SADA_FILTER.SpeakerGender)&&
     Number.isFinite(dialectRank(row.speakerDialect))&&
-    row.environment===SADA_FILTER.Environment&&
+    sameLabel(row.environment,SADA_FILTER.Environment)&&
     row.recordingId&&row.speaker&&row.audioSrc&&row.text&&
     row.durationSeconds>=minSeconds&&row.durationSeconds<=maxSeconds
   );
