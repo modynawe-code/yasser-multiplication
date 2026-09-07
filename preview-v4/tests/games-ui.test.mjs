@@ -111,15 +111,17 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
   assert.match(css,/\.xo-local-choice/);
 });
 
-test('PWA shell includes resumable games and the shared human voice architecture',async()=>{
+test('PWA shell includes resumable games and the shared natural voice architecture',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-52/);
+  assert.match(serviceWorker,/shell-53/);
   for(const path of [
     'src/shared/audio/human-voice-assets.js',
     'src/shared/audio/human-voice-policy.js',
+    'src/shared/audio/natural-voice-profile.js',
     'src/shared/audio/voice-manifest.js',
     'src/shared/audio/voice-service.js',
     'src/shared/audio/providers/local-audio-provider.js',
+    'src/shared/audio/providers/cloud-tts-provider.js',
     'src/shared/audio/providers/native-tts-provider.js',
     'src/shared/audio/providers/browser-tts-provider.js',
     'src/shared/audio/speech-service.js',
