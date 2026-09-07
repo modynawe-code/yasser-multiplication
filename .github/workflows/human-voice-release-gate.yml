@@ -1,0 +1,27 @@
+name: Human Voice Release Gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-human-voice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify complete human voice coverage
+        run: npm run voice:release-check
+        working-directory: preview-v4
+      - name: Upload recording inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: human-voice-recording-inventory
+          path: preview-v4/build/voice/
+          if-no-files-found: error
