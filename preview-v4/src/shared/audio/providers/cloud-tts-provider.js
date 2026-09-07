@@ -43,7 +43,6 @@ export function createCloudTtsProvider({
   async function speak(request={}){
     const text=String(request.text||'').replace(/\s+/g,' ').trim();
     if(!text||!api||typeof fetchFn!=='function'||request.isCurrent?.()===false)return false;
-    const session=readSession(storage);if(!session?.token)return false;
     await stop();
 
     const cached=cache.get(text);
@@ -52,9 +51,11 @@ export function createCloudTtsProvider({
     const controller=typeof AbortController==='function'?new AbortController():null;
     currentController=controller;
     try{
+      const session=readSession(storage),headers={'content-type':'application/json'};
+      if(session?.token)headers.authorization=`Bearer ${session.token}`;
       const response=await fetchFn(`${api}/v1/voice/synthesize`,{
         method:'POST',
-        headers:{'content-type':'application/json',authorization:`Bearer ${session.token}`},
+        headers,
         body:JSON.stringify({text}),
         signal:controller?.signal
       });
