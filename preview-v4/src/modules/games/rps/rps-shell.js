@@ -1,3 +1,5 @@
+import { rpsChoiceGraphic } from './rps-graphics.js';
+
 function ensureStyle(href,key){
   if(document.querySelector(`link[data-module-style="${key}"]`))return;
   const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.moduleStyle=key;document.head.appendChild(link);
@@ -18,18 +20,18 @@ export function ensureRpsShell(){
         </header>
 
         <div class="rps-scoreboard" aria-label="النتيجة">
-          <article class="rps-score-card yasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><div><strong>ياسر</strong><span id="rpsScoreYasser">0</span></div></article>
+          <article class="rps-score-card yasser" id="rpsScoreCardYasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><div><strong>ياسر</strong><span id="rpsScoreYasser">0</span></div></article>
           <div class="rps-round-chip"><small>الجولة</small><strong id="rpsRoundNumber">1</strong></div>
-          <article class="rps-score-card khaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><div><strong>خالد</strong><span id="rpsScoreKhaled">0</span></div></article>
+          <article class="rps-score-card khaled" id="rpsScoreCardKhaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><div><strong>خالد</strong><span id="rpsScoreKhaled">0</span></div></article>
         </div>
 
         <section class="rps-stage" id="rpsStage" aria-live="polite">
           <div class="rps-player-now" id="rpsPlayerNow"></div>
           <h2 id="rpsPrompt">اختار حركتك بسرية</h2>
           <div class="rps-choice-grid" id="rpsChoices">
-            <button class="rps-choice" data-rps-choice="rock"><span aria-hidden="true">🪨</span><strong>حجر</strong></button>
-            <button class="rps-choice" data-rps-choice="paper"><span aria-hidden="true">📄</span><strong>ورق</strong></button>
-            <button class="rps-choice" data-rps-choice="scissors"><span aria-hidden="true">✂️</span><strong>مقص</strong></button>
+            <button class="rps-choice" data-rps-choice="rock"><span class="rps-choice-art">${rpsChoiceGraphic('rock')}</span><strong>حجر</strong></button>
+            <button class="rps-choice" data-rps-choice="paper"><span class="rps-choice-art">${rpsChoiceGraphic('paper')}</span><strong>ورق</strong></button>
+            <button class="rps-choice" data-rps-choice="scissors"><span class="rps-choice-art">${rpsChoiceGraphic('scissors')}</span><strong>مقص</strong></button>
           </div>
           <div class="rps-handoff" id="rpsHandoff" hidden>
             <div class="rps-handoff-icon">🙈</div>
@@ -39,9 +41,9 @@ export function ensureRpsShell(){
           </div>
           <div class="rps-reveal" id="rpsReveal" hidden>
             <div class="rps-reveal-cards">
-              <article class="rps-reveal-card yasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><strong>ياسر</strong><span id="rpsRevealYasser">؟</span></article>
+              <article class="rps-reveal-card yasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><strong>ياسر</strong><span class="rps-reveal-move" id="rpsRevealYasser">؟</span></article>
               <div class="rps-versus">ضد</div>
-              <article class="rps-reveal-card khaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><strong>خالد</strong><span id="rpsRevealKhaled">؟</span></article>
+              <article class="rps-reveal-card khaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><strong>خالد</strong><span class="rps-reveal-move" id="rpsRevealKhaled">؟</span></article>
             </div>
             <h2 id="rpsResultText"></h2>
             <button class="btn primary" id="rpsNextRound">الجولة التالية</button>
