@@ -125,10 +125,11 @@ export default{
       const handled=await handleGameRoomRequest({request,env,readJson,respond:(status,body,extra)=>response(request,env,status,body,extra)});
       if(handled)return handled;
     }
-    const auth=await authenticate(request,env);if(!auth)return response(request,env,401,{error:'unauthorized'});
     if(path==='/v1/voice/synthesize'&&request.method==='POST'){
-      return handleVoiceRequest({request,env,auth,readJson,corsHeaders,respond:(status,body,extra)=>response(request,env,status,body,extra)});
+      const optionalAuth=bearer(request)?await authenticate(request,env):null;
+      return handleVoiceRequest({request,env,auth:optionalAuth,readJson,corsHeaders,respond:(status,body,extra)=>response(request,env,status,body,extra)});
     }
+    const auth=await authenticate(request,env);if(!auth)return response(request,env,401,{error:'unauthorized'});
     if(path==='/v1/auth/logout'&&request.method==='POST')return logout(request,env,auth);
     if(path==='/v1/me'&&request.method==='GET')return response(request,env,200,{parent:{email:auth.email},learners:await learnersForParent(env,auth.parent_id)});
     if(path==='/v1/sync/baseline'&&request.method==='POST')return syncBaseline(request,env,auth);
