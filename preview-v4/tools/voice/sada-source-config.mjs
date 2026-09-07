@@ -11,14 +11,14 @@ export const SADA_FILTER=Object.freeze({
   SpeakerAge:'Adult -- بالغ',
   SpeakerGender:'Male',
   SpeakerDialect:'Najdi',
+  SpeakerDialectFallbacks:Object.freeze(['Khaliji','Hijazi']),
   Environment:'Clean -- نظيف'
 });
 
 // Hugging Face's filter parser rejects the bilingual values containing `--`.
-// Narrow remotely with parser-safe predicates, then enforce age/environment locally.
+// Narrow remotely with parser-safe predicates when used, then enforce age/environment locally.
 export const SADA_SERVER_FILTER=Object.freeze({
-  SpeakerGender:SADA_FILTER.SpeakerGender,
-  SpeakerDialect:SADA_FILTER.SpeakerDialect
+  SpeakerGender:SADA_FILTER.SpeakerGender
 });
 
 function sqlString(value){return `'${String(value).replaceAll("'","''")}'`;}
@@ -30,6 +30,12 @@ export function sadaWhereClause(filter=SADA_SERVER_FILTER){
 function numberOrZero(value){
   const parsed=Number(value);
   return Number.isFinite(parsed)?parsed:0;
+}
+
+function dialectRank(value){
+  const order=[SADA_FILTER.SpeakerDialect,...SADA_FILTER.SpeakerDialectFallbacks];
+  const index=order.indexOf(String(value||'').trim());
+  return index===-1?Number.POSITIVE_INFINITY:index;
 }
 
 export function recordingIdFromSegmentId(segmentId=''){
@@ -65,7 +71,7 @@ export function isEligibleSadaRow(row,{minSeconds=.7,maxSeconds=14}={}){
     row&&
     row.speakerAge===SADA_FILTER.SpeakerAge&&
     row.speakerGender===SADA_FILTER.SpeakerGender&&
-    row.speakerDialect===SADA_FILTER.SpeakerDialect&&
+    Number.isFinite(dialectRank(row.speakerDialect))&&
     row.environment===SADA_FILTER.Environment&&
     row.recordingId&&row.speaker&&row.audioSrc&&row.text&&
     row.durationSeconds>=minSeconds&&row.durationSeconds<=maxSeconds
@@ -83,7 +89,7 @@ export function rankSadaSpeakerGroups(rows,{minSeconds=.7,maxSeconds=14}={}){
     const row=Object.isFrozen(input)?input:normalizeSadaRow(input);
     if(!isEligibleSadaRow(row,{minSeconds,maxSeconds}))continue;
     const key=sadaSpeakerGroupKey(row);
-    const current=groups.get(key)||{key,recordingId:row.recordingId,speaker:row.speaker,showName:row.showName,rows:[],totalSeconds:0};
+    const current=groups.get(key)||{key,recordingId:row.recordingId,speaker:row.speaker,showName:row.showName,speakerDialect:row.speakerDialect,rows:[],totalSeconds:0};
     current.rows.push(row);
     current.totalSeconds+=row.durationSeconds;
     groups.set(key,current);
@@ -92,6 +98,7 @@ export function rankSadaSpeakerGroups(rows,{minSeconds=.7,maxSeconds=14}={}){
     ...group,
     clipCount:group.rows.length,
     averageSeconds:group.rows.length?group.totalSeconds/group.rows.length:0,
+    dialectRank:dialectRank(group.speakerDialect),
     score:group.totalSeconds+(Math.min(group.rows.length,40)*.15)
-  })).sort((a,b)=>b.score-a.score||b.clipCount-a.clipCount||a.key.localeCompare(b.key,'en'));
+  })).sort((a,b)=>a.dialectRank-b.dialectRank||b.score-a.score||b.clipCount-a.clipCount||a.key.localeCompare(b.key,'en'));
 }
