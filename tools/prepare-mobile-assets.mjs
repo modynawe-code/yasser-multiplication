@@ -1,4 +1,4 @@
-import { readFile,writeFile,unlink } from 'node:fs/promises';
+import { mkdir,readFile,writeFile,unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const ROOT=resolve(new URL('..',import.meta.url).pathname);
@@ -46,6 +46,7 @@ const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" vi
 <rect x="28" y="28" width="968" height="968" rx="205" fill="none" stroke="#4fb4ff" stroke-width="18"/>
 </svg>`;
 
+await mkdir(ASSET_DIR,{recursive:true});
 await unlink(ICON_PNG).catch(()=>{});
 await writeFile(ICON_SVG,svg,'utf8');
 console.log(`Android launcher source ready: ${ICON_SVG}`);
