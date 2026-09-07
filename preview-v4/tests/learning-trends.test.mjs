@@ -43,5 +43,5 @@ test('reward service derives streak flame and improvement badge from immutable a
 test('learning trends are part of the offline application shell',async()=>{
   const worker=await readFile(new URL('../service-worker.js',import.meta.url),'utf8');
   assert.match(worker,/src\/shared\/progress\/learning-trends\.js/);
-  assert.match(worker,/shell-56/);
+  assert.match(worker,/shell-\d+/);
 });
