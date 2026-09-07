@@ -42,7 +42,8 @@ export function createVoiceService({
       lang:request.lang||'ar-SA',
       rate:Number(request.rate??.88),
       pitch:Number(request.pitch??1),
-      volume:Number(request.volume??1)
+      volume:Number(request.volume??1),
+      isCurrent:()=>token===generation
     };
     void run(normalized,token);
     return true;
