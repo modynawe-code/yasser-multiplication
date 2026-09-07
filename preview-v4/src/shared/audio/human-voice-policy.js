@@ -1,11 +1,13 @@
 export const HUMAN_VOICE_POLICY=Object.freeze({
-  schemaVersion:1,
+  schemaVersion:2,
   locale:'ar-SA',
-  runtimeMode:'migration',
-  releaseMode:'human-only',
+  runtimeMode:'natural-tts',
+  releaseMode:'natural-tts',
   humanAssetFormat:'mp3',
   syntheticFallbackAllowedDuringMigration:true,
-  requireCompleteHumanCoverageForRelease:true
+  requireCompleteHumanCoverageForRelease:false,
+  preferredProvider:'cloud-tts',
+  fallbackProviders:Object.freeze(['native-tts','browser-tts'])
 });
 
 export function isHumanOnlyVoiceMode(mode){
