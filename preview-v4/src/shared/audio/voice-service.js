@@ -1,6 +1,8 @@
 import { VOICE_MANIFEST } from './voice-manifest.js';
 import { HUMAN_VOICE_POLICY,isHumanOnlyVoiceMode } from './human-voice-policy.js';
+import { NATURAL_VOICE_PROFILE } from './natural-voice-profile.js';
 import { createLocalAudioProvider } from './providers/local-audio-provider.js';
+import { createCloudTtsProvider } from './providers/cloud-tts-provider.js';
 import { createNativeTtsProvider,resolveNativeTts } from './providers/native-tts-provider.js';
 import { createBrowserTtsProvider } from './providers/browser-tts-provider.js';
 
@@ -12,14 +14,15 @@ export function createVoiceService({
   nativeTts=resolveNativeTts(),
   synth=globalThis.speechSynthesis,
   Utterance=globalThis.SpeechSynthesisUtterance,
-  neuralProvider=null,
+  neuralProvider,
   mode=HUMAN_VOICE_POLICY.runtimeMode,
   providers=null
 }={}){
   const local=createLocalAudioProvider({manifest,AudioClass});
+  const cloud=neuralProvider===undefined?createCloudTtsProvider({AudioClass}):neuralProvider;
   const defaultChain=isHumanOnlyVoiceMode(mode)
     ?[local]
-    :[local,neuralProvider,createNativeTtsProvider({nativeTts}),createBrowserTtsProvider({synth,Utterance})];
+    :[local,cloud,createNativeTtsProvider({nativeTts}),createBrowserTtsProvider({synth,Utterance})];
   const chain=(providers||defaultChain).filter(provider=>provider&&typeof provider.speak==='function');
   let generation=0;
 
@@ -42,10 +45,10 @@ export function createVoiceService({
     if(request.interrupt!==false)chain.forEach(provider=>{void stopProvider(provider);});
     const normalized={
       ...request,
-      lang:request.lang||HUMAN_VOICE_POLICY.locale,
-      rate:Number(request.rate??.88),
-      pitch:Number(request.pitch??1),
-      volume:Number(request.volume??1),
+      lang:request.lang||NATURAL_VOICE_PROFILE.locale,
+      rate:Number(request.rate??NATURAL_VOICE_PROFILE.rate),
+      pitch:Number(request.pitch??NATURAL_VOICE_PROFILE.pitch),
+      volume:Number(request.volume??NATURAL_VOICE_PROFILE.volume),
       isCurrent:()=>token===generation
     };
     void run(normalized,token);
