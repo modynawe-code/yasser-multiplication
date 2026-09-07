@@ -83,7 +83,7 @@ export function ensureLearningShell(){
           </div>
           <button class="icon-btn" id="khaledHomeToHub">اختيار الطفل</button>
         </div>
-        <div class="khaled-stats"><div><span>المحاولات</span><strong id="khaledAttempts">0</strong></div><div><span>الأخطاء المسجلة</span><strong id="khaledErrors">0</strong></div></div>
+        <div class="khaled-stats"><div><span>أسئلة اليوم</span><strong id="khaledAttempts">0</strong></div><div><span>الإتقان العام</span><strong id="khaledErrors">0%</strong></div></div>
         <div class="khaled-skill-list" id="khaledSkillList"></div>
       </div>
     </section>
@@ -116,7 +116,7 @@ export function ensureLearningShell(){
         </div>
         <h2 id="khaledResultTitle">أحسنت يا خالد</h2><p id="khaledResultSkill"></p>
         <div class="score-ring"><strong id="khaledResultPct">0%</strong></div>
-        <div class="result-metrics"><div class="result-metric"><span>صحيح</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>أخطاء</span><strong id="khaledResultWrong">0</strong></div></div>
+        <div class="result-metrics"><div class="result-metric"><span>صح من أول مرة</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>صح بعد تصحيح</span><strong id="khaledResultCorrected">0</strong></div><div class="result-metric"><span>تحتاج مراجعة</span><strong id="khaledResultWrong">0</strong></div></div>
         <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="khaled-result-link" id="khaledResultToHub">اختيار الطفل</button></div>
       </div></div>
     </section>
