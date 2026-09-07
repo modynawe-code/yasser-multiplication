@@ -44,8 +44,9 @@ test('RPS typography uses a modern offline-safe Arabic font stack',async()=>{
   assert.doesNotMatch(css,/font-weight:950/);
 });
 
-test('PWA shell caches the RPS graphics module',async()=>{
+test('PWA shell caches the RPS graphics and game-feel audio modules',async()=>{
   const sw=await read('service-worker.js');
-  assert.match(sw,/shell-48/);
+  assert.match(sw,/shell-49/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-graphics\.js/);
+  assert.match(sw,/src\/modules\/games\/rps\/rps-audio\.js/);
 });
