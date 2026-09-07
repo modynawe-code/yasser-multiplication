@@ -5,6 +5,7 @@ import { SADA_FILTER,SADA_SOURCE,normalizeSadaRow,rankSadaSpeakerGroups } from '
 
 const PAGE_LENGTH=100;
 const MAX_CONSECUTIVE_PAGE_FAILURES=4;
+const MIN_ROWS_BEFORE_EARLY_SELECTION=1000;
 const ROOT=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const OUT=resolve(ROOT,'build/voice/sada');
 
@@ -33,11 +34,12 @@ async function fetchJson(url,{attempts=4}={}){
   throw lastError||new Error('Hugging Face API request failed');
 }
 
-async function fetchCandidates(startOffset,maxRows){
+async function fetchCandidates(startOffset,maxRows,{minCandidateSeconds=0}={}){
   const rows=[];
   const failedOffsets=[];
   let total=null;
   let consecutiveFailures=0;
+  let earlySelection=false;
   const endOffset=startOffset+maxRows;
   for(let offset=startOffset;offset<endOffset;offset+=PAGE_LENGTH){
     const url=new URL('/rows',SADA_SOURCE.viewerApi);
@@ -60,9 +62,17 @@ async function fetchCandidates(startOffset,maxRows){
     const page=(payload.rows||[]).map(normalizeSadaRow);
     rows.push(...page);
     console.log(`SADA metadata collected: ${rows.length}${total!==null?` / up to ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
+    if(minCandidateSeconds>0&&rows.length>=MIN_ROWS_BEFORE_EARLY_SELECTION){
+      const candidate=rankSadaSpeakerGroups(rows)[0];
+      if(candidate&&candidate.totalSeconds>=minCandidateSeconds){
+        earlySelection=true;
+        console.log(`Early human-source candidate found after ${rows.length} rows: ${candidate.key} (${(candidate.totalSeconds/60).toFixed(1)} min eligible).`);
+        break;
+      }
+    }
     if(page.length<PAGE_LENGTH||(total!==null&&offset+page.length>=total))break;
   }
-  return {rows,total,failedOffsets};
+  return {rows,total,failedOffsets,earlySelection};
 }
 
 function safeName(value){return String(value||'clip').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(0,140);}
@@ -104,11 +114,12 @@ async function main(){
   const maxRows=Math.max(100,Math.min(7000,numArg('max-rows',6100)));
   const targetMinutes=Math.max(1,Math.min(30,numArg('target-minutes',8)));
   const maxMb=Math.max(25,Math.min(500,numArg('max-mb',180)));
+  const minCandidateSeconds=flag('download')?targetMinutes*60*1.25:0;
   console.log(`Scanning SADA row metadata — offset ${startOffset}, max ${maxRows}; audio is not downloaded during the scan.`);
-  const fetched=await fetchCandidates(startOffset,maxRows),groups=rankSadaSpeakerGroups(fetched.rows);
+  const fetched=await fetchCandidates(startOffset,maxRows,{minCandidateSeconds}),groups=rankSadaSpeakerGroups(fetched.rows);
   const summary=groups.slice(0,10).map(({rows:clips,...group})=>({...group,minutes:Number((group.totalSeconds/60).toFixed(2))}));
   const scanName=startOffset?`scan-${startOffset}.json`:'scan-0.json';
-  const scan={source:SADA_SOURCE,filter:SADA_FILTER,startOffset,requestedRows:maxRows,collectedRows:fetched.rows.length,totalRows:fetched.total,failedOffsets:fetched.failedOffsets,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
+  const scan={source:SADA_SOURCE,filter:SADA_FILTER,startOffset,requestedRows:maxRows,collectedRows:fetched.rows.length,totalRows:fetched.total,failedOffsets:fetched.failedOffsets,earlySelection:fetched.earlySelection,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
   await saveJson(scanName,scan);
   if(startOffset===0)await saveJson('scan.json',scan);
   console.table(summary.map(g=>({group:g.key,clips:g.clipCount,minutes:g.minutes,show:g.showName})));
@@ -121,6 +132,7 @@ async function main(){
   console.log(`Selected human source: ${group.key} (${group.clipCount} eligible clips, ${(group.totalSeconds/60).toFixed(1)} min available).`);
   const result=await downloadGroup(group,{targetMinutes,maxMb});
   if(!result.count)throw new Error('Selected SADA speaker had no downloadable audio clips.');
+  if(result.seconds<Math.min(60,targetMinutes*60*.25))throw new Error(`Selected SADA speaker downloaded only ${(result.seconds/60).toFixed(1)} min; insufficient usable human audio.`);
   console.log(`Downloaded ${result.count} human clips, ${(result.seconds/60).toFixed(1)} min, ${(result.bytes/1024/1024).toFixed(1)} MB.`);
 }
 
