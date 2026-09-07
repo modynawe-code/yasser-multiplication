@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { SADA_FILTER,SADA_SOURCE,normalizeSadaRow,rankSadaSpeakerGroups } from './voice/sada-source-config.mjs';
 
 const PAGE_LENGTH=100;
+const MAX_CONSECUTIVE_PAGE_FAILURES=4;
 const ROOT=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const OUT=resolve(ROOT,'build/voice/sada');
 
@@ -13,7 +14,7 @@ function numArg(name,fallback){const n=Number(arg(name,fallback));return Number.
 function headers(){return process.env.HF_TOKEN?{Authorization:`Bearer ${process.env.HF_TOKEN}`}:{}}
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
-async function fetchJson(url,{attempts=6}={}){
+async function fetchJson(url,{attempts=4}={}){
   let lastError=null;
   for(let attempt=1;attempt<=attempts;attempt++){
     try{
@@ -27,40 +28,65 @@ async function fetchJson(url,{attempts=6}={}){
       lastError=error;
       if(attempt===attempts)throw error;
     }
-    await sleep(Math.min(10000,1200*attempt));
+    await sleep(Math.min(8000,1200*attempt));
   }
   throw lastError||new Error('Hugging Face API request failed');
 }
 
 async function fetchCandidates(startOffset,maxRows){
   const rows=[];
+  const failedOffsets=[];
   let total=null;
+  let consecutiveFailures=0;
   const endOffset=startOffset+maxRows;
   for(let offset=startOffset;offset<endOffset;offset+=PAGE_LENGTH){
     const url=new URL('/rows',SADA_SOURCE.viewerApi);
     url.search=new URLSearchParams({dataset:SADA_SOURCE.dataset,config:SADA_SOURCE.config,split:SADA_SOURCE.split,offset:String(offset),length:String(Math.min(PAGE_LENGTH,endOffset-offset))});
-    const payload=await fetchJson(url);
+    let payload;
+    try{
+      payload=await fetchJson(url);
+      consecutiveFailures=0;
+    }catch(error){
+      failedOffsets.push(offset);
+      consecutiveFailures+=1;
+      console.warn(`SADA metadata page ${offset} unavailable after retries; skipping it. ${error.message}`);
+      if(consecutiveFailures>=MAX_CONSECUTIVE_PAGE_FAILURES){
+        console.warn(`Stopping scan after ${MAX_CONSECUTIVE_PAGE_FAILURES} consecutive unavailable pages; using ${rows.length} rows already collected.`);
+        break;
+      }
+      continue;
+    }
     if(Number.isFinite(Number(payload.num_rows_total)))total=Number(payload.num_rows_total);
     const page=(payload.rows||[]).map(normalizeSadaRow);
     rows.push(...page);
-    const scanned=Math.min(rows.length,maxRows);
-    console.log(`SADA metadata scanned: ${scanned}${total!==null?` / ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
+    console.log(`SADA metadata collected: ${rows.length}${total!==null?` / up to ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
     if(page.length<PAGE_LENGTH||(total!==null&&offset+page.length>=total))break;
   }
-  return {rows,total};
+  return {rows,total,failedOffsets};
 }
 
 function safeName(value){return String(value||'clip').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(0,140);}
 
 async function saveJson(name,value){await mkdir(OUT,{recursive:true});await writeFile(resolve(OUT,name),`${JSON.stringify(value,null,2)}\n`,'utf8');}
 
+async function fetchAudio(src,{attempts=3}={}){
+  for(let attempt=1;attempt<=attempts;attempt++){
+    try{
+      const response=await fetch(src,{headers:headers()});
+      if(response.ok)return Buffer.from(await response.arrayBuffer());
+      if(response.status!==429&&response.status<500)return null;
+    }catch{}
+    if(attempt<attempts)await sleep(800*attempt);
+  }
+  return null;
+}
+
 async function downloadGroup(group,{targetMinutes,maxMb}){
   const dir=resolve(OUT,'raw',safeName(group.key));await mkdir(dir,{recursive:true});
   let seconds=0,bytes=0,count=0;const files=[];
   for(const row of group.rows){
     if(seconds>=targetMinutes*60||bytes>=maxMb*1024*1024)break;
-    const response=await fetch(row.audioSrc,{headers:headers()});if(!response.ok)continue;
-    const body=Buffer.from(await response.arrayBuffer());
+    const body=await fetchAudio(row.audioSrc);if(!body)continue;
     if(bytes+body.length>maxMb*1024*1024)break;
     const file=`${String(count+1).padStart(3,'0')}-${safeName(row.segmentId)}.wav`;
     await writeFile(resolve(dir,file),body);
@@ -75,28 +101,27 @@ async function downloadGroup(group,{targetMinutes,maxMb}){
 
 async function main(){
   const startOffset=Math.max(0,Math.min(7000,numArg('start-offset',0)));
-  const maxRows=Math.max(100,Math.min(7000,numArg('max-rows',7000)));
+  const maxRows=Math.max(100,Math.min(7000,numArg('max-rows',6100)));
   const targetMinutes=Math.max(1,Math.min(30,numArg('target-minutes',8)));
   const maxMb=Math.max(25,Math.min(500,numArg('max-mb',180)));
   console.log(`Scanning SADA row metadata — offset ${startOffset}, max ${maxRows}; audio is not downloaded during the scan.`);
   const fetched=await fetchCandidates(startOffset,maxRows),groups=rankSadaSpeakerGroups(fetched.rows);
   const summary=groups.slice(0,10).map(({rows:clips,...group})=>({...group,minutes:Number((group.totalSeconds/60).toFixed(2))}));
   const scanName=startOffset?`scan-${startOffset}.json`:'scan-0.json';
-  const scan={source:SADA_SOURCE,filter:SADA_FILTER,startOffset,scannedRows:fetched.rows.length,totalRows:fetched.total,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
+  const scan={source:SADA_SOURCE,filter:SADA_FILTER,startOffset,requestedRows:maxRows,collectedRows:fetched.rows.length,totalRows:fetched.total,failedOffsets:fetched.failedOffsets,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
   await saveJson(scanName,scan);
   if(startOffset===0)await saveJson('scan.json',scan);
   console.table(summary.map(g=>({group:g.key,clips:g.clipCount,minutes:g.minutes,show:g.showName})));
   if(!groups.length){
-    console.log('No clean adult male Najdi speaker group found in scanned SADA rows.');
-    if(flag('require-candidate'))process.exitCode=2;
-    return;
+    throw new Error(`No clean adult male Najdi speaker group found in ${fetched.rows.length} collected SADA rows.`);
   }
   if(!flag('download')){console.log(`Best candidate: ${groups[0].key}`);return;}
   const requested=arg('group');const group=requested?groups.find(item=>item.key===requested):groups[0];
   if(!group)throw new Error(`Requested group not found: ${requested}`);
+  console.log(`Selected human source: ${group.key} (${group.clipCount} eligible clips, ${(group.totalSeconds/60).toFixed(1)} min available).`);
   const result=await downloadGroup(group,{targetMinutes,maxMb});
   if(!result.count)throw new Error('Selected SADA speaker had no downloadable audio clips.');
-  console.log(`Downloaded ${result.count} clips, ${(result.seconds/60).toFixed(1)} min, ${(result.bytes/1024/1024).toFixed(1)} MB.`);
+  console.log(`Downloaded ${result.count} human clips, ${(result.seconds/60).toFixed(1)} min, ${(result.bytes/1024/1024).toFixed(1)} MB.`);
 }
 
 await main();
