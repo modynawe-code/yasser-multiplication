@@ -11,11 +11,15 @@ import { createGamesController } from './modules/games/games-controller.js';
 import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
+import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
 
 ensureLearningShell();
 
-const yasserRepository=createLocalStorageRepository();
-const khaledRepository=createKhaledRepository();
+const rewardService=createLearningRewardService();
+const yasserBaseRepository=createLocalStorageRepository();
+const khaledBaseRepository=createKhaledRepository();
+const yasserRepository=createRewardingRepository({learnerId:'yasser',repository:yasserBaseRepository,rewardService});
+const khaledRepository=createRewardingRepository({learnerId:'khaled',repository:khaledBaseRepository,rewardService});
 const cloudAuth=createFamilyAuthClient();
 const cloudSync=createFamilySyncService({authClient:cloudAuth,yasserRepository,khaledRepository});
 const yasser=createAppController({repository:yasserRepository});
@@ -73,4 +77,6 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub']){
   document.getElementById(id)?.addEventListener('click',exitKhaledToHub);
 }
 
+rewardService.evaluate('yasser',yasser.getState());
+rewardService.evaluate('khaled',khaled.getState());
 familyParent.start();games.start();hubVisuals.warm();hub.start();registerServiceWorker();
