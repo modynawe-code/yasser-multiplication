@@ -1,0 +1,67 @@
+name: Backend Production Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'feature/games-platform-v1'
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-production-deploy.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-and-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
+      API_BASE: https://yasser-khaled-family-api.modynawe.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify Cloudflare credentials
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Missing repository secret CLOUDFLARE_API_TOKEN"
+            exit 1
+          fi
+
+      - name: Apply production D1 migrations
+        run: npx --yes wrangler@4.129.0 d1 migrations apply yasser-khaled-family --remote --config wrangler.jsonc
+        working-directory: backend
+
+      - name: Deploy production Worker
+        run: npx --yes wrangler@4.129.0 deploy --config wrangler.jsonc
+        working-directory: backend
+
+      - name: Production health and two-device XO smoke test
+        run: |
+          node <<'NODE'
+          const base=process.env.API_BASE;
+          async function request(path,{method='GET',body,token}={}){
+            const headers={accept:'application/json'};
+            if(body!==undefined)headers['content-type']='application/json';
+            if(token)headers['x-game-token']=token;
+            const response=await fetch(base+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});
+            let payload=null;try{payload=await response.json();}catch{}
+            if(!response.ok)throw new Error(`${method} ${path} -> ${response.status} ${JSON.stringify(payload)}`);
+            return payload;
+          }
+          const health=await request('/health');
+          if(health?.ok!==true)throw new Error('Production health payload is not ok');
+          const host=await request('/v1/games/rooms',{method:'POST',body:{gameId:'xo',learnerId:'yasser'}});
+          if(!/^\d{6}$/.test(host?.room?.code||''))throw new Error('Room code contract failed');
+          if(host?.room?.status!=='waiting'||!host?.playerToken)throw new Error('Host room contract failed');
+          const guest=await request('/v1/games/rooms/join',{method:'POST',body:{code:host.room.code,learnerId:'khaled'}});
+          if(guest?.room?.status!=='playing'||guest?.room?.players?.length!==2||!guest?.playerToken)throw new Error('Second-device join contract failed');
+          const refreshed=await request(`/v1/games/rooms/${host.room.code}`,{token:host.playerToken});
+          if(refreshed?.room?.status!=='playing'||refreshed?.room?.players?.length!==2)throw new Error('Authenticated room read contract failed');
+          console.log(`Production smoke passed: room ${host.room.code}, two players connected.`);
+          NODE
