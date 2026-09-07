@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 22
       - name: Select one clean adult male Najdi source and download bounded clips
-        run: npm run voice:sada:download
+        run: node tools/sada-human-source.mjs --start-offset 0 --max-rows 6100 --download --target-minutes 8 --max-mb 180
         working-directory: preview-v4
       - name: Upload selected human source
         uses: actions/upload-artifact@v4
