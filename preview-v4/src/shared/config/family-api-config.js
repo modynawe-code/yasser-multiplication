@@ -1,13 +1,23 @@
 const OVERRIDE_KEY='family_api_base_v1';
 export const FAMILY_API_PRODUCTION_BASE='https://yasser-khaled-family-api.modynawe.workers.dev';
 
-export function getFamilyApiBase(storage=globalThis.localStorage){
+function mayUseStoredDevelopmentOverride(location=globalThis.location){
+  if(globalThis.__FAMILY_API_ALLOW_DEV_OVERRIDE__===true)return true;
+  const protocol=String(location?.protocol||'').toLowerCase();
+  const hostname=String(location?.hostname||'').toLowerCase();
+  const localHost=hostname==='localhost'||hostname==='127.0.0.1'||hostname==='::1'||hostname==='[::1]';
+  return localHost&&(protocol==='http:'||protocol==='https:');
+}
+
+export function getFamilyApiBase(storage=globalThis.localStorage,location=globalThis.location){
   const injected=String(globalThis.__FAMILY_API_BASE_URL__||'').trim();
   if(injected)return injected.replace(/\/$/,'');
-  try{
-    const override=String(storage?.getItem(OVERRIDE_KEY)||'').trim().replace(/\/$/,'');
-    if(override)return override;
-  }catch{}
+  if(mayUseStoredDevelopmentOverride(location)){
+    try{
+      const override=String(storage?.getItem(OVERRIDE_KEY)||'').trim().replace(/\/$/,'');
+      if(override)return override;
+    }catch{}
+  }
   return FAMILY_API_PRODUCTION_BASE;
 }
 
