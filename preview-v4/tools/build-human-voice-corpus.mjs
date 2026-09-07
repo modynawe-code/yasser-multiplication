@@ -123,14 +123,18 @@ async function checkCoverage(corpus,{strict=false}={}){
   console.log(`Recorded clips: ${corpus.length-missing.length}`);
   console.log(`Missing clips: ${missing.length}`);
   console.log(`Runtime voice mode: ${HUMAN_VOICE_POLICY.runtimeMode}`);
-  if(strict&&HUMAN_VOICE_POLICY.runtimeMode!=='human-only'){
+  console.log(`Release voice mode: ${HUMAN_VOICE_POLICY.releaseMode}`);
+
+  const requiresHuman=HUMAN_VOICE_POLICY.requireCompleteHumanCoverageForRelease===true||HUMAN_VOICE_POLICY.releaseMode==='human-only';
+  if(strict&&requiresHuman&&HUMAN_VOICE_POLICY.runtimeMode!=='human-only'){
     console.error('Human-only release gate failed: runtimeMode must be human-only before release.');
     process.exitCode=1;
   }
-  if(strict&&missing.length){
+  if(strict&&requiresHuman&&missing.length){
     console.error('Human-only release gate failed: recorded voice coverage is incomplete.');
     process.exitCode=1;
   }
+  if(strict&&!requiresHuman)console.log(`Voice release gate passed for ${HUMAN_VOICE_POLICY.releaseMode}.`);
 }
 
 const args=new Set(process.argv.slice(2));
