@@ -14,8 +14,11 @@ test('Android launcher follows the approved Yasser + Khaled + calculator contrac
   assert.doesNotMatch(source,/>×</);
 });
 
-test('Android workflow rebuilds when launcher composition changes',async()=>{
+test('Android workflow rebuilds on launcher changes and preserves one debug signing identity',async()=>{
   const workflow=await readFile(new URL('.github/workflows/android-debug-apk.yml',root),'utf8');
   assert.match(workflow,/tools\/prepare-mobile-assets\.mjs/);
   assert.match(workflow,/Generate Android launcher icon/);
+  assert.match(workflow,/actions\/cache@v4/);
+  assert.match(workflow,/~\/\.android\/debug\.keystore/);
+  assert.match(workflow,/yasser-khaled-android-debug-keystore-v1/);
 });

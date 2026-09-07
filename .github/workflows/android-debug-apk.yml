@@ -33,6 +33,12 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Restore stable debug signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: yasser-khaled-android-debug-keystore-v1
+
       - name: Install mobile toolchain
         run: npm install --no-audit --no-fund
 
