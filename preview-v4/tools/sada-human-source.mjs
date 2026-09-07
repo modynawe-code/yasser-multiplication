@@ -1,9 +1,10 @@
 import { mkdir,writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { SADA_SOURCE,normalizeSadaRow,rankSadaSpeakerGroups,sadaSpeakerGroupKey,sadaWhereClause } from './voice/sada-source-config.mjs';
+import { fileURLToPath } from 'node:url';
+import { SADA_SOURCE,normalizeSadaRow,rankSadaSpeakerGroups,sadaWhereClause } from './voice/sada-source-config.mjs';
 
 const PAGE_LENGTH=100;
-const ROOT=resolve(new URL('..',import.meta.url).pathname.replace(/^\/(.:)/,'$1'));
+const ROOT=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const OUT=resolve(ROOT,'build/voice/sada');
 
 function arg(name,fallback=null){const i=process.argv.indexOf(`--${name}`);return i>=0?process.argv[i+1]:fallback;}
