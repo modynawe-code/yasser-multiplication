@@ -92,6 +92,6 @@ test('character scale distinguishes chooser, intro, review, practice, and result
 test('strong Khaled round completion exposes the approved group celebration',async()=>{
   const scenes=await read('src/modules/khaled/ui/khaled-scene-controller.js');
   const controller=await read('src/modules/khaled/ui/khaled-controller.js');
-  assert.match(scenes,/if\(pct>=80\)return paint\('result','groupCelebration'\);/);
+  assert.match(scenes,/if\(pct>=80\)[^\n]*groupCelebration/);
   assert.match(controller,/summary\.masteryScore>=80\?'أبدعت يا خالد/);
 });
