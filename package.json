@@ -7,7 +7,7 @@
     "mobile:prepare": "node tools/build-mobile.mjs",
     "android:add": "npx cap add android",
     "android:sync": "npm run mobile:prepare && npx cap sync android",
-    "android:assets": "npx @capacitor/assets generate --android --assetPath mobile-assets --iconBackgroundColor '#ffffff' --iconBackgroundColorDark '#111827' --splashBackgroundColor '#ffffff' --splashBackgroundColorDark '#111827'",
+    "android:assets": "node tools/prepare-mobile-assets.mjs && npx @capacitor/assets generate --android --assetPath mobile-assets --iconBackgroundColor '#071f58' --iconBackgroundColorDark '#031841' --splashBackgroundColor '#071f58' --splashBackgroundColorDark '#031841'",
     "android:open": "npx cap open android"
   },
   "dependencies": {
