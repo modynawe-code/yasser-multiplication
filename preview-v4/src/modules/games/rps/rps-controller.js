@@ -2,8 +2,6 @@ import { createRpsState,nextRpsRound,resetRpsMatch,submitRpsChoice } from './rps
 import { RPS_CHOICE_META,rpsChoiceGraphic } from './rps-graphics.js';
 import { createRpsAudio } from './rps-audio.js';
 import { ensureRpsShell } from './rps-shell.js';
-import { createSpeechService } from '../../../shared/audio/speech-service.js';
-import { createFeedbackAudio } from '../../../ui/audio/feedback-audio.js';
 
 const PLAYERS=Object.freeze({
   yasser:{name:'ياسر',theme:'yasser',avatar:'assets/visual/original/yasser/welcome.png',celebrate:'assets/visual/original/yasser/celebrate.png'},
@@ -14,7 +12,7 @@ const byId=id=>document.getElementById(id);
 
 export function createRpsController({showView,onBack}={}){
   let bound=false,state=null,introTimer=null,transitionTimer=null,interactionLocked=false;
-  const speech=createSpeechService(),audio=createFeedbackAudio(),gameAudio=createRpsAudio();
+  const gameAudio=createRpsAudio();
 
   function setMode(active){document.body.classList.toggle('rps-game-mode',Boolean(active));}
   function clearTimers(){if(introTimer){clearTimeout(introTimer);introTimer=null;}if(transitionTimer){clearTimeout(transitionTimer);transitionTimer=null;}}
@@ -42,7 +40,7 @@ export function createRpsController({showView,onBack}={}){
   }
 
   function renderIntro(){
-    clearTimers();hideSections();syncScore();setStageState('intro');applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);
+    clearTimers();gameAudio.stop();hideSections();syncScore();setStageState('intro');applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);
     const intro=byId('rpsIntro');if(intro)intro.hidden=false;
     const reduced=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     introTimer=setTimeout(()=>{introTimer=null;renderChoosing({announce:true});},reduced?250:900);
@@ -57,11 +55,11 @@ export function createRpsController({showView,onBack}={}){
     if(prompt)prompt.textContent='اختر حركتك';
     document.querySelectorAll('[data-rps-choice]').forEach(button=>button.classList.remove('picked'));
     if(turn)turn.hidden=false;
-    if(announce)speech.speak(`دور ${player?.name||''}. حجر، ورق، مقص. اختر حركتك.`);
+    if(announce)gameAudio.turn(playerId);
   }
 
   function renderHandoff(){
-    hideSections();syncScore();interactionLocked=false;setStageState('handoff');applyWinnerTheme(null);
+    hideSections();syncScore();interactionLocked=false;setStageState('handoff');applyWinnerTheme(null);gameAudio.stop();
     const nextId=currentPlayer(),next=PLAYERS[nextId],handoff=byId('rpsHandoff'),avatar=byId('rpsHandoffAvatar'),badge=byId('rpsHandoffPlayer');
     applyPlayerTheme(nextId);applyScoreFocus(nextId);
     if(avatar){avatar.src=next?.avatar||'';avatar.alt=next?.name||'';}
@@ -84,12 +82,11 @@ export function createRpsController({showView,onBack}={}){
     const point=byId('rpsPointPop');if(point){point.className=`rps-point-pop ${state.roundWinner||''}`;point.textContent=state.roundWinner?'+1':'';}
     const next=byId('rpsNextRound');if(next)next.textContent=state.status==='finished'?'شوف الفائز 🏆':'الجولة التالية';
     gameAudio.reveal();
-    if(state.status==='finished'){
-      audio.achievement();speech.speak(`${PLAYERS[state.matchWinner]?.name||''} فاز بالمباراة. مبروك.`);
-    }else if(state.roundWinner){
-      transitionTimer=setTimeout(()=>{transitionTimer=null;gameAudio.point();},260);
-      speech.speak(`${PLAYERS[state.roundWinner]?.name||''} أخذ نقطة.`);
-    }else speech.speak('تعادل. نفس الحركة.');
+    if(state.status==='finished')return;
+    transitionTimer=setTimeout(()=>{
+      transitionTimer=null;
+      if(state.roundWinner){gameAudio.pointSfx();gameAudio.point(state.roundWinner);}else gameAudio.draw();
+    },260);
   }
 
   function renderFinish(){
@@ -99,6 +96,7 @@ export function createRpsController({showView,onBack}={}){
     if(byId('rpsFinishTitle'))byId('rpsFinishTitle').textContent=`${winner?.name||''} بطل المباراة!`;
     if(byId('rpsFinalScore'))byId('rpsFinalScore').textContent=`${PLAYERS.yasser.name} ${state?.scores?.yasser||0}  —  ${state?.scores?.khaled||0} ${PLAYERS.khaled.name}`;
     if(byId('rpsFinishArt'))byId('rpsFinishArt').innerHTML=winner?`<img src="${winner.celebrate}" alt="" decoding="async">`:'';
+    if(winnerId)gameAudio.win(winnerId);
   }
 
   function choose(choice,button){
@@ -117,13 +115,13 @@ export function createRpsController({showView,onBack}={}){
     const result=nextRpsRound(state);if(!result.ok)return;state=result.state;renderChoosing({announce:true});
   }
   function reset(){
-    clearTimers();speech.stop();
+    clearTimers();gameAudio.stop();
     const result=state?resetRpsMatch(state):{ok:true,state:createRpsState()};if(!result.ok)return;state=result.state;renderIntro();
   }
   function start(){
     ensureRpsShell();bind();state=createRpsState();setMode(true);showView?.('rpsGameView');renderIntro();
   }
-  function leave(){clearTimers();interactionLocked=false;setMode(false);speech.stop();state=null;applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);onBack?.();}
+  function leave(){clearTimers();interactionLocked=false;setMode(false);gameAudio.stop();state=null;applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);onBack?.();}
 
   function bind(){
     if(bound)return;bound=true;ensureRpsShell();
