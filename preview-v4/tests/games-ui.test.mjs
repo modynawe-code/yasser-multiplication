@@ -89,7 +89,7 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
 
 test('PWA shell includes resumable online games and lazy RPS modules',async()=>{
   const serviceWorker=await read('service-worker.js');
-  assert.match(serviceWorker,/shell-47/);
+  assert.match(serviceWorker,/shell-48/);
   for(const path of [
     'src/modules/games/games-controller.js',
     'src/modules/games/learning/game-learning-providers.js',
@@ -100,6 +100,7 @@ test('PWA shell includes resumable online games and lazy RPS modules',async()=>{
     'src/modules/games/ui/games.css',
     'src/modules/games/xo/xo-engine.js',
     'src/modules/games/rps/rps-engine.js',
+    'src/modules/games/rps/rps-graphics.js',
     'src/modules/games/rps/rps-controller.js',
     'src/modules/games/rps/rps-shell.js',
     'src/modules/games/rps/rps.css'
