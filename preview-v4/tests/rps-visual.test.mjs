@@ -45,10 +45,10 @@ test('RPS typography uses a modern offline-safe Arabic font stack',async()=>{
   assert.doesNotMatch(css,/font-weight:950/);
 });
 
-test('RPS voice uses shared human-first voice service while gameplay SFX stay independent',async()=>{
+test('RPS narration uses shared voice service while gameplay SFX stay independent',async()=>{
   const audio=await read('src/modules/games/rps/rps-audio.js');
   for(const key of ['turnYasser','turnKhaled','draw','pointYasser','pointKhaled','winYasser','winKhaled']){
-    assert.ok(RPS_AUDIO_CLIPS[key]?.endsWith('.mp3'),`missing recorded clip path for ${key}`);
+    assert.ok(RPS_AUDIO_CLIPS[key]?.endsWith('.mp3'),`missing optional recorded clip path for ${key}`);
   }
   assert.match(audio,/createVoiceService/);
   assert.match(audio,/games\.rps\.turn\.yasser/);
@@ -56,12 +56,14 @@ test('RPS voice uses shared human-first voice service while gameplay SFX stay in
   assert.match(audio,/playSfx/);
 });
 
-test('PWA shell caches the RPS graphics and shared human voice modules',async()=>{
+test('PWA shell caches RPS graphics and shared natural voice modules',async()=>{
   const sw=await read('service-worker.js');
-  assert.match(sw,/shell-52/);
+  assert.match(sw,/shell-53/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-graphics\.js/);
   assert.match(sw,/src\/modules\/games\/rps\/rps-audio\.js/);
   assert.match(sw,/src\/shared\/audio\/human-voice-assets\.js/);
   assert.match(sw,/src\/shared\/audio\/human-voice-policy\.js/);
+  assert.match(sw,/src\/shared\/audio\/natural-voice-profile\.js/);
+  assert.match(sw,/src\/shared\/audio\/providers\/cloud-tts-provider\.js/);
   assert.match(sw,/src\/shared\/audio\/voice-service\.js/);
 });
