@@ -1,12 +1,9 @@
+import { createSessionSyncId } from './session-sync.js';
+
 function chunks(values,size=200){const result=[];for(let i=0;i<values.length;i+=size)result.push(values.slice(i,i+size));return result;}
-function sessionId(learner,session,index){
-  const stamp=session.startedAt||session.endedAt||session.at||'unknown';
-  const skill=session.skillId||session.mode||'session';
-  return `${learner}-session-${stamp}-${skill}-${index}`.slice(0,180);
-}
-function sessionPayload(learner,session,index){
+function sessionPayload(learner,session){
   return{
-    sessionId:session.sessionId||sessionId(learner,session,index),
+    sessionId:createSessionSyncId(learner,session),
     learnerId:learner,
     skillId:session.skillId||null,
     mode:session.mode||null,
@@ -15,7 +12,8 @@ function sessionPayload(learner,session,index){
     correct:Number(session.correct||0),
     wrong:Number(session.wrong||0),
     total:Number(session.total||session.completed||0),
-    incomplete:Boolean(session.incomplete)
+    incomplete:Boolean(session.incomplete),
+    session
   };
 }
 function ownedEvents(values,learnerId){return (Array.isArray(values)?values:[]).filter(item=>item?.learnerId===learnerId);}
@@ -37,8 +35,8 @@ export function createFamilySyncService({authClient,capabilityRegistry}={}){
     let sessions=0;
     for(const {capability,state} of loaded){
       const items=capabilityRegistry.sessions?.(capability,state)||[];
-      for(const [index,session] of items.entries()){
-        await authClient.request('/v1/sync/session',{method:'POST',body:sessionPayload(capability.learnerId,session,index)});
+      for(const session of items){
+        await authClient.request('/v1/sync/session',{method:'POST',body:sessionPayload(capability.learnerId,session)});
         sessions++;
       }
     }
@@ -52,7 +50,7 @@ export function createFamilySyncService({authClient,capabilityRegistry}={}){
       const hasBaseline=Object.prototype.hasOwnProperty.call(snapshot?.baselines||{},capability.learnerId);
       const source=hasBaseline?snapshot.baselines[capability.learnerId]:capability.repository.load();
       states.set(capability.learnerId,capability.normalizeState(source));
-      applied[capability.learnerId]={attempts:0,evidence:0};
+      applied[capability.learnerId]={attempts:0,evidence:0,sessions:0};
     }
 
     for(const event of snapshot?.attempts||[]){
@@ -65,10 +63,15 @@ export function createFamilySyncService({authClient,capabilityRegistry}={}){
       if(!capability||!state||typeof capability.applyEvidence!=='function')continue;
       if(capability.applyEvidence(state,evidence))applied[capability.learnerId].evidence++;
     }
+    for(const session of snapshot?.sessions||[]){
+      const capability=capabilityRegistry.get(session?.learnerId),state=states.get(session?.learnerId);
+      if(!capability||!state||typeof capability.applySession!=='function')continue;
+      if(capability.applySession(state,session))applied[capability.learnerId].sessions++;
+    }
 
     for(const capability of capabilities)capability.repository.save(states.get(capability.learnerId));
-    const totals=Object.values(applied).reduce((sum,item)=>({attempts:sum.attempts+item.attempts,evidence:sum.evidence+item.evidence}),{attempts:0,evidence:0});
-    return{ok:true,applied,attempts:totals.attempts,evidence:totals.evidence,requiresReload:true};
+    const totals=Object.values(applied).reduce((sum,item)=>({attempts:sum.attempts+item.attempts,evidence:sum.evidence+item.evidence,sessions:sum.sessions+item.sessions}),{attempts:0,evidence:0,sessions:0});
+    return{ok:true,applied,attempts:totals.attempts,evidence:totals.evidence,sessions:totals.sessions,requiresReload:true};
   }
 
   async function sync(){await upload();return restore();}
