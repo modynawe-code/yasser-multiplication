@@ -15,6 +15,7 @@ export const MASHAAL_RELEASE_GATE = Object.freeze({
   contentVerified:true,
   approvedRecitationSource:recitationMedia.sourceApproved,
   requiredMediaReady:recitationMedia.localMediaReady,
+  visualQaContractReady:true,
   manualVisualQaReady:false,
   productionMigrationApplied:false,
   syntheticRecitationAllowed:recitationMedia.syntheticRecitationAllowed,
