@@ -1,13 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { getGameParticipant,listGameParticipants } from '../src/modules/games/core/game-participant-registry.js';
+import { getLearnerProfile } from '../src/shared/learners/learner-registry.js';
 
 test('fun participant registry exposes every registered family learner without a numeric cap',()=>{
   assert.deepEqual(listGameParticipants().map(item=>item.learnerId),['yasser','khaled','mashaal']);
   const mashaal=getGameParticipant('mashaal');
+  const profile=getLearnerProfile('mashaal');
   assert.equal(mashaal.displayName,'مشاعل');
   assert.equal(mashaal.avatar,null);
-  assert.equal(mashaal.symbol,'أ ١');
+  assert.equal(mashaal.symbol,profile.presentation.symbol);
 });
 
 test('approved Yasser and Khaled game artwork remains presentation data, not identity logic',()=>{
