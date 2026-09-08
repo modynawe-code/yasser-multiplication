@@ -23,7 +23,7 @@ export const LEARNER_REGISTRY = Object.freeze({
     theme:'khaled',
     presentation:Object.freeze({
       subtitle:'رياضيات أول ابتدائي',
-      summary:'أعداد • عمليات • قياس • أشال • نقود',
+      summary:'أعداد • عمليات • قياس • أشكال • نقود',
       symbol:'+ −',
       stageLabel:'أول ابتدائي',
       homeVariant:'early-reader'
