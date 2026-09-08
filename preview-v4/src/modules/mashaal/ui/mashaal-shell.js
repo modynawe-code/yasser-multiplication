@@ -14,15 +14,16 @@ export function ensureMashaalShell(){
   wrapper.innerHTML=`
     <section id="mashaalHomeView" class="view">
       <div class="mashaal-wrap">
-        <header class="mashaal-head">
-          <button class="icon-btn" id="mashaalToHub" type="button">${MASHAAL_HOME_COPY.back}</button>
+        <header class="mashaal-head mashaal-home-hero" aria-labelledby="mashaalHomeTitle">
+          <button class="icon-btn mashaal-home-back" id="mashaalToHub" type="button" aria-label="العودة لاختيار الطفل">${MASHAAL_HOME_COPY.back}</button>
           <div class="mashaal-heading">
             <div class="kicker">${MASHAAL_HOME_COPY.kicker}</div>
-            <h2>${MASHAAL_HOME_COPY.title}</h2>
+            <h2 id="mashaalHomeTitle">${MASHAAL_HOME_COPY.title}</h2>
             <p>${MASHAAL_HOME_COPY.subtitle}</p>
           </div>
-          <button class="mashaal-hear" id="mashaalHearHome" type="button" aria-label="اسمعي التعليمات">🔊</button>
+          <button class="mashaal-hear mashaal-home-hear" id="mashaalHearHome" type="button" aria-label="اسمعي التعليمات"><span aria-hidden="true">🔊</span><strong>اسمعي</strong></button>
         </header>
+        <div class="mashaal-world-prompt" aria-hidden="true"><strong>اختاري عالمك</strong><span>المسي البطاقة الكبيرة</span></div>
         <div class="mashaal-domain-grid" id="mashaalDomainGrid" aria-label="عوالم تعلم مشاعل"></div>
         <p class="mashaal-safe-note" aria-live="polite" id="mashaalHomeStatus"></p>
       </div>
@@ -31,8 +32,7 @@ export function ensureMashaalShell(){
     <section id="mashaalDomainView" class="view">
       <div class="mashaal-wrap mashaal-domain-view">
         <div class="mashaal-domain-actions">
-          <button class="icon-btn" id="mashaalDomainBack" type="button">رجوع للعوالم</button>
-          <button class="icon-btn" id="mashaalDomainToHub" type="button">اختيار الطفل</button>
+          <button class="icon-btn" id="mashaalDomainBack" type="button" data-nav="back">رجوع للعوالم</button>
         </div>
         <div class="mashaal-domain-focus card">
           <div class="mashaal-domain-symbol" id="mashaalDomainSymbol" aria-hidden="true">✨</div>
@@ -47,8 +47,7 @@ export function ensureMashaalShell(){
     <section id="mashaalActivityView" class="view">
       <div class="mashaal-wrap mashaal-activity-view">
         <div class="mashaal-domain-actions">
-          <button class="icon-btn" id="mashaalActivityBack" type="button">رجوع للمهارات</button>
-          <button class="icon-btn" id="mashaalActivityToHub" type="button">اختيار الطفل</button>
+          <button class="icon-btn" id="mashaalActivityBack" type="button" data-nav="back">رجوع للمهارات</button>
         </div>
         <article class="card mashaal-activity-card">
           <div class="mashaal-activity-topline">
