@@ -1,0 +1,13 @@
+.learner-hub{max-width:1180px}
+.learner-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:stretch}
+.learner-grid>.learner-card{width:100%;min-width:0}
+.learner-generic-character{width:min(100%,290px);height:var(--character-khaled-hub,250px)}
+.learner-generic-character .learner-placeholder{margin:auto}
+
+@media (orientation:landscape) and (min-width:850px) and (max-height:720px){
+  .learner-grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+}
+
+@media(max-width:700px){
+  .learner-grid{grid-template-columns:1fr}
+}
