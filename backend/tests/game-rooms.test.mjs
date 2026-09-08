@@ -60,6 +60,17 @@ test('online room storage keeps temporary player tokens hashed and uses six-digi
   assert.match(index,/handleGameRoomRequest/);
 });
 
+test('online game learner identity is open-ended but strictly normalized',async()=>{
+  const source=await read('src/game-rooms.mjs'),migration=await read('migrations/0004_open_family_learners.sql');
+  assert.match(source,/normalizeLearnerSlug/);
+  assert.match(source,/DEFAULT_DISPLAY_NAMES/);
+  assert.match(source,/mashaal:'مشاعل'/);
+  assert.doesNotMatch(source,/value==='yasser'\|\|value==='khaled'/);
+  assert.doesNotMatch(migration,/learner_id IN \('yasser','khaled'\)/);
+  assert.match(migration,/length\(learner_id\) BETWEEN 1 AND 64/);
+  assert.match(migration,/game_room_players_v2/);
+});
+
 test('room join guessing is independently throttled in D1',async()=>{
   const source=await read('src/game-rooms.mjs'),migration=await read('migrations/0003_game_room_join_throttle.sql');
   assert.match(source,/MAX_JOIN_ATTEMPTS=20/);
