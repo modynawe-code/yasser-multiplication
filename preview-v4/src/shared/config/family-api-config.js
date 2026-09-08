@@ -1,7 +1,22 @@
 const OVERRIDE_KEY='family_api_base_v1';
 export const FAMILY_API_PRODUCTION_BASE='https://yasser-khaled-family-api.modynawe.workers.dev';
 
+function isNativeCapacitor(capacitor=globalThis.Capacitor){
+  try{
+    if(typeof capacitor?.isNativePlatform==='function'&&capacitor.isNativePlatform())return true;
+    if(typeof capacitor?.getPlatform==='function'){
+      const platform=String(capacitor.getPlatform()||'').toLowerCase();
+      if(platform&&platform!=='web')return true;
+    }
+  }catch{}
+  return false;
+}
+
 function mayUseStoredDevelopmentOverride(location=globalThis.location){
+  // Capacitor Android serves the local WebView from https://localhost. That is
+  // an app origin, not a development browser origin, so a stale localhost API
+  // override must never win inside the installed app.
+  if(isNativeCapacitor())return false;
   if(globalThis.__FAMILY_API_ALLOW_DEV_OVERRIDE__===true)return true;
   const protocol=String(location?.protocol||'').toLowerCase();
   const hostname=String(location?.hostname||'').toLowerCase();
