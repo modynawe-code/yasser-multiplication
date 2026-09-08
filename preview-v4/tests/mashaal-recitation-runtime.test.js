@@ -21,6 +21,8 @@ test('recitation runtime opens only when integrity-verified local human audio ex
     assert.match(activity.mediaSha256,/^[a-f0-9]{64}$/);
     assert.equal(activity.mushafPage.pageNumber,604);
     assert.match(activity.mushafPage.imageUrl,/quranpedia\/quran-svg\/main\/mushafs\/hafs\/kfqc\/svg\/604\.svg$/);
+    assert.equal(activity.mushafPage.focusRegion.surahNumber,112);
+    assert.ok(activity.mushafPage.focusRegion.height>0&&activity.mushafPage.focusRegion.height<1);
   }
 });
 
@@ -53,7 +55,16 @@ test('reusable Quran player exposes explicit play pause and restart controls wit
   assert.match(player,/audio\.play\(\)/);
   assert.match(player,/audio\.pause\(\)/);
   assert.match(player,/audio\.currentTime=0/);
+  assert.match(player,/normalizedFocusRegion/);
+  assert.match(player,/focusRegion\.top\*100/);
   assert.doesNotMatch(player,/speechSynthesis|SpeechSynthesisUtterance|createSpeechService/);
+});
+
+test('Quran player presentation keeps KG3 controls large and uses a clipped official-page viewport',async()=>{
+  const css=await read('src/modules/mashaal/quran/quran-surah-player.css');
+  assert.match(css,/\.quran-page-viewport\{position:relative;overflow:hidden/);
+  assert.match(css,/\.quran-control\{min-height:72px/);
+  assert.match(css,/grid-template-columns:minmax\(330px,390px\)/);
 });
 
 test('Mashaal controller delegates Quran recitation to reusable player and only speaks instructions',async()=>{
