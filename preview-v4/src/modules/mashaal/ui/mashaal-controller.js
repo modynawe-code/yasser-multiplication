@@ -4,6 +4,7 @@ import { getMashaalDomainSkills } from './domain-view-model.js';
 import { createMashaalActivityPlan } from '../application/activity-plan.js';
 import { createMashaalActivityViewModel,isMashaalActivityAnswerCorrect } from './activity-view-model.js';
 import { createMashaalDigitalAttempt } from '../application/digital-attempt.js';
+import { createMashaalActivityCompletion } from '../application/activity-completion.js';
 import { recordMashaalEvidence } from '../application/progress-service.js';
 
 const DOMAIN_SYMBOLS=Object.freeze({
@@ -25,7 +26,7 @@ function renderStimulus(model){
     const groups=document.createElement('div');groups.className='mashaal-stimulus-groups';
     for(const group of stimulus.groups||[]){const box=document.createElement('div');box.className='mashaal-stimulus-group';box.textContent=group.join(' ');groups.appendChild(box);}host.appendChild(groups);return;
   }
-  const text=document.createElement('div');text.className='mashaal-stimulus-text';text.textContent=stimulus.text||'';host.appendChild(text);
+  const text=document.createElement('div');text.className=`mashaal-stimulus-text mashaal-stimulus-${stimulus.kind||'text'}`;text.textContent=stimulus.text||'';host.appendChild(text);
 }
 
 export function createMashaalController({repository,onExitToHub}={}){
@@ -70,6 +71,7 @@ export function createMashaalController({repository,onExitToHub}={}){
       const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.textContent=choice.label;
       button.addEventListener('click',()=>{
         if(activityComplete)return;
+        if(currentViewModel.completionOnly){completeCurrentActivity();return;}
         if(currentViewModel.orderedSequence){
           if(selectedChoices.has(choice.value))return;selectedChoices.add(choice.value);button.classList.add('selected');
           if(selectedChoices.size===currentViewModel.correctValues.length)submitAnswer([...selectedChoices]);return;
@@ -88,10 +90,16 @@ export function createMashaalController({repository,onExitToHub}={}){
     byId('mashaalActivitySkill').textContent=currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;byId('mashaalActivityFeedback').textContent='';
     renderStimulus(currentViewModel);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');speech.speak(currentViewModel.audioPromptAr);
   }
+  function saveEvidence(evidence,skillId){if(recordMashaalEvidence(state,{skillId,evidence}))repository.save(state);}
+  function completeCurrentActivity(){
+    if(activityComplete||!currentViewModel||!currentActivity)return;
+    const evidence=createMashaalActivityCompletion({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,activityType:currentViewModel.interaction,createdAt:new Date().toISOString()});
+    saveEvidence(evidence,currentViewModel.skillId);activityComplete=true;lockActivityControls();const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='رائع ✨';speech.speak('رائع يا مشاعل');
+  }
   function submitAnswer(answer){
     if(activityComplete||!currentViewModel||!currentActivity)return;const isCorrect=isMashaalActivityAnswerCorrect(currentViewModel,answer);
     const evidence=createMashaalDigitalAttempt({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,isCorrect,responseMs:Date.now()-startedAt});
-    if(recordMashaalEvidence(state,{skillId:currentViewModel.skillId,evidence}))repository.save(state);const feedback=byId('mashaalActivityFeedback');
+    saveEvidence(evidence,currentViewModel.skillId);const feedback=byId('mashaalActivityFeedback');
     if(isCorrect){activityComplete=true;lockActivityControls();if(feedback)feedback.textContent='أحسنتِ ✨';speech.speak('أحسنت يا مشاعل');}
     else{if(currentViewModel.orderedSequence)clearSelections();if(feedback)feedback.textContent='جربي مرة ثانية 👀';speech.speak('جربي مرة ثانية');startedAt=Date.now();}
   }
