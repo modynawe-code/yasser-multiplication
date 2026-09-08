@@ -31,13 +31,39 @@ export async function getRewardImageUrl(graphicKey,{fetchImpl=globalThis.fetch}=
   assetCache.set(source,request);return request;
 }
 
+function revealLoadedImage(image,art){
+  image.hidden=false;
+  art?.classList?.remove('asset-missing');
+}
+function revealFallback(image,art){
+  image.hidden=true;
+  image.removeAttribute?.('src');
+  art?.classList?.add('asset-missing');
+}
+function applyImageUrl(image,url,art){
+  if(!url){revealFallback(image,art);return Promise.resolve(false);}
+  image.hidden=true;
+  return new Promise(resolve=>{
+    let settled=false;
+    const finish=ok=>{
+      if(settled)return;settled=true;
+      image.onload=null;image.onerror=null;
+      if(ok)revealLoadedImage(image,art);else revealFallback(image,art);
+      resolve(ok);
+    };
+    image.onload=()=>finish(true);
+    image.onerror=()=>finish(false);
+    image.src=url;
+    if(image.complete)queueMicrotask(()=>finish(Number(image.naturalWidth)>0));
+  });
+}
+
 export async function hydrateRewardImages(root=globalThis.document){
   const images=[...(root?.querySelectorAll?.('img[data-reward-graphic]')||[])];
   await Promise.all(images.map(async image=>{
-    const url=await getRewardImageUrl(image.dataset.rewardGraphic);
     const art=image.closest?.('.reward-cabinet-art,.reward-feature-art');
-    if(url){image.src=url;image.hidden=false;art?.classList?.remove('asset-missing');return;}
-    image.hidden=true;art?.classList?.add('asset-missing');
+    const url=await getRewardImageUrl(image.dataset.rewardGraphic);
+    await applyImageUrl(image,url,art);
   }));
   return images.length;
 }
