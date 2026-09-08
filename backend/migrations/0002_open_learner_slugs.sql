@@ -77,9 +77,20 @@ ALTER TABLE learner_baselines_v2 RENAME TO learner_baselines;
 ALTER TABLE attempts_v2 RENAME TO attempts;
 ALTER TABLE learning_sessions_v2 RENAME TO learning_sessions;
 
+CREATE TABLE learning_evidence (
+  evidence_id TEXT PRIMARY KEY,
+  learner_id TEXT NOT NULL REFERENCES learners(id) ON DELETE RESTRICT,
+  skill_id TEXT NOT NULL,
+  evidence_type TEXT NOT NULL,
+  payload_json TEXT,
+  client_created_at TEXT NOT NULL,
+  received_at TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_learners_parent ON learners(parent_id);
 CREATE INDEX IF NOT EXISTS idx_attempts_learner_created ON attempts(learner_id, client_created_at);
 CREATE INDEX IF NOT EXISTS idx_learning_sessions_learner ON learning_sessions(learner_id, ended_at);
+CREATE INDEX IF NOT EXISTS idx_learning_evidence_learner_created ON learning_evidence(learner_id, client_created_at);
 
 CREATE TRIGGER IF NOT EXISTS learner_baselines_no_delete
 BEFORE DELETE ON learner_baselines
@@ -103,6 +114,18 @@ CREATE TRIGGER IF NOT EXISTS attempts_no_update
 BEFORE UPDATE ON attempts
 BEGIN
   SELECT RAISE(ABORT, 'attempt history is append-only');
+END;
+
+CREATE TRIGGER IF NOT EXISTS learning_evidence_no_delete
+BEFORE DELETE ON learning_evidence
+BEGIN
+  SELECT RAISE(ABORT, 'learning evidence is append-only');
+END;
+
+CREATE TRIGGER IF NOT EXISTS learning_evidence_no_update
+BEFORE UPDATE ON learning_evidence
+BEGIN
+  SELECT RAISE(ABORT, 'learning evidence is append-only');
 END;
 
 PRAGMA defer_foreign_keys = OFF;
