@@ -2,6 +2,7 @@ import { createLocalStorageRepository } from './infrastructure/storage/local-sto
 import { normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
 import { createAppController } from './ui/app-controller.js';
 import { registerServiceWorker } from './platform/pwa/register-service-worker.js';
+import { ensureYasserHomeShell } from './modules/yasser/ui/yasser-home-shell.js';
 import { ensureLearningShell } from './modules/hub/learning-shell.js';
 import { hydrateLearnerHub } from './modules/hub/learner-hub-registry.js';
 import { createHubController } from './modules/hub/hub-controller.js';
@@ -36,6 +37,7 @@ document.title='تعلم العائلة';
 const localBackup=createLocalBackupService();
 await localBackup.restoreIfFresh();
 
+ensureYasserHomeShell();
 ensureLearningShell();
 ensureMashaalShell();
 hydrateLearnerHub();
@@ -94,7 +96,7 @@ const learnerRuntimes=createLearnerRuntimeRegistry();
 const hubVisuals=createKhaledSceneController();
 let yasserStarted=false,khaledStarted=false;
 
-rewardCapabilities.register('yasser',{mode:'academic',getState:()=>yasser.getState(),onEnter:()=>yasser.enterHome(),motivationAnchor:'#homeView .focus-strip'});
+rewardCapabilities.register('yasser',{mode:'academic',getState:()=>yasser.getState(),onEnter:()=>yasser.enterHome(),motivationAnchor:'#homeView .yasser-home-focus'});
 rewardCapabilities.register('khaled',{mode:'academic',getState:()=>khaled.getState(),onEnter:()=>khaled.enter(),motivationAnchor:'#khaledHomeView .khaled-stats'});
 rewardCapabilities.register('mashaal',{mode:'developmental',getState:()=>mashaal.getState(),onEnter:()=>mashaal.enter()});
 
