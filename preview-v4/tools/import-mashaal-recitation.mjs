@@ -8,13 +8,13 @@ const EOCD_SIGNATURE=0x06054b50;
 const CENTRAL_SIGNATURE=0x02014b50;
 const LOCAL_SIGNATURE=0x04034b50;
 const MAX_EOCD_SCAN=22+0xffff;
-const TARGET_SURAH=112;
-const EXPECTED_PACKAGE_NAME='akhdar-sura.zip';
-const SOURCE_ID='kfgqpc-ibrahim-al-akhdar-hafs';
-const SOURCE_PACKAGE_URL='https://download.qurancomplex.gov.sa/new-sounds/akhdar/hafs/akhdar-sura.zip';
-const OUTPUT_FILE_NAME='ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3';
-const DEFAULT_OUTPUT=fileURLToPath(new URL(`../assets/recitation/${OUTPUT_FILE_NAME}`,import.meta.url));
-const DEFAULT_DATA=fileURLToPath(new URL('../src/modules/mashaal/curriculum/recitation-media-data.js',import.meta.url));
+export const TARGET_SURAH=112;
+export const EXPECTED_PACKAGE_NAME='akhdar-sura.zip';
+export const SOURCE_ID='kfgqpc-ibrahim-al-akhdar-hafs';
+export const SOURCE_PACKAGE_URL='https://download.qurancomplex.gov.sa/new-sounds/akhdar/hafs/akhdar-sura.zip';
+export const OUTPUT_FILE_NAME='ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3';
+export const DEFAULT_OUTPUT=fileURLToPath(new URL(`../assets/recitation/${OUTPUT_FILE_NAME}`,import.meta.url));
+export const DEFAULT_DATA=fileURLToPath(new URL('../src/modules/mashaal/curriculum/recitation-media-data.js',import.meta.url));
 
 function assertSafeUInt32(value,label){
   if(value===0xffffffff)throw new Error(`${label}: ZIP64 archives are not supported by this importer.`);
@@ -50,27 +50,31 @@ export async function listZipEntries(zipPath){
   try{
     const directory=await findCentralDirectory(handle);
     const buffer=await readExact(handle,directory.centralSize,directory.centralOffset);
-    const entries=[];
-    let cursor=0;
-    while(cursor<buffer.length){
-      if(cursor+46>buffer.length||buffer.readUInt32LE(cursor)!==CENTRAL_SIGNATURE)throw new Error('Invalid ZIP central-directory entry.');
-      const flags=buffer.readUInt16LE(cursor+8);
-      const compressionMethod=buffer.readUInt16LE(cursor+10);
-      const compressedSize=assertSafeUInt32(buffer.readUInt32LE(cursor+20),'compressed-size');
-      const uncompressedSize=assertSafeUInt32(buffer.readUInt32LE(cursor+24),'uncompressed-size');
-      const fileNameLength=buffer.readUInt16LE(cursor+28);
-      const extraLength=buffer.readUInt16LE(cursor+30);
-      const commentLength=buffer.readUInt16LE(cursor+32);
-      const localHeaderOffset=assertSafeUInt32(buffer.readUInt32LE(cursor+42),'local-header-offset');
-      const end=cursor+46+fileNameLength+extraLength+commentLength;
-      if(end>buffer.length)throw new Error('Invalid ZIP central-directory lengths.');
-      const name=buffer.subarray(cursor+46,cursor+46+fileNameLength).toString('utf8').replaceAll('\\','/');
-      entries.push(Object.freeze({name,flags,compressionMethod,compressedSize,uncompressedSize,localHeaderOffset}));
-      cursor=end;
-    }
-    if(directory.totalEntries!==0xffff&&entries.length!==directory.totalEntries)throw new Error(`ZIP entry count mismatch: expected ${directory.totalEntries}, found ${entries.length}.`);
-    return Object.freeze(entries);
+    return parseCentralDirectory(buffer,directory.totalEntries);
   }finally{await handle.close();}
+}
+
+export function parseCentralDirectory(buffer,totalEntries=null){
+  const entries=[];
+  let cursor=0;
+  while(cursor<buffer.length){
+    if(cursor+46>buffer.length||buffer.readUInt32LE(cursor)!==CENTRAL_SIGNATURE)throw new Error('Invalid ZIP central-directory entry.');
+    const flags=buffer.readUInt16LE(cursor+8);
+    const compressionMethod=buffer.readUInt16LE(cursor+10);
+    const compressedSize=assertSafeUInt32(buffer.readUInt32LE(cursor+20),'compressed-size');
+    const uncompressedSize=assertSafeUInt32(buffer.readUInt32LE(cursor+24),'uncompressed-size');
+    const fileNameLength=buffer.readUInt16LE(cursor+28);
+    const extraLength=buffer.readUInt16LE(cursor+30);
+    const commentLength=buffer.readUInt16LE(cursor+32);
+    const localHeaderOffset=assertSafeUInt32(buffer.readUInt32LE(cursor+42),'local-header-offset');
+    const end=cursor+46+fileNameLength+extraLength+commentLength;
+    if(end>buffer.length)throw new Error('Invalid ZIP central-directory lengths.');
+    const name=buffer.subarray(cursor+46,cursor+46+fileNameLength).toString('utf8').replaceAll('\\','/');
+    entries.push(Object.freeze({name,flags,compressionMethod,compressedSize,uncompressedSize,localHeaderOffset}));
+    cursor=end;
+  }
+  if(totalEntries!==null&&totalEntries!==0xffff&&entries.length!==totalEntries)throw new Error(`ZIP entry count mismatch: expected ${totalEntries}, found ${entries.length}.`);
+  return Object.freeze(entries);
 }
 
 function hasSurah112Token(name){
@@ -143,6 +147,16 @@ export function renderRecitationMediaData(record){
   return`// Plain-script data source shared by the browser modules and the classic service worker.\n// Generated only after extracting the approved KFGQPC Al-Ikhlas audio and verifying SHA-256.\nglobalThis.__FAMILY_LEARNING_RECITATION_MEDIA__=Object.freeze([\n  Object.freeze(${JSON.stringify(record,null,2).replaceAll('\n','\n  ')})\n]);\n`;
 }
 
+export async function writeVerifiedRecitationAudio(audio,{outputPath=DEFAULT_OUTPUT,dataPath=DEFAULT_DATA}={}){
+  if(!looksLikeMp3(audio))throw new Error('Selected data does not look like a valid MP3 file.');
+  const sha256=sha256Hex(audio),record=createRecitationRecord({sha256,byteLength:audio.length});
+  await mkdir(dirname(outputPath),{recursive:true});
+  await writeFile(outputPath,audio);
+  await mkdir(dirname(dataPath),{recursive:true});
+  await writeFile(dataPath,renderRecitationMediaData(record),'utf8');
+  return Object.freeze({outputPath,sha256,byteLength:audio.length,record});
+}
+
 export async function importMashaalRecitation({zipPath,entryName=null,outputPath=DEFAULT_OUTPUT,dataPath=DEFAULT_DATA,dryRun=false}={}){
   if(!zipPath)throw new Error('Path to the official akhdar-sura.zip archive is required.');
   const absoluteZip=resolve(zipPath);
@@ -151,13 +165,8 @@ export async function importMashaalRecitation({zipPath,entryName=null,outputPath
   const target=selectSurah112Entry(entries,{entryName});
   if(dryRun)return Object.freeze({zipPath:absoluteZip,entry:target.name,mp3Entries:entries.filter(item=>/\.mp3$/i.test(item.name)).length});
   const audio=await extractZipEntry(absoluteZip,target);
-  if(!looksLikeMp3(audio))throw new Error(`Selected entry does not look like a valid MP3 file: ${target.name}`);
-  const sha256=sha256Hex(audio),record=createRecitationRecord({sha256,byteLength:audio.length});
-  await mkdir(dirname(outputPath),{recursive:true});
-  await writeFile(outputPath,audio);
-  await mkdir(dirname(dataPath),{recursive:true});
-  await writeFile(dataPath,renderRecitationMediaData(record),'utf8');
-  return Object.freeze({zipPath:absoluteZip,entry:target.name,outputPath,sha256,byteLength:audio.length,record});
+  const written=await writeVerifiedRecitationAudio(audio,{outputPath,dataPath});
+  return Object.freeze({zipPath:absoluteZip,entry:target.name,...written});
 }
 
 function printUsage(){
