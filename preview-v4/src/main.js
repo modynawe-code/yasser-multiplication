@@ -24,6 +24,7 @@ import { createGameLearningAdapter } from './modules/games/learning/game-learnin
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncCapabilityRegistry } from './shared/sync/family-sync-capability-registry.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
+import { appendCloudSession } from './shared/sync/session-sync.js';
 import { createLocalBackupService } from './shared/backup/local-backup-service.js';
 import { createRewardRepository } from './shared/rewards/reward-repository.js';
 import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
@@ -64,21 +65,24 @@ syncCapabilities.register('yasser',{
   normalizeState,
   getAttempts:state=>state.attemptLog||[],
   applyAttempt:applyYasserAttemptEvent,
-  getSessions:state=>state.sessions||[]
+  getSessions:state=>state.sessions||[],
+  applySession:(state,session)=>appendCloudSession(state,session,{learnerId:'yasser'})
 });
 syncCapabilities.register('khaled',{
   repository:khaledRepository,
   normalizeState:normalizeKhaledState,
   getAttempts:state=>state.attemptLog||[],
   applyAttempt:applyKhaledAttemptEvent,
-  getSessions:state=>state.sessions||[]
+  getSessions:state=>state.sessions||[],
+  applySession:(state,session)=>appendCloudSession(state,session,{learnerId:'khaled'})
 });
 syncCapabilities.register('mashaal',{
   repository:mashaalRepository,
   normalizeState:normalizeMashaalState,
   getEvidence:state=>state.evidenceLog||[],
   applyEvidence:(state,evidence)=>recordMashaalEvidence(state,{skillId:evidence.skillId,evidence}),
-  getSessions:state=>state.sessions||[]
+  getSessions:state=>state.sessions||[],
+  applySession:(state,session)=>appendCloudSession(state,session,{learnerId:'mashaal'})
 });
 
 const cloudAuth=createFamilyAuthClient();
