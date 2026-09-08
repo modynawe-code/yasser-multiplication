@@ -7,5 +7,6 @@
 - [x] Verify detailed KG3 curriculum content and authored activities against approved sources.
 - [x] Keep 24 verified activities playable while Quran recitation stays blocked from synthetic speech.
 - [x] Select an explicitly reusable human recitation source: King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim.
+- [x] Build integrity-checked recitation media manifest, human-audio runtime, and automatic offline precache path.
 - [ ] Import only the required approved recitation clip(s) as local offline assets, record their integrity hashes, then open the recitation skill.
 - [ ] Apply the reviewed D1 migration only during the controlled production rollout.
