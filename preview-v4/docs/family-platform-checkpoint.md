@@ -16,6 +16,8 @@ Adding a new learner must not require editing Yasser, Khaled, or Mashaal feature
 - Family Sync Capability Registry: upload/restore behavior is registered per learner; the shared sync service must not branch on learner names.
 - Family backup: `FamilyLearning` namespace is open-ended. Legacy `YasserKhaledLearning` backup remains restorable.
 - Historical learning records remain append-only/idempotent; child-facing flows do not delete history.
+- Cloud sessions use deterministic IDs independent of array position, preserve the exact curriculum-specific session record, restore through learner capabilities, and de-duplicate against baseline/local sessions.
+- D1 learning sessions are append-only through migration `0005_learning_session_payload.sql`; legacy session uploads without `session_json` remain accepted for compatibility.
 
 ## Mashaal KG3 contract
 
@@ -34,8 +36,8 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 - Games/rewards/challenges remain composed with learner runtimes.
 - Learner data stays isolated.
 - Local backup and legacy restore stay functional.
-- Cloud sync stays authenticated, learner-scoped, idempotent, and append-only.
-- PWA/offline shell includes all required capability modules.
+- Cloud sync stays authenticated, learner-scoped, idempotent, append-only, and restores attempts, evidence, and exact session history.
+- PWA/offline shell includes all required capability and session-sync modules.
 - Backend D1 immutability protections stay intact.
 
 ## Gate rule
@@ -49,8 +51,8 @@ Do not move to the next architectural layer until:
 
 ## Current verified gate
 
-Latest integration head before this checkpoint: `32e2902099266b2b68019a38ba78cd375bc92843`.
+Latest verified implementation head: `64c76226818593afbade0a1cc7371e0a5646dd49`.
 
-`Preview V4 CI` run #1401 completed successfully for that head.
+`Preview V4 CI` run #1433 completed successfully for that head, including learning-app tests, human-voice inventory, and family-backend tests.
 
-The family sync generalization is therefore accepted on the integration branch as the current source for PR #29. The next work must build on these registries/capabilities rather than reintroducing fixed learner-name branches.
+The family sync and exact session-restore layer is accepted on the integration branch as the current source for PR #29. The next work must build on these registries/capabilities and must not reintroduce fixed learner-name branches or lossy session restore.
