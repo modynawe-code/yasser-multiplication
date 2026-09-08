@@ -1,3 +1,15 @@
+import { getMashaalWebMedia } from './mashaal-web-media.js';
+
+const STYLE_KEY='mashaal-web-media';
+function ensureWebMediaStyle(){
+  if(document.querySelector(`link[data-module-style="${STYLE_KEY}"]`))return;
+  const link=document.createElement('link');
+  link.rel='stylesheet';
+  link.href='src/modules/mashaal/ui/mashaal-web-media.css';
+  link.dataset.moduleStyle=STYLE_KEY;
+  document.head.appendChild(link);
+}
+
 const DOMAIN_ART=Object.freeze({
   'language-communication':'assets/mashaal/domains/language.webp',
   'cognitive-operations-general-knowledge':'assets/mashaal/domains/thinking.webp',
@@ -24,12 +36,14 @@ const SIMPLE_VISUALS=new Set([
   'star','ball','heart','door','apple','moon','circle','square','box','red-circle','blue-circle','red-square','yellow-square',
   'wake','brush-teeth','breakfast','umbrella','sunglasses','happy','sad','angry','wait-turn','grab-ball','walk-away-angry','ask-help','throw-blocks','kick-blocks',
   'wet-hands','soap','rub-hands','rinse-hands','stay-away','touch-hot','play-near-hot','return-book','leave-book-floor','damage-book','help-tidy','leave-mess','scatter-toys',
-  'saudi-flag','japan-flag','brazil-flag','doctor','teacher','baker','ball-above-box','ball-inside-box','ball-below-box','done','balance','fine-motor'
+  'saudi-flag','japan-flag','brazil-flag','doctor','teacher','baker','hospital','school','bakery','car','airplane','boat',
+  'ball-above-box','ball-inside-box','ball-below-box','done','balance','fine-motor'
 ]);
 
 export function getMashaalDomainArt(domainId){return DOMAIN_ART[domainId]||DOMAIN_ART['cognitive-operations-general-knowledge'];}
 
 export function createMashaalDomainArt(domainId,{className=''}={}){
+  ensureWebMediaStyle();
   const img=document.createElement('img');
   img.className=['mashaal-illustration',className].filter(Boolean).join(' ');
   img.src=getMashaalDomainArt(domainId);
@@ -49,11 +63,31 @@ function simpleVisual(key,{compact=false}={}){
   return visual;
 }
 
+function mediaVisual(key,media,{compact=false}={}){
+  ensureWebMediaStyle();
+  const host=document.createElement('span');
+  host.className=`mashaal-media-visual${compact?' compact':''}`;
+  host.dataset.mediaKind=key.endsWith('-flag')?'flag':'illustration';
+  host.setAttribute('aria-hidden','true');
+  const img=document.createElement('img');
+  img.src=media.url;
+  img.alt='';
+  img.decoding='async';
+  img.loading='eager';
+  img.referrerPolicy='no-referrer';
+  img.draggable=false;
+  img.addEventListener('error',()=>{host.replaceChildren(simpleVisual(key,{compact}));},{once:true});
+  host.appendChild(img);
+  return host;
+}
+
 export function createMashaalChoiceVisual(key,viewModel,{compact=false}={}){
   if((key==='left'||key==='right')&&viewModel?.stimulus?.kind==='groups'){
     const count=key==='left'?viewModel.stimulus.leftCount:viewModel.stimulus.rightCount;
     return createCountGroupVisual(count,{compact});
   }
+  const media=getMashaalWebMedia(key);
+  if(media)return mediaVisual(String(key),media,{compact});
   if(/^\d+$/.test(String(key))){
     const number=document.createElement('span');number.className=`mashaal-number-visual ${compact?'compact':''}`;number.textContent=String(key);number.setAttribute('aria-hidden','true');return number;
   }
@@ -94,7 +128,7 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     const trace=document.createElement('span');trace.className='mashaal-trace-visual';trace.innerHTML='<i></i><b></b>';host.appendChild(trace);return host;
   }
   if(stimulus.kind==='emotion-prompt'){
-    const row=document.createElement('div');row.className='mashaal-visual-sequence';for(const key of ['happy','sad','angry'])row.appendChild(simpleVisual(key,{compact:true}));host.appendChild(row);return host;
+    const row=document.createElement('div');row.className='mashaal-visual-sequence';for(const key of ['happy','sad','angry'])row.appendChild(createMashaalChoiceVisual(key,null,{compact:true}));host.appendChild(row);return host;
   }
   if(stimulus.kind==='movement'){
     host.appendChild(simpleVisual('balance',{compact}));return host;
