@@ -1,14 +1,23 @@
 const SYMBOLS=Object.freeze({
   star:'⭐',ball:'⚽',heart:'❤️',door:'🚪',apple:'🍎',moon:'🌙',circle:'●',square:'■',box:'▣',
   'red-circle':'🔴','blue-circle':'🔵','red-square':'🟥','yellow-square':'🟨',
-  wake:'🌅','brush-teeth':'🪥',breakfast:'🥣',umbrella:'☂️',sunglasses:'🕶️',done:'تم ✓'
+  wake:'🌅','brush-teeth':'🪥',breakfast:'🥣',umbrella:'☂️',sunglasses:'🕶️',done:'تم ✓',
+  happy:'😊 فرحانة',sad:'😢 حزينة',angry:'😠 زعلانة',
+  'wait-turn':'🤝 أنتظر دوري','grab-ball':'✋ آخذ الكرة','walk-away-angry':'😠 أبتعد وأنا غاضبة',
+  'ask-help':'🙋 أطلب المساعدة','throw-blocks':'🧱 أرمي المكعبات','kick-blocks':'🦶 أركل المكعبات',
+  'wet-hands':'💧 أبلل يدي','soap':'🧼 أستخدم الصابون','rub-hands':'👐 أفرك يدي','rinse-hands':'🚿 أشطف يدي',
+  'stay-away':'↩️ أبتعد','touch-hot':'✋ ألمس','play-near-hot':'⚽ ألعب قربه'
 });
 
 const tokenLabel=(token)=>({
-  left:'المجموعة الأولى',right:'المجموعة الثانية',
-  circle:'●',star:'⭐',square:'■',
+  left:'المجموعة الأولى',right:'المجموعة الثانية',circle:'●',star:'⭐',square:'■',
   'ball-above-box':'⚽\n▣','ball-inside-box':'▣ ⚽','ball-below-box':'▣\n⚽'
 }[token]||SYMBOLS[token]||String(token));
+
+const SCENES=Object.freeze({
+  'girl-drinking-water':'👧 💧','rainy-day':'🌧️ 👧','girl-lost-toy':'👧 🧸 ❓','two-children-one-ball':'👧 ⚽ 👧',
+  'fallen-block-tower':'👧 🧱💥','hot-surface':'🔥 ⚠️'
+});
 
 function stimulusModel(stimulus={}){
   switch(stimulus.kind){
@@ -20,8 +29,11 @@ function stimulusModel(stimulus={}){
     case 'attribute-sort':return {kind:'instruction',text:'👆'};
     case 'pattern':return {kind:'sequence',items:(stimulus.sequence||[]).map(tokenLabel)};
     case 'spatial-relation':return {kind:'relation',text:stimulus.relation==='above'?'⚽\n▣':`${stimulus.subject||''} ${stimulus.relation||''} ${stimulus.reference||''}`};
-    case 'picture-scene':return {kind:'picture',text:stimulus.scene==='girl-drinking-water'?'👧 💧':stimulus.scene==='rainy-day'?'🌧️ 👧':'🖼️'};
+    case 'picture-scene':return {kind:'picture',text:SCENES[stimulus.scene]||'🖼️'};
     case 'trace-path':return {kind:'trace',text:stimulus.path==='wave'?'● 〰️〰️〰️ ⭐':'● ─── ⭐'};
+    case 'emotion-prompt':return {kind:'picture',text:'😊 😢 😠 ❤️'};
+    case 'movement':return {kind:'picture',text:stimulus.movement==='balance-one-foot'?'🧍‍♀️ ⚖️':'🤸‍♀️'};
+    case 'fine-motor':return {kind:'picture',text:'🤏 ● ● ● ➜ 🥣'};
     default:return {kind:'text',text:''};
   }
 }
@@ -32,26 +44,16 @@ export function createMashaalActivityViewModel(activity){
   const multiSelect=activity.interaction==='sorting';
   const completionOnly=activity.evidenceType==='activity-completion';
   return Object.freeze({
-    id:activity.id,
-    skillId:activity.skillId,
-    interaction:activity.interaction,
-    evidenceType:activity.evidenceType,
-    promptAr:activity.promptAr,
-    audioPromptAr:activity.audioPromptAr,
-    stimulus:Object.freeze(stimulusModel(activity.stimulus)),
-    choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),
-    multiSelect,
-    orderedSequence,
-    completionOnly,
+    id:activity.id,skillId:activity.skillId,interaction:activity.interaction,evidenceType:activity.evidenceType,
+    promptAr:activity.promptAr,audioPromptAr:activity.audioPromptAr,stimulus:Object.freeze(stimulusModel(activity.stimulus)),
+    choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),multiSelect,orderedSequence,completionOnly,
     correctValues:Object.freeze(completionOnly?[]:orderedSequence?[...(activity.stimulus?.actions||[])]:multiSelect?String(activity.correctChoice||'').split('|').filter(Boolean):[String(activity.correctChoice||'')])
   });
 }
 
 export function isMashaalActivityAnswerCorrect(viewModel,answer){
   if(!viewModel||viewModel.completionOnly)return false;
-  const expected=[...viewModel.correctValues];
-  const received=(Array.isArray(answer)?answer:[answer]).map(String);
+  const expected=[...viewModel.correctValues],received=(Array.isArray(answer)?answer:[answer]).map(String);
   if(viewModel.orderedSequence)return expected.length===received.length&&expected.every((value,index)=>value===received[index]);
-  expected.sort();received.sort();
-  return expected.length===received.length&&expected.every((value,index)=>value===received[index]);
+  expected.sort();received.sort();return expected.length===received.length&&expected.every((value,index)=>value===received[index]);
 }
