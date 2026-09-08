@@ -5,7 +5,7 @@ function listFrom(getter,state){const value=typeof getter==='function'?getter(st
 export function createFamilySyncCapabilityRegistry(){
   const entries=new Map();
 
-  function register(learnerId,{repository,normalizeState,getAttempts=null,applyAttempt=null,getEvidence=null,applyEvidence=null,getSessions=null}={}){
+  function register(learnerId,{repository,normalizeState,getAttempts=null,applyAttempt=null,getEvidence=null,applyEvidence=null,getSessions=null,applySession=null}={}){
     const profile=getLearnerProfile(learnerId);
     if(!profile)throw new TypeError('registered learner is required');
     if(!repository?.load||!repository?.save)throw new TypeError('sync capability requires repository');
@@ -19,7 +19,8 @@ export function createFamilySyncCapabilityRegistry(){
       applyAttempt:typeof applyAttempt==='function'?applyAttempt:null,
       getEvidence:typeof getEvidence==='function'?getEvidence:null,
       applyEvidence:typeof applyEvidence==='function'?applyEvidence:null,
-      getSessions:typeof getSessions==='function'?getSessions:null
+      getSessions:typeof getSessions==='function'?getSessions:null,
+      applySession:typeof applySession==='function'?applySession:null
     });
     entries.set(profile.id,capability);
     return capability;
