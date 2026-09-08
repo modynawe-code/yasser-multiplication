@@ -1,8 +1,3 @@
-import { normalizeState, applyYasserAttemptEvent } from '../../domain/state-model.js';
-import { normalizeKhaledState, applyKhaledAttemptEvent } from '../../modules/khaled/domain/state-model.js';
-import { normalizeMashaalState } from '../../modules/mashaal/domain/state-model.js';
-import { recordMashaalEvidence } from '../../modules/mashaal/application/progress-service.js';
-
 function chunks(values,size=200){const result=[];for(let i=0;i<values.length;i+=size)result.push(values.slice(i,i+size));return result;}
 function sessionId(learner,session,index){
   const stamp=session.startedAt||session.endedAt||session.at||'unknown';
@@ -23,45 +18,57 @@ function sessionPayload(learner,session,index){
     incomplete:Boolean(session.incomplete)
   };
 }
+function ownedEvents(values,learnerId){return (Array.isArray(values)?values:[]).filter(item=>item?.learnerId===learnerId);}
 
-export function createFamilySyncService({authClient,yasserRepository,khaledRepository,mashaalRepository=null}={}){
-  if(!authClient||!yasserRepository||!khaledRepository)throw new Error('Family sync dependencies are required');
+export function createFamilySyncService({authClient,capabilityRegistry}={}){
+  if(!authClient?.isAuthenticated||!authClient?.request||!capabilityRegistry?.list||!capabilityRegistry?.get||!capabilityRegistry?.load)throw new Error('Family sync dependencies are required');
 
   async function upload(){
     if(!authClient.isAuthenticated())throw new Error('family_auth_required');
-    const yasser=normalizeState(yasserRepository.load()),khaled=normalizeKhaledState(khaledRepository.load());
-    const mashaal=mashaalRepository?normalizeMashaalState(mashaalRepository.load()):null;
-    await authClient.request('/v1/sync/baseline',{method:'POST',body:{learnerId:'yasser',state:yasser}});
-    await authClient.request('/v1/sync/baseline',{method:'POST',body:{learnerId:'khaled',state:khaled}});
-    if(mashaal)await authClient.request('/v1/sync/baseline',{method:'POST',body:{learnerId:'mashaal',state:mashaal}});
-    const attempts=[...yasser.attemptLog,...khaled.attemptLog];
+    const loaded=capabilityRegistry.list().map(capability=>({capability,state:capabilityRegistry.load(capability)}));
+    for(const {capability,state} of loaded)await authClient.request('/v1/sync/baseline',{method:'POST',body:{learnerId:capability.learnerId,state}});
+
+    const attempts=loaded.flatMap(({capability,state})=>ownedEvents(capabilityRegistry.attempts?.(capability,state),capability.learnerId));
     for(const batch of chunks(attempts,200))if(batch.length)await authClient.request('/v1/sync/attempts',{method:'POST',body:{attempts:batch}});
-    const evidence=mashaal?.evidenceLog||[];
+
+    const evidence=loaded.flatMap(({capability,state})=>ownedEvents(capabilityRegistry.evidence?.(capability,state),capability.learnerId));
     for(const batch of chunks(evidence,200))if(batch.length)await authClient.request('/v1/sync/evidence',{method:'POST',body:{evidence:batch}});
-    for(const [index,session] of (yasser.sessions||[]).entries())await authClient.request('/v1/sync/session',{method:'POST',body:sessionPayload('yasser',session,index)});
-    for(const [index,session] of (khaled.sessions||[]).entries())await authClient.request('/v1/sync/session',{method:'POST',body:sessionPayload('khaled',session,index)});
-    if(mashaal)for(const [index,session] of (mashaal.sessions||[]).entries())await authClient.request('/v1/sync/session',{method:'POST',body:sessionPayload('mashaal',session,index)});
-    return{ok:true,attempts:attempts.length,evidence:evidence.length,sessions:(yasser.sessions?.length||0)+(khaled.sessions?.length||0)+(mashaal?.sessions?.length||0)};
+
+    let sessions=0;
+    for(const {capability,state} of loaded){
+      const items=capabilityRegistry.sessions?.(capability,state)||[];
+      for(const [index,session] of items.entries()){
+        await authClient.request('/v1/sync/session',{method:'POST',body:sessionPayload(capability.learnerId,session,index)});
+        sessions++;
+      }
+    }
+    return{ok:true,learners:loaded.length,attempts:attempts.length,evidence:evidence.length,sessions};
   }
 
   async function restore(){
     if(!authClient.isAuthenticated())throw new Error('family_auth_required');
-    const snapshot=await authClient.request('/v1/sync/snapshot');
-    const yasser=normalizeState(snapshot.baselines?.yasser||yasserRepository.load());
-    const khaled=normalizeKhaledState(snapshot.baselines?.khaled||khaledRepository.load());
-    const mashaal=mashaalRepository?normalizeMashaalState(snapshot.baselines?.mashaal||mashaalRepository.load()):null;
-    let appliedYasser=0,appliedKhaled=0,appliedMashaal=0;
-    for(const event of snapshot.attempts||[]){
-      if(event.learnerId==='yasser'&&applyYasserAttemptEvent(yasser,event))appliedYasser++;
-      if(event.learnerId==='khaled'&&applyKhaledAttemptEvent(khaled,event))appliedKhaled++;
+    const snapshot=await authClient.request('/v1/sync/snapshot'),capabilities=capabilityRegistry.list(),states=new Map(),applied={};
+    for(const capability of capabilities){
+      const hasBaseline=Object.prototype.hasOwnProperty.call(snapshot?.baselines||{},capability.learnerId);
+      const source=hasBaseline?snapshot.baselines[capability.learnerId]:capability.repository.load();
+      states.set(capability.learnerId,capability.normalizeState(source));
+      applied[capability.learnerId]={attempts:0,evidence:0};
     }
-    if(mashaal){
-      for(const evidence of snapshot.evidence||[]){
-        if(evidence.learnerId==='mashaal'&&recordMashaalEvidence(mashaal,{skillId:evidence.skillId,evidence}))appliedMashaal++;
-      }
+
+    for(const event of snapshot?.attempts||[]){
+      const capability=capabilityRegistry.get(event?.learnerId),state=states.get(event?.learnerId);
+      if(!capability||!state||typeof capability.applyAttempt!=='function')continue;
+      if(capability.applyAttempt(state,event))applied[capability.learnerId].attempts++;
     }
-    yasserRepository.save(yasser);khaledRepository.save(khaled);if(mashaal)mashaalRepository.save(mashaal);
-    return{ok:true,appliedYasser,appliedKhaled,appliedMashaal,requiresReload:true};
+    for(const evidence of snapshot?.evidence||[]){
+      const capability=capabilityRegistry.get(evidence?.learnerId),state=states.get(evidence?.learnerId);
+      if(!capability||!state||typeof capability.applyEvidence!=='function')continue;
+      if(capability.applyEvidence(state,evidence))applied[capability.learnerId].evidence++;
+    }
+
+    for(const capability of capabilities)capability.repository.save(states.get(capability.learnerId));
+    const totals=Object.values(applied).reduce((sum,item)=>({attempts:sum.attempts+item.attempts,evidence:sum.evidence+item.evidence}),{attempts:0,evidence:0});
+    return{ok:true,applied,attempts:totals.attempts,evidence:totals.evidence,requiresReload:true};
   }
 
   async function sync(){await upload();return restore();}
