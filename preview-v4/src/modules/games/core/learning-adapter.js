@@ -1,7 +1,15 @@
 import { isLearnerContext } from './player-context.js';
+import { normalizeLearnerId } from '../../../shared/learners/learner-id.js';
 
 export function createLearningAdapter({providers={}}={}){
   const providerMap=new Map(Object.entries(providers));
+
+  function supports(learnerId){
+    const id=normalizeLearnerId(learnerId);
+    return Boolean(id&&providerMap.has(id));
+  }
+
+  function listSupportedLearnerIds(){return Object.freeze([...providerMap.keys()]);}
 
   function providerFor(player){
     if(!isLearnerContext(player))throw new TypeError('valid player context is required');
@@ -22,5 +30,5 @@ export function createLearningAdapter({providers={}}={}){
     return provider.recordChallenge({player,result:{...result}});
   }
 
-  return Object.freeze({nextChallenge,recordChallenge});
+  return Object.freeze({supports,listSupportedLearnerIds,nextChallenge,recordChallenge});
 }
