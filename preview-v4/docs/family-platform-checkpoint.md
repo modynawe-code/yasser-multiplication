@@ -29,7 +29,10 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 - Quran recitation remains closed until approved human recitation media exists; TTS is not recitation audio.
 - Specific content/outcomes stay source-bound to verified curriculum references.
 - 25 skills are verified; 24 activities are playable until the single Al-Ikhlas human-recitation asset is installed.
-- `PHASE.md` and `decision-log.md` now reflect that curriculum/content verification is complete; remaining work is controlled release readiness, not curriculum drafting.
+- `PHASE.md` and `decision-log.md` reflect that curriculum/content verification is complete; remaining work is controlled release readiness, not curriculum drafting.
+- The approved recitation source remains King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim, limited to Surat Al-Ikhlas (112).
+- `tools/import-mashaal-recitation.mjs` is the required import path for the official `akhdar-sura.zip`: it identifies Surah 112 explicitly, refuses ambiguous/non-112 selections, extracts only that MP3, validates MP3 structure, computes SHA-256, and generates the local media data record.
+- The importer being ready does not mean recitation media is ready; release remains blocked until the official package is actually processed and the extracted local asset is committed.
 
 ## Compatibility contracts that must remain green
 
@@ -63,8 +66,8 @@ Do not move to the next architectural layer until:
 
 ## Current verified gate
 
-Latest verified implementation head: `be2b32a7e0057afbef8ae1b9f9c82d40d27d5643`.
+Latest verified implementation head: `c16a17b2d0876aba85a4b4bd35eaa6cb7aaa85d1`.
 
-`Preview V4 CI` run #1460 completed successfully for that head. Learning-app tests, human-voice inventory, and family-backend tests are all green after the Mashaal phase/decision-log corrections.
+`Preview V4 CI` run #1472 completed successfully for that head. Learning-app tests, the recitation ZIP importer tests, human-voice inventory, and family-backend tests are green. The recitation blocker is therefore narrowed to obtaining and importing the official KFGQPC package itself; no mirror audio is accepted as a substitute.
 
-The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, and explicit release blockers rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
+The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, explicit release blockers, and the verified recitation-import path rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
