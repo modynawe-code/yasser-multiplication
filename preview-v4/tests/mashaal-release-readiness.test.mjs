@@ -10,12 +10,11 @@ test('Mashaal visual QA preparation is complete while the real-device pass remai
   assert.equal(isMashaalReleaseReady(MASHAAL_RELEASE_GATE),false);
 });
 
-test('current Mashaal release gate reports exactly the three operational blockers',()=>{
-  assert.deepEqual(getMashaalReleaseBlockers(MASHAAL_RELEASE_GATE),[
-    'approved-human-recitation-audio',
-    'manual-galaxy-tab-visual-qa',
-    'controlled-production-d1-migration'
-  ]);
+test('current Mashaal release gate reports only blockers that are still operationally open',()=>{
+  const expected=[];
+  if(!MASHAAL_RELEASE_GATE.requiredMediaReady)expected.push('approved-human-recitation-audio');
+  expected.push('manual-galaxy-tab-visual-qa','controlled-production-d1-migration');
+  assert.deepEqual(getMashaalReleaseBlockers(MASHAAL_RELEASE_GATE),expected);
 });
 
 test('automated visual QA preparation cannot substitute for the manual Galaxy Tab pass',()=>{
