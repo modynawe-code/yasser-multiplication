@@ -11,6 +11,15 @@ test('Yasser home is composed from a dedicated learner presentation module befor
   assert.match(main,/motivationAnchor:'#homeView \.yasser-home-focus'/);
 });
 
+test('index keeps only the Yasser home mount point so presentation markup has one source of truth',async()=>{
+  const html=await read('index.html');
+  assert.match(html,/<title>تعلم العائلة<\/title>/);
+  assert.match(html,/<section id="homeView" class="view"><\/section>/);
+  assert.doesNotMatch(html,/class="home-grid"/);
+  assert.doesNotMatch(html,/class="card parent-summary"/);
+  assert.doesNotMatch(html,/id="homeYasser"/);
+});
+
 test('Yasser learner home has one mission surface and no parent-report sidebar contract',async()=>{
   const shell=await read('src/modules/yasser/ui/yasser-home-shell.js');
   assert.match(shell,/home\.dataset\.presentation==='yasser-home-v2'/);
