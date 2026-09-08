@@ -1,0 +1,6 @@
+- Wire Mashaal into Family Hub from learner registry.
+- Add Mashaal home view shell driven by KG3 domain view model.
+- Add Mashaal to parent report using qualitative summary.
+- Replace backend fixed learner slug constraint via additive migration.
+- Generalize backend learner initialization and sync validation.
+- Run all frontend/backend tests and PWA regression.
