@@ -34,7 +34,7 @@ hydrateFamilyParentLearners();
 
 const rewardRepository=createRewardRepository({storage:localBackup.storage});
 const rewardService=createLearningRewardService({repository:rewardRepository});
-let cabinet=null;
+let cabinet=null,hub=null,games=null;
 function presentLearningStatus(learnerId,result){renderLearningMotivation({learnerId,status:result});cabinet?.refresh(learnerId,result);}
 
 const yasserBaseRepository=createLocalStorageRepository(localBackup.storage);
@@ -47,10 +47,10 @@ const cloudAuth=createFamilyAuthClient();
 const cloudSync=createFamilySyncService({authClient:cloudAuth,yasserRepository,khaledRepository,mashaalRepository});
 const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
-const mashaal=createMashaalController({repository:mashaalRepository});
+const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show()});
 const learnerRuntimes=createLearnerRuntimeRegistry();
 const hubVisuals=createKhaledSceneController();
-let yasserStarted=false,khaledStarted=false,hub,games;
+let yasserStarted=false,khaledStarted=false;
 
 cabinet=createRewardCabinetController({
   getStatus:learnerId=>learnerId==='khaled'?rewardService.evaluate('khaled',khaled.getState()):rewardService.evaluate('yasser',yasser.getState()),
