@@ -1,4 +1,5 @@
 name: Android Debug APK
+# Stable signing persistence verification: cache key v1.
 
 on:
   workflow_dispatch:
