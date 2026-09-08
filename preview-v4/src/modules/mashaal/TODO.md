@@ -16,7 +16,8 @@
 - [x] Limit the recitation scope to one surah only: سورة الإخلاص (112).
 - [x] Build integrity-checked recitation media manifest, human-audio runtime, and automatic offline precache path.
 - [x] Add a safe `recitation:import` tool that inspects the official `akhdar-sura.zip`, selects Surah 112 explicitly, verifies MP3 structure, computes SHA-256, and generates the local media manifest.
+- [x] Define and regression-test the Galaxy Tab visual QA contract and manual landscape/portrait matrix without treating automation as a real-device pass.
 - [ ] Run `npm run recitation:import -- <path-to-akhdar-sura.zip>` against the official KFGQPC package, commit only the extracted سورة الإخلاص asset, and verify the generated SHA-256.
-- [ ] Run manual Galaxy Tab visual QA in landscape and portrait.
+- [ ] Run the documented manual Galaxy Tab visual QA on the actual target device in landscape and portrait; only then set the manual visual QA release flag to passed.
 - [ ] Apply the reviewed D1 migrations only during the controlled production rollout.
 - [ ] Merge Draft PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves.
