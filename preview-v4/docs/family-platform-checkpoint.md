@@ -65,9 +65,9 @@ Do not move to the next architectural layer until:
 
 ## Current verified gate
 
-Latest verified implementation head: `4b0cf9de728231ead4b4c309b57eab29a4c3d9b9`.
+Latest verified implementation head: `dfb0c02a5ec78dab13a14889cbee46359227fc2d`.
 
-`Preview V4 CI` run #1528 completed successfully for that head. Learning-app tests, recitation runtime/media contracts, human-voice inventory, and family-backend tests are green with the committed Al-Ikhlas asset present.
+`Preview V4 CI` run #1530 completed successfully for that head. Learning-app tests, recitation runtime/media contracts, human-voice inventory, and family-backend tests are green with the committed Al-Ikhlas asset present.
 
 Current Mashaal content state: 25/25 skills ready. The audio blocker is closed. Production remains blocked only by real Galaxy Tab visual QA and the controlled production D1 rollout.
 
