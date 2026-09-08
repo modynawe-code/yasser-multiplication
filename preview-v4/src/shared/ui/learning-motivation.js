@@ -1,10 +1,5 @@
 import { REWARD_BY_ID } from '../rewards/reward-catalog.js';
 
-const TARGETS=Object.freeze({
-  yasser:Object.freeze({slotId:'yasserMotivation',anchor:'#homeView .focus-strip'}),
-  khaled:Object.freeze({slotId:'khaledMotivation',anchor:'#khaledHomeView .khaled-stats'})
-});
-
 function safeNumber(value){const number=Number(value);return Number.isFinite(number)?Math.max(0,number):0;}
 function safePct(value){return Math.max(0,Math.min(100,Math.round(safeNumber(value))));}
 function rewardLabel(summary){
@@ -16,11 +11,13 @@ function ensureStyle(){
   if(document.querySelector('link[data-module-style="learning-motivation"]'))return;
   const link=document.createElement('link');link.rel='stylesheet';link.href='src/shared/ui/learning-motivation.css';link.dataset.moduleStyle='learning-motivation';document.head.appendChild(link);
 }
-function ensureSlot(learnerId){
-  const target=TARGETS[learnerId];if(!target)return null;
-  const existing=document.getElementById(target.slotId);if(existing)return existing;
-  const anchor=document.querySelector(target.anchor);if(!anchor)return null;
-  const slot=document.createElement('div');slot.id=target.slotId;slot.className='learning-motivation-slot';slot.dataset.learner=learnerId;anchor.insertAdjacentElement('afterend',slot);return slot;
+function slotId(learnerId){return `learningMotivation-${String(learnerId||'')}`;}
+function ensureSlot(learnerId,anchorSelector){
+  const id=String(learnerId||''),selector=String(anchorSelector||'').trim();
+  if(!id||!selector)return null;
+  const existing=document.getElementById(slotId(id));if(existing)return existing;
+  const anchor=document.querySelector(selector);if(!anchor)return null;
+  const slot=document.createElement('div');slot.id=slotId(id);slot.className='learning-motivation-slot';slot.dataset.learner=id;anchor.insertAdjacentElement('afterend',slot);return slot;
 }
 
 export function buildLearningMotivationMarkup(status={}){
@@ -43,6 +40,6 @@ export function buildLearningMotivationMarkup(status={}){
   </section>`;
 }
 
-export function renderLearningMotivation({learnerId,status}={}){
-  ensureStyle();const slot=ensureSlot(String(learnerId||''));if(!slot)return false;slot.innerHTML=buildLearningMotivationMarkup(status);return true;
+export function renderLearningMotivation({learnerId,status,anchorSelector}={}){
+  ensureStyle();const slot=ensureSlot(String(learnerId||''),anchorSelector);if(!slot)return false;slot.innerHTML=buildLearningMotivationMarkup(status);return true;
 }
