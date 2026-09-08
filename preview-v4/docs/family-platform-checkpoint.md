@@ -28,6 +28,7 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 - Parent reporting uses developmental states, not school-style percentages.
 - Quran recitation remains closed until approved human recitation media exists; TTS is not recitation audio.
 - Specific content/outcomes stay source-bound to verified curriculum references.
+- 25 skills are verified; 24 activities are playable until the single Al-Ikhlas human-recitation asset is installed.
 
 ## Compatibility contracts that must remain green
 
@@ -40,6 +41,16 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 - PWA/offline shell includes all required capability and session-sync modules.
 - Backend D1 immutability protections stay intact.
 
+## Production readiness contract
+
+Technical integration success is not the same as production readiness. Mashaal release readiness must remain false until all three operational blockers are cleared:
+
+1. approved local Surat Al-Ikhlas human-recitation asset is present and SHA-256 verified;
+2. manual Galaxy Tab visual QA passes in landscape and portrait;
+3. reviewed D1 migrations are applied during the controlled production rollout.
+
+`release-gate.js` and `release-status.js` encode these blockers and must not silently weaken them.
+
 ## Gate rule
 
 Do not move to the next architectural layer until:
@@ -51,8 +62,8 @@ Do not move to the next architectural layer until:
 
 ## Current verified gate
 
-Latest verified implementation head: `64c76226818593afbade0a1cc7371e0a5646dd49`.
+Latest verified implementation head: `ccf7c45e31b98cd7656370c7ea077be1f500b727`.
 
-`Preview V4 CI` run #1433 completed successfully for that head, including learning-app tests, human-voice inventory, and family-backend tests.
+`Preview V4 CI` run #1450 completed successfully for that head. The release-readiness tests confirm that technical/content integration is accepted while production readiness remains false for exactly the three blockers above.
 
-The family sync and exact session-restore layer is accepted on the integration branch as the current source for PR #29. The next work must build on these registries/capabilities and must not reintroduce fixed learner-name branches or lossy session restore.
+The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, and explicit release blockers rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
