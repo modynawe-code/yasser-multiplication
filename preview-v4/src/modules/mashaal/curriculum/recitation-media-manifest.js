@@ -1,8 +1,21 @@
 import './recitation-media-data.js';
 
 const SHA256_RE=/^[a-f0-9]{64}$/i;
+const VERIFIED_MUSHAF_URL_PREFIX='https://raw.githubusercontent.com/quranpedia/quran-svg/main/mushafs/hafs/kfqc/svg/';
 const media=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__;
 export const MASHAAL_RECITATION_MEDIA=Object.freeze(Array.isArray(media)?[...media]:[]);
+
+export function validateMashaalMushafPage(page){
+  const errors=[];
+  if(!page||typeof page!=='object')return Object.freeze({valid:false,errors:Object.freeze(['mushaf-page-required'])});
+  if(typeof page.sourceId!=='string'||!page.sourceId.trim())errors.push('mushaf-source-id-required');
+  if(!Number.isInteger(page.pageNumber)||page.pageNumber<1||page.pageNumber>604)errors.push('mushaf-page-number-invalid');
+  const localPath=typeof page.imagePath==='string'&&page.imagePath.startsWith('./assets/quran/');
+  const verifiedRemote=typeof page.imageUrl==='string'&&page.imageUrl.startsWith(VERIFIED_MUSHAF_URL_PREFIX)&&page.imageUrl.endsWith('.svg');
+  if(!localPath&&!verifiedRemote)errors.push('verified-mushaf-image-required');
+  if(typeof page.riwayahAr!=='string'||!page.riwayahAr.includes('حفص'))errors.push('hafs-mushaf-required');
+  return Object.freeze({valid:errors.length===0,errors:Object.freeze(errors)});
+}
 
 export function validateMashaalRecitationAsset(asset){
   const errors=[];
@@ -14,6 +27,8 @@ export function validateMashaalRecitationAsset(asset){
   if(!Number.isInteger(asset.surahNumber)||asset.surahNumber<1||asset.surahNumber>114)errors.push('surah-number-invalid');
   if(typeof asset.surahNameAr!=='string'||!asset.surahNameAr.trim())errors.push('surah-name-required');
   if(asset.humanVoice!==true)errors.push('human-voice-required');
+  const mushafValidation=validateMashaalMushafPage(asset.mushafPage);
+  if(!mushafValidation.valid)errors.push(...mushafValidation.errors);
   return Object.freeze({valid:errors.length===0,errors:Object.freeze(errors)});
 }
 
