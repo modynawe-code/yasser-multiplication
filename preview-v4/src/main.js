@@ -12,7 +12,9 @@ import { ensureMashaalShell } from './modules/mashaal/ui/mashaal-shell.js';
 import { createMashaalController } from './modules/mashaal/ui/mashaal-controller.js';
 import { createMashaalLocalStorageRepository } from './modules/mashaal/infrastructure/local-storage-repository.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
+import { createFamilyParentReportCapabilityRegistry } from './modules/parent/family-parent-report-capabilities.js';
 import { hydrateFamilyParentLearners } from './modules/parent/family-parent-shell-registry.js';
+import { familyYasserReport,familyKhaledReport,familyMashaalReport,familyYasserOverview,familyKhaledOverview,familyMashaalOverview,familyYasserSessions,familyKhaledSessions,familyMashaalSessions } from './modules/parent/family-parent-renderers.js';
 import { createGamesController } from './modules/games/games-controller.js';
 import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
@@ -36,6 +38,7 @@ hydrateFamilyParentLearners();
 const rewardRepository=createRewardRepository({storage:localBackup.storage});
 const rewardService=createLearningRewardService({repository:rewardRepository});
 const rewardCapabilities=createRewardCapabilityRegistry();
+const parentReportCapabilities=createFamilyParentReportCapabilityRegistry();
 let cabinet=null,hub=null,games=null;
 function presentLearningStatus(learnerId,result){
   const capability=rewardCapabilities.get(learnerId);
@@ -63,6 +66,10 @@ rewardCapabilities.register('yasser',{mode:'academic',getState:()=>yasser.getSta
 rewardCapabilities.register('khaled',{mode:'academic',getState:()=>khaled.getState(),onEnter:()=>khaled.enter(),motivationAnchor:'#khaledHomeView .khaled-stats'});
 rewardCapabilities.register('mashaal',{mode:'developmental',getState:()=>mashaal.getState(),onEnter:()=>mashaal.enter()});
 
+parentReportCapabilities.register('yasser',{reportType:'academic',getState:()=>yasser.getState(),renderReport:familyYasserReport,renderOverview:familyYasserOverview,listSessions:familyYasserSessions});
+parentReportCapabilities.register('khaled',{reportType:'academic',getState:()=>khaled.getState(),renderReport:familyKhaledReport,renderOverview:familyKhaledOverview,listSessions:familyKhaledSessions});
+parentReportCapabilities.register('mashaal',{reportType:'developmental',getState:()=>mashaal.getState(),renderReport:familyMashaalReport,renderOverview:familyMashaalOverview,listSessions:familyMashaalSessions});
+
 cabinet=createRewardCabinetController({
   capabilityRegistry:rewardCapabilities,
   getStatus:learnerId=>{
@@ -78,7 +85,7 @@ const gameLearning=createGameLearningAdapter({
 });
 
 const familyParent=createFamilyParentController({
-  getYasserState:()=>yasser.getState(),getKhaledState:()=>khaled.getState(),getMashaalState:()=>mashaal.getState(),
+  reportCapabilities:parentReportCapabilities,
   cloudAuth,cloudSync,onCloudRestore:result=>{if(result?.requiresReload)window.location.reload();},onExitToHub:()=>hub?.show()
 });
 
