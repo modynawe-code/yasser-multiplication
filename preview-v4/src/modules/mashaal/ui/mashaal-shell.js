@@ -38,9 +38,29 @@ export function ensureMashaalShell(){
           <div class="mashaal-domain-symbol" id="mashaalDomainSymbol" aria-hidden="true">✨</div>
           <h2 id="mashaalDomainTitle">عالم مشاعل</h2>
           <button class="mashaal-hear large" id="mashaalHearDomain" type="button" aria-label="اسمعي اسم العالم">🔊 اسمعي</button>
-          <p id="mashaalDomainMessage">نجهز ألعاب هذا العالم بعناية.</p>
-          <div class="mashaal-coming" aria-label="الأنشطة قيد التجهيز">قريبًا ✨</div>
+          <p id="mashaalDomainMessage">اختاري لعبة نبدأ فيها.</p>
+          <div class="mashaal-skill-grid" id="mashaalSkillGrid" aria-label="مهارات هذا العالم"></div>
         </div>
+      </div>
+    </section>
+
+    <section id="mashaalActivityView" class="view">
+      <div class="mashaal-wrap mashaal-activity-view">
+        <div class="mashaal-domain-actions">
+          <button class="icon-btn" id="mashaalActivityBack" type="button">رجوع للمهارات</button>
+          <button class="icon-btn" id="mashaalActivityToHub" type="button">اختيار الطفل</button>
+        </div>
+        <article class="card mashaal-activity-card">
+          <div class="mashaal-activity-topline">
+            <span id="mashaalActivitySkill">لعبة مشاعل</span>
+            <button class="mashaal-hear" id="mashaalHearActivity" type="button" aria-label="اسمعي السؤال">🔊</button>
+          </div>
+          <h2 id="mashaalActivityPrompt">اسمعي ثم اختاري.</h2>
+          <div class="mashaal-stimulus" id="mashaalActivityStimulus" aria-hidden="true"></div>
+          <div class="mashaal-activity-choices" id="mashaalActivityChoices"></div>
+          <button class="btn primary mashaal-check" id="mashaalActivityCheck" type="button" hidden>تحقق</button>
+          <p class="mashaal-activity-feedback" id="mashaalActivityFeedback" aria-live="polite"></p>
+        </article>
       </div>
     </section>`;
 
