@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { familyMashaalReport } from '../src/modules/parent/family-parent-renderers.js';
+import { createInitialMashaalState } from '../src/modules/mashaal/domain/state-model.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -29,12 +31,25 @@ test('family renderers preserve stage-specific assessment instead of forcing one
   const renderers=await read('src/modules/parent/family-parent-renderers.js');
   assert.match(renderers,/getOverallProgress/);
   assert.match(renderers,/KHALED_SKILLS/);
-  assert.match(renderers,/familyMashaalReport/);
-  assert.match(renderers,/التقييم لمشاعل نمائي وليس نسبة مئوية/);
+  assert.match(renderers,/buildMashaalParentSummary/);
+  assert.match(renderers,/التقييم نمائي/);
+  assert.match(renderers,/المهارات الموثقة/);
+  assert.match(renderers,/بانتظار صوت تلاوة معتمد/);
+  assert.doesNotMatch(renderers,/التقييم لمشاعل نمائي وليس نسبة مئوية/);
   assert.match(renderers,/familyGenericLearnerReport/);
   assert.match(renderers,/لا يتم إسقاط تقييم مرحلة أخرى عليه/);
   assert.match(renderers,/متقن مبدئيًا/);
   assert.match(renderers,/sort\(\(a,b\)=>new Date\(b\.at\)-new Date\(a\.at\)\)/);
+});
+
+test('Mashaal parent report derives 25 verified skills with 24 ready and no percentage score',()=>{
+  const html=familyMashaalReport(createInitialMashaalState());
+  assert.match(html,/المهارات الموثقة<\/span><strong>25<\/strong>/);
+  assert.match(html,/أنشطة جاهزة<\/span><strong>24<\/strong>/);
+  assert.match(html,/بانتظار صوت معتمد<\/span><strong>1<\/strong>/);
+  assert.match(html,/الاستماع والترديد/);
+  assert.match(html,/بانتظار صوت تلاوة معتمد/);
+  assert.doesNotMatch(html,/%/);
 });
 
 test('parent controller routes future registered learners to safe generic fallback',async()=>{
