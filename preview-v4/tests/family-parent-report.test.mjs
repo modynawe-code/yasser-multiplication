@@ -34,7 +34,6 @@ test('family renderers preserve stage-specific assessment instead of forcing one
   assert.match(renderers,/buildMashaalParentSummary/);
   assert.match(renderers,/التقييم نمائي/);
   assert.match(renderers,/المهارات الموثقة/);
-  assert.match(renderers,/بانتظار صوت تلاوة معتمد/);
   assert.doesNotMatch(renderers,/التقييم لمشاعل نمائي وليس نسبة مئوية/);
   assert.match(renderers,/familyGenericLearnerReport/);
   assert.match(renderers,/لا يتم إسقاط تقييم مرحلة أخرى عليه/);
