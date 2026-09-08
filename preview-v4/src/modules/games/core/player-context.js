@@ -1,19 +1,19 @@
-const LEARNERS=Object.freeze(['yasser','khaled']);
+import { normalizeLearnerId } from '../../../shared/learners/learner-id.js';
 
 export function createPlayerContext({playerId,learnerId,displayName,theme}={}){
   const id=String(playerId||'').trim();
-  const learner=String(learnerId||'').trim();
+  const learner=normalizeLearnerId(learnerId);
   if(!id)throw new TypeError('playerId is required');
-  if(!LEARNERS.includes(learner))throw new TypeError(`unsupported learner: ${learner}`);
+  if(!learner)throw new TypeError(`invalid learner: ${learnerId}`);
 
   return Object.freeze({
     playerId:id,
     learnerId:learner,
     displayName:String(displayName||learner).trim(),
-    theme:theme||learner,
+    theme:String(theme||learner).trim()||learner,
   });
 }
 
 export function isLearnerContext(value){
-  return Boolean(value&&typeof value.playerId==='string'&&LEARNERS.includes(value.learnerId));
+  return Boolean(value&&typeof value.playerId==='string'&&normalizeLearnerId(value.learnerId));
 }
