@@ -11,6 +11,7 @@ const REQUIRED_READY_FLAGS=Object.freeze([
   'contentVerified',
   'approvedRecitationSource',
   'requiredMediaReady',
+  'visualQaContractReady',
   'manualVisualQaReady',
   'productionMigrationApplied'
 ]);
