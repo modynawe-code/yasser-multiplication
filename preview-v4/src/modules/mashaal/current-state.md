@@ -1,0 +1,1 @@
+Current integration state: foundation only. Family Hub, parent report and backend generic learner migration are pending until existing code paths are inspected and updated with regression coverage.
