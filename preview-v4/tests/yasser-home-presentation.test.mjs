@@ -56,5 +56,5 @@ test('dedicated Yasser home presentation is part of the offline application shel
   const worker=await read('service-worker.js');
   assert.match(worker,/src\/modules\/yasser\/ui\/yasser-home-shell\.js/);
   assert.match(worker,/src\/modules\/yasser\/ui\/yasser-home\.css/);
-  assert.match(worker,/shell-72/);
+  assert.match(worker,/shell-73/);
 });
