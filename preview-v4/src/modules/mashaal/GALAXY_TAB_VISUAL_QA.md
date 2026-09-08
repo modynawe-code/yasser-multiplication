@@ -48,14 +48,14 @@ Landscape and portrait:
 
 Check at least:
 - `حروفي وكلامي` (largest language skill set).
-- `المسلم الصغير` (contains the blocked recitation path until approved audio is installed).
+- `المسلم الصغير` (contains the approved local Surat Al-Ikhlas recitation activity).
 
 Landscape and portrait:
 - Domain symbol/title/listen button fit without crowding.
 - Skill cards wrap cleanly.
 - Ready skills are tappable.
-- Quran recitation remains visibly locked while approved local media is absent.
-- Locked state uses more than reduced opacity alone (lock marker is visible).
+- Quran recitation skill is available and opens normally with the approved local human-recitation asset.
+- Recitation playback uses the local Ibrahim Al-Akhdar Al-Ikhlas asset; no synthetic TTS fallback is presented as Quran recitation.
 
 ### 4. Activity — ordinary single-choice
 
@@ -103,17 +103,19 @@ Pass only if:
 Landscape and portrait:
 - Parent area remains visually distinct from child UI.
 - Mashaal shows developmental labels (`لم تبدأ / تتطور / متقنة`) without percentage scoring.
-- The 25 documented skills / 24 ready activities / recitation blocker remain readable.
+- The 25 documented skills / 25 ready activities are readable.
 - Long skill lists do not break the tab/navigation layout.
 
 ### 9. Offline/PWA smoke check
 
 After one successful online load/install:
 - Open Mashaal home once.
+- Open the Surat Al-Ikhlas recitation activity once so the approved local media path is exercised.
 - Disable network.
 - Re-open the installed PWA or refresh the app shell.
 - Confirm Mashaal home/domain/non-recitation activities still load.
-- Do not mark recitation as passed until the approved local Al-Ikhlas asset is actually installed and precached.
+- Confirm the Surat Al-Ikhlas activity still opens and the approved local Ibrahim Al-Akhdar recitation plays while offline.
+- Treat any synthetic TTS fallback for Quran recitation as a FAIL.
 
 ## Evidence to record
 
@@ -123,6 +125,7 @@ For each orientation capture:
 - One single-choice activity.
 - One ordered/multi-step activity.
 - One completion-only activity.
+- Surat Al-Ikhlas recitation activity.
 - Mashaal parent report.
 
 Record:
