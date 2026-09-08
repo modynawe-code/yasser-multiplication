@@ -20,8 +20,12 @@ globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__=Object.freeze([
       "riwayah": "Hafs from Asim",
       "riwayahAr": "حفص عن عاصم",
       "pageNumber": 604,
-      "imageUrl": "https://raw.githubusercontent.com/quranpedia/quran-svg/main/mushafs/hafs/kfqc/svg/604.svg",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/quranpedia/quran-svg@b91d39e1065b57bdda3e94aca8ecf3575e50e1e6/mushafs/hafs/kfqc/svg/604.svg",
+      "fallbackImageUrls": Object.freeze([
+        "https://raw.githubusercontent.com/quranpedia/quran-svg/b91d39e1065b57bdda3e94aca8ecf3575e50e1e6/mushafs/hafs/kfqc/svg/604.svg"
+      ]),
       "distributionRepository": "https://github.com/quranpedia/quran-svg",
+      "distributionCommit": "b91d39e1065b57bdda3e94aca8ecf3575e50e1e6",
       "sourceNotice": "https://github.com/quranpedia/quran-svg/blob/main/NOTICE.md",
       "offlineBundled": false,
       "imageAspectRatio": 0.6272727273,
