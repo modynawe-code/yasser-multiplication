@@ -43,7 +43,8 @@ export function ensureGamesShell(){
 
         <div class="xo-lobby-card">
           <section class="xo-local-choice" aria-label="اللعب على نفس الجهاز">
-            <div><strong>على نفس الجهاز</strong><span>ياسر وخالد يتناوبون على هذا الجهاز.</span></div>
+            <div class="xo-local-copy"><strong>على نفس الجهاز</strong><span>اختر لاعبين ثم ابدأ الجولة.</span></div>
+            <div class="xo-lobby-players xo-local-players" id="xoLocalPlayers" role="group" aria-label="اختيار لاعبين على هذا الجهاز"></div>
             <button class="btn primary" id="xoLocalStart">ابدأ اللعب</button>
           </section>
 
@@ -51,10 +52,7 @@ export function ensureGamesShell(){
 
           <section class="xo-online-choice" aria-label="اللعب أونلاين">
             <div class="xo-lobby-copy"><h2>بين جهازين أونلاين</h2><p>اختر صاحب هذا الجهاز أولًا.</p></div>
-            <div class="xo-lobby-players" role="group" aria-label="اختيار اللاعب لهذا الجهاز">
-              <button class="xo-lobby-player yasser" data-xo-learner="yasser"><img src="assets/visual/original/yasser/welcome.png" alt=""><strong>ياسر</strong></button>
-              <button class="xo-lobby-player khaled" data-xo-learner="khaled"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt=""><strong>خالد</strong></button>
-            </div>
+            <div class="xo-lobby-players" id="xoOnlinePlayers" role="group" aria-label="اختيار اللاعب لهذا الجهاز"></div>
             <button class="btn secondary xo-create-room" id="xoOnlineCreate">إنشاء غرفة أونلاين</button>
 
             <div class="xo-room-join">
@@ -73,7 +71,7 @@ export function ensureGamesShell(){
       <div class="games-shell xo-shell">
         <header class="games-header xo-header">
           <button class="icon-btn" id="xoBackToGames" data-nav="back">الألعاب</button>
-          <div><div class="kicker">إكس أو التعليمية</div><h1>ياسر ضد خالد</h1><p id="xoModeLabel">نسخة محلية — جهاز واحد</p></div>
+          <div><div class="kicker">إكس أو التعليمية</div><h1 id="xoMatchTitle">إكس أو</h1><p id="xoModeLabel">نسخة محلية — جهاز واحد</p></div>
           <button class="btn secondary xo-reset" id="xoReset">جولة جديدة</button>
         </header>
 
@@ -84,18 +82,18 @@ export function ensureGamesShell(){
 
           <section class="xo-play-panel" aria-label="الدور والسؤال">
             <div class="xo-player-strip" aria-label="اللاعبون">
-              <article class="xo-player-card yasser" id="xoPlayerYasser">
-                <div class="xo-player-avatar"><img src="assets/visual/original/yasser/welcome.png" alt="" decoding="async"></div>
-                <div><strong>ياسر</strong><span>الأزرق</span></div>
+              <article class="xo-player-card" id="xoPlayerA" data-xo-player-slot="0">
+                <div class="xo-player-avatar" id="xoPlayerAAvatar"></div>
+                <div><strong id="xoPlayerAName">اللاعب الأول</strong><span>اللاعب الأول</span></div>
               </article>
               <div class="xo-turn-panel" role="status" aria-live="polite">
                 <small>الدور الآن</small>
-                <strong id="xoTurnName">ياسر</strong>
+                <strong id="xoTurnName">—</strong>
                 <span id="xoStatusText">جاوب ثم اختر مربعًا</span>
               </div>
-              <article class="xo-player-card khaled" id="xoPlayerKhaled">
-                <div class="xo-player-avatar"><img src="assets/visual/original/khaled/khaled-point-thumbsup.png" alt="" decoding="async"></div>
-                <div><strong>خالد</strong><span>البرتقالي</span></div>
+              <article class="xo-player-card" id="xoPlayerB" data-xo-player-slot="1">
+                <div class="xo-player-avatar" id="xoPlayerBAvatar"></div>
+                <div><strong id="xoPlayerBName">اللاعب الثاني</strong><span>اللاعب الثاني</span></div>
               </article>
             </div>
 
