@@ -1,36 +1,32 @@
-const SYMBOLS=Object.freeze({
-  star:'⭐',ball:'⚽',heart:'❤️',door:'🚪',apple:'🍎',moon:'🌙',circle:'●',square:'■',box:'▣',
-  'red-circle':'🔴','blue-circle':'🔵','red-square':'🟥','yellow-square':'🟨',wake:'🌅','brush-teeth':'🪥',breakfast:'🥣',umbrella:'☂️',sunglasses:'🕶️',done:'تم ✓',
-  happy:'😊 فرحانة',sad:'😢 حزينة',angry:'😠 زعلانة','wait-turn':'🤝 أنتظر دوري','grab-ball':'✋ آخذ الكرة','walk-away-angry':'😠 أبتعد وأنا غاضبة',
-  'ask-help':'🙋 أطلب المساعدة','throw-blocks':'🧱 أرمي المكعبات','kick-blocks':'🦶 أركل المكعبات','wet-hands':'💧 أبلل يدي','soap':'🧼 أستخدم الصابون','rub-hands':'👐 أفرك يدي','rinse-hands':'🚿 أشطف يدي',
-  'stay-away':'↩️ أبتعد','touch-hot':'✋ ألمس','play-near-hot':'⚽ ألعب قربه','return-book':'📚 أرجع الكتاب','leave-book-floor':'📖 أتركه على الأرض','damage-book':'✂️ أتلفه',
-  'help-tidy':'🧺 أساعد في الترتيب','leave-mess':'🚶 أترك المكان','scatter-toys':'🧸 أنثر الألعاب','saudi-flag':'🇸🇦','japan-flag':'🇯🇵','brazil-flag':'🇧🇷',
-  doctor:'🩺 طبيب',teacher:'👩‍🏫 معلمة',baker:'🥖 خباز'
+const LABELS=Object.freeze({
+  star:'نجمة',ball:'كرة',heart:'قلب',door:'باب',apple:'تفاحة',moon:'قمر',circle:'دائرة',square:'مربع',box:'صندوق',
+  'red-circle':'دائرة حمراء','blue-circle':'دائرة زرقاء','red-square':'مربع أحمر','yellow-square':'مربع أصفر',wake:'استيقاظ','brush-teeth':'تنظيف الأسنان',breakfast:'فطور',umbrella:'مظلة',sunglasses:'نظارة شمسية',done:'تم',
+  happy:'فرحانة',sad:'حزينة',angry:'زعلانة','wait-turn':'أنتظر دوري','grab-ball':'آخذ الكرة','walk-away-angry':'أبتعد وأنا غاضبة',
+  'ask-help':'أطلب المساعدة','throw-blocks':'أرمي المكعبات','kick-blocks':'أركل المكعبات','wet-hands':'أبلل يدي','soap':'أستخدم الصابون','rub-hands':'أفرك يدي','rinse-hands':'أشطف يدي',
+  'stay-away':'أبتعد','touch-hot':'ألمس','play-near-hot':'ألعب قربه','return-book':'أرجع الكتاب','leave-book-floor':'أتركه على الأرض','damage-book':'أتلفه',
+  'help-tidy':'أساعد في الترتيب','leave-mess':'أترك المكان','scatter-toys':'أنثر الألعاب','saudi-flag':'علم السعودية','japan-flag':'علم اليابان','brazil-flag':'علم البرازيل',
+  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق'
 });
 
-const tokenLabel=(token)=>({left:'المجموعة الأولى',right:'المجموعة الثانية',circle:'●',star:'⭐',square:'■','ball-above-box':'⚽\n▣','ball-inside-box':'▣ ⚽','ball-below-box':'▣\n⚽'}[token]||SYMBOLS[token]||String(token));
-const SCENES=Object.freeze({
-  'girl-drinking-water':'👧 💧','rainy-day':'🌧️ 👧','girl-lost-toy':'👧 🧸 ❓','two-children-one-ball':'👧 ⚽ 👧','fallen-block-tower':'👧 🧱💥','hot-surface':'🔥 ⚠️',
-  'borrowed-book':'👧 📖 📚','playtime-cleanup':'🧸 🧺 👧👧','flags':'🇸🇦 🇯🇵 🇧🇷','clinic':'🤒 🏥'
-});
+const tokenLabel=(token)=>LABELS[token]||String(token);
 
 function stimulusModel(stimulus={}){
   switch(stimulus.kind){
-    case 'ordered-actions':return {kind:'instruction',text:'🔊'};
-    case 'initial-sound':return {kind:'sound',text:`/${stimulus.sound||''}/`};
-    case 'letter-sound':return {kind:'sound',text:`/${stimulus.sound||''}/`};
-    case 'countable-set':return {kind:'items',items:Array.from({length:stimulus.count||0},()=>SYMBOLS[stimulus.item]||'●')};
-    case 'group-comparison':return {kind:'groups',groups:[Array.from({length:stimulus.leftCount||0},()=> '●'),Array.from({length:stimulus.rightCount||0},()=> '●')]};
-    case 'attribute-sort':return {kind:'instruction',text:'👆'};
-    case 'pattern':return {kind:'sequence',items:(stimulus.sequence||[]).map(tokenLabel)};
-    case 'spatial-relation':return {kind:'relation',text:stimulus.relation==='above'?'⚽\n▣':`${stimulus.subject||''} ${stimulus.relation||''} ${stimulus.reference||''}`};
-    case 'picture-scene':return {kind:'picture',text:SCENES[stimulus.scene]||'🖼️'};
-    case 'trace-path':return {kind:'trace',text:stimulus.path==='wave'?'● 〰️〰️〰️ ⭐':'● ─── ⭐'};
-    case 'emotion-prompt':return {kind:'picture',text:'😊 😢 😠 ❤️'};
-    case 'movement':return {kind:'picture',text:stimulus.movement==='balance-one-foot'?'🧍‍♀️ ⚖️':'🤸‍♀️'};
-    case 'fine-motor':return {kind:'picture',text:'🤏 ● ● ● ➜ 🥣'};
+    case 'ordered-actions':return {kind:'ordered-actions',items:[...(stimulus.actions||[])]};
+    case 'initial-sound':return {kind:'sound',sound:stimulus.sound||''};
+    case 'letter-sound':return {kind:'sound',sound:stimulus.sound||''};
+    case 'countable-set':return {kind:'items',item:stimulus.item||'circle',count:stimulus.count||0};
+    case 'group-comparison':return {kind:'groups',leftCount:stimulus.leftCount||0,rightCount:stimulus.rightCount||0,item:'circle'};
+    case 'attribute-sort':return {kind:'sort',attribute:stimulus.attribute||'',target:stimulus.target||''};
+    case 'pattern':return {kind:'sequence',items:[...(stimulus.sequence||[])]};
+    case 'spatial-relation':return {kind:'relation',relation:stimulus.relation||'',subject:stimulus.subject||'',reference:stimulus.reference||''};
+    case 'picture-scene':return {kind:'picture',scene:stimulus.scene||''};
+    case 'trace-path':return {kind:'trace',path:stimulus.path||'wave'};
+    case 'emotion-prompt':return {kind:'emotion-prompt'};
+    case 'movement':return {kind:'movement',movement:stimulus.movement||''};
+    case 'fine-motor':return {kind:'fine-motor',task:stimulus.task||''};
     case 'recitation-audio':return {kind:'recitation',surahNameAr:stimulus.surahNameAr||'تلاوة قصيرة',surahNumber:stimulus.surahNumber||null};
-    default:return {kind:'text',text:''};
+    default:return {kind:'text'};
   }
 }
 
@@ -45,7 +41,7 @@ export function createMashaalActivityViewModel(activity){
     promptAr:activity.promptAr,
     audioPromptAr:activity.audioPromptAr,
     stimulus:Object.freeze(stimulusModel(activity.stimulus)),
-    choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),
+    choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value),visualKey:String(value)}))),
     multiSelect,
     orderedSequence,
     completionOnly,
