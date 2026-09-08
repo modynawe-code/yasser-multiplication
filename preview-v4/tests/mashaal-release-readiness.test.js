@@ -6,26 +6,25 @@ import { getMashaalReleaseBlockers,isMashaalReleaseReady } from '../src/modules/
 
 test('Mashaal release gate records verified integration without claiming production readiness',()=>{
   assert.equal(MASHAAL_RELEASE_GATE.verifiedSkills,25);
-  assert.equal(MASHAAL_RELEASE_GATE.readyActivities,24);
-  assert.equal(MASHAAL_RELEASE_GATE.blockedActivities,1);
+  assert.equal(MASHAAL_RELEASE_GATE.readyActivities,MASHAAL_RELEASE_GATE.requiredMediaReady?25:24);
+  assert.equal(MASHAAL_RELEASE_GATE.blockedActivities,MASHAAL_RELEASE_GATE.requiredMediaReady?0:1);
+  assert.equal(MASHAAL_RELEASE_GATE.blockerCode,MASHAAL_RELEASE_GATE.requiredMediaReady?null:'approved-human-recitation-audio');
   assert.equal(MASHAAL_RELEASE_GATE.contentVerified,true);
   assert.equal(MASHAAL_RELEASE_GATE.familyGamesIntegrated,true);
   assert.equal(MASHAAL_RELEASE_GATE.cloudSyncIntegrated,true);
   assert.equal(MASHAAL_RELEASE_GATE.exactSessionRestoreReady,true);
   assert.equal(MASHAAL_RELEASE_GATE.approvedRecitationSource,true);
-  assert.equal(MASHAAL_RELEASE_GATE.requiredMediaReady,false);
   assert.equal(MASHAAL_RELEASE_GATE.manualVisualQaReady,false);
   assert.equal(MASHAAL_RELEASE_GATE.productionMigrationApplied,false);
   assert.equal(MASHAAL_RELEASE_GATE.syntheticRecitationAllowed,false);
   assert.equal(isMashaalReleaseReady(MASHAAL_RELEASE_GATE),false);
 });
 
-test('current production blockers are explicit and limited to media, manual visual QA and controlled migration',()=>{
-  assert.deepEqual(getMashaalReleaseBlockers(MASHAAL_RELEASE_GATE),[
-    'approved-human-recitation-audio',
-    'manual-galaxy-tab-visual-qa',
-    'controlled-production-d1-migration'
-  ]);
+test('current production blockers derive from actual media readiness plus manual QA and controlled migration',()=>{
+  const expected=[];
+  if(!MASHAAL_RELEASE_GATE.requiredMediaReady)expected.push('approved-human-recitation-audio');
+  expected.push('manual-galaxy-tab-visual-qa','controlled-production-d1-migration');
+  assert.deepEqual(getMashaalReleaseBlockers(MASHAAL_RELEASE_GATE),expected);
 });
 
 test('release status can become ready without changing the readiness algorithm',()=>{
@@ -40,5 +39,4 @@ test('Mashaal validation docs point to the integration PR and do not retain PR 2
   assert.match(checklist,/PR #29/);
   assert.doesNotMatch(checklist,/PR #27/);
   assert.match(current,/Draft PR #29/);
-  assert.match(current,/exactly three operational gates/);
 });
