@@ -1,4 +1,5 @@
-const LEARNERS=new Set(['yasser','khaled']);
+import { normalizeLearnerSlug } from './learners.mjs';
+
 function isIsoDate(value){return typeof value==='string'&&!Number.isNaN(Date.parse(value));}
 function jsonSafe(value,max=2000){try{const text=JSON.stringify(value);return text.length<=max?text:null;}catch{return null;}}
 function integerOrNull(value){if(value==null||value==='')return null;const n=Number(value);return Number.isInteger(n)?n:null;}
@@ -6,14 +7,14 @@ function integerOrNull(value){if(value==null||value==='')return null;const n=Num
 export function validateAttemptPayload(input){
   if(!input||typeof input!=='object')return{ok:false,error:'invalid_attempt'};
   const attemptId=String(input.attemptId||'').trim();
-  const learnerId=String(input.learnerId||'').trim();
+  const learnerId=normalizeLearnerSlug(input.learnerId);
   const skillId=String(input.skillId||'').trim();
   const questionId=input.questionId==null?null:String(input.questionId).slice(0,180);
   const questionType=input.questionType==null?null:String(input.questionType).slice(0,80);
   const createdAt=String(input.createdAt||input.at||'');
   const table=integerOrNull(input.table),multiplier=integerOrNull(input.multiplier);
   if(!attemptId||attemptId.length>180)return{ok:false,error:'invalid_attempt_id'};
-  if(!LEARNERS.has(learnerId))return{ok:false,error:'invalid_learner'};
+  if(!learnerId)return{ok:false,error:'invalid_learner'};
   if(!skillId||skillId.length>120)return{ok:false,error:'invalid_skill'};
   if(!isIsoDate(createdAt))return{ok:false,error:'invalid_created_at'};
   if(learnerId==='yasser'&&(!(table>=1&&table<=10)||!(multiplier>=1&&multiplier<=10)))return{ok:false,error:'invalid_yasser_fact'};
@@ -34,8 +35,8 @@ export function validateAttemptBatch(body,{maxBatch=250}={}){
 
 export function validateSessionPayload(input){
   if(!input||typeof input!=='object')return{ok:false,error:'invalid_session'};
-  const sessionId=String(input.sessionId||'').trim(),learnerId=String(input.learnerId||'').trim();
-  if(!sessionId||sessionId.length>180||!LEARNERS.has(learnerId))return{ok:false,error:'invalid_session_identity'};
+  const sessionId=String(input.sessionId||'').trim(),learnerId=normalizeLearnerSlug(input.learnerId);
+  if(!sessionId||sessionId.length>180||!learnerId)return{ok:false,error:'invalid_session_identity'};
   return{ok:true,value:{
     sessionId,learnerId,skillId:input.skillId==null?null:String(input.skillId).slice(0,120),mode:input.mode==null?null:String(input.mode).slice(0,40),
     startedAt:isIsoDate(input.startedAt)?input.startedAt:null,endedAt:isIsoDate(input.endedAt)?input.endedAt:null,
