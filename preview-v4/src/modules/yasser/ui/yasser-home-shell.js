@@ -51,6 +51,15 @@ export function ensureYasserHomeShell(){
             <button class="btn secondary" id="startLearn">مراجعة سريعة</button>
             <button class="btn exam" id="startExam">اختبار • 30 سؤالًا</button>
           </div>
+
+          <section class="yasser-home-progress" aria-label="تقدم ياسر">
+            <div class="yasser-home-progress-head"><strong>تقدمي</strong><span>ملخص سريع بدون فتح تقرير ولي الأمر</span></div>
+            <div class="yasser-home-progress-metrics">
+              <div><span>محاولاتي</span><strong id="miniAttempts">0</strong></div>
+              <div><span>تحتاج مراجعة</span><strong id="miniErrors">0</strong></div>
+            </div>
+            <div class="progress-grid yasser-home-progress-grid" id="progressList"></div>
+          </section>
           <noscript><p class="no-js">افتح الصفحة في Chrome أو Samsung Internet لبدء التدريب وحفظ النتائج.</p></noscript>
         </section>
       </article>
