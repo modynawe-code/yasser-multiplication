@@ -1,23 +1,22 @@
 const SYMBOLS=Object.freeze({
-  star:'⭐',ball:'⚽',apple:'🍎',circle:'●',square:'■',box:'▣',
-  'red-circle':'🔴','blue-circle':'🔵','red-star':'⭐','yellow-star':'🌟'
+  star:'⭐',ball:'⚽',heart:'❤️',door:'🚪',apple:'🍎',moon:'🌙',circle:'●',square:'■',box:'▣',
+  'red-circle':'🔴','blue-circle':'🔵','red-square':'🟥','yellow-square':'🟨'
 });
 
 const tokenLabel=(token)=>({
   left:'المجموعة الأولى',right:'المجموعة الثانية',
-  'star-then-ball':'⭐ ثم ⚽','ball-then-star':'⚽ ثم ⭐','star-only':'⭐ فقط',
   circle:'●',star:'⭐',square:'■',
-  'ball-above-box':'⚽ فوق الصندوق','ball-inside-box':'⚽ داخل الصندوق','ball-below-box':'⚽ تحت الصندوق'
+  'ball-above-box':'⚽\n▣','ball-inside-box':'▣ ⚽','ball-below-box':'▣\n⚽'
 }[token]||SYMBOLS[token]||String(token));
 
 function stimulusModel(stimulus={}){
   switch(stimulus.kind){
-    case 'ordered-actions':return {kind:'sequence',items:(stimulus.actions||[]).map(tokenLabel)};
+    case 'ordered-actions':return {kind:'instruction',text:'🔊'};
     case 'initial-sound':return {kind:'sound',text:`/${stimulus.sound||''}/`};
     case 'letter-sound':return {kind:'sound',text:`/${stimulus.sound||''}/`};
     case 'countable-set':return {kind:'items',items:Array.from({length:stimulus.count||0},()=>SYMBOLS[stimulus.item]||'●')};
     case 'group-comparison':return {kind:'groups',groups:[Array.from({length:stimulus.leftCount||0},()=> '●'),Array.from({length:stimulus.rightCount||0},()=> '●')]};
-    case 'attribute-sort':return {kind:'items',items:[]};
+    case 'attribute-sort':return {kind:'instruction',text:'👆'};
     case 'pattern':return {kind:'sequence',items:(stimulus.sequence||[]).map(tokenLabel)};
     case 'spatial-relation':return {kind:'relation',text:stimulus.relation==='above'?'⚽\n▣':`${stimulus.subject||''} ${stimulus.relation||''} ${stimulus.reference||''}`};
     default:return {kind:'text',text:''};
@@ -26,6 +25,8 @@ function stimulusModel(stimulus={}){
 
 export function createMashaalActivityViewModel(activity){
   if(!activity)return null;
+  const orderedSequence=activity.stimulus?.kind==='ordered-actions';
+  const multiSelect=activity.interaction==='sorting';
   return Object.freeze({
     id:activity.id,
     skillId:activity.skillId,
@@ -34,14 +35,17 @@ export function createMashaalActivityViewModel(activity){
     audioPromptAr:activity.audioPromptAr,
     stimulus:Object.freeze(stimulusModel(activity.stimulus)),
     choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),
-    multiSelect:activity.interaction==='sorting',
-    correctValues:Object.freeze(activity.interaction==='sorting'?String(activity.correctChoice||'').split('|').filter(Boolean):[String(activity.correctChoice||'')])
+    multiSelect,
+    orderedSequence,
+    correctValues:Object.freeze(orderedSequence?[...(activity.stimulus?.actions||[])]:multiSelect?String(activity.correctChoice||'').split('|').filter(Boolean):[String(activity.correctChoice||'')])
   });
 }
 
 export function isMashaalActivityAnswerCorrect(viewModel,answer){
   if(!viewModel)return false;
-  const expected=[...viewModel.correctValues].sort();
-  const received=(Array.isArray(answer)?answer:[answer]).map(String).sort();
+  const expected=[...viewModel.correctValues];
+  const received=(Array.isArray(answer)?answer:[answer]).map(String);
+  if(viewModel.orderedSequence)return expected.length===received.length&&expected.every((value,index)=>value===received[index]);
+  expected.sort();received.sort();
   return expected.length===received.length&&expected.every((value,index)=>value===received[index]);
 }
