@@ -1,0 +1,15 @@
+.mashaal-media-visual{display:grid;place-items:center;width:112px;height:100px;border-radius:22px;background:#fff;border:1px solid #eadff1;overflow:hidden;box-shadow:0 6px 14px rgba(70,47,78,.06)}
+.mashaal-media-visual.compact{width:74px;height:66px;border-radius:16px;box-shadow:none}
+.mashaal-media-visual img{display:block;width:100%;height:100%;object-fit:contain;padding:6px;box-sizing:border-box}
+.mashaal-media-visual[data-media-kind="flag"]{width:min(150px,100%);height:104px;border-radius:18px;background:#f8f8f8}
+.mashaal-media-visual[data-media-kind="flag"] img{padding:0;object-fit:cover}
+.mashaal-choice .mashaal-media-visual{width:min(150px,100%);height:108px}
+.mashaal-choice .mashaal-media-visual img{padding:7px}
+.mashaal-skill-preview{position:relative;isolation:isolate}
+.mashaal-skill-domain-art{position:absolute;inset:0;z-index:0;width:100%!important;height:100%!important;object-fit:contain;opacity:.2;filter:saturate(.85)}
+.mashaal-skill-concept{position:relative;z-index:1;width:100%;height:100%;display:grid;place-items:center}
+.mashaal-skill-concept .mashaal-generated-stimulus{background:transparent}
+.mashaal-choice--completion{min-height:74px!important;width:min(260px,100%);justify-self:center;align-self:center;background:#fff7fd;border-color:#d9bdd3}
+.mashaal-choice--completion .mashaal-choice-visual{display:none}
+.mashaal-choice--completion .mashaal-choice-label{font-size:22px}
+@media(max-width:760px){.mashaal-media-visual{width:96px;height:88px}.mashaal-choice .mashaal-media-visual{height:96px}}
