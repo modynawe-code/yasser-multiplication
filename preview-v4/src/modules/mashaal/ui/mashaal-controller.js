@@ -60,7 +60,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     }
   }
   function renderStimulus(model){
-    const host=byId('mashaalActivityStimulus');if(!host)return null;host.innerHTML='';host.setAttribute('aria-hidden','true');host.classList.remove('mashaal-stimulus-choice-owned');const stimulus=model?.stimulus||{};
+    const host=byId('mashaalActivityStimulus');if(!host)return null;host.innerHTML='';host.hidden=false;host.setAttribute('aria-hidden','true');const stimulus=model?.stimulus||{};
     if(stimulus.kind==='recitation'){
       return mountQuranSurahPlayer(host,{
         surahNameAr:stimulus.surahNameAr,
@@ -74,7 +74,7 @@ export function createMashaalController({repository,onExitToHub}={}){
       });
     }
     if(stimulus.kind==='groups'){
-      host.classList.add('mashaal-stimulus-choice-owned');
+      host.hidden=true;
       return null;
     }
     host.appendChild(createMashaalStimulusVisual(stimulus,{domainId:currentDomain?.id||null}));return null;
@@ -94,7 +94,7 @@ export function createMashaalController({repository,onExitToHub}={}){
   function exit(){leave();onExitToHub?.();}
 
   function renderActivityChoices(){
-    const host=byId('mashaalActivityChoices');if(!host||!currentViewModel)return;host.innerHTML='';clearSelections();
+    const host=byId('mashaalActivityChoices');if(!host||!currentViewModel)return;host.innerHTML='';host.style.gridTemplateColumns=currentViewModel.stimulus.kind==='groups'?'repeat(2,minmax(0,1fr))':'';clearSelections();
     const check=byId('mashaalActivityCheck');if(check){check.hidden=!currentViewModel.multiSelect;check.disabled=false;}
     for(const choice of currentViewModel.choices){
       const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.setAttribute('aria-label',choice.label);
