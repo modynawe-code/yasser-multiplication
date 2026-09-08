@@ -33,6 +33,7 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 - The approved recitation source remains King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim, limited to Surat Al-Ikhlas (112).
 - `tools/import-mashaal-recitation.mjs` is the required import path for the official `akhdar-sura.zip`: it identifies Surah 112 explicitly, refuses ambiguous/non-112 selections, extracts only that MP3, validates MP3 structure, computes SHA-256, and generates the local media data record.
 - The importer being ready does not mean recitation media is ready; release remains blocked until the official package is actually processed and the extracted local asset is committed.
+- `GALAXY_TAB_VISUAL_QA.md` plus the tablet QA contract test define the required landscape/portrait device matrix. Automated QA preparation is tracked separately from the real-device result: `visualQaContractReady:true` does not satisfy `manualVisualQaReady:false`.
 
 ## Compatibility contracts that must remain green
 
@@ -50,10 +51,10 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 Technical integration success is not the same as production readiness. Mashaal release readiness must remain false until all three operational blockers are cleared:
 
 1. approved local Surat Al-Ikhlas human-recitation asset is present and SHA-256 verified;
-2. manual Galaxy Tab visual QA passes in landscape and portrait;
+2. manual Galaxy Tab visual QA passes on the actual target device in landscape and portrait;
 3. reviewed D1 migrations are applied during the controlled production rollout.
 
-`release-gate.js` and `release-status.js` encode these blockers and must not silently weaken them.
+`release-gate.js` and `release-status.js` encode these blockers and must not silently weaken them. The visual-QA preparation flag is a required architectural contract, but it cannot replace the manual pass flag.
 
 ## Gate rule
 
@@ -66,8 +67,8 @@ Do not move to the next architectural layer until:
 
 ## Current verified gate
 
-Latest verified implementation head: `c16a17b2d0876aba85a4b4bd35eaa6cb7aaa85d1`.
+Latest verified implementation head: `8eb251c0dd911108e060271ef7c6ee7969bd0770`.
 
-`Preview V4 CI` run #1472 completed successfully for that head. Learning-app tests, the recitation ZIP importer tests, human-voice inventory, and family-backend tests are green. The recitation blocker is therefore narrowed to obtaining and importing the official KFGQPC package itself; no mirror audio is accepted as a substitute.
+`Preview V4 CI` run #1488 completed successfully for that head. Learning-app tests, the recitation importer, tablet QA contract, release-readiness tests, human-voice inventory, and family-backend tests are green. The current release-readiness test confirms exactly three operational blockers: approved Al-Ikhlas media, real Galaxy Tab visual QA, and controlled production D1 migration.
 
-The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, explicit release blockers, and the verified recitation-import path rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
+The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, explicit release blockers, verified recitation-import path, and separate visual-QA preparation/manual-evidence gates rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
