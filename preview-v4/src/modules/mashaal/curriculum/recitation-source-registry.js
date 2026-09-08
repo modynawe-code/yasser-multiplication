@@ -1,3 +1,5 @@
+import { listVerifiedMashaalRecitationAssets } from './recitation-media-manifest.js';
+
 const KFGQPC_AUDIO_RIGHTS_URL='https://qc-dev.qurancomplex.gov.sa/quran-audios/';
 
 export const MASHAAL_RECITATION_SOURCES=Object.freeze({
@@ -16,9 +18,7 @@ export const MASHAAL_RECITATION_SOURCES=Object.freeze({
     sourcePage:'https://qurancomplex.gov.sa/quran-audio-hafs-akhdar/',
     sourcePackage:'https://download.qurancomplex.gov.sa/new-sounds/akhdar/hafs/akhdar-sura.zip',
     childLearningMode:Object.freeze(['listen','repeat','replay']),
-    syntheticRecitationAllowed:false,
-    localMediaReady:false,
-    localAssets:Object.freeze([])
+    syntheticRecitationAllowed:false
   })
 });
 
@@ -29,11 +29,12 @@ export function getMashaalRecitationSource(id=MASHAAL_DEFAULT_RECITATION_SOURCE_
 }
 
 export function getMashaalRecitationMediaStatus(id=MASHAAL_DEFAULT_RECITATION_SOURCE_ID){
-  const source=getMashaalRecitationSource(id);
+  const source=getMashaalRecitationSource(id),localAssets=source?listVerifiedMashaalRecitationAssets(source.id):[];
   return Object.freeze({
     sourceId:source?.id||null,
     sourceApproved:Boolean(source?.sourceApproved&&source?.humanVoice&&source?.rightsStatus==='explicit-public-use-for-applications'),
-    localMediaReady:Boolean(source?.localMediaReady&&source?.localAssets?.length),
+    localMediaReady:localAssets.length>0,
+    localAssets:Object.freeze([...localAssets]),
     syntheticRecitationAllowed:Boolean(source?.syntheticRecitationAllowed)
   });
 }
