@@ -29,14 +29,15 @@ function stimulusModel(stimulus={}){
     case 'emotion-prompt':return {kind:'picture',text:'😊 😢 😠 ❤️'};
     case 'movement':return {kind:'picture',text:stimulus.movement==='balance-one-foot'?'🧍‍♀️ ⚖️':'🤸‍♀️'};
     case 'fine-motor':return {kind:'picture',text:'🤏 ● ● ● ➜ 🥣'};
+    case 'recitation-audio':return {kind:'recitation',text:`📖 ${stimulus.surahNameAr||'تلاوة قصيرة'}`};
     default:return {kind:'text',text:''};
   }
 }
 
 export function createMashaalActivityViewModel(activity){
   if(!activity)return null;
-  const orderedSequence=activity.stimulus?.kind==='ordered-actions',multiSelect=activity.interaction==='sorting',completionOnly=activity.evidenceType==='activity-completion';
-  return Object.freeze({id:activity.id,skillId:activity.skillId,interaction:activity.interaction,evidenceType:activity.evidenceType,promptAr:activity.promptAr,audioPromptAr:activity.audioPromptAr,stimulus:Object.freeze(stimulusModel(activity.stimulus)),choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),multiSelect,orderedSequence,completionOnly,correctValues:Object.freeze(completionOnly?[]:orderedSequence?[...(activity.stimulus?.actions||[])]:multiSelect?String(activity.correctChoice||'').split('|').filter(Boolean):[String(activity.correctChoice||'')])});
+  const orderedSequence=activity.stimulus?.kind==='ordered-actions',multiSelect=activity.interaction==='sorting',completionOnly=activity.evidenceType==='activity-completion',requiresHumanRecitation=activity.stimulus?.kind==='recitation-audio';
+  return Object.freeze({id:activity.id,skillId:activity.skillId,interaction:activity.interaction,evidenceType:activity.evidenceType,promptAr:activity.promptAr,audioPromptAr:activity.audioPromptAr,stimulus:Object.freeze(stimulusModel(activity.stimulus)),choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),multiSelect,orderedSequence,completionOnly,requiresHumanRecitation,recitationAudioPath:requiresHumanRecitation?activity.mediaPath:null,correctValues:Object.freeze(completionOnly?[]:orderedSequence?[...(activity.stimulus?.actions||[])]:multiSelect?String(activity.correctChoice||'').split('|').filter(Boolean):[String(activity.correctChoice||'')])});
 }
 
 export function isMashaalActivityAnswerCorrect(viewModel,answer){
