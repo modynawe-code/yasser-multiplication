@@ -1,12 +1,12 @@
 import { createParentAccessGate } from '../../shared/security/parent-access.js';
 import { getLearnerProfile } from '../../shared/learners/learner-registry.js';
-import { familyOverview, familyYasserReport, familyKhaledReport, familyMashaalReport, familyGenericLearnerReport, familySessions } from './family-parent-renderers.js';
+import { familyOverviewEntries,familySessionEntries,familyGenericLearnerReport } from './family-parent-renderers.js';
 
 function byId(id){return document.getElementById(id);}
 function all(selector){return[...document.querySelectorAll(selector)];}
 function show(id){all('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
 
-export function createFamilyParentController({getYasserState,getKhaledState,getMashaalState=()=>({evidenceLog:[],sessions:[]}),onExitToHub,cloudAuth=null,cloudSync=null,onCloudRestore=null}={}){
+export function createFamilyParentController({reportCapabilities,onExitToHub,cloudAuth=null,cloudSync=null,onCloudRestore=null}={}){
   let bound=false;
   const access=createParentAccessGate();
 
@@ -26,28 +26,26 @@ export function createFamilyParentController({getYasserState,getKhaledState,getM
     byId('familyCloudAccount').textContent=session.email||'حساب ولي الأمر';
     const status=byId('familyCloudStatus');
     byId('familyCloudSync').onclick=async()=>{try{status.textContent='جاري رفع السجل…';const result=await cloudSync.upload();status.textContent=`تمت المزامنة: ${result.attempts} محاولة و${result.evidence||0} دليل تعلم.`;}catch{status.textContent='تعذرت المزامنة الآن. البيانات المحلية لم تُحذف.';}};
-    byId('familyCloudRestore').onclick=async()=>{try{status.textContent='جاري استعادة السجل…';const result=await cloudSync.restore();status.textContent=`تمت الاستعادة. ياسر +${result.appliedYasser}، خالد +${result.appliedKhaled}، مشاعل +${result.appliedMashaal||0}.`;onCloudRestore?.(result);}catch{status.textContent='تعذرت الاستعادة. لم يتم حذف البيانات المحلية.';}};
+    byId('familyCloudRestore').onclick=async()=>{try{status.textContent='جاري استعادة السجل…';const result=await cloudSync.restore();status.textContent='تمت استعادة سجلات التعلم المتاحة من السحابة.';onCloudRestore?.(result);}catch{status.textContent='تعذرت الاستعادة. لم يتم حذف البيانات المحلية.';}};
     byId('familyCloudLogout').onclick=async()=>{await cloudAuth.logout();render('overview');};
   }
 
-  function reportForTab(tab,yasser,khaled,mashaal){
-    if(tab==='overview')return familyOverview(yasser,khaled,mashaal);
-    if(tab==='yasser')return familyYasserReport(yasser);
-    if(tab==='khaled')return familyKhaledReport(khaled);
-    if(tab==='mashaal')return familyMashaalReport(mashaal);
-    if(tab==='sessions')return familySessions(yasser,khaled,mashaal);
+  function reportForTab(tab){
+    if(tab==='overview')return familyOverviewEntries(reportCapabilities?.overviewEntries?.()||[]);
+    if(tab==='sessions')return familySessionEntries(reportCapabilities?.sessionEntries?.()||[]);
+    const capability=reportCapabilities?.get?.(tab);
+    if(capability)return capability.renderReport(capability.getState(),capability.profile);
     return familyGenericLearnerReport(getLearnerProfile(tab));
   }
 
   function render(tab='overview'){
-    const yasser=getYasserState(),khaled=getKhaledState(),mashaal=getMashaalState();
     all('[data-family-parent-tab]').forEach(button=>button.classList.toggle('active',button.dataset.familyParentTab===tab));
     const content=byId('familyParentContent');if(!content)return;
-    content.innerHTML=reportForTab(tab,yasser,khaled,mashaal);
+    content.innerHTML=reportForTab(tab);
     if(tab==='overview')cloudPanel(content);
     const exportButton=byId('familyExportBtn');
     if(exportButton)exportButton.onclick=()=>{
-      const payload={schemaVersion:3,type:'family-learning-backup',exportedAt:new Date().toISOString(),learners:{yasser:getYasserState(),khaled:getKhaledState(),mashaal:getMashaalState()}};
+      const payload={schemaVersion:4,type:'family-learning-backup',exportedAt:new Date().toISOString(),learners:reportCapabilities?.exportStates?.()||{}};
       const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),anchor=document.createElement('a');
       anchor.href=url;anchor.download=`family-learning-results-${new Date().toISOString().slice(0,10)}.json`;anchor.click();URL.revokeObjectURL(url);
     };
