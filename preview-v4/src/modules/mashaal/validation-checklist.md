@@ -9,12 +9,15 @@
 - [x] Ordered and multi-select choices expose accessible pressed state.
 - [x] Family Hub and parent-report layouts scale to future learners without fixed desktop child counts.
 - [x] Parent report derives Mashaal state from the same curriculum/activity plan and shows no child percentage score.
-- [x] Offline PWA shell includes Mashaal runtime and parent-report dependencies.
+- [x] Full games/rewards integration preserves Yasser and Khaled while keeping Mashaal developmental rewards separate.
+- [x] Cloud sync is learner-neutral and restores exact stage-specific sessions without duplicating local/baseline history.
+- [x] Attempts, developmental evidence, and cloud session history are append-only/idempotent.
+- [x] Offline PWA shell includes Mashaal runtime, parent-report, family-sync capability, and session-restore dependencies.
 - [x] Yasser regression coverage passes.
 - [x] Khaled regression coverage passes.
 - [x] Family backend regression coverage passes.
 - [x] Quran recitation runtime forbids synthetic recitation and is limited to Surat Al-Ikhlas (112).
 - [ ] Import the single approved Al-Ikhlas human-recitation file from King Fahd Glorious Quran Printing Complex and record SHA-256.
 - [ ] Run manual visual QA on the target Galaxy Tab-sized landscape and portrait viewports.
-- [ ] Apply the reviewed D1 migration only during controlled production rollout.
-- [ ] Merge PR #27 only after remaining release blockers are cleared.
+- [ ] Apply the reviewed D1 migrations only during controlled production rollout.
+- [ ] Merge PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves the merge.
