@@ -16,11 +16,19 @@ function legacyCardId(learnerId){
 function createFallbackVisual(profile){
   const visual=document.createElement('div');
   visual.className=`learner-placeholder ${profile.theme||''}`.trim();
+  const visualKey=String(profile.presentation?.fallbackVisual||'symbols').trim();
+  visual.dataset.visualKey=visualKey;
+
+  if(visualKey==='preschool-learning'){
+    for(const [className,text] of [['learner-preschool-flower','✿'],['learner-preschool-letter','أ'],['learner-preschool-number','١']]){
+      const span=document.createElement('span');span.className=className;span.textContent=text;visual.appendChild(span);
+    }
+    return visual;
+  }
+
   const symbols=String(profile.presentation?.symbol||'★').split(/\s+/).filter(Boolean).slice(0,2);
   for(const symbol of symbols.length?symbols:['★']){
-    const span=document.createElement('span');
-    span.textContent=symbol;
-    visual.appendChild(span);
+    const span=document.createElement('span');span.textContent=symbol;visual.appendChild(span);
   }
   return visual;
 }
