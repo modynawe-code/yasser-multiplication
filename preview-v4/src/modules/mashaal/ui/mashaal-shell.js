@@ -9,6 +9,7 @@ export function ensureMashaalShell(){
   const main=document.querySelector('main');
   if(!main||document.getElementById('mashaalHomeView'))return;
   ensureStyle('src/modules/mashaal/ui/mashaal.css','mashaal');
+  ensureStyle('src/modules/mashaal/ui/mashaal-home.css','mashaal-home');
 
   const wrapper=document.createElement('div');
   wrapper.innerHTML=`
