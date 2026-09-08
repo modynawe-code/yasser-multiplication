@@ -20,13 +20,14 @@ export function createMashaalRecitationActivities(skillId){
     indicatorRefs:Object.freeze(['IE 1.0.2','IE 1.0.3']),
     interaction:'listening',
     promptAr:`اسمعي سورة ${asset.surahNameAr} ثم رددي بهدوء.`,
-    audioPromptAr:`اضغطي زر الاستماع، اسمعي سورة ${asset.surahNameAr}، ثم رددي بعد القارئ.`,
+    audioPromptAr:`اضغطي تشغيل، اسمعي سورة ${asset.surahNameAr}، ثم رددي بعد القارئ.`,
     stimulus:Object.freeze({kind:'recitation-audio',surahNameAr:asset.surahNameAr,surahNumber:asset.surahNumber}),
     choices:Object.freeze(['done']),
     mediaSourceId:asset.sourceId,
     mediaAssetId:asset.id,
     mediaPath:asset.localPath,
     mediaSha256:asset.sha256,
+    mushafPage:asset.mushafPage?Object.freeze({...asset.mushafPage}):null,
     syntheticRecitationAllowed:false
   })));
 }
