@@ -21,8 +21,11 @@ function latestReward(summary){
   const latest=[...unlocks].sort((a,b)=>new Date(b?.at||0)-new Date(a?.at||0))[0];
   return REWARD_BY_ID[latest?.rewardId]||REWARD_BY_ID['mastery-cup'];
 }
+function ratioMarkup(current,total){
+  return `<bdi class="reward-ratio" dir="ltr">${safeNumber(current)} / ${safeNumber(total)}</bdi>`;
+}
 function imageMarkup(graphicKey,cssClass=''){
-  return `<img class="${cssClass}" data-reward-graphic="${graphicKey}" alt="" hidden loading="lazy" decoding="async"><span class="reward-cabinet-art-fallback" aria-hidden="true"></span>`;
+  return `<img class="${cssClass}" data-reward-graphic="${graphicKey}" alt="" hidden decoding="async"><span class="reward-cabinet-art-fallback" aria-hidden="true"></span>`;
 }
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="reward-cabinet"]'))return;
@@ -63,7 +66,7 @@ export function buildRewardCabinetMarkup({status={},excludeRewardId=null}={}){
   return REWARD_CATALOG.filter(item=>item.id!==excludeRewardId).map(item=>{
     const count=rewardCount(summary,item.id),unlocked=count>0,latest=latestUnlock(summary,item.id),date=formatUnlockDate(latest?.at);
     return `<article class="reward-cabinet-card ${unlocked?'unlocked':'locked'}" data-reward-id="${item.id}" data-unlocked="${unlocked}">
-      <div class="reward-cabinet-art">${imageMarkup(item.graphicKey)}${unlocked?'':'<span class="reward-cabinet-lock">قريبًا</span>'}</div>
+      <div class="reward-cabinet-art">${imageMarkup(item.graphicKey)}</div>
       <div class="reward-cabinet-copy"><strong>${item.label}</strong><span class="reward-state">${unlocked?'مفتوح':'مقفل'}</span>${count>1?`<small>مرات الفتح: ${count}</small>`:''}${date?`<small>آخر فتح: ${date}</small>`:''}</div>
     </article>`;
   }).join('');
@@ -75,9 +78,9 @@ function featureMarkup(status){
 }
 function challengeMarkup(status){
   const daily=Array.isArray(status?.challenges?.daily)?status.challenges.daily:[],weekly=Array.isArray(status?.challenges?.weekly)?status.challenges.weekly:[],items=[...daily,...weekly];
-  const rows=items.map(item=>`<div class="reward-challenge-item" data-complete="${Boolean(item?.complete)}"><div><strong>${item?.label||'تحدي تعلم'}</strong><span>${safeNumber(item?.current)} / ${Math.max(1,safeNumber(item?.target)||1)}</span></div><div class="reward-challenge-bar" role="progressbar" aria-label="${item?.label||'تقدم التحدي'}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100,safeNumber(item?.pct))}"><i style="width:${Math.min(100,safeNumber(item?.pct))}%"></i></div></div>`).join('');
+  const rows=items.map(item=>`<div class="reward-challenge-item" data-complete="${Boolean(item?.complete)}"><div><strong>${item?.label||'تحدي تعلم'}</strong><span>${ratioMarkup(safeNumber(item?.current),Math.max(1,safeNumber(item?.target)||1))}</span></div><div class="reward-challenge-bar" role="progressbar" aria-label="${item?.label||'تقدم التحدي'}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100,safeNumber(item?.pct))}"><i style="width:${Math.min(100,safeNumber(item?.pct))}%"></i></div></div>`).join('');
   const done=items.filter(item=>item?.complete).length;
-  return `<div class="reward-challenge-heading"><span>تحدي هذا الأسبوع</span><strong>${done} / ${items.length||1}</strong></div><p>أكمل مهامك، والجوائز تُفتح تلقائيًا من نتائجك الحقيقية.</p><div class="reward-challenge-list">${rows||'<div class="reward-challenge-empty">ابدأ التدريب ليظهر تقدمك هنا.</div>'}</div><button type="button" id="rewardChallengeStart" class="reward-challenge-start">ابدأ التحدي</button>`;
+  return `<div class="reward-challenge-heading"><span>تحدي هذا الأسبوع</span><strong>${ratioMarkup(done,items.length)}</strong></div><p>أكمل مهامك، والجوائز تُفتح تلقائيًا من نتائجك الحقيقية.</p><div class="reward-challenge-list">${rows||'<div class="reward-challenge-empty">ابدأ التدريب ليظهر تقدمك هنا.</div>'}</div><button type="button" id="rewardChallengeStart" class="reward-challenge-start">ابدأ التحدي</button>`;
 }
 
 export function createRewardCabinetController({getStatus,onExit}={}){
@@ -91,7 +94,7 @@ export function createRewardCabinetController({getStatus,onExit}={}){
     const learner=LEARNERS[learnerId],view=document.getElementById('rewardCabinetView');if(!learner||!view)return false;view.dataset.learner=learnerId;
     const summary=status?.summary||{},openedKinds=REWARD_CATALOG.filter(item=>rewardCount(summary,item.id)>0).length,total=safeNumber(summary.total),streak=safeNumber(status?.trends?.streakDays),weekly=status?.challenges?.weekly||[],weeklyDone=weekly.filter(item=>item?.complete).length,cups=rewardCount(summary,'mastery-cup')+rewardCount(summary,'weekly-cup'),feature=latestReward(summary);
     view.querySelectorAll('[data-reward-learner]').forEach(button=>{const active=button.dataset.rewardLearner===learnerId;button.classList.toggle('active',active);button.setAttribute('aria-current',active?'true':'false');});
-    document.getElementById('rewardCabinetSummary').innerHTML=`<div><span>أنواع مفتوحة</span><strong>${openedKinds} / ${REWARD_CATALOG.length}</strong></div><div><span>إجمالي الجوائز</span><strong>${total}</strong></div><div><span>أفضل سلسلة</span><strong>${streak} يوم</strong></div><div><span>الكؤوس</span><strong>${cups}</strong></div>`;
+    document.getElementById('rewardCabinetSummary').innerHTML=`<div><span>أنواع مفتوحة</span><strong>${ratioMarkup(openedKinds,REWARD_CATALOG.length)}</strong></div><div><span>إجمالي الجوائز</span><strong>${total}</strong></div><div><span>أفضل سلسلة</span><strong>${streak} يوم</strong></div><div><span>الكؤوس</span><strong>${cups}</strong></div>`;
     document.getElementById('rewardCabinetFeature').innerHTML=featureMarkup(status);
     document.getElementById('rewardCabinetGrid').innerHTML=buildRewardCabinetMarkup({status,excludeRewardId:feature.id});
     document.getElementById('rewardCabinetChallenge').innerHTML=challengeMarkup(status);
