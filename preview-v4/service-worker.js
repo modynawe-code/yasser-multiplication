@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-67`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-68`;
 const RECITATION_ASSETS=(globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[]).map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
@@ -19,7 +19,7 @@ const APP_SHELL=[
   './src/shared/learners/learner-id.js','./src/shared/learners/learner-profile.js','./src/shared/learners/learner-registry.js','./src/shared/learners/runtime-registry.js',
   './src/shared/curricula/curriculum-id.js','./src/shared/curricula/curriculum-profile.js','./src/shared/curricula/curriculum-registry.js','./src/shared/curricula/runtime-registry.js',
   './src/shared/family/family-config.js','./src/shared/family/expansion-invariant.js','./src/shared/family/version.js',
-  './src/shared/challenges/challenge-engine.js','./src/shared/rewards/reward-catalog.js','./src/shared/rewards/reward-engine.js','./src/shared/rewards/reward-repository.js','./src/shared/rewards/learning-reward-service.js',
+  './src/shared/challenges/challenge-engine.js','./src/shared/rewards/reward-catalog.js','./src/shared/rewards/reward-engine.js','./src/shared/rewards/reward-repository.js','./src/shared/rewards/learning-reward-service.js','./src/shared/rewards/reward-capability-registry.js',
   './src/shared/ui/learning-motivation.js','./src/shared/ui/learning-motivation.css','./src/shared/ui/reward-assets.js','./src/shared/ui/reward-cabinet.js','./src/shared/ui/reward-cabinet.css',
   './src/shared/config/family-api-config.js','./src/shared/sync/family-auth-client.js','./src/shared/sync/family-sync-service.js',
 
