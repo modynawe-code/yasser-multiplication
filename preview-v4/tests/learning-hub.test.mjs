@@ -41,17 +41,22 @@ test('switching learners closes active module state and leaves one active view',
   assert.match(yasser,/\n    leave,/);
 });
 
-test('Mashaal route is audio-first and exposes only verified domain-level navigation',async()=>{
+test('Mashaal route is audio-first and opens only skills with verified activity content',async()=>{
   const controller=await read('src/modules/mashaal/ui/mashaal-controller.js');
   const shell=await read('src/modules/mashaal/ui/mashaal-shell.js');
   const curriculum=await read('src/modules/mashaal/curriculum/kg3-curriculum.js');
+  const activityPlan=await read('src/modules/mashaal/application/activity-plan.js');
   assert.match(controller,/createSpeechService/);
   assert.match(controller,/getMashaalHomeDomains/);
   assert.match(controller,/يا مشاعل، اختاري العالم/);
-  assert.match(shell,/قريبًا ✨/);
+  assert.match(controller,/skill\.contentReady\?'ابدئي ✨':'قريبًا'/);
+  assert.match(controller,/if\(!plan\?\.contentReady\)return/);
+  assert.match(shell,/id="mashaalSkillGrid"/);
+  assert.match(shell,/id="mashaalActivityView"/);
+  assert.match(activityPlan,/listReleasableMashaalKg3Activities/);
+  assert.match(activityPlan,/contentReady:activities\.length>0/);
   assert.match(curriculum,/language-communication/);
   assert.match(curriculum,/quran-islamic-education/);
-  assert.doesNotMatch(shell,/letter-sound-readiness|count-and-quantity|islamic-values-situations/);
 });
 
 test('Khaled mode hides Yasser chrome and preserves incomplete sessions',async()=>{
