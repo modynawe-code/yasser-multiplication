@@ -36,7 +36,7 @@ function renderStimulus(model){
 export function createMashaalController({repository,onExitToHub}={}){
   if(!repository)throw new Error('Mashaal repository is required');
   const speech=createSpeechService();
-  let bound=false,currentDomain=null,currentSkill=null,currentActivity=null,currentViewModel=null,state=repository.load(),startedAt=0;
+  let bound=false,currentDomain=null,currentSkill=null,currentActivity=null,currentViewModel=null,state=repository.load(),startedAt=0,activityComplete=false;
   const selectedChoices=new Set();
 
   function renderDomains(){
@@ -70,7 +70,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     document.body.classList.add('mashaal-mode');
     renderDomains();show('mashaalHomeView');
   }
-  function leave(){speech.stop();document.body.classList.remove('mashaal-mode');currentActivity=null;currentViewModel=null;selectedChoices.clear();}
+  function leave(){speech.stop();document.body.classList.remove('mashaal-mode');currentActivity=null;currentViewModel=null;activityComplete=false;selectedChoices.clear();}
   function openDomain(domainId){
     currentDomain=getMashaalHomeDomains().find(item=>item.id===domainId)||null;if(!currentDomain)return;
     byId('mashaalDomainSymbol').textContent=DOMAIN_SYMBOLS[currentDomain.id]||'★';
@@ -79,15 +79,16 @@ export function createMashaalController({repository,onExitToHub}={}){
     renderSkills(currentDomain.id);show('mashaalDomainView');speech.speak(currentDomain.title);
   }
   function backHome(){speech.stop();renderDomains();show('mashaalHomeView');}
-  function backDomain(){speech.stop();currentActivity=null;currentViewModel=null;selectedChoices.clear();if(currentDomain){renderSkills(currentDomain.id);show('mashaalDomainView');}else backHome();}
+  function backDomain(){speech.stop();currentActivity=null;currentViewModel=null;activityComplete=false;selectedChoices.clear();if(currentDomain){renderSkills(currentDomain.id);show('mashaalDomainView');}else backHome();}
   function exit(){leave();onExitToHub?.();}
 
   function renderActivityChoices(){
     const host=byId('mashaalActivityChoices');if(!host||!currentViewModel)return;host.innerHTML='';selectedChoices.clear();
-    const check=byId('mashaalActivityCheck');if(check)check.hidden=!currentViewModel.multiSelect;
+    const check=byId('mashaalActivityCheck');if(check){check.hidden=!currentViewModel.multiSelect;check.disabled=false;}
     for(const choice of currentViewModel.choices){
       const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.textContent=choice.label;
       button.addEventListener('click',()=>{
+        if(activityComplete)return;
         if(currentViewModel.multiSelect){
           if(selectedChoices.has(choice.value)){selectedChoices.delete(choice.value);button.classList.remove('selected');}else{selectedChoices.add(choice.value);button.classList.add('selected');}
         }else submitAnswer(choice.value);
@@ -96,10 +97,16 @@ export function createMashaalController({repository,onExitToHub}={}){
     }
   }
 
+  function lockActivityControls(){
+    byId('mashaalActivityChoices')?.querySelectorAll('button').forEach(button=>{button.disabled=true;});
+    const check=byId('mashaalActivityCheck');if(check){check.disabled=true;check.hidden=true;}
+  }
+
   function openSkill(skillId){
     const plan=createMashaalActivityPlan(skillId);if(!plan?.contentReady)return;
     currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===skillId)||null;
     currentActivity=plan.activities[0]||null;currentViewModel=createMashaalActivityViewModel(currentActivity);if(!currentViewModel)return;
+    activityComplete=false;
     byId('mashaalActivitySkill').textContent=currentSkill?.title||'لعبة مشاعل';
     byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;
     byId('mashaalActivityFeedback').textContent='';
@@ -107,14 +114,14 @@ export function createMashaalController({repository,onExitToHub}={}){
   }
 
   function submitAnswer(answer){
-    if(!currentViewModel||!currentActivity)return;
+    if(activityComplete||!currentViewModel||!currentActivity)return;
     const isCorrect=isMashaalActivityAnswerCorrect(currentViewModel,answer);
     const evidence=createMashaalDigitalAttempt({
       evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,isCorrect,responseMs:Date.now()-startedAt
     });
     if(recordMashaalEvidence(state,{skillId:currentViewModel.skillId,evidence}))repository.save(state);
     const feedback=byId('mashaalActivityFeedback');
-    if(isCorrect){if(feedback)feedback.textContent='أحسنتِ ✨';speech.speak('أحسنت يا مشاعل');}
+    if(isCorrect){activityComplete=true;lockActivityControls();if(feedback)feedback.textContent='أحسنتِ ✨';speech.speak('أحسنت يا مشاعل');}
     else{if(feedback)feedback.textContent='جربي مرة ثانية 👀';speech.speak('جربي مرة ثانية');startedAt=Date.now();}
   }
 
