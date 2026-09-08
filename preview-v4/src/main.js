@@ -9,6 +9,7 @@ import { createHubController } from './modules/hub/hub-controller.js';
 import { createLearnerRuntimeRegistry } from './modules/hub/learner-runtime-registry.js';
 import { createKhaledRepository } from './modules/khaled/infrastructure/storage/local-storage-repository.js';
 import { normalizeKhaledState,applyKhaledAttemptEvent } from './modules/khaled/domain/state-model.js';
+import { ensureKhaledHomeShell } from './modules/khaled/ui/khaled-home-shell.js';
 import { createKhaledController } from './modules/khaled/ui/khaled-controller.js';
 import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
 import { ensureMashaalShell } from './modules/mashaal/ui/mashaal-shell.js';
@@ -39,6 +40,7 @@ await localBackup.restoreIfFresh();
 
 ensureYasserHomeShell();
 ensureLearningShell();
+ensureKhaledHomeShell();
 ensureMashaalShell();
 hydrateLearnerHub();
 hydrateFamilyParentLearners();
