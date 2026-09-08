@@ -1,5 +1,6 @@
 // Plain-script data source shared by the browser modules and the classic service worker.
-// Generated only after extracting the approved KFGQPC Al-Ikhlas audio and verifying SHA-256.
+// Quran audio is the approved KFGQPC Ibrahim Al-Akhdar recording. Mushaf artwork is the
+// KFGQPC Madinah Mushaf (Hafs) distributed as SVG by quranpedia/quran-svg.
 globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__=Object.freeze([
   Object.freeze({
     "id": "kfgqpc-ibrahim-al-akhdar-hafs-112",
@@ -12,6 +13,18 @@ globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__=Object.freeze([
     "surahNumber": 112,
     "surahNameAr": "الإخلاص",
     "humanVoice": true,
+    "mushafPage": Object.freeze({
+      "sourceId": "kfgqpc-hafs-madinah-svg",
+      "publisher": "King Fahd Glorious Quran Printing Complex",
+      "publisherAr": "مجمع الملك فهد لطباعة المصحف الشريف",
+      "riwayah": "Hafs from Asim",
+      "riwayahAr": "حفص عن عاصم",
+      "pageNumber": 604,
+      "imageUrl": "https://raw.githubusercontent.com/quranpedia/quran-svg/main/mushafs/hafs/kfqc/svg/604.svg",
+      "distributionRepository": "https://github.com/quranpedia/quran-svg",
+      "sourceNotice": "https://github.com/quranpedia/quran-svg/blob/main/NOTICE.md",
+      "offlineBundled": false
+    }),
     "retrieval": {
       "sourceAuthority": "King Fahd Glorious Quran Printing Complex",
       "sourcePackage": "https://download.qurancomplex.gov.sa/new-sounds/akhdar/hafs/akhdar-sura.zip",
