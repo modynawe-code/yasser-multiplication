@@ -5,15 +5,17 @@ import { readFile } from 'node:fs/promises';
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
 test('Khaled learning flow exposes only context-appropriate child navigation',async()=>{
-  const shell=await read('src/modules/hub/learning-shell.js');
-  assert.match(shell,/id="khaledIntroBack"[^>]*>رجوع<\/button>/);
-  assert.match(shell,/id="khaledIntroStart"[^>]*>يلا نبدأ<\/button>/);
-  assert.match(shell,/id="khaledHomeToHub"[^>]*>اختيار الطفل<\/button>/);
-  assert.match(shell,/id="khaledExitSession"[^>]*>رجوع<\/button>/);
-  assert.doesNotMatch(shell,/id="khaledSessionToHub"/);
-  assert.match(shell,/id="khaledRetry"[^>]*>مرة ثانية<\/button>/);
-  assert.match(shell,/id="khaledResultHome"[^>]*>مهارات خالد<\/button>/);
-  assert.match(shell,/class="khaled-result-link" id="khaledResultToHub">اختيار الطفل<\/button>/);
+  const familyShell=await read('src/modules/hub/learning-shell.js');
+  const homeShell=await read('src/modules/khaled/ui/khaled-home-shell.js');
+  assert.match(familyShell,/id="khaledIntroBack"[^>]*>رجوع<\/button>/);
+  assert.match(familyShell,/id="khaledIntroStart"[^>]*>يلا نبدأ<\/button>/);
+  assert.match(homeShell,/id="khaledHomeToHub"[^>]*>اختيار الطفل<\/button>/);
+  assert.match(familyShell,/id="khaledExitSession"[^>]*>رجوع<\/button>/);
+  assert.doesNotMatch(familyShell,/id="khaledSessionToHub"/);
+  assert.doesNotMatch(homeShell,/id="khaledSessionToHub"/);
+  assert.match(familyShell,/id="khaledRetry"[^>]*>مرة ثانية<\/button>/);
+  assert.match(familyShell,/id="khaledResultHome"[^>]*>مهارات خالد<\/button>/);
+  assert.match(familyShell,/class="khaled-result-link" id="khaledResultToHub">اختيار الطفل<\/button>/);
 });
 
 test('cross-learner Khaled exits stay owned by the composition root',async()=>{
