@@ -9,8 +9,9 @@ function assertPlayer(state,playerId){
 
 function clone(state){return JSON.parse(JSON.stringify(state));}
 
-export function createRpsState({players=['yasser','khaled'],targetScore=3}={}){
+export function createRpsState({players,targetScore=3}={}){
   if(!Array.isArray(players)||players.length!==2||new Set(players).size!==2)throw new TypeError('RPS requires exactly two distinct players');
+  if(!players.every(id=>typeof id==='string'&&id.trim()))throw new TypeError('RPS player ids must be non-empty strings');
   if(!Number.isInteger(targetScore)||targetScore<1||targetScore>9)throw new TypeError('targetScore must be between 1 and 9');
   return Object.freeze({
     players:Object.freeze([...players]),
