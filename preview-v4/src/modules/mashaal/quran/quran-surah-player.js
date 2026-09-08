@@ -15,6 +15,16 @@ function formatTime(seconds){
   return `${minutes}:${secs}`;
 }
 
+function normalizedFocusRegion(mushafPage,surahNumber){
+  const region=mushafPage?.focusRegion;
+  const aspect=Number(mushafPage?.imageAspectRatio);
+  const top=Number(region?.top),height=Number(region?.height);
+  if(!region||region.surahNumber!==surahNumber)return null;
+  if(!Number.isFinite(aspect)||aspect<=0||!Number.isFinite(top)||!Number.isFinite(height))return null;
+  if(top<0||height<=0||top+height>1)return null;
+  return Object.freeze({top,height,aspect,labelAr:String(region.labelAr||'').trim()});
+}
+
 export function mountQuranSurahPlayer(host,{
   surahNameAr='السورة',
   surahNumber=null,
@@ -28,6 +38,7 @@ export function mountQuranSurahPlayer(host,{
 
   const pageImage=String(mushafPage?.imagePath||mushafPage?.imageUrl||'').trim();
   if(!pageImage)throw new Error('Verified mushaf page image is required');
+  const focusRegion=normalizedFocusRegion(mushafPage,surahNumber);
 
   host.innerHTML='';
   host.removeAttribute('aria-hidden');
@@ -39,17 +50,33 @@ export function mountQuranSurahPlayer(host,{
 
   const figure=document.createElement('figure');
   figure.className='quran-page-frame';
+  if(focusRegion)figure.dataset.focused='true';
+
+  const viewport=document.createElement('div');
+  viewport.className='quran-page-viewport';
+  if(focusRegion){
+    viewport.dataset.focused='true';
+    viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);
+  }
+
   const image=document.createElement('img');
   image.className='quran-page-image';
   image.src=pageImage;
-  image.alt=`صفحة المصحف التي تحتوي على سورة ${surahNameAr}`;
+  image.alt=focusRegion
+    ?`سورة ${surahNameAr} كما تظهر في صفحة ${mushafPage?.pageNumber||''} من مصحف المدينة`
+    :`صفحة المصحف التي تحتوي على سورة ${surahNameAr}`;
   image.decoding='async';
   image.loading='eager';
+  if(focusRegion)image.style.transform=`translateY(-${focusRegion.top*100}%)`;
+
+  viewport.appendChild(image);
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
   const pageLabel=mushafPage?.pageNumber?` • صفحة ${mushafPage.pageNumber}`:'';
-  caption.textContent=`مصحف المدينة • حفص عن عاصم${pageLabel}`;
-  figure.append(image,caption);
+  caption.textContent=focusRegion
+    ?`${focusRegion.labelAr||`سورة ${surahNameAr}`} • من مصحف المدينة${pageLabel} • حفص عن عاصم`
+    :`مصحف المدينة • حفص عن عاصم${pageLabel}`;
+  figure.append(viewport,caption);
 
   const audio=new Audio(audioPath);
   audio.preload='metadata';
