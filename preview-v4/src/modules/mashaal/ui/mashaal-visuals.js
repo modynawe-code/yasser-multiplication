@@ -24,7 +24,7 @@ const SIMPLE_VISUALS=new Set([
   'star','ball','heart','door','apple','moon','circle','square','box','red-circle','blue-circle','red-square','yellow-square',
   'wake','brush-teeth','breakfast','umbrella','sunglasses','happy','sad','angry','wait-turn','grab-ball','walk-away-angry','ask-help','throw-blocks','kick-blocks',
   'wet-hands','soap','rub-hands','rinse-hands','stay-away','touch-hot','play-near-hot','return-book','leave-book-floor','damage-book','help-tidy','leave-mess','scatter-toys',
-  'saudi-flag','japan-flag','brazil-flag','doctor','teacher','baker','ball-above-box','ball-inside-box','ball-below-box','done'
+  'saudi-flag','japan-flag','brazil-flag','doctor','teacher','baker','ball-above-box','ball-inside-box','ball-below-box','done','balance','fine-motor'
 ]);
 
 export function getMashaalDomainArt(domainId){return DOMAIN_ART[domainId]||DOMAIN_ART['cognitive-operations-general-knowledge'];}
@@ -88,7 +88,7 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     const bubble=document.createElement('span');bubble.className='mashaal-sound-visual';bubble.textContent=stimulus.sound||'';host.appendChild(bubble);return host;
   }
   if(stimulus.kind==='relation'){
-    const key=stimulus.relation==='above'?'ball-above-box':'ball-inside-box';host.appendChild(simpleVisual(key,{compact}));return host;
+    const key=stimulus.relation==='above'?'ball-above-box':stimulus.relation==='below'?'ball-below-box':'ball-inside-box';host.appendChild(simpleVisual(key,{compact}));return host;
   }
   if(stimulus.kind==='trace'){
     const trace=document.createElement('span');trace.className='mashaal-trace-visual';trace.innerHTML='<i></i><b></b>';host.appendChild(trace);return host;
