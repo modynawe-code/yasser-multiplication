@@ -34,9 +34,18 @@ test('generic learning evidence accepts safe child-owned identities and bounded 
   assert.equal(validateEvidenceBatch({evidence:Array.from({length:251},(_,i)=>({...evidence,evidenceId:`ev-${i}`}))}).ok,false);
 });
 
-test('learning session validation accepts safe generic identity and rejects malformed identity',()=>{
-  assert.equal(validateSessionPayload({sessionId:'s1',learnerId:'yasser',total:10}).ok,true);
+test('learning session validation accepts exact payloads and remains compatible with legacy clients',()=>{
+  const exact={sessionId:'s1',learnerId:'yasser',total:10,session:{endedAt:'2026-09-08T10:00:00Z',mode:'practice',completed:10,masteryScore:90}};
+  const validated=validateSessionPayload(exact);
+  assert.equal(validated.ok,true);
+  assert.equal(JSON.parse(validated.value.sessionJson).masteryScore,90);
   assert.equal(validateSessionPayload({sessionId:'s2',learnerId:'mashaal',total:4}).ok,true);
   assert.equal(validateSessionPayload({sessionId:'s3',learnerId:'future-child',total:4}).ok,true);
   assert.equal(validateSessionPayload({sessionId:'s4',learnerId:'../intruder',total:10}).ok,false);
+});
+
+test('learning session validation rejects oversized exact payloads',()=>{
+  const result=validateSessionPayload({sessionId:'huge',learnerId:'yasser',session:{text:'x'.repeat(50001)}});
+  assert.equal(result.ok,false);
+  assert.equal(result.error,'session_payload_too_large');
 });
