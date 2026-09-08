@@ -8,27 +8,22 @@ import { createMashaalActivityCompletion } from '../application/activity-complet
 import { getMashaalTransferPrompt } from '../application/transfer-prompts.js';
 import { recordMashaalEvidence } from '../application/progress-service.js';
 import { mountQuranSurahPlayer } from '../quran/quran-surah-player.js';
-
-const DOMAIN_PRESENTATION=Object.freeze({
-  'language-communication':Object.freeze({symbol:'أ',scene:Object.freeze(['أ','ب','💬'])}),
-  'cognitive-operations-general-knowledge':Object.freeze({symbol:'١٢٣',scene:Object.freeze(['١','٢','△'])}),
-  'social-emotional-development':Object.freeze({symbol:'☺',scene:Object.freeze(['😊','♥','🤝'])}),
-  'health-physical-development':Object.freeze({symbol:'✦',scene:Object.freeze(['🍎','💧','⚽'])}),
-  'quran-islamic-education':Object.freeze({symbol:'☾',scene:Object.freeze(['☾','📖','✦'])}),
-  'national-social-studies':Object.freeze({symbol:'🇸🇦',scene:Object.freeze(['🇸🇦','⌂','🤝'])})
-});
+import { createMashaalChoiceVisual,createMashaalDomainArt,createMashaalStimulusVisual } from './mashaal-visuals.js';
 
 function byId(id){return document.getElementById(id);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
 function evidenceId(activityId){const random=globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2);return `mashaal-${activityId}-${Date.now()}-${random}`;}
 
 function renderWorldVisual(button,domainId){
-  const presentation=DOMAIN_PRESENTATION[domainId]||Object.freeze({symbol:'★',scene:Object.freeze(['★'])});
-  const stage=document.createElement('span');stage.className='mashaal-domain-card-visual';stage.setAttribute('aria-hidden','true');
-  for(const [index,item] of presentation.scene.entries()){
-    const piece=document.createElement('span');piece.className=`mashaal-world-piece piece-${index+1}`;piece.textContent=item;stage.appendChild(piece);
-  }
-  button.appendChild(stage);
+  const stage=document.createElement('span');stage.className='mashaal-domain-card-visual';stage.setAttribute('aria-hidden','true');stage.appendChild(createMashaalDomainArt(domainId));button.appendChild(stage);
+}
+
+function renderSkillPreview(skill,domainId){
+  const preview=document.createElement('span');preview.className='mashaal-skill-preview';preview.setAttribute('aria-hidden','true');
+  const plan=createMashaalActivityPlan(skill.id);const activity=plan?.activities?.[0];const model=activity?createMashaalActivityViewModel(activity):null;
+  if(model&&!model.requiresHumanRecitation)preview.appendChild(createMashaalStimulusVisual(model.stimulus,{domainId,compact:true}));
+  else preview.appendChild(createMashaalDomainArt(domainId));
+  return preview;
 }
 
 export function createMashaalController({repository,onExitToHub}={}){
@@ -57,7 +52,9 @@ export function createMashaalController({repository,onExitToHub}={}){
     const grid=byId('mashaalSkillGrid');if(!grid)return;grid.innerHTML='';
     for(const skill of getMashaalDomainSkills(domainId)){
       const button=document.createElement('button');button.type='button';button.className='mashaal-skill-card';button.dataset.skillId=skill.id;
-      const title=document.createElement('strong');title.textContent=skill.title;const stateLabel=document.createElement('span');stateLabel.textContent=skill.contentReady?'ابدئي':'قريبًا';button.append(title,stateLabel);
+      button.appendChild(renderSkillPreview(skill,domainId));
+      const copy=document.createElement('span');copy.className='mashaal-skill-copy';const title=document.createElement('strong');title.textContent=skill.title;const helper=document.createElement('span');helper.textContent=skill.contentReady?'المسي الصورة وابدئي':'قريبًا';copy.append(title,helper);
+      const start=document.createElement('span');start.className='mashaal-skill-start';start.textContent=skill.contentReady?'ابدئي':'قريبًا';button.append(copy,start);
       button.setAttribute('aria-label',`${skill.title}، ${skill.contentReady?'ابدئي':'قريبًا'}`);
       if(!skill.contentReady){button.disabled=true;button.setAttribute('aria-disabled','true');}grid.appendChild(button);
     }
@@ -76,15 +73,7 @@ export function createMashaalController({repository,onExitToHub}={}){
         }
       });
     }
-    if(stimulus.kind==='items'||stimulus.kind==='sequence'){
-      const row=document.createElement('div');row.className='mashaal-stimulus-row';
-      for(const item of stimulus.items||[]){const span=document.createElement('span');span.textContent=item;row.appendChild(span);}host.appendChild(row);return null;
-    }
-    if(stimulus.kind==='groups'){
-      const groups=document.createElement('div');groups.className='mashaal-stimulus-groups';
-      for(const group of stimulus.groups||[]){const box=document.createElement('div');box.className='mashaal-stimulus-group';box.textContent=group.join(' ');groups.appendChild(box);}host.appendChild(groups);return null;
-    }
-    const text=document.createElement('div');text.className=`mashaal-stimulus-text mashaal-stimulus-${stimulus.kind||'text'}`;text.textContent=stimulus.text||'';host.appendChild(text);return null;
+    host.appendChild(createMashaalStimulusVisual(stimulus,{domainId:currentDomain?.id||null}));return null;
   }
 
   function enter(){state=repository.load();document.body.classList.remove('hub-mode','intro-mode','khaled-mode','family-parent-mode');document.body.classList.add('mashaal-mode');renderDomains();show('mashaalHomeView');}
@@ -92,7 +81,8 @@ export function createMashaalController({repository,onExitToHub}={}){
   function openDomain(domainId){
     destroyRecitation();currentDomain=getMashaalHomeDomains().find(item=>item.id===domainId)||null;if(!currentDomain)return;
     const view=byId('mashaalDomainView');if(view)view.dataset.domainId=currentDomain.id;
-    byId('mashaalDomainSymbol').textContent=DOMAIN_PRESENTATION[currentDomain.id]?.symbol||'★';byId('mashaalDomainTitle').textContent=currentDomain.title;byId('mashaalDomainMessage').textContent='اختاري لعبة نبدأ فيها.';
+    const symbol=byId('mashaalDomainSymbol');if(symbol){symbol.innerHTML='';symbol.appendChild(createMashaalDomainArt(currentDomain.id));}
+    byId('mashaalDomainTitle').textContent=currentDomain.title;byId('mashaalDomainMessage').textContent='اختاري الصورة اللي تبين نبدأ فيها.';
     renderSkills(currentDomain.id);show('mashaalDomainView');speech.speak(currentDomain.title);
   }
   function backHome(){speech.stop();destroyRecitation();renderDomains();show('mashaalHomeView');}
@@ -103,7 +93,10 @@ export function createMashaalController({repository,onExitToHub}={}){
     const host=byId('mashaalActivityChoices');if(!host||!currentViewModel)return;host.innerHTML='';clearSelections();
     const check=byId('mashaalActivityCheck');if(check){check.hidden=!currentViewModel.multiSelect;check.disabled=false;}
     for(const choice of currentViewModel.choices){
-      const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.textContent=choice.label;button.setAttribute('aria-label',choice.label);
+      const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.setAttribute('aria-label',choice.label);
+      const visual=document.createElement('span');visual.className='mashaal-choice-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,currentViewModel));
+      const label=document.createElement('span');label.className='mashaal-choice-label';label.textContent=choice.label;button.append(visual,label);
+      if((choice.value==='left'||choice.value==='right')&&currentViewModel.stimulus.kind==='groups')button.dataset.visualOnly='true';
       if(currentViewModel.multiSelect||currentViewModel.orderedSequence)button.setAttribute('aria-pressed','false');
       button.addEventListener('click',()=>{
         if(activityComplete)return;
@@ -138,7 +131,7 @@ export function createMashaalController({repository,onExitToHub}={}){
   }
   function completeCurrentActivity(){
     if(activityComplete||!currentViewModel||!currentActivity)return;
-    if(currentViewModel.requiresHumanRecitation&&!recitationPlayed){const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='اسمعي التلاوة كاملة أولًا 🎧';speech.speak('اسمعي التلاوة كاملة أولًا');return;}
+    if(currentViewModel.requiresHumanRecitation&&!recitationPlayed){const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='اسمعي التلاوة كاملة أولًا.';speech.speak('اسمعي التلاوة كاملة أولًا');return;}
     const evidence=createMashaalActivityCompletion({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,activityType:currentViewModel.interaction,createdAt:new Date().toISOString()});
     saveEvidence(evidence,currentViewModel.skillId);finishActivity('رائع يا مشاعل');
   }
@@ -147,7 +140,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     const evidence=createMashaalDigitalAttempt({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,isCorrect,responseMs:Date.now()-startedAt});
     saveEvidence(evidence,currentViewModel.skillId);
     if(isCorrect)finishActivity('أحسنت يا مشاعل');
-    else{if(currentViewModel.orderedSequence)clearSelections();const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='جربي مرة ثانية 👀';speech.speak('جربي مرة ثانية');startedAt=Date.now();}
+    else{if(currentViewModel.orderedSequence)clearSelections();const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='جربي مرة ثانية.';speech.speak('جربي مرة ثانية');startedAt=Date.now();}
   }
   function bind(){
     if(bound)return;bound=true;
