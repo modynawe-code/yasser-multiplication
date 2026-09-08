@@ -13,7 +13,7 @@ test('family registry exposes current learners without a numeric child cap',()=>
 
 test('composition root keeps games, rewards and all three learner runtimes together',async()=>{
   const main=await read('src/main.js');
-  for(const token of ['createGamesController','createRewardCabinetController','createAppController','createKhaledController','createMashaalController','createLearnerRuntimeRegistry'])assert.match(main,new RegExp(token));
+  for(const token of ['createGamesController','createRewardCabinetController','createRewardCapabilityRegistry','createAppController','createKhaledController','createMashaalController','createLearnerRuntimeRegistry'])assert.match(main,new RegExp(token));
   for(const learner of ['yasser','khaled','mashaal'])assert.match(main,new RegExp(`learnerRuntimes\\.register\\('${learner}'`));
   assert.match(main,/createMashaalController\(\{repository:mashaalRepository,onExitToHub:\(\)=>hub\?\.show\(\)\}\)/);
 });
@@ -41,12 +41,17 @@ test('learner chooser is open-ended and does not assume exactly two columns',asy
 
 test('offline shell contains both the restored games platform and Mashaal KG3',async()=>{
   const worker=await read('service-worker.js');
-  for(const path of ['modules/games/games-controller.js','modules/games/xo/xo-engine.js','modules/games/rps/rps-controller.js','shared/rewards/reward-engine.js','modules/mashaal/ui/mashaal-controller.js','modules/mashaal/curriculum/kg3-curriculum.js','modules/hub/open-family-learner-grid.css'])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  for(const path of ['modules/games/games-controller.js','modules/games/xo/xo-engine.js','modules/games/rps/rps-controller.js','shared/rewards/reward-engine.js','shared/rewards/reward-capability-registry.js','modules/mashaal/ui/mashaal-controller.js','modules/mashaal/curriculum/kg3-curriculum.js','modules/hub/open-family-learner-grid.css'])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });
 
-test('durable local backup protects Yasser, Khaled, Mashaal and reward records together',async()=>{
+test('durable local backup uses open family namespaces while preserving legacy Yasser and Khaled migration keys',async()=>{
   const backup=await read('src/shared/backup/local-backup-service.js');
-  for(const key of ['yasser_mul_v4_preview','khaled_grade1_math_v1','family_learning:mashaal','family-learning-rewards-v1:yasser','family-learning-rewards-v1:khaled'])assert.match(backup,new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  assert.match(backup,/TRACKED_PREFIXES=Object\.freeze\(\['family_learning:','family-learning-rewards-v1:'\]\)/);
+  assert.match(backup,/LOCAL_BACKUP_DIRECTORY='FamilyLearning'/);
+  assert.match(backup,/LEGACY_LOCAL_BACKUP_DIRECTORY='YasserKhaledLearning'/);
+  assert.match(backup,/yasser_mul_v4_preview/);
+  assert.match(backup,/khaled_grade1_math_v1/);
+  assert.doesNotMatch(backup,/family_learning:mashaal/);
 });
 
 test('parent reporting keeps Mashaal developmental instead of forcing school percentages',async()=>{
