@@ -1,5 +1,6 @@
 import { createParentAccessGate } from '../../shared/security/parent-access.js';
-import { familyOverview, familyYasserReport, familyKhaledReport, familyMashaalReport, familySessions } from './family-parent-renderers.js';
+import { getLearnerProfile } from '../../shared/learners/learner-registry.js';
+import { familyOverview, familyYasserReport, familyKhaledReport, familyMashaalReport, familyGenericLearnerReport, familySessions } from './family-parent-renderers.js';
 
 function byId(id){return document.getElementById(id);}
 function all(selector){return[...document.querySelectorAll(selector)];}
@@ -29,11 +30,20 @@ export function createFamilyParentController({getYasserState,getKhaledState,getM
     byId('familyCloudLogout').onclick=async()=>{await cloudAuth.logout();render('overview');};
   }
 
+  function reportForTab(tab,yasser,khaled,mashaal){
+    if(tab==='overview')return familyOverview(yasser,khaled,mashaal);
+    if(tab==='yasser')return familyYasserReport(yasser);
+    if(tab==='khaled')return familyKhaledReport(khaled);
+    if(tab==='mashaal')return familyMashaalReport(mashaal);
+    if(tab==='sessions')return familySessions(yasser,khaled,mashaal);
+    return familyGenericLearnerReport(getLearnerProfile(tab));
+  }
+
   function render(tab='overview'){
     const yasser=getYasserState(),khaled=getKhaledState(),mashaal=getMashaalState();
     all('[data-family-parent-tab]').forEach(button=>button.classList.toggle('active',button.dataset.familyParentTab===tab));
     const content=byId('familyParentContent');if(!content)return;
-    content.innerHTML=tab==='overview'?familyOverview(yasser,khaled,mashaal):tab==='yasser'?familyYasserReport(yasser):tab==='khaled'?familyKhaledReport(khaled):tab==='mashaal'?familyMashaalReport(mashaal):familySessions(yasser,khaled,mashaal);
+    content.innerHTML=reportForTab(tab,yasser,khaled,mashaal);
     if(tab==='overview')cloudPanel(content);
     const exportButton=byId('familyExportBtn');
     if(exportButton)exportButton.onclick=()=>{
