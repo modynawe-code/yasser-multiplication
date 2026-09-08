@@ -10,15 +10,37 @@ function windowStrip(label,summary){return `<article class="family-window-card">
 function skillSummary(log,learnerId,skillId){const summary=summarizeLearningAttempts(log,{learnerId,skillId});return{summary,level:learningLevel(summary)};}
 function mashaalStatusClass(status){return status==='mastered'?'master':status==='developing'?'practice':'none';}
 
+export function familyYasserOverview(state={}){
+  const windows=summarizeLearningWindows(state.attemptLog||[],{learnerId:'yasser'});
+  return `<section class="family-period-section" data-family-overview-learner="yasser"><h3>ياسر</h3><div class="parent-cards family-summary-cards">${metricCard('أسئلة ياسر',windows.all.questions)}</div><div class="family-window-grid">${windowStrip('اليوم',windows.today)}${windowStrip('هذا الأسبوع',windows.week)}${windowStrip('كل الوقت',windows.all)}</div></section>`;
+}
+
+export function familyKhaledOverview(state={}){
+  const windows=summarizeLearningWindows(state.attemptLog||[],{learnerId:'khaled'});
+  return `<section class="family-period-section khaled-period" data-family-overview-learner="khaled"><h3>خالد</h3><div class="parent-cards family-summary-cards">${metricCard('أسئلة خالد',windows.all.questions)}</div><div class="family-window-grid">${windowStrip('اليوم',windows.today)}${windowStrip('هذا الأسبوع',windows.week)}${windowStrip('كل الوقت',windows.all)}</div></section>`;
+}
+
+export function familyMashaalOverview(state={}){
+  const summary=buildMashaalParentSummary(state),evidence=Array.isArray(state.evidenceLog)?state.evidenceLog.length:0;
+  return `<article class="family-learner-summary mashaal" data-family-overview-learner="mashaal"><div><span>مشاعل</span><strong>روضة ثالثة</strong></div><dl><div><dt>أدلة تعلم</dt><dd>${evidence}</dd></div><div><dt>مهارات موثقة</dt><dd>${summary.totalSkills}</dd></div><div><dt>أنشطة جاهزة</dt><dd>${summary.readySkills}</dd></div><div><dt>التقييم</dt><dd>نمائي</dd></div></dl></article>`;
+}
+
+export function familyGenericOverview(_state={},profile={}){
+  const name=profile?.displayName||'الطفل',stage=profile?.presentation?.subtitle||profile?.stage||'مسار تعلم';
+  return `<article class="family-learner-summary generic" data-family-overview-learner="${profile?.id||''}"><div><span>${name}</span><strong>${stage}</strong></div><p class="muted">ملف الطفل محفوظ، وسيظهر ملخص مرحلته المتخصص عند تركيب مزود التقرير الخاص بها.</p></article>`;
+}
+
+export function familyOverviewEntries(entries=[]){
+  const markup=(Array.isArray(entries)?entries:[]).map(item=>item?.markup||'').filter(Boolean).join('');
+  return `<h2>تقرير الأطفال</h2><p class="muted">لكل طفل مساره وطريقة تقييمه المناسبة لمرحلته. سجل التعلم التاريخي لا يُمحى عند التحسن لاحقًا.</p><div class="parent-tools"><button class="small-btn" id="familyExportBtn">تنزيل نسخة احتياطية موحدة</button></div>${markup||'<p class="muted">لا توجد ملفات تعلم مسجلة بعد.</p>'}`;
+}
+
 export function familyOverview(yasserState,khaledState,mashaalState={}){
-  const yasser=summarizeLearningWindows(yasserState.attemptLog,{learnerId:'yasser'}),khaled=summarizeLearningWindows(khaledState.attemptLog,{learnerId:'khaled'}),mashaal=buildMashaalParentSummary(mashaalState);
-  const evidence=Array.isArray(mashaalState.evidenceLog)?mashaalState.evidenceLog.length:0;
-  return`<h2>تقرير الأطفال</h2><p class="muted">لكل طفل مساره وطريقة تقييمه المناسبة لمرحلته. سجل التعلم التاريخي لا يُمحى عند التحسن لاحقًا.</p>
-  <div class="parent-tools"><button class="small-btn" id="familyExportBtn">تنزيل نسخة احتياطية موحدة</button></div>
-  <div class="parent-cards family-summary-cards">${metricCard('أسئلة ياسر',yasser.all.questions)}${metricCard('أسئلة خالد',khaled.all.questions)}${metricCard('أدلة تعلم مشاعل',evidence)}${metricCard('مهارات مشاعل الجاهزة',`${mashaal.readySkills}/${mashaal.totalSkills}`)}</div>
-  <div class="family-period-section"><h3>ياسر</h3><div class="family-window-grid">${windowStrip('اليوم',yasser.today)}${windowStrip('هذا الأسبوع',yasser.week)}${windowStrip('كل الوقت',yasser.all)}</div></div>
-  <div class="family-period-section khaled-period"><h3>خالد</h3><div class="family-window-grid">${windowStrip('اليوم',khaled.today)}${windowStrip('هذا الأسبوع',khaled.week)}${windowStrip('كل الوقت',khaled.all)}</div></div>
-  <article class="family-learner-summary mashaal"><div><span>مشاعل</span><strong>روضة ثالثة</strong></div><dl><div><dt>أدلة تعلم</dt><dd>${evidence}</dd></div><div><dt>مهارات موثقة</dt><dd>${mashaal.totalSkills}</dd></div><div><dt>التقييم</dt><dd>نمائي</dd></div></dl></article>`;
+  return familyOverviewEntries([
+    {markup:familyYasserOverview(yasserState)},
+    {markup:familyKhaledOverview(khaledState)},
+    {markup:familyMashaalOverview(mashaalState)}
+  ]);
 }
 
 export function familyYasserReport(state){
@@ -40,11 +62,28 @@ export function familyMashaalReport(state={}){
 
 export function familyGenericLearnerReport(profile){const name=profile?.displayName||'الطفل',stage=profile?.presentation?.subtitle||profile?.stage||'مسار تعلم';return`<h2>${name} — ${stage}</h2><p class="muted">هذا الطفل مسجل في منصة التعلم، لكن تقرير مرحلته المتخصص لم يُركب بعد. يبقى ملفه منفصلًا ولا يتم إسقاط تقييم مرحلة أخرى عليه.</p>`;}
 
-export function familySessions(yasserState,khaledState,mashaalState={}){
-  const yasser=(yasserState.sessions||[]).map(session=>({learner:'ياسر',at:session.endedAt,label:session.mode==='exam'?'اختبار جدول الضرب':'تدريب جدول الضرب',total:Number(session.completed||0),firstTry:Number(session.firstTryCorrect??session.correct??0),corrected:Number(session.correctedAfterError||0),unresolved:Number(session.unresolved??session.wrong??0),mastery:Number(session.masteryScore??pct(session.correct,session.completed)),incomplete:Boolean(session.incomplete),developmental:false}));
-  const khaled=(khaledState.sessions||[]).map(session=>({learner:'خالد',at:session.at,label:KHALED_SKILLS.find(skill=>skill.id===session.skillId)?.title||'رياضيات خالد',total:Number(session.total||0),firstTry:Number(session.firstTryCorrect??session.correct??0),corrected:Number(session.correctedAfterError||0),unresolved:Number(session.unresolved??session.wrong??0),mastery:Number(session.masteryScore??session.pct??0),incomplete:Boolean(session.incomplete),developmental:false}));
-  const mashaal=(mashaalState.sessions||[]).map(session=>({learner:'مشاعل',at:session.endedAt||session.at||session.startedAt,label:'نشاط روضة',total:Number(session.total||session.completed||0),incomplete:Boolean(session.incomplete),developmental:true}));
-  const sessions=[...yasser,...khaled,...mashaal].sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,30);if(!sessions.length)return'<h2>آخر الجلسات</h2><p class="muted">لا توجد جلسات مسجلة حتى الآن.</p>';
+export function familyYasserSessions(state={}){
+  return (state.sessions||[]).map(session=>({learnerId:'yasser',learner:'ياسر',at:session.endedAt,label:session.mode==='exam'?'اختبار جدول الضرب':'تدريب جدول الضرب',total:Number(session.completed||0),firstTry:Number(session.firstTryCorrect??session.correct??0),corrected:Number(session.correctedAfterError||0),unresolved:Number(session.unresolved??session.wrong??0),mastery:Number(session.masteryScore??pct(session.correct,session.completed)),incomplete:Boolean(session.incomplete),developmental:false}));
+}
+
+export function familyKhaledSessions(state={}){
+  return (state.sessions||[]).map(session=>({learnerId:'khaled',learner:'خالد',at:session.at,label:KHALED_SKILLS.find(skill=>skill.id===session.skillId)?.title||'رياضيات خالد',total:Number(session.total||0),firstTry:Number(session.firstTryCorrect??session.correct??0),corrected:Number(session.correctedAfterError||0),unresolved:Number(session.unresolved??session.wrong??0),mastery:Number(session.masteryScore??session.pct??0),incomplete:Boolean(session.incomplete),developmental:false}));
+}
+
+export function familyMashaalSessions(state={}){
+  return (state.sessions||[]).map(session=>({learnerId:'mashaal',learner:'مشاعل',at:session.endedAt||session.at||session.startedAt,label:'نشاط روضة',total:Number(session.total||session.completed||0),incomplete:Boolean(session.incomplete),developmental:true}));
+}
+
+export function familyGenericSessions(state={},profile={}){
+  return (state.sessions||[]).map(session=>({learnerId:profile?.id||'',learner:profile?.displayName||'الطفل',at:session.endedAt||session.at||session.startedAt,label:session.label||profile?.presentation?.subtitle||'نشاط تعلم',total:Number(session.total||session.completed||0),incomplete:Boolean(session.incomplete),developmental:true}));
+}
+
+export function familySessionEntries(entries=[]){
+  const sessions=(Array.isArray(entries)?entries:[]).filter(Boolean).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,30);if(!sessions.length)return'<h2>آخر الجلسات</h2><p class="muted">لا توجد جلسات مسجلة حتى الآن.</p>';
   const rows=sessions.map(session=>`<tr><td>${formatDate(session.at)}</td><td><b>${session.learner}</b></td><td>${session.label}${session.incomplete?' • غير مكتمل':''}</td><td>${session.total}</td><td>${session.developmental?'—':session.firstTry}</td><td>${session.developmental?'—':session.corrected}</td><td>${session.developmental?'—':session.unresolved}</td><td>${session.developmental?'نمائي':`${session.mastery}%`}</td></tr>`).join('');
-  return`<h2>آخر الجلسات</h2><p class="muted">التصحيح يظهر منفصلًا عن الإجابة الصحيحة من أول مرة، ومسار الروضة يبقى نمائيًا.</p><div class="table-scroll"><table class="table-report"><thead><tr><th>الوقت</th><th>الطفل</th><th>النشاط</th><th>عدد</th><th>أول مرة</th><th>بعد تصحيح</th><th>تحتاج مراجعة</th><th>التقييم</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  return`<h2>آخر الجلسات</h2><p class="muted">التصحيح يظهر منفصلًا عن الإجابة الصحيحة من أول مرة، والمسارات النمائية لا تُحوّل إلى نسب مدرسية.</p><div class="table-scroll"><table class="table-report"><thead><tr><th>الوقت</th><th>الطفل</th><th>النشاط</th><th>عدد</th><th>أول مرة</th><th>بعد تصحيح</th><th>تحتاج مراجعة</th><th>التقييم</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+export function familySessions(yasserState,khaledState,mashaalState={}){
+  return familySessionEntries([...familyYasserSessions(yasserState),...familyKhaledSessions(khaledState),...familyMashaalSessions(mashaalState)]);
 }
