@@ -13,7 +13,7 @@ test('Yasser home is composed from a dedicated learner presentation module befor
 
 test('Yasser learner home has one mission surface and no parent-report sidebar contract',async()=>{
   const shell=await read('src/modules/yasser/ui/yasser-home-shell.js');
-  assert.match(shell,/data\.presentation==='yasser-home-v2'/);
+  assert.match(shell,/home\.dataset\.presentation==='yasser-home-v2'/);
   assert.match(shell,/class="yasser-home-hero"/);
   assert.match(shell,/class="yasser-home-training"/);
   assert.match(shell,/id="tableSelector"/);
