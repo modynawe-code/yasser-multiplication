@@ -39,7 +39,8 @@ export const LEARNER_REGISTRY = Object.freeze({
     presentation:Object.freeze({
       subtitle:'روضة ثالثة',
       summary:'لغة • تفكير • مشاعر • صحة • وطني',
-      symbol:'أ ١',
+      symbol:'✿',
+      fallbackVisual:'preschool-learning',
       stageLabel:'روضة ثالثة',
       homeVariant:'preschool'
     })
