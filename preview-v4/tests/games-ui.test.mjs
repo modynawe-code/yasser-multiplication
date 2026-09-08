@@ -13,7 +13,7 @@ test('games platform is composed as an isolated feature module',async()=>{
   assert.match(main,/games\?\.leave\(\)/);
 });
 
-test('games shell exposes a clear local vs online XO lobby without changing learner screens',async()=>{
+test('games shell exposes a clear registry-hydrated local vs online XO lobby without learner hardcoding',async()=>{
   const shell=await read('src/modules/games/ui/games-shell.js');
   assert.match(shell,/gamesOpenBtn/);
   assert.match(shell,/id="gamesHomeView"/);
@@ -21,24 +21,50 @@ test('games shell exposes a clear local vs online XO lobby without changing lear
   assert.doesNotMatch(shell,/النظام قابلًا للتوسع/);
   assert.match(shell,/id="xoLobbyView"/);
   assert.match(shell,/على نفس الجهاز/);
+  assert.match(shell,/اختر لاعبين ثم ابدأ الجولة/);
   assert.match(shell,/بين جهازين أونلاين/);
   assert.match(shell,/اختر صاحب هذا الجهاز أولًا/);
+  assert.match(shell,/id="xoLocalPlayers"/);
+  assert.match(shell,/id="xoOnlinePlayers"/);
   assert.match(shell,/id="xoLocalStart"/);
   assert.match(shell,/id="xoOnlineCreate"/);
   assert.match(shell,/id="xoOnlineJoin"/);
   assert.match(shell,/maxlength="6"/);
   assert.match(shell,/id="xoGameView"/);
+  assert.match(shell,/id="xoMatchTitle"/);
+  assert.match(shell,/data-xo-player-slot="0"/);
+  assert.match(shell,/data-xo-player-slot="1"/);
   assert.match(shell,/class="xo-layout"/);
   assert.match(shell,/id="xoChallenge"/);
   assert.match(shell,/id="xoHearChallenge"/);
-  assert.match(shell,/assets\/visual\/original\/yasser\/welcome\.png/);
-  assert.match(shell,/assets\/visual\/original\/khaled\/khaled-point-thumbsup\.png/);
+  assert.match(shell,/games-open-family\.css/);
+  assert.doesNotMatch(shell,/assets\/visual\/original\/yasser/);
+  assert.doesNotMatch(shell,/assets\/visual\/original\/khaled/);
+  assert.doesNotMatch(shell,/data-xo-learner="(?:yasser|khaled)"/);
   assert.doesNotMatch(shell,/تُحفظ المحاولات التعليمية/);
 });
 
-test('XO controller uses online room and learning boundaries without learner-controller coupling',async()=>{
+test('game participant registry owns optional approved artwork while the XO shell stays learner-neutral',async()=>{
+  const registry=await read('src/modules/games/core/game-participant-registry.js');
+  assert.match(registry,/listLearnerProfiles/);
+  assert.match(registry,/getLearnerProfile/);
+  assert.match(registry,/createPlayerContext/);
+  assert.match(registry,/presentation\?\.symbol/);
+  assert.match(registry,/assets\/visual\/original\/yasser\/welcome\.png/);
+  assert.match(registry,/assets\/visual\/original\/khaled\/khaled-point-thumbsup\.png/);
+  assert.match(registry,/yasser\/celebrate\.png/);
+  assert.match(registry,/khaled\/khaled-celebration\.png/);
+  assert.match(registry,/avatar:artwork\.avatar\|\|null/);
+});
+
+test('XO controller uses registry participants, online room and learning boundaries without learner-controller coupling',async()=>{
   const controller=await read('src/modules/games/games-controller.js');
-  assert.match(controller,/createPlayerContext/);
+  assert.match(controller,/getGameParticipant/);
+  assert.match(controller,/listGameParticipants/);
+  assert.match(controller,/gameParticipantMarkup/);
+  assert.match(controller,/learningAdapter\?\.supports/);
+  assert.match(controller,/data-xo-local-learner/);
+  assert.match(controller,/data-xo-online-learner/);
   assert.match(controller,/createXoState/);
   assert.match(controller,/passXoTurn/);
   assert.match(controller,/playXoMove/);
@@ -53,9 +79,9 @@ test('XO controller uses online room and learning boundaries without learner-con
   assert.match(controller,/انتظر شوي…/);
   assert.match(controller,/rematchReady/);
   assert.match(controller,/xoReset.*hidden/);
-  assert.match(controller,/yasser\/celebrate\.png/);
-  assert.match(controller,/khaled\/khaled-celebration\.png/);
   assert.match(controller,/xoPlayAgain/);
+  assert.doesNotMatch(controller,/players:\s*\['yasser','khaled'\]/);
+  assert.doesNotMatch(controller,/اختر ياسر أو خالد/);
   assert.doesNotMatch(controller,/khaled-controller/);
   assert.doesNotMatch(controller,/app-controller/);
   assert.doesNotMatch(controller,/local-storage-repository/);
@@ -102,6 +128,7 @@ test('RPS presentation is a full arena rather than a page card',async()=>{
 
 test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet heights',async()=>{
   const css=await read('src/modules/games/ui/games.css');
+  const openFamilyCss=await read('src/modules/games/ui/games-open-family.css');
   assert.match(css,/body\.games-mode \.topbar\{display:none\}/);
   assert.match(css,/body\.xo-game-mode\{overflow:hidden\}/);
   assert.match(css,/height:100dvh/);
@@ -109,9 +136,11 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
   assert.match(css,/\.xo-token\{width:82%;height:82%/);
   assert.match(css,/\.xo-lobby-shell\{height:100dvh/);
   assert.match(css,/\.xo-local-choice/);
+  assert.match(openFamilyCss,/xo-local-players/);
+  assert.match(openFamilyCss,/repeat\(auto-fit,minmax\(130px,1fr\)\)/);
 });
 
-test('PWA shell includes resumable games and the shared natural voice architecture',async()=>{
+test('PWA shell includes resumable games, registry participants and the shared natural voice architecture',async()=>{
   const serviceWorker=await read('service-worker.js');
   assert.match(serviceWorker,/shell-\d+/);
   for(const path of [
@@ -126,12 +155,14 @@ test('PWA shell includes resumable games and the shared natural voice architectu
     'src/shared/audio/providers/browser-tts-provider.js',
     'src/shared/audio/speech-service.js',
     'src/modules/games/games-controller.js',
+    'src/modules/games/core/game-participant-registry.js',
     'src/modules/games/learning/game-learning-providers.js',
     'src/modules/games/online/game-room-client.js',
     'src/modules/games/online/game-room-resume-store.js',
     'src/modules/games/xo/xo-online-session.js',
     'src/modules/games/ui/games-shell.js',
     'src/modules/games/ui/games.css',
+    'src/modules/games/ui/games-open-family.css',
     'src/modules/games/xo/xo-engine.js',
     'src/modules/games/rps/rps-engine.js',
     'src/modules/games/rps/rps-graphics.js',
