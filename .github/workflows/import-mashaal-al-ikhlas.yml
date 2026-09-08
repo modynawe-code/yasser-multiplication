@@ -1,0 +1,56 @@
+name: Import Mashaal Al-Ikhlas
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/family-games-mashaal-integration-v1
+    paths:
+      - .github/workflows/import-mashaal-al-ikhlas.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import-official-recitation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/family-games-mashaal-integration-v1
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch only Surat Al-Ikhlas from the official KFGQPC archive
+        working-directory: preview-v4
+        run: npm run recitation:fetch-official
+
+      - name: Verify generated recitation asset
+        working-directory: preview-v4
+        run: |
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
+          grep -q '"surahNumber": 112' src/modules/mashaal/curriculum/recitation-media-data.js
+          grep -Eq '"sha256": "[a-f0-9]{64}"' src/modules/mashaal/curriculum/recitation-media-data.js
+          sha256sum assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
+
+      - name: Run learning-app regression suite with the real media manifest
+        working-directory: preview-v4
+        run: npm test
+
+      - name: Commit verified Al-Ikhlas media
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview-v4/assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
+          git add preview-v4/src/modules/mashaal/curriculum/recitation-media-data.js
+          if git diff --cached --quiet; then
+            echo "Verified media already matches the branch; nothing to commit."
+          else
+            git commit -m "Add verified KFGQPC Al-Ikhlas recitation"
+            git push origin HEAD:feature/family-games-mashaal-integration-v1
+          fi
