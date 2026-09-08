@@ -1,0 +1,1 @@
+Only KG3 age range and the six official learning-domain labels are currently marked verified from the 2025 Saudi Curriculum Guide. The implementation skill decomposition remains draft until matched to authoritative application/standards documents.
