@@ -24,7 +24,7 @@ test('installed app identity is learner-neutral while runtime owns active browse
 
 test('service worker shell includes open-family runtime and current KG3 activity shell',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-37/);
+  assert.match(worker,/shell-38/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
@@ -39,6 +39,7 @@ test('service worker shell includes open-family runtime and current KG3 activity
     'modules/hub/learner-hub-registry.js',
     'modules/mashaal/curriculum/kg3-activity-catalog.js',
     'modules/mashaal/application/activity-release-validator.js',
+    'modules/mashaal/application/activity-completion.js',
     'modules/mashaal/ui/activity-view-model.js',
     'modules/mashaal/ui/mashaal-controller.js',
     'modules/mashaal/ui/mashaal.css',
