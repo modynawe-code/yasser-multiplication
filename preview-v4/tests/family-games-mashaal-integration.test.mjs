@@ -18,6 +18,18 @@ test('composition root keeps games, rewards and all three learner runtimes toget
   assert.match(main,/createMashaalController\(\{repository:mashaalRepository,onExitToHub:\(\)=>hub\?\.show\(\)\}\)/);
 });
 
+test('family hub cannot boot without restoring the visible games entry',async()=>{
+  const main=await read('src/main.js');
+  const hub=await read('src/modules/hub/learning-shell.js');
+  const games=await read('src/modules/games/ui/games-shell.js');
+  assert.ok(main.indexOf('ensureLearningShell();')<main.indexOf('games.start();'));
+  assert.match(hub,/class="hub-heading-actions"/);
+  assert.match(games,/querySelector\('#hubView \.hub-heading-actions'\)/);
+  assert.match(games,/button\.id='gamesOpenBtn'/);
+  assert.match(games,/button\.textContent='🎮 الألعاب'/);
+  assert.match(games,/id="gamesHomeView"/);
+});
+
 test('learner chooser is open-ended and does not assume exactly two columns',async()=>{
   const registry=await read('src/modules/hub/learner-hub-registry.js');
   const css=await read('src/modules/hub/open-family-learner-grid.css');
@@ -29,7 +41,7 @@ test('learner chooser is open-ended and does not assume exactly two columns',asy
 
 test('offline shell contains both the restored games platform and Mashaal KG3',async()=>{
   const worker=await read('service-worker.js');
-  for(const path of ['modules/games/games-controller.js','modules/games/xo/xo-engine.js','modules/games/rps/rps-controller.js','shared/rewards/reward-engine.js','modules/mashaal/ui/mashaal-controller.js','modules/mashaal/curriculum/kg3-curriculum.js'])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+  for(const path of ['modules/games/games-controller.js','modules/games/xo/xo-engine.js','modules/games/rps/rps-controller.js','shared/rewards/reward-engine.js','modules/mashaal/ui/mashaal-controller.js','modules/mashaal/curriculum/kg3-curriculum.js','modules/hub/open-family-learner-grid.css'])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });
 
 test('durable local backup protects Yasser, Khaled, Mashaal and reward records together',async()=>{
