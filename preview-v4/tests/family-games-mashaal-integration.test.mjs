@@ -30,12 +30,16 @@ test('family hub cannot boot without restoring the visible games entry',async()=
   assert.match(games,/id="gamesHomeView"/);
 });
 
-test('learner chooser is open-ended and does not assume exactly two columns',async()=>{
+test('learner chooser stays registry-driven while using the approved adaptive tablet composition',async()=>{
   const registry=await read('src/modules/hub/learner-hub-registry.js');
   const css=await read('src/modules/hub/open-family-learner-grid.css');
   assert.match(registry,/listLearnerProfiles\(\)/);
   assert.match(registry,/grid\.appendChild\(card\)/);
-  assert.match(css,/repeat\(auto-fit,minmax\(280px,1fr\)\)/);
+  assert.match(registry,/profile\.presentation\?\.homeVariant/);
+  assert.doesNotMatch(registry,/profile\.id==='mashaal'/);
+  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:620px\)[\s\S]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:430px\)[\s\S]*grid-template-columns:1fr/);
   assert.doesNotMatch(css,/grid-template-columns:1fr 1fr/);
 });
 
