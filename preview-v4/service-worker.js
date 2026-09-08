@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-74`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-75`;
 const RECITATION_ASSETS=(globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[]).map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
@@ -29,12 +29,12 @@ const APP_SHELL=[
   './src/modules/games/core/game-contract.js','./src/modules/games/core/game-registry.js','./src/modules/games/core/player-context.js','./src/modules/games/core/game-participant-registry.js','./src/modules/games/core/learning-adapter.js','./src/modules/games/game-catalog.js','./src/modules/games/games-controller.js','./src/modules/games/learning/game-learning-providers.js','./src/modules/games/online/game-room-client.js','./src/modules/games/online/game-room-resume-store.js','./src/modules/games/xo/xo-engine.js','./src/modules/games/xo/xo-online-session.js','./src/modules/games/rps/rps-engine.js','./src/modules/games/rps/rps-graphics.js','./src/modules/games/rps/rps-audio.js','./src/modules/games/rps/rps-controller.js','./src/modules/games/rps/rps-shell.js','./src/modules/games/rps/rps.css','./src/modules/games/rps/rps-open-family.css','./src/modules/games/ui/games-shell.js','./src/modules/games/ui/games.css','./src/modules/games/ui/games-open-family.css',
 
   './src/modules/khaled/domain/curriculum.js','./src/modules/khaled/domain/question-bank.js','./src/modules/khaled/domain/advanced-question-bank.js','./src/modules/khaled/domain/addition-question-bank.js','./src/modules/khaled/domain/subtraction-question-bank.js','./src/modules/khaled/domain/add-sub-strategies-question-bank.js','./src/modules/khaled/domain/place-value-question-bank.js','./src/modules/khaled/domain/measurement-question-bank.js','./src/modules/khaled/domain/number-patterns-question-bank.js','./src/modules/khaled/domain/geometry-fractions-question-bank.js','./src/modules/khaled/domain/money-question-bank.js','./src/modules/khaled/domain/state-model.js',
-  './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-home-shell.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css','./src/modules/khaled/ui/khaled-home.css','./src/modules/khaled/ui/khaled-device-hardening.css','./src/modules/khaled/ui/khaled-activity-types.css','./src/modules/khaled/ui/khaled-number-relations.css','./src/modules/khaled/ui/khaled-addition-renderer.js','./src/modules/khaled/ui/khaled-addition.css','./src/modules/khaled/ui/khaled-subtraction-renderer.js','./src/modules/khaled/ui/khaled-subtraction.css','./src/modules/khaled/ui/khaled-strategies-renderer.js','./src/modules/khaled/ui/khaled-strategies.css','./src/modules/khaled/ui/khaled-place-value-renderer.js','./src/modules/khaled/ui/khaled-place-value.css','./src/modules/khaled/ui/khaled-advanced-renderer.js','./src/modules/khaled/ui/khaled-measurement-renderer.js','./src/modules/khaled/ui/khaled-measurement.css','./src/modules/khaled/ui/khaled-number-patterns-renderer.js','./src/modules/khaled/ui/khaled-number-patterns.css','./src/modules/khaled/ui/khaled-geometry-fractions-renderer.js','./src/modules/khaled/ui/khaled-geometry-fractions.css','./src/modules/khaled/ui/khaled-money-renderer.js','./src/modules/khaled/ui/saudi-money-assets.js','./src/modules/khaled/ui/khaled-money.css',
+  './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-home-shell.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css','./src/modules/khaled/ui/khaled-home.css','./src/modules/khaled/ui/khaled-device-hardening.css','./src/modules/khaled/ui/khaled-activity-types.css','./src/modules/khaled/ui/khaled-number-relations.css','./src/modules/khaled/ui/khaled-addition-renderer.js','./src/modules/khaled/ui/khaled-addition.css','./src/modules/khaled/ui/khaled-subtraction-renderer.js','./src/modules/khaled/ui/khaled-subtraction.css','./src/modules/khaled/ui/khaled-strategies-renderer.js','./src/modules/khaled/ui/khaled-strategies.css','./src/modules/khaled/ui/khaled-place-value-renderer.js','./src/modules/khaled/ui/khaled-place-value.css','./src/modules/khaled/ui/khaled-advanced-renderer.js','./src/modules/khaled/ui/khaled-measurement-renderer.js','./src/modules/khaled/ui/khaled-measurement.css','./src/modules/khaled/ui/khaled-number-patterns-renderer.js','./src/modules/khaled/ui/khaled-number-patterns.css','./src/modules/khaled/ui/khaled-geometry-fractions-renderer.js','./src/modules/khaled/ui/khaled-money-renderer.js','./src/modules/khaled/ui/saudi-money-assets.js','./src/modules/khaled/ui/khaled-money.css',
 
   './src/modules/mashaal/curriculum/kg3-curriculum.js','./src/modules/mashaal/curriculum/kg3-skill-map.js','./src/modules/mashaal/curriculum/kg3-skill-provenance.js','./src/modules/mashaal/curriculum/source-registry.js','./src/modules/mashaal/curriculum/kg3-activity-catalog.js','./src/modules/mashaal/curriculum/recitation-media-data.js','./src/modules/mashaal/curriculum/recitation-media-manifest.js','./src/modules/mashaal/curriculum/recitation-source-registry.js',
   './src/modules/mashaal/data/domain-labels.js','./src/modules/mashaal/data/kg3-domain-order.js','./src/modules/mashaal/domain/constants.js','./src/modules/mashaal/domain/progress-model.js','./src/modules/mashaal/domain/state-model.js',
   './src/modules/mashaal/application/skill-index.js','./src/modules/mashaal/application/activity-plan.js','./src/modules/mashaal/application/activity-release-validator.js','./src/modules/mashaal/application/recitation-activity-factory.js','./src/modules/mashaal/application/recitation-release-validator.js','./src/modules/mashaal/application/digital-attempt.js','./src/modules/mashaal/application/activity-completion.js','./src/modules/mashaal/application/transfer-prompts.js','./src/modules/mashaal/application/progress-service.js','./src/modules/mashaal/application/parent-labels.js','./src/modules/mashaal/application/parent-summary.js',
-  './src/modules/mashaal/infrastructure/local-storage-repository.js','./src/modules/mashaal/ui/home-copy.js','./src/modules/mashaal/ui/home-view-model.js','./src/modules/mashaal/ui/domain-view-model.js','./src/modules/mashaal/ui/activity-view-model.js','./src/modules/mashaal/ui/mashaal-shell.js','./src/modules/mashaal/ui/mashaal-controller.js','./src/modules/mashaal/ui/mashaal.css','./src/modules/mashaal/ui/mashaal-home.css',
+  './src/modules/mashaal/infrastructure/local-storage-repository.js','./src/modules/mashaal/ui/home-copy.js','./src/modules/mashaal/ui/home-view-model.js','./src/modules/mashaal/ui/domain-view-model.js','./src/modules/mashaal/ui/activity-view-model.js','./src/modules/mashaal/ui/mashaal-shell.js','./src/modules/mashaal/ui/mashaal-controller.js','./src/modules/mashaal/ui/mashaal.css','./src/modules/mashaal/ui/mashaal-home.css','./src/modules/mashaal/quran/quran-surah-player.js','./src/modules/mashaal/quran/quran-surah-player.css',
 
   './src/modules/parent/family-parent-controller.js','./src/modules/parent/family-parent-report-capabilities.js','./src/modules/parent/family-parent-renderers.js','./src/modules/parent/family-parent-shell-registry.js','./src/modules/parent/family-parent.css','./src/modules/parent/family-parent-open-learners.css',
 
@@ -52,6 +52,22 @@ function isSaudiCurrencyImage(request){
     const url=new URL(request.url);
     return url.hostname==='www.sama.gov.sa'&&url.pathname.includes('/Currency/PublishingImages/');
   }catch{return false;}
+}
+function isVerifiedQuranPageImage(request){
+  if(request.destination!=='image')return false;
+  try{
+    const url=new URL(request.url);
+    return url.hostname==='raw.githubusercontent.com'&&url.pathname.startsWith('/quranpedia/quran-svg/main/mushafs/hafs/kfqc/svg/')&&url.pathname.endsWith('.svg');
+  }catch{return false;}
+}
+async function runtimeCacheImage(request,cache){
+  const cached=await cache.match(request)||await caches.match(request);
+  if(cached)return cached;
+  try{
+    const response=await fetch(request);
+    if(response&&(response.ok||response.type==='opaque'))await cache.put(request,response.clone());
+    return response;
+  }catch{return Response.error();}
 }
 
 self.addEventListener('install',event=>{event.waitUntil((async()=>{
@@ -78,15 +94,7 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE_VERSION);
-    if(isSaudiCurrencyImage(event.request)){
-      const cached=await cache.match(event.request)||await caches.match(event.request);
-      if(cached)return cached;
-      try{
-        const response=await fetch(event.request);
-        if(response&&(response.ok||response.type==='opaque'))await cache.put(event.request,response.clone());
-        return response;
-      }catch{return Response.error();}
-    }
+    if(isSaudiCurrencyImage(event.request)||isVerifiedQuranPageImage(event.request))return runtimeCacheImage(event.request,cache);
     try{
       const response=await fetch(event.request,{cache:'no-store'});
       if(response&&response.status===200&&response.type!=='opaque')await cache.put(event.request,response.clone());
