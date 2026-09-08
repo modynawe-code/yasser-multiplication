@@ -20,6 +20,20 @@ test('reward cabinet renders the full eight-item catalog with shared graphic key
   assert.doesNotMatch(markup,/🏆|🎯|🔥|⭐/u);
 });
 
+test('locked reward cards do not cover their artwork with a duplicate coming-soon badge',()=>{
+  const markup=buildRewardCabinetMarkup({status});
+  assert.doesNotMatch(markup,/reward-cabinet-lock/);
+  assert.match(markup,/reward-state">مقفل/);
+});
+
+test('reward cabinet isolates numeric ratios from Arabic RTL bidi reordering',async()=>{
+  const source=await readFile(new URL('../src/shared/ui/reward-cabinet.js',import.meta.url),'utf8');
+  assert.match(source,/class="reward-ratio" dir="ltr"/);
+  assert.match(source,/ratioMarkup\(openedKinds,REWARD_CATALOG\.length\)/);
+  assert.match(source,/ratioMarkup\(done,items\.length\)/);
+  assert.match(source,/ratioMarkup\(safeNumber\(item\?\.current\),Math\.max\(1,safeNumber\(item\?\.target\)\|\|1\)\)/);
+});
+
 test('reward graphics are shared while learner ownership stays outside the asset namespace',()=>{
   assert.equal(REWARD_ASSET_KEYS.length,8);
   assert.equal(rewardAssetSource('mastery-cup'),'assets/rewards/mastery-cup.b64.txt');
@@ -39,6 +53,13 @@ test('reward image loader validates and returns a PNG data URL',async()=>{
   const encoded=(await readFile(new URL('../assets/rewards/mastery-cup.b64.txt',import.meta.url),'utf8')).trim();
   const url=await getRewardImageUrl('mastery-cup',{fetchImpl:async()=>({ok:true,text:async()=>encoded})});
   assert.match(url,/^data:image\/png;base64,iVBORw0KGgo/);
+});
+
+test('reward image hydration hides broken image chrome and exposes a fallback contract',async()=>{
+  const source=await readFile(new URL('../src/shared/ui/reward-assets.js',import.meta.url),'utf8');
+  assert.match(source,/image\.onerror=\(\)=>finish\(false\)/);
+  assert.match(source,/revealFallback\(image,art\)/);
+  assert.match(source,/image\.removeAttribute\?\.\('src'\)/);
 });
 
 test('composition root owns cabinet navigation while learner controllers stay untouched',async()=>{
