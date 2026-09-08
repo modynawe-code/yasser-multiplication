@@ -5,11 +5,12 @@ export const LOCAL_BACKUP_PREVIOUS_PATH=`${LOCAL_BACKUP_DIRECTORY}/backup-previo
 export const LOCAL_BACKUP_KEYS=Object.freeze([
   'yasser_mul_v4_preview',
   'khaled_grade1_math_v1',
+  'family_learning:mashaal',
   'family-learning-rewards-v1:yasser',
   'family-learning-rewards-v1:khaled'
 ]);
 
-const PRIMARY_KEYS=new Set(['yasser_mul_v4_preview','khaled_grade1_math_v1']);
+const PRIMARY_KEYS=new Set(['yasser_mul_v4_preview','khaled_grade1_math_v1','family_learning:mashaal']);
 const TRACKED_KEYS=new Set(LOCAL_BACKUP_KEYS);
 const DOCUMENTS_DIRECTORY='DOCUMENTS';
 const UTF8_ENCODING='utf8';
@@ -17,7 +18,7 @@ const UTF8_ENCODING='utf8';
 export function resolveNativeFilesystem(){
   try{
     const cap=globalThis.Capacitor;
-    if(!cap?.isNativePlatform?.()||!cap?.isPluginAvailable?.('Filesystem'))return null;
+    if(!cap?.isNativePlatform?.()||!cap.isPluginAvailable?.('Filesystem'))return null;
     return cap.Plugins?.Filesystem||null;
   }catch{return null;}
 }
