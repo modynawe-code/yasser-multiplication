@@ -39,9 +39,9 @@ test('Khaled presentation stays first-grade responsive while curriculum renderin
   assert.match(controller,/byId\('khaledErrors'\)/);
 });
 
-test('dedicated Khaled home presentation is part of the offline application shell',async()=>{
+test('dedicated Khaled home presentation is part of the versioned offline application shell',async()=>{
   const worker=await read('service-worker.js');
   assert.match(worker,/src\/modules\/khaled\/ui\/khaled-home-shell\.js/);
   assert.match(worker,/src\/modules\/khaled\/ui\/khaled-home\.css/);
-  assert.match(worker,/shell-73/);
+  assert.match(worker,/CACHE_VERSION=`\$\{CACHE_PREFIX\}shell-\d+`/);
 });
