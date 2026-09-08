@@ -1,6 +1,6 @@
 import { hashPassword, normalizeEmail, randomId, randomSessionToken, SECURITY_DEFAULTS, sha256Base64Url, validatePassword, verifyPassword } from './security.mjs';
 import { DEFAULT_LEARNERS, normalizeLearnerSlug } from './learners.mjs';
-import { validateAttemptBatch, validateSessionPayload } from './validation.mjs';
+import { validateAttemptBatch, validateEvidenceBatch, validateSessionPayload } from './validation.mjs';
 
 const JSON_HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
 const nowIso=()=>new Date().toISOString();
@@ -104,6 +104,16 @@ async function syncAttempts(request,env,auth){
   if(statements.length)await env.DB.batch(statements);
   return response(request,env,200,{ok:true,received:parsed.value.length});
 }
+async function syncEvidence(request,env,auth){
+  const parsed=validateEvidenceBatch(await readJson(request));if(!parsed.ok)return response(request,env,400,{error:parsed.error});
+  const learners=await learnerMap(env,auth.parent_id),receivedAt=nowIso(),statements=[];
+  for(const item of parsed.value){
+    const learnerId=learners[item.learnerId];if(!learnerId)return response(request,env,403,{error:'learner_not_owned'});
+    statements.push(env.DB.prepare('INSERT OR IGNORE INTO learning_evidence(evidence_id,learner_id,skill_id,evidence_type,payload_json,client_created_at,received_at) VALUES(?,?,?,?,?,?,?)').bind(item.evidenceId,learnerId,item.skillId,item.type,item.payloadJson,item.createdAt,receivedAt));
+  }
+  if(statements.length)await env.DB.batch(statements);
+  return response(request,env,200,{ok:true,received:parsed.value.length});
+}
 async function syncSession(request,env,auth){
   const parsed=validateSessionPayload(await readJson(request));if(!parsed.ok)return response(request,env,400,{error:parsed.error});
   const learners=await learnerMap(env,auth.parent_id),item=parsed.value,learnerId=learners[item.learnerId];if(!learnerId)return response(request,env,403,{error:'learner_not_owned'});
@@ -114,9 +124,15 @@ async function snapshot(request,env,auth){
   await learnersForParent(env,auth.parent_id);
   const baselines=await env.DB.prepare(`SELECT l.slug AS learnerId,b.state_json AS stateJson FROM learner_baselines b JOIN learners l ON l.id=b.learner_id WHERE l.parent_id=?`).bind(auth.parent_id).all();
   const attempts=await env.DB.prepare(`SELECT a.attempt_id AS attemptId,l.slug AS learnerId,a.skill_id AS skillId,a.table_number AS "table",a.multiplier,a.question_id AS questionId,a.question_type AS questionType,a.answer_json AS answerJson,a.correct_answer_json AS correctAnswerJson,a.is_correct AS isCorrect,a.response_ms AS responseMs,a.client_created_at AS createdAt FROM attempts a JOIN learners l ON l.id=a.learner_id WHERE l.parent_id=? ORDER BY a.client_created_at ASC LIMIT 10000`).bind(auth.parent_id).all();
+  const evidence=await env.DB.prepare(`SELECT e.evidence_id AS evidenceId,l.slug AS learnerId,e.skill_id AS skillId,e.evidence_type AS type,e.payload_json AS payloadJson,e.client_created_at AS createdAt FROM learning_evidence e JOIN learners l ON l.id=e.learner_id WHERE l.parent_id=? ORDER BY e.client_created_at ASC LIMIT 10000`).bind(auth.parent_id).all();
   const sessions=await env.DB.prepare(`SELECT s.session_id AS sessionId,l.slug AS learnerId,s.skill_id AS skillId,s.mode,s.started_at AS startedAt,s.ended_at AS endedAt,s.correct,s.wrong,s.total,s.incomplete FROM learning_sessions s JOIN learners l ON l.id=s.learner_id WHERE l.parent_id=? ORDER BY COALESCE(s.ended_at,s.started_at) DESC LIMIT 500`).bind(auth.parent_id).all();
   const baselineMap={};for(const item of baselines.results||[]){try{baselineMap[item.learnerId]=JSON.parse(item.stateJson);}catch{}}
-  return response(request,env,200,{baselines:baselineMap,attempts:(attempts.results||[]).map(item=>({...item,answer:JSON.parse(item.answerJson||'null'),correctAnswer:JSON.parse(item.correctAnswerJson||'null'),isCorrect:Boolean(item.isCorrect)})),sessions:sessions.results||[]});
+  return response(request,env,200,{
+    baselines:baselineMap,
+    attempts:(attempts.results||[]).map(item=>({...item,answer:JSON.parse(item.answerJson||'null'),correctAnswer:JSON.parse(item.correctAnswerJson||'null'),isCorrect:Boolean(item.isCorrect)})),
+    evidence:(evidence.results||[]).map(item=>({...item,payload:JSON.parse(item.payloadJson||'null')})),
+    sessions:sessions.results||[]
+  });
 }
 
 export default{
@@ -131,6 +147,7 @@ export default{
     if(path==='/v1/me'&&request.method==='GET')return response(request,env,200,{parent:{email:auth.email},learners:await learnersForParent(env,auth.parent_id)});
     if(path==='/v1/sync/baseline'&&request.method==='POST')return syncBaseline(request,env,auth);
     if(path==='/v1/sync/attempts'&&request.method==='POST')return syncAttempts(request,env,auth);
+    if(path==='/v1/sync/evidence'&&request.method==='POST')return syncEvidence(request,env,auth);
     if(path==='/v1/sync/session'&&request.method==='POST')return syncSession(request,env,auth);
     if(path==='/v1/sync/snapshot'&&request.method==='GET')return snapshot(request,env,auth);
     return response(request,env,404,{error:'not_found'});
