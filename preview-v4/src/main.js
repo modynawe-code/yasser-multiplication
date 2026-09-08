@@ -15,6 +15,7 @@ import { hydrateFamilyParentLearners } from './modules/parent/family-parent-shel
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 
+document.title='تعلم العائلة';
 ensureLearningShell();
 ensureMashaalShell();
 hydrateLearnerHub();
