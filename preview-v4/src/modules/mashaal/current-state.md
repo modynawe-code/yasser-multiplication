@@ -1,1 +1,1 @@
-Current integration state: foundation only. Family Hub, parent report and backend generic learner migration are pending until existing code paths are inspected and updated with regression coverage.
+Current integration state: technical integration complete on the feature branch. Mashaal is wired into the Family Hub, parent report, generic learner backend contracts, cloud sync, and offline PWA shell. Frontend and backend regression suites are green. Production D1 migration has not been applied, and detailed KG3 curriculum content remains blocked until source verification.
