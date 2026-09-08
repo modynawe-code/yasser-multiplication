@@ -99,7 +99,7 @@ test('manifest record keeps approved source identity and local-only playback pat
   assert.equal(record.sourceId,'kfgqpc-ibrahim-al-akhdar-hafs');
   assert.equal(record.surahNumber,112);
   assert.equal(record.sha256,hash);
-  assert.match(record.localPath(/^|$)/?null:/^\.\/assets\/recitation\//);
+  assert.match(record.localPath,/^\.\/assets\/recitation\//);
   const source=renderRecitationMediaData(record);
   assert.match(source,/Object\.freeze/);
   assert.equal(looksLikeMp3(Buffer.from('not-mp3')),false);
