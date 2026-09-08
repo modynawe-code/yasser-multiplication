@@ -28,7 +28,7 @@ test('installed app identity is learner-neutral while runtime keeps the full gam
 
 test('service worker shell includes cloud session restore, games, shared UI contracts, currency assets and open-family modules',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-72/);
+  assert.match(worker,/shell-73/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
@@ -42,6 +42,7 @@ test('service worker shell includes cloud session restore, games, shared UI cont
     'modules/yasser/ui/yasser-home-shell.js',
     'modules/yasser/ui/yasser-home.css',
     'modules/khaled/domain/money-question-bank.js',
+    'modules/khaled/ui/khaled-home-shell.js',
     'modules/khaled/ui/saudi-money-assets.js',
     'modules/khaled/ui/khaled-home.css',
     'modules/khaled/ui/khaled-device-hardening.css',
