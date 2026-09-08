@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-76`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-77`;
 const RECITATION_ASSETS=(globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[]).map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
@@ -34,7 +34,7 @@ const APP_SHELL=[
   './src/modules/mashaal/curriculum/kg3-curriculum.js','./src/modules/mashaal/curriculum/kg3-skill-map.js','./src/modules/mashaal/curriculum/kg3-skill-provenance.js','./src/modules/mashaal/curriculum/source-registry.js','./src/modules/mashaal/curriculum/kg3-activity-catalog.js','./src/modules/mashaal/curriculum/recitation-media-data.js','./src/modules/mashaal/curriculum/recitation-media-manifest.js','./src/modules/mashaal/curriculum/recitation-source-registry.js',
   './src/modules/mashaal/data/domain-labels.js','./src/modules/mashaal/data/kg3-domain-order.js','./src/modules/mashaal/domain/constants.js','./src/modules/mashaal/domain/progress-model.js','./src/modules/mashaal/domain/state-model.js',
   './src/modules/mashaal/application/skill-index.js','./src/modules/mashaal/application/activity-plan.js','./src/modules/mashaal/application/activity-release-validator.js','./src/modules/mashaal/application/recitation-activity-factory.js','./src/modules/mashaal/application/recitation-release-validator.js','./src/modules/mashaal/application/digital-attempt.js','./src/modules/mashaal/application/activity-completion.js','./src/modules/mashaal/application/transfer-prompts.js','./src/modules/mashaal/application/progress-service.js','./src/modules/mashaal/application/parent-labels.js','./src/modules/mashaal/application/parent-summary.js',
-  './src/modules/mashaal/infrastructure/local-storage-repository.js','./src/modules/mashaal/ui/home-copy.js','./src/modules/mashaal/ui/home-view-model.js','./src/modules/mashaal/ui/domain-view-model.js','./src/modules/mashaal/ui/activity-view-model.js','./src/modules/mashaal/ui/mashaal-shell.js','./src/modules/mashaal/ui/mashaal-controller.js','./src/modules/mashaal/ui/mashaal.css','./src/modules/mashaal/ui/mashaal-home.css','./src/modules/mashaal/quran/quran-surah-player.js','./src/modules/mashaal/quran/quran-surah-player.css',
+  './src/modules/mashaal/infrastructure/local-storage-repository.js','./src/modules/mashaal/ui/home-copy.js','./src/modules/mashaal/ui/home-view-model.js','./src/modules/mashaal/ui/domain-view-model.js','./src/modules/mashaal/ui/activity-view-model.js','./src/modules/mashaal/ui/mashaal-shell.js','./src/modules/mashaal/ui/mashaal-controller.js','./src/modules/mashaal/ui/mashaal-visuals.js','./src/modules/mashaal/ui/mashaal.css','./src/modules/mashaal/ui/mashaal-home.css','./src/modules/mashaal/ui/mashaal-visuals.css','./src/modules/mashaal/quran/quran-surah-player.js','./src/modules/mashaal/quran/quran-surah-player.css',
 
   './src/modules/parent/family-parent-controller.js','./src/modules/parent/family-parent-report-capabilities.js','./src/modules/parent/family-parent-renderers.js','./src/modules/parent/family-parent-shell-registry.js','./src/modules/parent/family-parent.css','./src/modules/parent/family-parent-open-learners.css',
 
