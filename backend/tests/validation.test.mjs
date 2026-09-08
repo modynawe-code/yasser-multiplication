@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateAttemptBatch, validateAttemptPayload, validateSessionPayload } from '../src/validation.mjs';
+import { validateAttemptBatch, validateAttemptPayload, validateEvidenceBatch, validateEvidencePayload, validateSessionPayload } from '../src/validation.mjs';
 
 const valid={attemptId:'kha-1',learnerId:'khaled',skillId:'numbers-0-5',questionId:'q1',questionType:'count-select',answer:2,correctAnswer:3,isCorrect:false,createdAt:'2026-09-05T17:00:00.000Z'};
 
@@ -23,6 +23,15 @@ test('Yasser attempt validation requires a real multiplication fact coordinate',
 test('attempt sync batch has a hard request-size count limit',()=>{
   assert.equal(validateAttemptBatch({attempts:[valid]}).ok,true);
   assert.equal(validateAttemptBatch({attempts:Array.from({length:251},(_,i)=>({...valid,attemptId:`x-${i}`}))}).ok,false);
+});
+
+test('generic learning evidence accepts safe child-owned identities and bounded payloads',()=>{
+  const evidence={evidenceId:'ev-1',learnerId:'mashaal',skillId:'count-and-quantity',type:'activity-completion',payload:{completed:true},createdAt:'2026-09-08T05:00:00.000Z'};
+  assert.equal(validateEvidencePayload(evidence).ok,true);
+  assert.equal(validateEvidencePayload({...evidence,learnerId:'future-child',evidenceId:'ev-2'}).ok,true);
+  assert.equal(validateEvidencePayload({...evidence,learnerId:'../bad'}).ok,false);
+  assert.equal(validateEvidenceBatch({evidence:[evidence]}).ok,true);
+  assert.equal(validateEvidenceBatch({evidence:Array.from({length:251},(_,i)=>({...evidence,evidenceId:`ev-${i}`}))}).ok,false);
 });
 
 test('learning session validation accepts safe generic identity and rejects malformed identity',()=>{
