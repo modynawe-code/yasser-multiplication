@@ -21,6 +21,16 @@ function defaultContextFactory(){
   return AudioContextClass?new AudioContextClass():null;
 }
 
+function normalizePlayer(input){
+  if(input&&typeof input==='object'){
+    const id=String(input.learnerId||input.playerId||'').trim();
+    const name=String(input.displayName||id||'اللاعب').trim();
+    return{id:id||'player',name};
+  }
+  const id=String(input||'player').trim()||'player';
+  return{id,name:id};
+}
+
 export function createRpsAudio({voiceService=createVoiceService(),contextFactory=defaultContextFactory}={}){
   let context=null;
 
@@ -50,21 +60,19 @@ export function createRpsAudio({voiceService=createVoiceService(),contextFactory
   }
 
   function say(id,text){return voiceService.say({id,text,lang:'ar-SA',rate:.9,pitch:1,volume:1});}
+  function playerSay(event,input,textFactory){
+    const player=normalizePlayer(input);
+    return say(`games.rps.${event}.${player.id}`,textFactory(player.name));
+  }
 
   return Object.freeze({
     choose:()=>playSfx('choose'),
     reveal:()=>playSfx('reveal'),
     pointSfx:()=>playSfx('point'),
-    turn:playerId=>playerId==='yasser'
-      ?say('games.rps.turn.yasser','دور ياسر. حجر، ورق، مقص. اختر حركتك.')
-      :say('games.rps.turn.khaled','دور خالد. حجر، ورق، مقص. اختر حركتك.'),
-    point:playerId=>playerId==='yasser'
-      ?say('games.rps.point.yasser','ياسر أخذ نقطة.')
-      :say('games.rps.point.khaled','خالد أخذ نقطة.'),
+    turn:player=>playerSay('turn',player,name=>`دور ${name}. حجر، ورق، مقص. اختر حركتك.`),
+    point:player=>playerSay('point',player,name=>`${name} أخذ نقطة.`),
     draw:()=>say('games.rps.draw','تعادل. نفس الحركة.'),
-    win:playerId=>playerId==='yasser'
-      ?say('games.rps.win.yasser','ياسر بطل المباراة. مبروك.')
-      :say('games.rps.win.khaled','خالد بطل المباراة. مبروك.'),
+    win:player=>playerSay('win',player,name=>`${name} بطل المباراة. مبروك.`),
     stop:()=>voiceService.stop()
   });
 }
