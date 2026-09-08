@@ -1,22 +1,17 @@
 const SYMBOLS=Object.freeze({
   star:'⭐',ball:'⚽',heart:'❤️',door:'🚪',apple:'🍎',moon:'🌙',circle:'●',square:'■',box:'▣',
-  'red-circle':'🔴','blue-circle':'🔵','red-square':'🟥','yellow-square':'🟨',
-  wake:'🌅','brush-teeth':'🪥',breakfast:'🥣',umbrella:'☂️',sunglasses:'🕶️',done:'تم ✓',
-  happy:'😊 فرحانة',sad:'😢 حزينة',angry:'😠 زعلانة',
-  'wait-turn':'🤝 أنتظر دوري','grab-ball':'✋ آخذ الكرة','walk-away-angry':'😠 أبتعد وأنا غاضبة',
-  'ask-help':'🙋 أطلب المساعدة','throw-blocks':'🧱 أرمي المكعبات','kick-blocks':'🦶 أركل المكعبات',
-  'wet-hands':'💧 أبلل يدي','soap':'🧼 أستخدم الصابون','rub-hands':'👐 أفرك يدي','rinse-hands':'🚿 أشطف يدي',
-  'stay-away':'↩️ أبتعد','touch-hot':'✋ ألمس','play-near-hot':'⚽ ألعب قربه'
+  'red-circle':'🔴','blue-circle':'🔵','red-square':'🟥','yellow-square':'🟨',wake:'🌅','brush-teeth':'🪥',breakfast:'🥣',umbrella:'☂️',sunglasses:'🕶️',done:'تم ✓',
+  happy:'😊 فرحانة',sad:'😢 حزينة',angry:'😠 زعلانة','wait-turn':'🤝 أنتظر دوري','grab-ball':'✋ آخذ الكرة','walk-away-angry':'😠 أبتعد وأنا غاضبة',
+  'ask-help':'🙋 أطلب المساعدة','throw-blocks':'🧱 أرمي المكعبات','kick-blocks':'🦶 أركل المكعبات','wet-hands':'💧 أبلل يدي','soap':'🧼 أستخدم الصابون','rub-hands':'👐 أفرك يدي','rinse-hands':'🚿 أشطف يدي',
+  'stay-away':'↩️ أبتعد','touch-hot':'✋ ألمس','play-near-hot':'⚽ ألعب قربه','return-book':'📚 أرجع الكتاب','leave-book-floor':'📖 أتركه على الأرض','damage-book':'✂️ أتلفه',
+  'help-tidy':'🧺 أساعد في الترتيب','leave-mess':'🚶 أترك المكان','scatter-toys':'🧸 أنثر الألعاب','saudi-flag':'🇸🇦','japan-flag':'🇯🇵','brazil-flag':'🇧🇷',
+  doctor:'🩺 طبيب',teacher:'👩‍🏫 معلمة',baker:'🥖 خباز'
 });
 
-const tokenLabel=(token)=>({
-  left:'المجموعة الأولى',right:'المجموعة الثانية',circle:'●',star:'⭐',square:'■',
-  'ball-above-box':'⚽\n▣','ball-inside-box':'▣ ⚽','ball-below-box':'▣\n⚽'
-}[token]||SYMBOLS[token]||String(token));
-
+const tokenLabel=(token)=>({left:'المجموعة الأولى',right:'المجموعة الثانية',circle:'●',star:'⭐',square:'■','ball-above-box':'⚽\n▣','ball-inside-box':'▣ ⚽','ball-below-box':'▣\n⚽'}[token]||SYMBOLS[token]||String(token));
 const SCENES=Object.freeze({
-  'girl-drinking-water':'👧 💧','rainy-day':'🌧️ 👧','girl-lost-toy':'👧 🧸 ❓','two-children-one-ball':'👧 ⚽ 👧',
-  'fallen-block-tower':'👧 🧱💥','hot-surface':'🔥 ⚠️'
+  'girl-drinking-water':'👧 💧','rainy-day':'🌧️ 👧','girl-lost-toy':'👧 🧸 ❓','two-children-one-ball':'👧 ⚽ 👧','fallen-block-tower':'👧 🧱💥','hot-surface':'🔥 ⚠️',
+  'borrowed-book':'👧 📖 📚','playtime-cleanup':'🧸 🧺 👧👧','flags':'🇸🇦 🇯🇵 🇧🇷','clinic':'🤒 🏥'
 });
 
 function stimulusModel(stimulus={}){
@@ -40,15 +35,8 @@ function stimulusModel(stimulus={}){
 
 export function createMashaalActivityViewModel(activity){
   if(!activity)return null;
-  const orderedSequence=activity.stimulus?.kind==='ordered-actions';
-  const multiSelect=activity.interaction==='sorting';
-  const completionOnly=activity.evidenceType==='activity-completion';
-  return Object.freeze({
-    id:activity.id,skillId:activity.skillId,interaction:activity.interaction,evidenceType:activity.evidenceType,
-    promptAr:activity.promptAr,audioPromptAr:activity.audioPromptAr,stimulus:Object.freeze(stimulusModel(activity.stimulus)),
-    choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),multiSelect,orderedSequence,completionOnly,
-    correctValues:Object.freeze(completionOnly?[]:orderedSequence?[...(activity.stimulus?.actions||[])]:multiSelect?String(activity.correctChoice||'').split('|').filter(Boolean):[String(activity.correctChoice||'')])
-  });
+  const orderedSequence=activity.stimulus?.kind==='ordered-actions',multiSelect=activity.interaction==='sorting',completionOnly=activity.evidenceType==='activity-completion';
+  return Object.freeze({id:activity.id,skillId:activity.skillId,interaction:activity.interaction,evidenceType:activity.evidenceType,promptAr:activity.promptAr,audioPromptAr:activity.audioPromptAr,stimulus:Object.freeze(stimulusModel(activity.stimulus)),choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value)}))),multiSelect,orderedSequence,completionOnly,correctValues:Object.freeze(completionOnly?[]:orderedSequence?[...(activity.stimulus?.actions||[])]:multiSelect?String(activity.correctChoice||'').split('|').filter(Boolean):[String(activity.correctChoice||'')])});
 }
 
 export function isMashaalActivityAnswerCorrect(viewModel,answer){
