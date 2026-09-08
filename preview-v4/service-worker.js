@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-64`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-65`;
 const RECITATION_ASSETS=(globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[]).map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
@@ -23,7 +23,7 @@ const APP_SHELL=[
   './src/shared/ui/learning-motivation.js','./src/shared/ui/learning-motivation.css','./src/shared/ui/reward-assets.js','./src/shared/ui/reward-cabinet.js','./src/shared/ui/reward-cabinet.css',
   './src/shared/config/family-api-config.js','./src/shared/sync/family-auth-client.js','./src/shared/sync/family-sync-service.js',
 
-  './src/modules/hub/hub-controller.js','./src/modules/hub/learner-runtime-registry.js','./src/modules/hub/learner-hub-registry.js','./src/modules/hub/learning-shell.js','./src/modules/hub/learning-hub.css',
+  './src/modules/hub/hub-controller.js','./src/modules/hub/learner-runtime-registry.js','./src/modules/hub/learner-hub-registry.js','./src/modules/hub/learning-shell.js','./src/modules/hub/learning-hub.css','./src/modules/hub/open-family-learner-grid.css',
 
   './src/modules/games/core/game-contract.js','./src/modules/games/core/game-registry.js','./src/modules/games/core/player-context.js','./src/modules/games/core/learning-adapter.js','./src/modules/games/game-catalog.js','./src/modules/games/games-controller.js','./src/modules/games/learning/game-learning-providers.js','./src/modules/games/online/game-room-client.js','./src/modules/games/online/game-room-resume-store.js','./src/modules/games/xo/xo-engine.js','./src/modules/games/xo/xo-online-session.js','./src/modules/games/rps/rps-engine.js','./src/modules/games/rps/rps-graphics.js','./src/modules/games/rps/rps-audio.js','./src/modules/games/rps/rps-controller.js','./src/modules/games/rps/rps-shell.js','./src/modules/games/rps/rps.css','./src/modules/games/ui/games-shell.js','./src/modules/games/ui/games.css',
 
