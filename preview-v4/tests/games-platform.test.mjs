@@ -31,7 +31,14 @@ test('player context carries learner identity but no academic progress state',()
   assert.equal(player.learnerId,'khaled');
 });
 
-test('learning adapter routes questions by learner through a provider boundary',async()=>{
+test('player context accepts any safe future learner slug instead of a fixed child list',()=>{
+  const future=createPlayerContext({playerId:'future-player',learnerId:'future-child',displayName:'طفل جديد'});
+  assert.equal(future.learnerId,'future-child');
+  assert.equal(future.displayName,'طفل جديد');
+  assert.throws(()=>createPlayerContext({playerId:'bad',learnerId:'../unsafe'}));
+});
+
+test('learning adapter routes questions and exposes educational eligibility by provider registration',async()=>{
   const calls=[];
   const adapter=createLearningAdapter({providers:{
     yasser:{nextChallenge:payload=>{calls.push(payload.player.learnerId);return{kind:'multiplication'};}},
@@ -39,6 +46,11 @@ test('learning adapter routes questions by learner through a provider boundary',
   }});
   const yasser=createPlayerContext({playerId:'y',learnerId:'yasser',displayName:'ياسر'});
   const khaled=createPlayerContext({playerId:'k',learnerId:'khaled',displayName:'خالد'});
+  assert.equal(adapter.supports('yasser'),true);
+  assert.equal(adapter.supports('khaled'),true);
+  assert.equal(adapter.supports('mashaal'),false);
+  assert.equal(adapter.supports('future-child'),false);
+  assert.deepEqual(adapter.listSupportedLearnerIds(),['yasser','khaled']);
   assert.equal((await adapter.nextChallenge(yasser)).kind,'multiplication');
   assert.equal((await adapter.nextChallenge(khaled)).kind,'grade-one');
   assert.deepEqual(calls,['yasser','khaled']);
