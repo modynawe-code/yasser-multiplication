@@ -11,12 +11,14 @@ import { ensureMashaalShell } from './modules/mashaal/ui/mashaal-shell.js';
 import { createMashaalController } from './modules/mashaal/ui/mashaal-controller.js';
 import { createMashaalLocalStorageRepository } from './modules/mashaal/infrastructure/local-storage-repository.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
+import { hydrateFamilyParentLearners } from './modules/parent/family-parent-shell-registry.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 
 ensureLearningShell();
 ensureMashaalShell();
 hydrateLearnerHub();
+hydrateFamilyParentLearners();
 
 const yasserRepository=createLocalStorageRepository();
 const khaledRepository=createKhaledRepository();
@@ -50,9 +52,7 @@ function enterYasser(){
 function enterKhaled(){
   yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();
 }
-function enterMashaal(){
-  yasser.leave();khaled.leave();familyParent.leave();mashaal.enter();
-}
+function enterMashaal(){yasser.leave();khaled.leave();familyParent.leave();mashaal.enter();}
 function enterLearner(learnerId){
   if(learnerId==='yasser')return enterYasser();
   if(learnerId==='khaled')return enterKhaled();
