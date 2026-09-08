@@ -14,12 +14,12 @@ export const MASHAAL_KG3_SKILL_PROVENANCE = Object.freeze({
   'letter-sound-readiness':strategy('Reading strategies for adults working with 4 to 6 year olds: alphabetic principle'),
   'prewriting-fine-motor':pending('Writing is directly supported, but the exact fine-motor/prewriting KG2-3 indicator still needs matching.'),
 
-  'count-and-quantity':pending('Locate the exact KG2-3 number-sense/counting indicator before release.'),
-  'compare-quantities':pending('Locate the exact KG2-3 quantity-comparison indicator before release.'),
-  'classify-sort':pending('Locate the exact KG2-3 classification/sorting indicator before release.'),
+  'count-and-quantity':direct('CK 1.1.7 and related Concepts of Numbers and Mathematical Operations indicators'),
+  'compare-quantities':direct('CK 1.1.8, compare concrete groups using same as, more than and fewer than'),
+  'classify-sort':direct('CK 2.3.1-CK 2.3.2, Science: categorize and sort living things'),
   'patterns':pending('Locate the exact KG2-3 pattern indicator before release.'),
   'shapes-space':direct('CK 1.4.5-CK 1.4.7, Mathematics: Geometry and Spatial Sense'),
-  'observe-reason':pending('Map this broad implementation skill to one or more explicit cognition/approaches-to-learning indicators.'),
+  'observe-reason':direct('CK 2.1.1-CK 2.1.5 and AL 3.0.1-AL 3.0.2, inquiry, inference and problem solving'),
 
   'recognize-emotions':strand('Social-Emotional Development: Self / Emotional Expression'),
   'express-needs-feelings':strand('Social-Emotional Development: Self / Emotional Expression'),
