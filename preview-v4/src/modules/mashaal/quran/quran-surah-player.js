@@ -25,6 +25,11 @@ function normalizedFocusRegion(mushafPage,surahNumber){
   return Object.freeze({top,height,aspect,labelAr:String(region.labelAr||'').trim()});
 }
 
+function pageSources(mushafPage){
+  const values=[mushafPage?.imagePath,mushafPage?.imageUrl,...(Array.isArray(mushafPage?.fallbackImageUrls)?mushafPage.fallbackImageUrls:[])];
+  return [...new Set(values.map(value=>String(value||'').trim()).filter(Boolean))];
+}
+
 export function mountQuranSurahPlayer(host,{
   surahNameAr='السورة',
   surahNumber=null,
@@ -36,8 +41,8 @@ export function mountQuranSurahPlayer(host,{
   if(!audioPath)throw new Error('Verified human recitation audio is required');
   ensureStyle();
 
-  const pageImage=String(mushafPage?.imagePath||mushafPage?.imageUrl||'').trim();
-  if(!pageImage)throw new Error('Verified mushaf page image is required');
+  const sources=pageSources(mushafPage);
+  if(!sources.length)throw new Error('Verified mushaf page image is required');
   const focusRegion=normalizedFocusRegion(mushafPage,surahNumber);
 
   host.innerHTML='';
@@ -61,7 +66,7 @@ export function mountQuranSurahPlayer(host,{
 
   const image=document.createElement('img');
   image.className='quran-page-image';
-  image.src=pageImage;
+  image.src=sources[0];
   image.alt=focusRegion
     ?`سورة ${surahNameAr} كما تظهر في صفحة ${mushafPage?.pageNumber||''} من مصحف المدينة`
     :`صفحة المصحف التي تحتوي على سورة ${surahNameAr}`;
@@ -73,9 +78,10 @@ export function mountQuranSurahPlayer(host,{
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
   const pageLabel=mushafPage?.pageNumber?` • صفحة ${mushafPage.pageNumber}`:'';
-  caption.textContent=focusRegion
+  const normalCaption=focusRegion
     ?`${focusRegion.labelAr||`سورة ${surahNameAr}`} • من مصحف المدينة${pageLabel} • حفص عن عاصم`
     :`مصحف المدينة • حفص عن عاصم${pageLabel}`;
+  caption.textContent=normalCaption;
   figure.append(viewport,caption);
 
   const audio=new Audio(audioPath);
@@ -89,7 +95,7 @@ export function mountQuranSurahPlayer(host,{
   const play=document.createElement('button');
   play.type='button';play.className='quran-control quran-control-primary';play.innerHTML='<span aria-hidden="true">▶</span><strong>تشغيل</strong>';
   const pause=document.createElement('button');
-  pause.type='button';pause.className='quran-control';pause.innerHTML='<span aria-hidden="true">⏸</span><strong>إيقاف مؤقت</strong>';
+  pause.type='button';pause.className='quran-control';pause.innerHTML='<span aria-hidden="true">Ⅱ</span><strong>إيقاف مؤقت</strong>';
   const restart=document.createElement('button');
   restart.type='button';restart.className='quran-control';restart.innerHTML='<span aria-hidden="true">↺</span><strong>من البداية</strong>';
   transport.append(play,pause,restart);
@@ -110,7 +116,7 @@ export function mountQuranSurahPlayer(host,{
   root.append(figure,transport,progressWrap,status);
   host.appendChild(root);
 
-  let completed=false,destroyed=false;
+  let completed=false,destroyed=false,sourceIndex=0;
   const updateProgress=()=>{
     if(destroyed)return;
     const duration=audio.duration;
@@ -118,10 +124,10 @@ export function mountQuranSurahPlayer(host,{
     time.textContent=`${formatTime(audio.currentTime)} / ${formatTime(duration)}`;
   };
   const markCompleted=()=>{
-    completed=true;status.textContent='انتهت التلاوة ✨';updateProgress();onCompleted();
+    completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();
   };
   const playAudio=async()=>{
-    try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة 🎧':'تعمل التلاوة الآن 🎧';return true;}
+    try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';return true;}
     catch{status.textContent='اضغطي تشغيل مرة ثانية';return false;}
   };
   const pauseAudio=()=>{audio.pause();status.textContent='متوقفة مؤقتًا';};
@@ -135,7 +141,13 @@ export function mountQuranSurahPlayer(host,{
   audio.addEventListener('loadedmetadata',updateProgress);
   audio.addEventListener('ended',markCompleted);
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
-  image.addEventListener('error',()=>{figure.dataset.imageError='true';caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
+  image.addEventListener('load',()=>{figure.removeAttribute('data-image-error');caption.textContent=normalCaption;});
+  image.addEventListener('error',()=>{
+    sourceIndex+=1;
+    if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}
+    figure.dataset.imageError='true';
+    caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';
+  });
 
   return Object.freeze({
     play:playAudio,
