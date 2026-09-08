@@ -6,6 +6,8 @@ import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activi
 import { validateMashaalRecitationActivity } from '../src/modules/mashaal/application/recitation-release-validator.js';
 import { getMashaalRecitationMediaStatus } from '../src/modules/mashaal/curriculum/recitation-source-registry.js';
 
+const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
+
 test('recitation runtime opens only when integrity-verified local human audio exists',()=>{
   const media=getMashaalRecitationMediaStatus();
   const plan=createMashaalActivityPlan('listen-repeat');
@@ -17,18 +19,23 @@ test('recitation runtime opens only when integrity-verified local human audio ex
     assert.equal(activity.stimulus.surahNumber,112);
     assert.match(activity.mediaPath,/^\.\/assets\/recitation\/.*\.mp3$/);
     assert.match(activity.mediaSha256,/^[a-f0-9]{64}$/);
+    assert.equal(activity.mushafPage.pageNumber,604);
+    assert.match(activity.mushafPage.imageUrl,/quranpedia\/quran-svg\/main\/mushafs\/hafs\/kfqc\/svg\/604\.svg$/);
   }
 });
 
-test('recitation view model carries a local human-audio path separately from TTS instructions',()=>{
+test('recitation view model carries human audio and verified Mushaf artwork separately from spoken instructions',()=>{
   const model=createMashaalActivityViewModel({
     id:'recitation-demo',skillId:'listen-repeat',interaction:'listening',evidenceType:'activity-completion',
-    promptAr:'اسمعي ثم رددي.',audioPromptAr:'اضغطي زر الاستماع ثم رددي بعد القارئ.',
-    stimulus:{kind:'recitation-audio',surahNameAr:'سورة قصيرة'},choices:['done'],mediaPath:'./assets/recitation/demo.mp3'
+    promptAr:'اسمعي ثم رددي.',audioPromptAr:'اضغطي تشغيل ثم رددي بعد القارئ.',
+    stimulus:{kind:'recitation-audio',surahNameAr:'الإخلاص',surahNumber:112},choices:['done'],mediaPath:'./assets/recitation/demo.mp3',
+    mushafPage:{sourceId:'kfgqpc-hafs-madinah-svg',pageNumber:604,imageUrl:'https://example.test/604.svg'}
   });
   assert.equal(model.requiresHumanRecitation,true);
   assert.equal(model.recitationAudioPath,'./assets/recitation/demo.mp3');
   assert.equal(model.stimulus.kind,'recitation');
+  assert.equal(model.stimulus.surahNameAr,'الإخلاص');
+  assert.equal(model.recitationMushafPage.pageNumber,604);
   assert.equal(model.completionOnly,true);
 });
 
@@ -38,11 +45,30 @@ test('recitation validator rejects media that is not present in the verified man
   assert.ok(result.errors.includes('approved-recitation-media-required'));
 });
 
-test('Mashaal controller never uses TTS as Quran recitation audio',async()=>{
-  const controller=await readFile(new URL('../src/modules/mashaal/ui/mashaal-controller.js',import.meta.url),'utf8');
-  assert.match(controller,/new Audio\(currentViewModel\.recitationAudioPath\)/);
-  assert.match(controller,/requiresHumanRecitation/);
-  assert.match(controller,/recitationPlayed/);
-  assert.match(controller,/اسمعي التلاوة أولًا/);
-  assert.match(controller,/if\(currentViewModel\.requiresHumanRecitation\)\{void playCurrentRecitation\(\);return;\}/);
+test('reusable Quran player exposes explicit play pause and restart controls without Quran TTS',async()=>{
+  const player=await read('src/modules/mashaal/quran/quran-surah-player.js');
+  assert.match(player,/تشغيل/);
+  assert.match(player,/إيقاف مؤقت/);
+  assert.match(player,/من البداية/);
+  assert.match(player,/audio\.play\(\)/);
+  assert.match(player,/audio\.pause\(\)/);
+  assert.match(player,/audio\.currentTime=0/);
+  assert.doesNotMatch(player,/speechSynthesis|SpeechSynthesisUtterance|createSpeechService/);
+});
+
+test('Mashaal controller delegates Quran recitation to reusable player and only speaks instructions',async()=>{
+  const controller=await read('src/modules/mashaal/ui/mashaal-controller.js');
+  assert.match(controller,/mountQuranSurahPlayer/);
+  assert.match(controller,/recitationMushafPage/);
+  assert.match(controller,/recitationPlayed=true/);
+  assert.match(controller,/اسمعي التلاوة كاملة أولًا/);
+  assert.doesNotMatch(controller,/new Audio\(/);
+});
+
+test('service worker caches the Quran player and runtime-caches only the verified KFGQPC Hafs SVG path',async()=>{
+  const worker=await read('service-worker.js');
+  assert.match(worker,/modules\/mashaal\/quran\/quran-surah-player\.js/);
+  assert.match(worker,/modules\/mashaal\/quran\/quran-surah-player\.css/);
+  assert.match(worker,/quranpedia\/quran-svg\/main\/mushafs\/hafs\/kfqc\/svg/);
+  assert.match(worker,/isVerifiedQuranPageImage/);
 });
