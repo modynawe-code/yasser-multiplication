@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-44`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-45`;
 const RECITATION_ASSETS=(globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[]).map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
