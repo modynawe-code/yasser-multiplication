@@ -1,4 +1,5 @@
 import { rpsChoiceGraphic } from './rps-graphics.js';
+import { applySystemInsets } from '../../../shared/ui/system-insets.js';
 
 function ensureStyle(href,key){
   if(document.querySelector(`link[data-module-style="${key}"]`))return;
@@ -109,5 +110,7 @@ export function ensureRpsShell(){
         </section>
       </div>
     </section>`;
-  main.appendChild(host.firstElementChild);
+  const view=host.firstElementChild;
+  main.appendChild(view);
+  applySystemInsets(view.querySelector('.rps-shell'));
 }
