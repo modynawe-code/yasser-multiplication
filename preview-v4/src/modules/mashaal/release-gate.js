@@ -4,5 +4,10 @@ export const MASHAAL_RELEASE_GATE = Object.freeze({
   parentIntegrated:true,
   backendIntegrated:true,
   regressionsGreen:true,
-  contentVerified:false
+  contentVerified:true,
+  requiredMediaReady:false,
+  verifiedSkills:25,
+  readyActivities:24,
+  blockedActivities:1,
+  blockerCode:'approved-human-recitation-audio'
 });
