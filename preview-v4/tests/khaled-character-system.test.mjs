@@ -31,10 +31,13 @@ test('Khaled scene controller maps intro and learning states without requiring i
   assert.match(controller,/fallback\.hidden=false/);
 });
 
-test('learning shell has stable Khaled image slots with non-image fallbacks',async()=>{
-  const shell=await read('src/modules/hub/learning-shell.js');
-  for(const id of ['hubKhaledCharacter','khaledIntroCharacter','khaledHomeCharacter','khaledSessionCharacter','khaledResultCharacter'])assert.match(shell,new RegExp(`id="${id}"`));
-  for(const id of ['hubKhaledFallback','khaledIntroCharacterFallback','khaledHomeCharacterFallback','khaledSessionCharacterFallback','khaledResultCharacterFallback'])assert.match(shell,new RegExp(`id="${id}"`));
+test('Khaled visual slots stay stable across structural and dedicated home presentation shells',async()=>{
+  const familyShell=await read('src/modules/hub/learning-shell.js');
+  const homeShell=await read('src/modules/khaled/ui/khaled-home-shell.js');
+  for(const id of ['hubKhaledCharacter','khaledIntroCharacter','khaledSessionCharacter','khaledResultCharacter'])assert.match(familyShell,new RegExp(`id="${id}"`));
+  for(const id of ['hubKhaledFallback','khaledIntroCharacterFallback','khaledSessionCharacterFallback','khaledResultCharacterFallback'])assert.match(familyShell,new RegExp(`id="${id}"`));
+  assert.match(homeShell,/id="khaledHomeCharacter"/);
+  assert.match(homeShell,/id="khaledHomeCharacterFallback"/);
 });
 
 test('Khaled character CSS preserves aspect ratio, containment, and reduced motion preference',async()=>{
