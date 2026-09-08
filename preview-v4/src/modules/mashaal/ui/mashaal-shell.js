@@ -5,11 +5,14 @@ function ensureStyle(href,key){
   const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.moduleStyle=key;document.head.appendChild(link);
 }
 
+const speakerMark='<span class="mashaal-speaker-mark" aria-hidden="true"><i></i></span>';
+
 export function ensureMashaalShell(){
   const main=document.querySelector('main');
   if(!main||document.getElementById('mashaalHomeView'))return;
   ensureStyle('src/modules/mashaal/ui/mashaal.css','mashaal');
   ensureStyle('src/modules/mashaal/ui/mashaal-home.css','mashaal-home');
+  ensureStyle('src/modules/mashaal/ui/mashaal-visuals.css','mashaal-visuals');
 
   const wrapper=document.createElement('div');
   wrapper.innerHTML=`
@@ -22,9 +25,9 @@ export function ensureMashaalShell(){
             <h2 id="mashaalHomeTitle">${MASHAAL_HOME_COPY.title}</h2>
             <p>${MASHAAL_HOME_COPY.subtitle}</p>
           </div>
-          <button class="mashaal-hear mashaal-home-hear" id="mashaalHearHome" type="button" aria-label="اسمعي التعليمات"><span aria-hidden="true">🔊</span><strong>اسمعي</strong></button>
+          <button class="mashaal-hear mashaal-home-hear" id="mashaalHearHome" type="button" aria-label="اسمعي التعليمات">${speakerMark}<strong>اسمعي</strong></button>
         </header>
-        <div class="mashaal-world-prompt" aria-hidden="true"><strong>اختاري عالمك</strong><span>المسي البطاقة الكبيرة</span></div>
+        <div class="mashaal-world-prompt" aria-hidden="true"><strong>اختاري عالمك</strong><span>المسي الصورة الكبيرة</span></div>
         <div class="mashaal-domain-grid" id="mashaalDomainGrid" aria-label="عوالم تعلم مشاعل"></div>
         <p class="mashaal-safe-note" aria-live="polite" id="mashaalHomeStatus"></p>
       </div>
@@ -36,10 +39,10 @@ export function ensureMashaalShell(){
           <button class="icon-btn" id="mashaalDomainBack" type="button" data-nav="back">رجوع للعوالم</button>
         </div>
         <div class="mashaal-domain-focus card">
-          <div class="mashaal-domain-symbol" id="mashaalDomainSymbol" aria-hidden="true">✨</div>
+          <div class="mashaal-domain-symbol" id="mashaalDomainSymbol" aria-hidden="true"></div>
           <h2 id="mashaalDomainTitle">عالم مشاعل</h2>
-          <button class="mashaal-hear large" id="mashaalHearDomain" type="button" aria-label="اسمعي اسم العالم">🔊 اسمعي</button>
-          <p id="mashaalDomainMessage">اختاري لعبة نبدأ فيها.</p>
+          <button class="mashaal-hear large" id="mashaalHearDomain" type="button" aria-label="اسمعي اسم العالم">${speakerMark}<strong>اسمعي</strong></button>
+          <p id="mashaalDomainMessage">اختاري صورة نبدأ فيها.</p>
           <div class="mashaal-skill-grid" id="mashaalSkillGrid" aria-label="مهارات هذا العالم"></div>
         </div>
       </div>
@@ -53,7 +56,7 @@ export function ensureMashaalShell(){
         <article class="card mashaal-activity-card">
           <div class="mashaal-activity-topline">
             <span id="mashaalActivitySkill">لعبة مشاعل</span>
-            <button class="mashaal-hear" id="mashaalHearActivity" type="button" aria-label="اسمعي السؤال">🔊</button>
+            <button class="mashaal-hear" id="mashaalHearActivity" type="button" aria-label="اسمعي السؤال">${speakerMark}</button>
           </div>
           <h2 id="mashaalActivityPrompt">اسمعي ثم اختاري.</h2>
           <div class="mashaal-stimulus" id="mashaalActivityStimulus" aria-hidden="true"></div>
