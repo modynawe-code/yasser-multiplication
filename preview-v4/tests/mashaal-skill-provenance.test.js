@@ -19,10 +19,10 @@ test('curriculum verification remains conservative until pending indicators are 
   const summary=summarizeMashaalKg3Provenance();
   assert.deepEqual(summary,{
     total:25,
-    'direct-indicator':2,
+    'direct-indicator':6,
     'standards-strand':11,
     'adult-strategy':3,
-    'pending-indicator':9
+    'pending-indicator':5
   });
   assert.ok(summary['pending-indicator']>0);
 });
