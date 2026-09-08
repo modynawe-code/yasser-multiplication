@@ -4,14 +4,14 @@ Mashaal KG3 is technically integrated on the family-platform feature branch. The
 
 Curriculum/content state:
 - 25 KG3 skills are source-bound across the six Saudi KG domains.
-- 24 activities are playable now.
+- All 25 skills now have playable/available content.
 - Quran listening/repetition is intentionally limited to Surat Al-Ikhlas (112).
 - The approved source is King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim.
+- The verified local asset is `assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3`, size 238696 bytes, SHA-256 `102112a78148e14a568679599d856b06ce830ac63e6e59fa2d6a5a423d8c9bd1`.
 - Quran recitation never falls back to synthetic speech.
 
-This is not yet production-ready. Remaining release blockers are deliberately explicit:
-1. import the single local Al-Ikhlas human-recitation asset and record its SHA-256;
-2. complete manual visual QA on the target Galaxy Tab landscape and portrait viewports;
-3. apply the reviewed D1 migrations only during the controlled production rollout.
+The Al-Ikhlas media blocker is closed. This is not yet production-ready. Remaining release blockers are deliberately explicit:
+1. complete manual visual QA on the actual target Galaxy Tab in landscape and portrait and record PASS evidence;
+2. apply the reviewed D1 migrations only during the controlled production rollout.
 
-PR #29 stays Draft until these blockers are cleared. No production merge or D1 migration is implied by technical CI success.
+PR #29 stays Draft until these blockers are cleared and Mohammed explicitly approves merge/deployment. No production merge or D1 migration is implied by technical CI success.
