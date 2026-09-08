@@ -33,12 +33,30 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      # The first successful build creates this key; later builds restore the same signer.
       - name: Restore stable Android debug signing key
         uses: actions/cache@v4
         with:
           path: ~/.android/debug.keystore
           key: yasser-khaled-android-debug-keystore-v1
+
+      - name: Ensure stable Android debug signing key
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -dname "CN=Android Debug,O=Android,C=US" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000
+          fi
+          keytool -list -v \
+            -keystore "$HOME/.android/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey | grep 'SHA256:'
 
       - name: Install mobile toolchain
         run: npm install --no-audit --no-fund
