@@ -5,7 +5,8 @@ export const LEARNER_REGISTRY = Object.freeze({
     stage:'grade6',
     curriculumIds:Object.freeze(['multiplication-1-10']),
     module:'yasser',
-    theme:'yasser'
+    theme:'yasser',
+    presentation:Object.freeze({subtitle:'جدول الضرب 1–10',summary:'تدريب • اختبار • إتقان',symbol:'× ÷'})
   }),
   khaled:Object.freeze({
     id:'khaled',
@@ -13,7 +14,8 @@ export const LEARNER_REGISTRY = Object.freeze({
     stage:'grade1',
     curriculumIds:Object.freeze(['saudi-grade1-math']),
     module:'khaled',
-    theme:'khaled'
+    theme:'khaled',
+    presentation:Object.freeze({subtitle:'رياضيات أول ابتدائي',summary:'أعداد • عمليات • قياس • أشكال • نقود',symbol:'+ −'})
   }),
   mashaal:Object.freeze({
     id:'mashaal',
@@ -21,7 +23,8 @@ export const LEARNER_REGISTRY = Object.freeze({
     stage:'kg3',
     curriculumIds:Object.freeze(['saudi-kg3']),
     module:'mashaal',
-    theme:'mashaal'
+    theme:'mashaal',
+    presentation:Object.freeze({subtitle:'روضة ثالثة',summary:'لغة • تفكير • مشاعر • صحة • وطني',symbol:'أ ١'})
   })
 });
 
