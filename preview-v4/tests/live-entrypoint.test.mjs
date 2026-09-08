@@ -28,7 +28,7 @@ test('installed app identity is learner-neutral while runtime keeps the full gam
 
 test('service worker shell includes cloud session restore, games, shared UI contracts, currency assets and open-family modules',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-73/);
+  assert.match(worker,/CACHE_VERSION=`\$\{CACHE_PREFIX\}shell-\d+`/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
