@@ -1,29 +1,32 @@
-#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card{max-width:1040px;min-height:0;padding:22px 26px}
-#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card h2{margin:12px 0 14px;font-size:clamp(24px,3vw,30px)}
-#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-choices{max-width:320px;margin-top:2px}
-#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-choice{min-height:58px}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card{max-width:980px;min-height:0;padding:18px 22px}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card h2{margin:8px 0 12px;font-size:clamp(24px,2.8vw,29px)}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-choices{max-width:280px;margin-top:0}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-choice{min-height:62px}
 .quran-player-host{min-height:0!important;margin:0!important;display:block!important}
-.quran-surah-player{width:min(100%,760px);margin:auto;display:grid;gap:16px;justify-items:stretch}
-.quran-page-frame{width:min(100%,440px);margin:0 auto;padding:12px;border:1px solid #ded7bf;border-radius:24px;background:#fffef7;box-shadow:0 14px 30px rgba(67,58,35,.10)}
-.quran-page-image{display:block;width:100%;height:auto;max-height:390px;object-fit:contain;border-radius:14px;background:#fff}
-.quran-page-caption{padding:9px 8px 2px;text-align:center;color:#756b53;font-size:13px;font-weight:800}
-.quran-page-frame[data-image-error="true"]{min-height:180px;display:grid;place-items:center}.quran-page-frame[data-image-error="true"] .quran-page-image{display:none}
+.quran-surah-player{width:min(100%,880px);margin:auto;display:grid;gap:14px;justify-items:stretch}
+.quran-page-frame{width:min(100%,420px);margin:0 auto;padding:10px;border:1px solid #ded7bf;border-radius:24px;background:#fffef7;box-shadow:0 14px 30px rgba(67,58,35,.10)}
+.quran-page-viewport{position:relative;overflow:hidden;border-radius:15px;background:#fff}
+.quran-page-image{display:block;width:100%;height:auto;border-radius:14px;background:#fff}
+.quran-page-viewport[data-focused="true"] .quran-page-image{position:absolute;inset:0 auto auto 0;max-width:none;max-height:none;border-radius:0;transform-origin:center top}
+.quran-page-caption{padding:9px 8px 2px;text-align:center;color:#756b53;font-size:13px;font-weight:800;line-height:1.45}
+.quran-page-frame[data-image-error="true"]{min-height:180px;display:grid;place-items:center}.quran-page-frame[data-image-error="true"] .quran-page-viewport{display:none}
 .quran-transport{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.quran-control{min-height:64px;border:2px solid #e4d6ea;border-radius:20px;background:#fff;padding:10px 14px;color:var(--text);font:inherit;font-weight:950;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 6px 14px rgba(74,48,84,.05);touch-action:manipulation}
-.quran-control span{font-size:21px}.quran-control strong{font-size:17px}.quran-control-primary{background:#fff3fb;border-color:#bb78aa;color:#6c3d62}
+.quran-control{min-height:72px;border:2px solid #e4d6ea;border-radius:20px;background:#fff;padding:11px 14px;color:var(--text);font:inherit;font-weight:950;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 14px rgba(74,48,84,.05);touch-action:manipulation}
+.quran-control span{font-size:25px}.quran-control strong{font-size:18px}.quran-control-primary{background:#fff3fb;border-color:#bb78aa;color:#6c3d62;box-shadow:0 8px 18px rgba(183,121,170,.16)}
 .quran-control:active{transform:scale(.985)}
 .quran-control:focus-visible{outline:4px solid #5a4e9a;outline-offset:3px}
 .quran-progress-wrap{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding-inline:6px;direction:ltr}
-.quran-progress{width:100%;height:9px;accent-color:#8d6384}.quran-time{font-variant-numeric:tabular-nums;color:#786e7c;font-size:12px;font-weight:800;min-width:78px;text-align:left}
-.quran-player-status{min-height:28px;margin:0;text-align:center;color:#765276;font-size:16px;font-weight:900}
-@media (orientation:landscape) and (min-width:850px) and (max-height:720px){
-  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-wrap{padding-top:8px}
-  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-domain-actions{margin-bottom:6px}
-  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card{padding:14px 20px}
-  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card h2{font-size:23px;margin:6px 0 8px}
-  .quran-surah-player{grid-template-columns:minmax(210px,300px) minmax(0,1fr);grid-template-areas:"page controls" "page progress" "page status";align-items:center;column-gap:22px;row-gap:10px}
-  .quran-page-frame{grid-area:page;width:100%;padding:8px}.quran-page-image{max-height:340px}.quran-transport{grid-area:controls}.quran-progress-wrap{grid-area:progress}.quran-player-status{grid-area:status}
-  .quran-control{min-height:58px;padding:8px 10px}.quran-control strong{font-size:15px}
+.quran-progress{width:100%;height:10px;accent-color:#8d6384}.quran-time{font-variant-numeric:tabular-nums;color:#786e7c;font-size:13px;font-weight:800;min-width:84px;text-align:left}
+.quran-player-status{min-height:28px;margin:0;text-align:center;color:#765276;font-size:17px;font-weight:900}
+@media (orientation:landscape) and (min-width:850px) and (max-height:800px){
+  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-wrap{padding-top:6px;padding-bottom:10px}
+  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-domain-actions{margin-bottom:4px}
+  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card{padding:12px 18px}
+  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card h2{font-size:24px;margin:4px 0 8px}
+  .quran-surah-player{grid-template-columns:minmax(330px,390px) minmax(0,1fr);grid-template-areas:"page controls" "page progress" "page status";align-items:center;column-gap:28px;row-gap:10px}
+  .quran-page-frame{grid-area:page;width:100%;padding:9px}.quran-transport{grid-area:controls}.quran-progress-wrap{grid-area:progress}.quran-player-status{grid-area:status}
+  .quran-control{min-height:66px;padding:9px 10px}.quran-control strong{font-size:17px}.quran-control span{font-size:23px}
+  #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-feedback{margin-top:8px;min-height:28px;font-size:20px}
 }
-@media(max-width:620px){.quran-transport{grid-template-columns:1fr}.quran-page-frame{width:min(100%,380px)}.quran-page-image{max-height:360px}}
+@media(max-width:620px){.quran-transport{grid-template-columns:1fr}.quran-page-frame{width:min(100%,390px)}.quran-control{min-height:70px}}
 @media(prefers-reduced-motion:reduce){.quran-control{transition:none}.quran-control:active{transform:none}}
