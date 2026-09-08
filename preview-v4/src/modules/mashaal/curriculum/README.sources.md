@@ -12,6 +12,6 @@ Every implementation skill must have an entry in `kg3-skill-provenance.js`. Evid
 - `adult-strategy`: supported by SELS implementation guidance, not by itself a child outcome.
 - `pending-indicator`: plausible implementation decomposition that must not be released until matched to an explicit SELS indicator.
 
-Current audit: **25/25 skills have provenance records; 2 direct indicators, 11 standards-strand, 3 adult-strategy, 9 pending-indicator.**
+Current audit: **25/25 skills have provenance records; 6 direct indicators, 11 standards-strand, 3 adult-strategy, 5 pending-indicator.**
 
 `contentVerified` must remain `false` while any `pending-indicator` remains or while an activity relies only on `adult-strategy` evidence.
