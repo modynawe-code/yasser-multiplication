@@ -79,7 +79,11 @@ hub=createHubController({onBeforeShow:()=>{learnerRuntimes.leaveAll();leaveLearn
 
 games=createGamesController({learningAdapter:gameLearning,onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
 
-for(const id of ['khaledIntroBack','khaledHomeToHub','khaledSessionToHub','khaledResultToHub'])document.getElementById(id)?.addEventListener('click',()=>hub?.show());
+function exitKhaledToHub(){
+  khaled.leave();
+  hub?.show();
+}
+for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub'])document.getElementById(id)?.addEventListener('click',exitKhaledToHub);
 
 mashaal.start();
 presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
