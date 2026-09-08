@@ -20,6 +20,13 @@ test('single-choice and sorting answers use one correctness contract',()=>{
   assert.equal(isMashaalActivityAnswerCorrect(choice,'star'),false);
 
   const sorting=createMashaalActivityViewModel(MASHAAL_KG3_ACTIVITY_CATALOG.find(item=>item.id==='kg3-classify-sort-01'));
-  assert.equal(isMashaalActivityAnswerCorrect(sorting,['red-star','red-circle']),true);
+  assert.equal(isMashaalActivityAnswerCorrect(sorting,['red-square','red-circle']),true);
   assert.equal(isMashaalActivityAnswerCorrect(sorting,['red-circle']),false);
+});
+
+test('ordered listening activity requires the spoken touch sequence in the same order',()=>{
+  const ordered=createMashaalActivityViewModel(MASHAAL_KG3_ACTIVITY_CATALOG.find(item=>item.id==='kg3-listen-two-step-choice-01'));
+  assert.equal(ordered.orderedSequence,true);
+  assert.equal(isMashaalActivityAnswerCorrect(ordered,['star','ball']),true);
+  assert.equal(isMashaalActivityAnswerCorrect(ordered,['ball','star']),false);
 });
