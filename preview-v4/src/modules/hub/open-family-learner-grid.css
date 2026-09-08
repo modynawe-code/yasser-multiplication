@@ -1,5 +1,5 @@
 /* Canonical open-family learner chooser composition.
-   This module intentionally owns the hub layout so learner-specific modules do not. */
+   This module owns the family launcher only; learner modules own their internal homes. */
 .learner-hub{
   width:min(1120px,100%);
   max-width:1120px;
@@ -9,49 +9,69 @@
   justify-content:center;
 }
 
-.hub-heading{position:relative;text-align:center;margin-bottom:16px}
-.hub-heading-actions{display:flex;justify-content:flex-start;align-items:center;min-height:48px;margin-bottom:2px}
+.hub-heading{position:relative;text-align:center;margin-bottom:18px}
+.hub-heading-actions{display:flex;justify-content:flex-start;align-items:center;gap:10px;min-height:48px;margin-bottom:4px}
 .hub-heading .kicker,.hub-heading p{display:none}
-.hub-heading h1{font-size:clamp(31px,4.4vw,42px);line-height:1.2;margin:0;font-weight:950}
-.hub-heading .family-parent-open{min-height:46px;padding-inline:16px;font-size:14px;background:rgba(255,255,255,.92)}
+.hub-heading h1{font-size:clamp(31px,4.4vw,42px);line-height:1.2;margin:0;font-weight:950;letter-spacing:-.025em}
+.hub-heading .family-parent-open{min-height:46px;padding-inline:16px;font-size:14px;background:rgba(255,255,255,.94);box-shadow:0 5px 14px rgba(51,63,93,.05)}
 
 .learner-grid{
   width:100%;
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:clamp(10px,1.8vw,18px);
+  gap:clamp(12px,1.8vw,19px);
   align-items:stretch;
 }
 
 .learner-grid>.learner-card{
+  --learner-accent:#4e6ed7;
+  --learner-soft:#eef3ff;
+  position:relative;
   width:100%;
   min-width:0;
   min-height:290px;
-  padding:16px 14px 18px;
+  padding:15px 14px 18px;
   grid-template-rows:minmax(170px,1fr) auto;
   gap:8px;
-  border-radius:24px;
+  border:1px solid color-mix(in srgb,var(--learner-accent) 18%,#dfe5f4);
+  border-radius:28px;
+  background:linear-gradient(160deg,#fff 0 58%,var(--learner-soft) 145%);
+  box-shadow:0 14px 30px rgba(42,53,85,.08);
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
 }
-.learner-card-copy{align-self:end}
+.learner-grid>.learner-card::before{content:"";position:absolute;inset:0 0 auto;height:7px;background:var(--learner-accent);z-index:1}
+.learner-grid>.learner-card[data-learner-id="yasser"]{--learner-accent:#3157d5;--learner-soft:#edf2ff}
+.learner-grid>.learner-card[data-learner-id="khaled"]{--learner-accent:#ec7a23;--learner-soft:#fff3e7}
+.learner-grid>.learner-card[data-learner-id="mashaal"]{--learner-accent:#b96b9e;--learner-soft:#fff0f8}
+.learner-grid>.learner-card:hover{transform:translateY(-2px);box-shadow:0 18px 36px rgba(42,53,85,.11)}
+.learner-grid>.learner-card:active{transform:scale(.99)}
+.learner-card-copy{align-self:end;z-index:2}
 .learner-card strong{font-size:clamp(24px,3.2vw,30px);line-height:1.15}
-.learner-card span{font-size:clamp(14px,1.9vw,17px);margin-top:6px}
+.learner-card-copy>span{display:inline-flex!important;align-items:center;justify-content:center;width:auto;margin:8px auto 0!important;padding:6px 12px;border-radius:999px;background:var(--learner-soft);color:color-mix(in srgb,var(--learner-accent) 84%,#27334d);font-size:clamp(13px,1.7vw,15px)!important;font-weight:900}
 .learner-card small{display:none}
 
 .hub-yasser-character,.hub-khaled-character,.learner-generic-character{
   width:min(100%,220px);
   height:180px;
   align-self:center;
-  overflow:hidden;
+  overflow:visible;
 }
 .learner-card .learner-yasser-image{height:180px;max-height:180px;width:auto;max-width:100%;object-fit:contain}
 .hub-khaled-character .khaled-character-image{width:auto;max-width:100%;max-height:180px;object-fit:contain}
 .learner-profile-image{display:block;width:auto;height:100%;max-width:100%;max-height:180px;object-fit:contain;filter:drop-shadow(0 12px 16px rgba(31,56,126,.10));user-select:none;-webkit-user-drag:none}
-.learner-generic-character .learner-placeholder{margin:auto;width:128px;height:128px;border-radius:32px}
-.learner-generic-character .learner-placeholder span{font-size:40px}
+.learner-generic-character .learner-placeholder{margin:auto;width:138px;height:138px;border-radius:38px}
+.learner-generic-character .learner-placeholder span{margin:0}
+.learner-placeholder[data-visual-key="preschool-learning"]{position:relative;display:block;overflow:hidden;background:linear-gradient(145deg,#fff1f8,#f3f7ff);border:1px solid #ead6e5;box-shadow:0 12px 22px rgba(126,70,107,.10)}
+.learner-placeholder[data-visual-key="preschool-learning"]::before,.learner-placeholder[data-visual-key="preschool-learning"]::after{content:"";position:absolute;border-radius:999px;background:rgba(185,107,158,.11)}
+.learner-placeholder[data-visual-key="preschool-learning"]::before{width:92px;height:92px;right:-30px;top:-28px}.learner-placeholder[data-visual-key="preschool-learning"]::after{width:72px;height:72px;left:-25px;bottom:-23px}
+.learner-placeholder[data-visual-key="preschool-learning"] span{position:absolute;display:grid;place-items:center;background:#fff;border:1px solid rgba(185,107,158,.18);color:#8f4f7b;font-weight:950;box-shadow:0 5px 12px rgba(96,55,83,.07)}
+.learner-preschool-flower{width:68px;height:68px;left:35px;top:34px;border-radius:22px;font-size:35px!important;z-index:2}
+.learner-preschool-letter{width:40px;height:40px;right:12px;top:21px;border-radius:13px;font-size:22px!important;transform:rotate(7deg)}
+.learner-preschool-number{width:38px;height:38px;left:14px;bottom:17px;border-radius:12px;font-size:20px!important;transform:rotate(-8deg)}
 
 @media (orientation:landscape) and (min-width:850px){
   .learner-hub{min-height:0;justify-content:flex-start;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(14px,env(safe-area-inset-bottom))}
-  .hub-heading{margin-bottom:10px}
+  .hub-heading{margin-bottom:11px}
   .hub-heading-actions{min-height:42px;margin-bottom:0}
   .hub-heading .family-parent-open{min-height:42px}
   .hub-heading h1{font-size:34px}
@@ -66,7 +86,7 @@
   .hub-yasser-character,.hub-khaled-character,.learner-generic-character{height:150px}
   .learner-card .learner-yasser-image{height:150px;max-height:150px}
   .hub-khaled-character .khaled-character-image,.learner-profile-image{max-height:150px}
-  .learner-generic-character .learner-placeholder{width:112px;height:112px}
+  .learner-generic-character .learner-placeholder{width:120px;height:120px}.learner-preschool-flower{left:29px;top:29px;width:62px;height:62px}.learner-preschool-letter{right:9px;top:17px}.learner-preschool-number{left:10px;bottom:13px}
 }
 
 @media(max-width:620px){
@@ -85,3 +105,4 @@
   .learner-card .learner-yasser-image{height:130px;max-height:130px}
   .hub-khaled-character .khaled-character-image,.learner-profile-image{max-height:130px}
 }
+@media(prefers-reduced-motion:reduce){.learner-grid>.learner-card{transition:none}.learner-grid>.learner-card:hover,.learner-grid>.learner-card:active{transform:none}}
