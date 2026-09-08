@@ -24,7 +24,7 @@ test('installed app identity is learner-neutral while runtime owns active browse
 
 test('service worker shell includes open-family runtime and current shell version',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-35/);
+  assert.match(worker,/shell-36/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
@@ -33,6 +33,7 @@ test('service worker shell includes open-family runtime and current shell versio
     'shared/sync/family-auth-client.js',
     'shared/sync/family-sync-service.js',
     'shared/learners/learner-registry.js',
+    'modules/hub/learner-runtime-registry.js',
     'modules/hub/learner-hub-registry.js',
     'modules/mashaal/ui/mashaal-controller.js',
     'modules/mashaal/ui/mashaal.css',
