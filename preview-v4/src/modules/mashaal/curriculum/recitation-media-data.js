@@ -23,7 +23,14 @@ globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__=Object.freeze([
       "imageUrl": "https://raw.githubusercontent.com/quranpedia/quran-svg/main/mushafs/hafs/kfqc/svg/604.svg",
       "distributionRepository": "https://github.com/quranpedia/quran-svg",
       "sourceNotice": "https://github.com/quranpedia/quran-svg/blob/main/NOTICE.md",
-      "offlineBundled": false
+      "offlineBundled": false,
+      "imageAspectRatio": 0.6272727273,
+      "focusRegion": Object.freeze({
+        "surahNumber": 112,
+        "top": 0,
+        "height": 0.29,
+        "labelAr": "سورة الإخلاص"
+      })
     }),
     "retrieval": {
       "sourceAuthority": "King Fahd Glorious Quran Printing Complex",
