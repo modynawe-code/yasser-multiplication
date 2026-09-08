@@ -17,8 +17,9 @@
 - [x] Khaled regression coverage passes.
 - [x] Family backend regression coverage passes.
 - [x] Quran recitation runtime forbids synthetic recitation and is limited to Surat Al-Ikhlas (112).
+- [x] Verified Al-Ikhlas human-recitation asset is committed: 238696 bytes, SHA-256 `102112a78148e14a568679599d856b06ce830ac63e6e59fa2d6a5a423d8c9bd1`.
+- [x] Mashaal content readiness is 25/25 skills.
 - [x] Galaxy Tab visual QA contract and manual evidence matrix are documented and regression-tested; this does not count as the real-device pass.
-- [ ] Import the single approved Al-Ikhlas human-recitation file from King Fahd Glorious Quran Printing Complex and record SHA-256.
 - [ ] Run the documented manual visual QA on the actual target Galaxy Tab in landscape and portrait and record PASS evidence.
 - [ ] Apply the reviewed D1 migrations only during controlled production rollout.
 - [ ] Merge PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves the merge.
