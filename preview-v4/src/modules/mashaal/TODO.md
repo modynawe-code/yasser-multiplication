@@ -15,7 +15,8 @@
 - [x] Select an explicitly reusable human recitation source: King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim.
 - [x] Limit the recitation scope to one surah only: سورة الإخلاص (112).
 - [x] Build integrity-checked recitation media manifest, human-audio runtime, and automatic offline precache path.
-- [ ] Import the approved سورة الإخلاص audio file as a local offline asset and record its SHA-256.
+- [x] Add a safe `recitation:import` tool that inspects the official `akhdar-sura.zip`, selects Surah 112 explicitly, verifies MP3 structure, computes SHA-256, and generates the local media manifest.
+- [ ] Run `npm run recitation:import -- <path-to-akhdar-sura.zip>` against the official KFGQPC package, commit only the extracted سورة الإخلاص asset, and verify the generated SHA-256.
 - [ ] Run manual Galaxy Tab visual QA in landscape and portrait.
 - [ ] Apply the reviewed D1 migrations only during the controlled production rollout.
 - [ ] Merge Draft PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves.
