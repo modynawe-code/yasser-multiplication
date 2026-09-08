@@ -20,6 +20,7 @@ import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 import { createLocalBackupService } from './shared/backup/local-backup-service.js';
 import { createRewardRepository } from './shared/rewards/reward-repository.js';
 import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
+import { createRewardCapabilityRegistry } from './shared/rewards/reward-capability-registry.js';
 import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
 import { createRewardCabinetController } from './shared/ui/reward-cabinet.js';
 
@@ -34,8 +35,14 @@ hydrateFamilyParentLearners();
 
 const rewardRepository=createRewardRepository({storage:localBackup.storage});
 const rewardService=createLearningRewardService({repository:rewardRepository});
+const rewardCapabilities=createRewardCapabilityRegistry();
 let cabinet=null,hub=null,games=null;
-function presentLearningStatus(learnerId,result){renderLearningMotivation({learnerId,status:result});cabinet?.refresh(learnerId,result);}
+function presentLearningStatus(learnerId,result){
+  const capability=rewardCapabilities.get(learnerId);
+  if(capability?.mode!=='academic')return false;
+  const rendered=renderLearningMotivation({learnerId,status:result,anchorSelector:capability.motivationAnchor});
+  cabinet?.refresh(learnerId,result);return rendered;
+}
 
 const yasserBaseRepository=createLocalStorageRepository(localBackup.storage);
 const khaledBaseRepository=createKhaledRepository(localBackup.storage);
@@ -52,9 +59,17 @@ const learnerRuntimes=createLearnerRuntimeRegistry();
 const hubVisuals=createKhaledSceneController();
 let yasserStarted=false,khaledStarted=false;
 
+rewardCapabilities.register('yasser',{mode:'academic',getState:()=>yasser.getState(),onEnter:()=>yasser.enterHome(),motivationAnchor:'#homeView .focus-strip'});
+rewardCapabilities.register('khaled',{mode:'academic',getState:()=>khaled.getState(),onEnter:()=>khaled.enter(),motivationAnchor:'#khaledHomeView .khaled-stats'});
+rewardCapabilities.register('mashaal',{mode:'developmental',getState:()=>mashaal.getState(),onEnter:()=>mashaal.enter()});
+
 cabinet=createRewardCabinetController({
-  getStatus:learnerId=>learnerId==='khaled'?rewardService.evaluate('khaled',khaled.getState()):rewardService.evaluate('yasser',yasser.getState()),
-  onExit:learnerId=>learnerId==='khaled'?khaled.enter():yasser.enterHome()
+  capabilityRegistry:rewardCapabilities,
+  getStatus:learnerId=>{
+    const capability=rewardCapabilities.get(learnerId);
+    return capability?.mode==='academic'&&capability.getState?rewardService.evaluate(learnerId,capability.getState()):{};
+  },
+  onExit:learnerId=>rewardCapabilities.get(learnerId)?.onEnter?.()
 });
 
 const gameLearning=createGameLearningAdapter({
