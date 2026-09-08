@@ -60,7 +60,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     }
   }
   function renderStimulus(model){
-    const host=byId('mashaalActivityStimulus');if(!host)return null;host.innerHTML='';host.setAttribute('aria-hidden','true');const stimulus=model?.stimulus||{};
+    const host=byId('mashaalActivityStimulus');if(!host)return null;host.innerHTML='';host.setAttribute('aria-hidden','true');host.classList.remove('mashaal-stimulus-choice-owned');const stimulus=model?.stimulus||{};
     if(stimulus.kind==='recitation'){
       return mountQuranSurahPlayer(host,{
         surahNameAr:stimulus.surahNameAr,
@@ -72,6 +72,10 @@ export function createMashaalController({repository,onExitToHub}={}){
           const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='أحسنتِ، سمعنا السورة كاملة. الآن ردديها ثم اضغطي تم.';
         }
       });
+    }
+    if(stimulus.kind==='groups'){
+      host.classList.add('mashaal-stimulus-choice-owned');
+      return null;
     }
     host.appendChild(createMashaalStimulusVisual(stimulus,{domainId:currentDomain?.id||null}));return null;
   }
