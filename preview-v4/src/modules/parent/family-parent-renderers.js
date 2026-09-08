@@ -1,6 +1,7 @@
 import { getOverallProgress, getProgressRows } from '../../application/progress-service.js';
 import { KHALED_SKILLS } from '../khaled/domain/curriculum.js';
 import { MASHAAL_KG3_DOMAINS } from '../mashaal/curriculum/kg3-curriculum.js';
+import { buildMashaalParentSummary } from '../mashaal/application/parent-summary.js';
 
 function pct(correct,total){return total?Math.round(correct/total*100):0;}
 function formatDate(value){try{return new Date(value).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'});}catch{return value||'—';}}
@@ -12,6 +13,8 @@ function khaledSkillStatus(item){
   if(accuracy>=70)return{label:'يتقدم',className:'practice'};
   return{label:'يحتاج تدريب',className:'practice'};
 }
+
+function mashaalStatusClass(status){return status==='mastered'?'master':status==='developing'?'practice':'none';}
 
 export function familyOverview(yasserState,khaledState,mashaalState={}){
   const yasser=getOverallProgress(yasserState),khaledAccuracy=pct(khaledState.totalCorrect,khaledState.totalAttempts);
@@ -49,9 +52,15 @@ export function familyKhaledReport(state){
 }
 
 export function familyMashaalReport(state={}){
-  const evidenceCount=Array.isArray(state.evidenceLog)?state.evidenceLog.length:0,sessionCount=Array.isArray(state.sessions)?state.sessions.length:0;
-  const domains=MASHAAL_KG3_DOMAINS.map(domain=>`<article class="family-skill-card mashaal-domain-report"><div class="family-skill-head"><div><strong>${domain.childTitle}</strong><small>${domain.title}</small></div><em class="level none">المجال معتمد</em></div></article>`).join('');
-  return`<h2>مشاعل — روضة ثالثة</h2><p class="muted">التقييم لمشاعل نمائي وليس نسبة مئوية. المجالات الستة مثبتة من دليل الخطط السعودي الحالي، أما المهارات التفصيلية فلا تُعرض كتقييم حتى اكتمال توثيقها من الأدلة التطبيقية.</p><div class="parent-cards"><div class="parent-card"><span>أدلة التعلم</span><strong>${evidenceCount}</strong></div><div class="parent-card"><span>الجلسات</span><strong>${sessionCount}</strong></div><div class="parent-card"><span>المجالات</span><strong>${MASHAAL_KG3_DOMAINS.length}</strong></div></div><div class="family-skill-grid">${domains}</div>`;
+  const evidenceCount=Array.isArray(state.evidenceLog)?state.evidenceLog.length:0,sessionCount=Array.isArray(state.sessions)?state.sessions.length:0,summary=buildMashaalParentSummary(state);
+  const domains=summary.domains.map(domain=>{
+    const skills=domain.skills.map(skill=>{
+      const badge=skill.contentReady?skill.statusLabel:skill.contentLabel,className=skill.contentReady?mashaalStatusClass(skill.status):'none';
+      return`<div class="mashaal-parent-skill"><div><strong>${skill.title}</strong><small>${skill.contentLabel}</small></div><em class="level ${className}">${badge}</em></div>`;
+    }).join('');
+    return`<article class="family-skill-card mashaal-domain-report"><div class="family-skill-head"><div><strong>${domain.childTitle}</strong><small>${domain.title}</small></div><em class="level none">${domain.ready}/${domain.skills.length} جاهزة</em></div><div class="mashaal-parent-skill-list">${skills}</div></article>`;
+  }).join('');
+  return`<h2>مشاعل — روضة ثالثة</h2><p class="muted">التقييم نمائي: «لم تبدأ / تتطور / متقنة»، بدون نسب مئوية. خريطة المهارات موثقة، وتبقى التلاوة مقفلة حتى يتوفر صوت بشري معتمد بدل نطق آلي.</p><div class="parent-cards"><div class="parent-card"><span>أدلة التعلم</span><strong>${evidenceCount}</strong></div><div class="parent-card"><span>المهارات الموثقة</span><strong>${summary.totalSkills}</strong></div><div class="parent-card"><span>أنشطة جاهزة</span><strong>${summary.readySkills}</strong></div><div class="parent-card"><span>بانتظار صوت معتمد</span><strong>${summary.awaitingApprovedHumanAudio}</strong></div></div><div class="family-skill-grid">${domains}</div>`;
 }
 
 export function familyGenericLearnerReport(profile){
