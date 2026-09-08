@@ -1,9 +1,8 @@
-const SHA256_RE=/^[a-f0-9]{64}$/i;
+import './recitation-media-data.js';
 
-// Source of truth for recitation files that are physically bundled with the PWA.
-// Do not add an entry until the local file has been copied from an approved source
-// and its SHA-256 has been verified.
-export const MASHAAL_RECITATION_MEDIA=Object.freeze([]);
+const SHA256_RE=/^[a-f0-9]{64}$/i;
+const media=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__;
+export const MASHAAL_RECITATION_MEDIA=Object.freeze(Array.isArray(media)?[...media]:[]);
 
 export function validateMashaalRecitationAsset(asset){
   const errors=[];
