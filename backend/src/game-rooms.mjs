@@ -1,16 +1,22 @@
 import { randomId, randomSessionToken, sha256Base64Url } from './security.mjs';
+import { normalizeLearnerSlug } from './learners.mjs';
 
 const ROOM_TTL_MINUTES=30;
 const MAX_RECENT_ROOMS_PER_IP=10;
 const MAX_JOIN_ATTEMPTS=20;
 const JOIN_WINDOW_MINUTES=10;
 const JOIN_BLOCK_MINUTES=15;
-const DISPLAY_NAMES=Object.freeze({yasser:'ياسر',khaled:'خالد'});
+const DEFAULT_DISPLAY_NAMES=Object.freeze({yasser:'ياسر',khaled:'خالد',mashaal:'مشاعل'});
 const WIN_LINES=Object.freeze([[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]);
 
 const nowIso=()=>new Date().toISOString();
 const futureIso=minutes=>new Date(Date.now()+minutes*60000).toISOString();
-function validLearner(value){return value==='yasser'||value==='khaled';}
+function validLearner(value){return Boolean(normalizeLearnerSlug(value));}
+function normalizeDisplayName(value,learnerId){
+  const fallback=DEFAULT_DISPLAY_NAMES[learnerId]||learnerId;
+  const text=String(value||fallback).replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,40);
+  return text||fallback;
+}
 function validGame(value){return value==='xo';}
 function normalizeCode(value){return String(value||'').replace(/\D/g,'').slice(0,6);}
 function clone(value){return JSON.parse(JSON.stringify(value));}
@@ -97,7 +103,7 @@ async function recordJoinFailure(env,key){
 async function clearJoinThrottle(env,key){await env.DB.prepare('DELETE FROM game_room_join_throttle WHERE throttle_key=?').bind(key).run().catch(()=>null);}
 
 async function createRoom(request,env,respond,readJson){
-  const body=await readJson(request),gameId=String(body?.gameId||''),learnerId=String(body?.learnerId||'');
+  const body=await readJson(request),gameId=String(body?.gameId||''),learnerId=normalizeLearnerSlug(body?.learnerId),displayName=normalizeDisplayName(body?.displayName,learnerId);
   if(!validGame(gameId)||!validLearner(learnerId))return respond(400,{error:'invalid_game_room'});
   const throttle=await allowCreate(request,env);if(!throttle.ok)return respond(429,{error:'too_many_rooms'});
   const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),state=createInitialXoRoomState(playerId);
@@ -107,7 +113,7 @@ async function createRoom(request,env,respond,readJson){
     try{
       await env.DB.batch([
         env.DB.prepare('INSERT INTO game_rooms(id,code,game_id,status,state_json,version,creator_key,expires_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(roomId,candidate,gameId,'waiting',JSON.stringify(state),0,throttle.key,expiresAt,createdAt,createdAt),
-        env.DB.prepare('INSERT INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(roomId,playerId,learnerId,DISPLAY_NAMES[learnerId],tokenHash,0,createdAt,createdAt)
+        env.DB.prepare('INSERT INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(roomId,playerId,learnerId,displayName,tokenHash,0,createdAt,createdAt)
       ]);
       code=candidate;break;
     }catch(error){if(!String(error?.message||error).toLowerCase().includes('unique'))throw error;}
@@ -117,7 +123,7 @@ async function createRoom(request,env,respond,readJson){
 }
 
 async function joinRoom(request,env,respond,readJson){
-  const body=await readJson(request),code=normalizeCode(body?.code),learnerId=String(body?.learnerId||'');
+  const body=await readJson(request),code=normalizeCode(body?.code),learnerId=normalizeLearnerSlug(body?.learnerId),displayName=normalizeDisplayName(body?.displayName,learnerId);
   if(code.length!==6||!validLearner(learnerId))return respond(400,{error:'invalid_join_request'});
   const throttleKey=await joinThrottleKey(request),throttle=await joinThrottleStatus(env,throttleKey);if(throttle.blocked)return respond(429,{error:'too_many_join_attempts'});
   const fail=async(status,error,extra={})=>{await recordJoinFailure(env,throttleKey);return respond(status,{error,...extra});};
@@ -126,7 +132,7 @@ async function joinRoom(request,env,respond,readJson){
   const existing=await playersForRoom(env,row.id);if(existing.some(item=>item.learner_id===learnerId))return fail(409,'learner_already_in_room');
   let state;try{state=JSON.parse(row.state_json);}catch{return respond(500,{error:'invalid_room_state'});}
   const playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso(),next=addXoRoomGuest(state,playerId);if(!next.ok)return fail(409,next.reason);
-  const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,DISPLAY_NAMES[learnerId],tokenHash,1,joinedAt,joinedAt).run();
+  const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,displayName,tokenHash,1,joinedAt,joinedAt).run();
   if(Number(insert?.meta?.changes||0)!==1)return fail(409,'room_full');
   const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind('playing',JSON.stringify(next.state),joinedAt,futureIso(ROOM_TTL_MINUTES),row.id,row.version).run();
   if(Number(update?.meta?.changes||0)!==1){
