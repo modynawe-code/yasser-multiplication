@@ -22,9 +22,9 @@ test('installed app identity is learner-neutral while runtime owns active browse
   assert.match(main,/document\.title='تعلم العائلة'/);
 });
 
-test('service worker shell includes open-family runtime and current shell version',async()=>{
+test('service worker shell includes open-family runtime and current KG3 activity shell',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-36/);
+  assert.match(worker,/shell-37/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
@@ -33,8 +33,13 @@ test('service worker shell includes open-family runtime and current shell versio
     'shared/sync/family-auth-client.js',
     'shared/sync/family-sync-service.js',
     'shared/learners/learner-registry.js',
+    'shared/progress/evidence.js',
+    'shared/activities/activity-types.js',
     'modules/hub/learner-runtime-registry.js',
     'modules/hub/learner-hub-registry.js',
+    'modules/mashaal/curriculum/kg3-activity-catalog.js',
+    'modules/mashaal/application/activity-release-validator.js',
+    'modules/mashaal/ui/activity-view-model.js',
     'modules/mashaal/ui/mashaal-controller.js',
     'modules/mashaal/ui/mashaal.css',
     'modules/khaled/ui/khaled-device-hardening.css',
