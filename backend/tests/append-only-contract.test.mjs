@@ -32,16 +32,25 @@ test('developmental learning evidence is append-only at database level',async()=
   for(const token of ['CREATE TABLE IF NOT EXISTS learning_evidence','learning_evidence_no_delete','BEFORE DELETE ON learning_evidence','learning_evidence_no_update','BEFORE UPDATE ON learning_evidence','idx_learning_evidence_learner_created'])assert.match(sql,new RegExp(token));
 });
 
-test('Worker exposes append/read sync including evidence but no history mutation endpoint',async()=>{
+test('learning sessions keep exact payload and become append-only before production rollout',async()=>{
+  const sql=await read('migrations/0005_learning_session_payload.sql');
+  for(const token of ['ALTER TABLE learning_sessions ADD COLUMN session_json TEXT','learning_sessions_no_delete','BEFORE DELETE ON learning_sessions','learning_sessions_no_update','BEFORE UPDATE ON learning_sessions'])assert.match(sql,new RegExp(token));
+});
+
+test('Worker exposes append/read sync including evidence and sessions but no history mutation endpoint',async()=>{
   const worker=await read('src/index.mjs');
-  for(const route of ['/v1/sync/baseline','/v1/sync/attempts','/v1/sync/evidence','/v1/sync/snapshot'])assert.match(worker,new RegExp(route.replaceAll('/','\\/')));
+  for(const route of ['/v1/sync/baseline','/v1/sync/attempts','/v1/sync/evidence','/v1/sync/session','/v1/sync/snapshot'])assert.match(worker,new RegExp(route.replaceAll('/','\\/')));
   assert.match(worker,/INSERT OR IGNORE INTO learner_baselines/);
   assert.match(worker,/INSERT OR IGNORE INTO learning_evidence/);
+  assert.match(worker,/INSERT OR IGNORE INTO learning_sessions/);
+  assert.match(worker,/session_json/);
   assert.doesNotMatch(worker,/request\.method==='DELETE'.*attempt/s);
   assert.doesNotMatch(worker,/UPDATE attempts SET/);
   assert.doesNotMatch(worker,/DELETE FROM attempts/);
   assert.doesNotMatch(worker,/UPDATE learning_evidence SET/);
   assert.doesNotMatch(worker,/DELETE FROM learning_evidence/);
+  assert.doesNotMatch(worker,/UPDATE learning_sessions SET/);
+  assert.doesNotMatch(worker,/DELETE FROM learning_sessions/);
 });
 
 test('Worker initializes family learners from the catalog instead of fixed insert statements',async()=>{
