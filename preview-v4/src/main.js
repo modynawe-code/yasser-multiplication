@@ -4,6 +4,7 @@ import { registerServiceWorker } from './platform/pwa/register-service-worker.js
 import { ensureLearningShell } from './modules/hub/learning-shell.js';
 import { hydrateLearnerHub } from './modules/hub/learner-hub-registry.js';
 import { createHubController } from './modules/hub/hub-controller.js';
+import { createLearnerRuntimeRegistry } from './modules/hub/learner-runtime-registry.js';
 import { createKhaledRepository } from './modules/khaled/infrastructure/storage/local-storage-repository.js';
 import { createKhaledController } from './modules/khaled/ui/khaled-controller.js';
 import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
@@ -27,11 +28,12 @@ const mashaalRepository=createMashaalLocalStorageRepository();
 const cloudAuth=createFamilyAuthClient();
 const cloudSync=createFamilySyncService({authClient:cloudAuth,yasserRepository,khaledRepository,mashaalRepository});
 const yasser=createAppController({repository:yasserRepository});
+const learnerRuntimes=createLearnerRuntimeRegistry();
 let yasserStarted=false;
+let khaledStarted=false;
 let hub;
 
 const khaled=createKhaledController({repository:khaledRepository,onExitToHub:()=>hub?.show()});
-let khaledStarted=false;
 const hubVisuals=createKhaledSceneController();
 const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show()});
 mashaal.start();
@@ -46,29 +48,32 @@ const familyParent=createFamilyParentController({
   onExitToHub:()=>hub?.show()
 });
 
-function enterYasser(){
-  khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode');
-  if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();
-}
-function enterKhaled(){
-  yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();
-}
-function enterMashaal(){yasser.leave();khaled.leave();familyParent.leave();mashaal.enter();}
+learnerRuntimes.register('yasser',{
+  leave:()=>yasser.leave(),
+  enter:()=>{
+    document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode');
+    if(!yasserStarted){yasserStarted=true;yasser.start();return;}
+    yasser.enterHome();
+  }
+});
+learnerRuntimes.register('khaled',{
+  leave:()=>khaled.leave(),
+  enter:()=>{if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}
+});
+learnerRuntimes.register('mashaal',{leave:()=>mashaal.leave(),enter:()=>mashaal.enter()});
+
 function enterLearner(learnerId){
-  if(learnerId==='yasser')return enterYasser();
-  if(learnerId==='khaled')return enterKhaled();
-  if(learnerId==='mashaal')return enterMashaal();
-  hub?.show();
+  familyParent.leave();
+  if(!learnerRuntimes.activate(learnerId))hub?.show();
 }
-function exitKhaledToHub(){khaled.leave();hub?.show();}
 
 hub=createHubController({
-  onBeforeShow:()=>{yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();},
+  onBeforeShow:()=>{learnerRuntimes.leaveAll();familyParent.leave();},
   onAfterShow:()=>hubVisuals.hub(),
   onSelectLearner:enterLearner
 });
 
-document.getElementById('khaledSessionToHub')?.addEventListener('click',exitKhaledToHub);
-document.getElementById('khaledResultToHub')?.addEventListener('click',exitKhaledToHub);
+document.getElementById('khaledSessionToHub')?.addEventListener('click',()=>hub?.show());
+document.getElementById('khaledResultToHub')?.addEventListener('click',()=>hub?.show());
 
 familyParent.start();hubVisuals.warm();hub.start();registerServiceWorker();
