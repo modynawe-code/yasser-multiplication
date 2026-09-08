@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { buildLearningMotivationMarkup } from '../src/shared/ui/learning-motivation.js';
 import { createRewardingRepository } from '../src/shared/rewards/learning-reward-service.js';
+import { createRewardCapabilityRegistry } from '../src/shared/rewards/reward-capability-registry.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -27,10 +28,27 @@ test('presentation callback runs only after successful academic persistence and 
   assert.equal(saves,1);assert.equal(evaluations,1);assert.equal(presentations,1);
 });
 
-test('composition root displays motivation for both learners and offline shell owns its assets',async()=>{
-  const main=await read('src/main.js'),presenter=await read('src/shared/ui/learning-motivation.js'),worker=await read('service-worker.js');
-  assert.match(main,/renderLearningMotivation/);assert.match(main,/onEvaluated/);
-  assert.match(main,/presentLearningStatus\('yasser'/);assert.match(main,/presentLearningStatus\('khaled'/);
-  assert.match(presenter,/#homeView \.focus-strip/);assert.match(presenter,/#khaledHomeView \.khaled-stats/);
+test('reward capability registry separates academic rewards from developmental learners',()=>{
+  const registry=createRewardCapabilityRegistry();
+  registry.register('yasser',{mode:'academic'});
+  registry.register('khaled',{mode:'academic'});
+  registry.register('mashaal',{mode:'developmental'});
+  assert.deepEqual(registry.list({mode:'academic'}).map(item=>item.learnerId),['yasser','khaled']);
+  assert.equal(registry.supports('mashaal','academic'),false);
+  assert.equal(registry.supports('mashaal','developmental'),true);
+});
+
+test('composition root owns reward anchors and keeps shared presenter learner-neutral',async()=>{
+  const main=await read('src/main.js'),presenter=await read('src/shared/ui/learning-motivation.js'),cabinet=await read('src/shared/ui/reward-cabinet.js'),worker=await read('service-worker.js');
+  assert.match(main,/createRewardCapabilityRegistry/);
+  assert.match(main,/rewardCapabilities\.register\('yasser',\{mode:'academic'/);
+  assert.match(main,/rewardCapabilities\.register\('khaled',\{mode:'academic'/);
+  assert.match(main,/rewardCapabilities\.register\('mashaal',\{mode:'developmental'/);
+  assert.match(main,/#homeView \.focus-strip/);assert.match(main,/#khaledHomeView \.khaled-stats/);
+  assert.match(presenter,/anchorSelector/);
+  assert.doesNotMatch(presenter,/#homeView \.focus-strip|#khaledHomeView \.khaled-stats/);
+  assert.match(cabinet,/capabilityRegistry/);assert.match(cabinet,/academicCapabilities/);
+  assert.doesNotMatch(cabinet,/const LEARNERS/);
+  assert.match(worker,/src\/shared\/rewards\/reward-capability-registry\.js/);
   assert.match(worker,/src\/shared\/ui\/learning-motivation\.js/);assert.match(worker,/src\/shared\/ui\/learning-motivation\.css/);assert.match(worker,/shell-\d+/);
 });
