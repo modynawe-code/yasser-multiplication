@@ -14,9 +14,11 @@ test('Khaled learning flow exposes explicit back and learner-home navigation',as
 test('cross-module Khaled navigation is wired only at the composition root',async()=>{
   const main=await read('src/main.js');
   const controller=await read('src/modules/khaled/ui/khaled-controller.js');
-  assert.match(main,/function exitKhaledToHub\(\)\{\s*khaled\.leave\(\);hub\?\.show\(\);\s*\}/);
-  assert.match(main,/khaledSessionToHub.*exitKhaledToHub/);
-  assert.match(main,/khaledResultToHub.*exitKhaledToHub/);
+  assert.match(main,/const learnerRuntimes=createLearnerRuntimeRegistry\(\)/);
+  assert.match(main,/onBeforeShow:\(\)=>\{learnerRuntimes\.leaveAll\(\);familyParent\.leave\(\);\}/);
+  assert.match(main,/khaledSessionToHub.*hub\?\.show\(\)/);
+  assert.match(main,/khaledResultToHub.*hub\?\.show\(\)/);
+  assert.doesNotMatch(controller,/createHubController|createLearnerRuntimeRegistry|modules\/hub/);
   assert.match(controller,/function exitSession\(\)\{leave\(\);enter\(\);\}/);
   assert.match(controller,/storeSession\(\{incomplete:true\}\)/);
 });
