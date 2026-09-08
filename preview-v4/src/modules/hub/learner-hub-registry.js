@@ -13,36 +13,88 @@ function legacyCardId(learnerId){
   return learnerId==='yasser'?'hubYasser':learnerId==='khaled'?'hubKhaled':null;
 }
 
-function createGenericCard(profile){
-  const button=document.createElement('button');
-  button.className=`learner-card ${profile.theme||'learner'}-card`;
-  button.type='button';
-  button.dataset.learnerId=profile.id;
-  button.id=`hubLearner-${profile.id}`;
-
-  const visualShell=document.createElement('div');
-  visualShell.className='learner-character-shell learner-generic-character';
-  visualShell.setAttribute('aria-hidden','true');
+function createFallbackVisual(profile){
   const visual=document.createElement('div');
   visual.className=`learner-placeholder ${profile.theme||''}`.trim();
   const symbols=String(profile.presentation?.symbol||'★').split(/\s+/).filter(Boolean).slice(0,2);
   for(const symbol of symbols.length?symbols:['★']){
-    const span=document.createElement('span');span.textContent=symbol;visual.appendChild(span);
+    const span=document.createElement('span');
+    span.textContent=symbol;
+    visual.appendChild(span);
   }
-  visualShell.appendChild(visual);
+  return visual;
+}
 
+function createGenericVisual(profile){
+  const visualShell=document.createElement('div');
+  visualShell.className='learner-character-shell learner-generic-character';
+  visualShell.setAttribute('aria-hidden','true');
+
+  const avatar=String(profile.presentation?.avatar||'').trim();
+  if(avatar){
+    const image=document.createElement('img');
+    image.className='learner-profile-image';
+    image.src=avatar;
+    image.alt='';
+    image.decoding='async';
+    visualShell.appendChild(image);
+  }else{
+    visualShell.appendChild(createFallbackVisual(profile));
+  }
+
+  return visualShell;
+}
+
+function createCardCopy(profile){
   const copy=document.createElement('div');
   copy.className='learner-card-copy';
-  const strong=document.createElement('strong');strong.textContent=profile.displayName;
-  const subtitle=document.createElement('span');subtitle.textContent=profile.presentation?.subtitle||profile.stage||'مسار تعلم';
-  const summary=document.createElement('small');summary.textContent=profile.presentation?.summary||'مسار مستقل وتقدم محفوظ';
-  copy.append(strong,subtitle,summary);
-  button.append(visualShell,copy);
+  const strong=document.createElement('strong');
+  const stage=document.createElement('span');
+  const summary=document.createElement('small');
+  copy.append(strong,stage,summary);
+  applyProfileCopy(copy,profile);
+  return copy;
+}
+
+function applyProfileCopy(copy,profile){
+  if(!copy)return;
+  const strong=copy.querySelector('strong');
+  const stage=copy.querySelector('span');
+  const summary=copy.querySelector('small');
+  if(strong)strong.textContent=profile.displayName;
+  if(stage)stage.textContent=profile.presentation?.stageLabel||profile.presentation?.subtitle||profile.stage||'مسار تعلم';
+  if(summary)summary.textContent=profile.presentation?.summary||'';
+}
+
+function applyProfilePresentation(card,profile){
+  card.dataset.learnerId=profile.id;
+  card.dataset.learnerModule=profile.module||'';
+  card.dataset.learnerVariant=profile.presentation?.homeVariant||'';
+  applyProfileCopy(card.querySelector('.learner-card-copy'),profile);
+  const stageLabel=profile.presentation?.stageLabel||profile.presentation?.subtitle||profile.stage||'مسار تعلم';
+  card.setAttribute('aria-label',`${profile.displayName}، ${stageLabel}`);
+}
+
+function createGenericCard(profile){
+  const button=document.createElement('button');
+  button.className=`learner-card ${profile.theme||'learner'}-card`;
+  button.type='button';
+  button.id=`hubLearner-${profile.id}`;
+  button.append(createGenericVisual(profile),createCardCopy(profile));
+  applyProfilePresentation(button,profile);
   return button;
+}
+
+function compactParentAccessLabel(){
+  const button=document.querySelector('.family-parent-open');
+  if(!button)return;
+  button.textContent='ولي الأمر';
+  button.setAttribute('aria-label','فتح تقرير ولي الأمر');
 }
 
 export function hydrateLearnerHub(){
   ensureOpenFamilyGridStyle();
+  compactParentAccessLabel();
   const grid=document.querySelector('.learner-grid');
   if(!grid)return [];
   const hydrated=[];
@@ -52,12 +104,11 @@ export function hydrateLearnerHub(){
       const legacyId=legacyCardId(profile.id);
       card=legacyId?document.getElementById(legacyId):null;
     }
-    if(card){
-      card.dataset.learnerId=profile.id;
-      card.dataset.learnerModule=profile.module||'';
-    }else{
+    if(!card){
       card=createGenericCard(profile);
       grid.appendChild(card);
+    }else{
+      applyProfilePresentation(card,profile);
     }
     hydrated.push(card);
   }
