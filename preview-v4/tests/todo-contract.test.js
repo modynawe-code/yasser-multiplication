@@ -9,11 +9,13 @@ test('Mashaal technical integration and curriculum verification are complete whi
   assert.equal(MASHAAL_RELEASE_GATE.backendIntegrated,true);
   assert.equal(MASHAAL_RELEASE_GATE.regressionsGreen,true);
   assert.equal(MASHAAL_RELEASE_GATE.contentVerified,true);
+  assert.equal(MASHAAL_RELEASE_GATE.approvedRecitationSource,true);
   assert.equal(MASHAAL_RELEASE_GATE.requiredMediaReady,false);
   assert.equal(MASHAAL_RELEASE_GATE.blockerCode,'approved-human-recitation-audio');
 
   const todo=await readFile(new URL('../src/modules/mashaal/TODO.md',import.meta.url),'utf8');
   assert.match(todo,/\[x\] Verify detailed KG3 curriculum content/);
-  assert.match(todo,/\[ \] Add approved human recitation audio/);
+  assert.match(todo,/\[x\] Select an explicitly reusable human recitation source/);
+  assert.match(todo,/\[ \] Import only the required approved recitation clip/);
   assert.match(todo,/\[ \] Apply the reviewed D1 migration/);
 });
