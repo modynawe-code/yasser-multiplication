@@ -11,13 +11,13 @@
 - [x] Keep family backup open-ended while preserving legacy YasserKhaledLearning restore support.
 - [x] Run complete frontend/backend regression suites and PWA contract tests.
 - [x] Verify detailed KG3 curriculum content and authored activities against approved sources.
-- [x] Keep 24 verified activities playable while Quran recitation stays blocked from synthetic speech.
 - [x] Select an explicitly reusable human recitation source: King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim.
 - [x] Limit the recitation scope to one surah only: سورة الإخلاص (112).
 - [x] Build integrity-checked recitation media manifest, human-audio runtime, and automatic offline precache path.
-- [x] Add a safe `recitation:import` tool that inspects the official `akhdar-sura.zip`, selects Surah 112 explicitly, verifies MP3 structure, computes SHA-256, and generates the local media manifest.
+- [x] Add safe ZIP and HTTP-range import paths for the approved KFGQPC source package.
+- [x] Commit the verified سورة الإخلاص human-recitation asset: 238696 bytes, SHA-256 `102112a78148e14a568679599d856b06ce830ac63e6e59fa2d6a5a423d8c9bd1`.
+- [x] Reach 25/25 KG3 skills with playable/available content while keeping Quran recitation human-only.
 - [x] Define and regression-test the Galaxy Tab visual QA contract and manual landscape/portrait matrix without treating automation as a real-device pass.
-- [ ] Run `npm run recitation:import -- <path-to-akhdar-sura.zip>` against the official KFGQPC package, commit only the extracted سورة الإخلاص asset, and verify the generated SHA-256.
-- [ ] Run the documented manual Galaxy Tab visual QA on the actual target device in landscape and portrait; only then set the manual visual QA release flag to passed.
+- [ ] Run the documented manual Galaxy Tab visual QA on the actual target device in landscape and portrait and record PASS evidence.
 - [ ] Apply the reviewed D1 migrations only during the controlled production rollout.
 - [ ] Merge Draft PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves.
