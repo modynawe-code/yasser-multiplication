@@ -125,8 +125,6 @@ export function ensureLearningShell(){
       <div class="family-parent-layout">
         <nav class="card family-parent-nav">
           <button class="active" data-family-parent-tab="overview">الملخص</button>
-          <button data-family-parent-tab="yasser">ياسر</button>
-          <button data-family-parent-tab="khaled">خالد</button>
           <button data-family-parent-tab="sessions">آخر الجلسات</button>
           <button id="familyParentHome">العودة لاختيار الطفل</button>
         </nav>
@@ -142,7 +140,7 @@ export function ensureLearningShell(){
     const modal=document.createElement('div');
     modal.className='modal';
     modal.id='familyPinModal';
-    modal.innerHTML=`<div class="card modal-card"><h3 style="margin-top:0">تقرير ولي الأمر</h3><p class="muted">أدخل الرقم السري لعرض تقدم ياسر وخالد.</p><input class="pin" id="familyPinInput" type="password" inputmode="numeric" maxlength="4" /><button class="btn primary" style="width:100%" id="familyPinSubmit">فتح التقرير</button><button class="btn secondary" style="width:100%;margin-top:8px" id="familyPinCancel">إلغاء</button></div>`;
+    modal.innerHTML=`<div class="card modal-card"><h3 style="margin-top:0">تقرير ولي الأمر</h3><p class="muted">أدخل الرقم السري لعرض تقدم الأطفال.</p><input class="pin" id="familyPinInput" type="password" inputmode="numeric" maxlength="4" /><button class="btn primary" style="width:100%" id="familyPinSubmit">فتح التقرير</button><button class="btn secondary" style="width:100%;margin-top:8px" id="familyPinCancel">إلغاء</button></div>`;
     document.body.appendChild(modal);
   }
 }
