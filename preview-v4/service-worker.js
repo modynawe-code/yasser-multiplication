@@ -1,5 +1,5 @@
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-40`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-41`;
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css',
@@ -21,42 +21,7 @@ const APP_SHELL=[
 ];
 
 function absolute(path){return new URL(path,self.location.href).href;}
-function isSaudiCurrencyImage(request){
-  if(request.destination!=='image')return false;
-  try{const url=new URL(request.url);return url.hostname==='www.sama.gov.sa'&&url.pathname.includes('/Currency/PublishingImages/');}catch{return false;}
-}
-
-self.addEventListener('install',event=>{event.waitUntil((async()=>{
-  const cache=await caches.open(CACHE_VERSION);
-  for(const path of APP_SHELL){
-    const request=new Request(absolute(path),{cache:'reload'}),response=await fetch(request);
-    if(!response.ok)throw new Error(`Precache failed: ${path} ${response.status}`);
-    await cache.put(request,response);
-  }
-  await self.skipWaiting();
-})());});
-
-self.addEventListener('activate',event=>{event.waitUntil((async()=>{
-  const keys=await caches.keys(),oldKeys=keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_VERSION);
-  await Promise.all(oldKeys.map(key=>caches.delete(key)));
-  await self.clients.claim();
-  if(oldKeys.length){const windows=await self.clients.matchAll({type:'window'});await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null)));}
-})());});
-
-self.addEventListener('fetch',event=>{
-  if(event.request.method!=='GET')return;
-  event.respondWith((async()=>{
-    const cache=await caches.open(CACHE_VERSION);
-    if(isSaudiCurrencyImage(event.request)){
-      const cached=await cache.match(event.request)||await caches.match(event.request);if(cached)return cached;
-      try{const response=await fetch(event.request);if(response&&(response.ok||response.type==='opaque'))await cache.put(event.request,response.clone());return response;}catch{return Response.error();}
-    }
-    try{
-      const response=await fetch(event.request,{cache:'no-store'});if(response&&response.status===200&&response.type!=='opaque')await cache.put(event.request,response.clone());return response;
-    }catch{
-      const cached=await cache.match(event.request)||await caches.match(event.request);if(cached)return cached;
-      if(event.request.mode==='navigate')return cache.match(absolute('./index.html'));
-      return Response.error();
-    }
-  })());
-});
+function isSaudiCurrencyImage(request){if(request.destination!=='image')return false;try{const url=new URL(request.url);return url.hostname==='www.sama.gov.sa'&&url.pathname.includes('/Currency/PublishingImages/');}catch{return false;}}
+self.addEventListener('install',event=>{event.waitUntil((async()=>{const cache=await caches.open(CACHE_VERSION);for(const path of APP_SHELL){const request=new Request(absolute(path),{cache:'reload'}),response=await fetch(request);if(!response.ok)throw new Error(`Precache failed: ${path} ${response.status}`);await cache.put(request,response);}await self.skipWaiting();})());});
+self.addEventListener('activate',event=>{event.waitUntil((async()=>{const keys=await caches.keys(),oldKeys=keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE_VERSION);await Promise.all(oldKeys.map(key=>caches.delete(key)));await self.clients.claim();if(oldKeys.length){const windows=await self.clients.matchAll({type:'window'});await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null)));}})());});
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith((async()=>{const cache=await caches.open(CACHE_VERSION);if(isSaudiCurrencyImage(event.request)){const cached=await cache.match(event.request)||await caches.match(event.request);if(cached)return cached;try{const response=await fetch(event.request);if(response&&(response.ok||response.type==='opaque'))await cache.put(event.request,response.clone());return response;}catch{return Response.error();}}try{const response=await fetch(event.request,{cache:'no-store'});if(response&&response.status===200&&response.type!=='opaque')await cache.put(event.request,response.clone());return response;}catch{const cached=await cache.match(event.request)||await caches.match(event.request);if(cached)return cached;if(event.request.mode==='navigate')return cache.match(absolute('./index.html'));return Response.error();}})());});
