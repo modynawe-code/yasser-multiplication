@@ -1,12 +1,14 @@
 import { listVerifiedMashaalRecitationAssets } from '../curriculum/recitation-media-manifest.js';
-import { MASHAAL_DEFAULT_RECITATION_SOURCE_ID } from '../curriculum/recitation-source-registry.js';
+import { MASHAAL_DEFAULT_RECITATION_SOURCE_ID,MASHAAL_RECITATION_TARGET } from '../curriculum/recitation-source-registry.js';
 
 const SELS='saudi-early-learning-standards-3-6-2015';
 const RECITATION_SKILL_ID='listen-repeat';
 
 export function createMashaalRecitationActivities(skillId){
   if(skillId!==RECITATION_SKILL_ID)return Object.freeze([]);
-  const assets=listVerifiedMashaalRecitationAssets(MASHAAL_DEFAULT_RECITATION_SOURCE_ID);
+  const assets=listVerifiedMashaalRecitationAssets(MASHAAL_DEFAULT_RECITATION_SOURCE_ID)
+    .filter(asset=>asset.surahNumber===MASHAAL_RECITATION_TARGET.surahNumber)
+    .slice(0,1);
   return Object.freeze(assets.map(asset=>Object.freeze({
     id:`kg3-recitation-${asset.id}`,
     stage:'kg3',
