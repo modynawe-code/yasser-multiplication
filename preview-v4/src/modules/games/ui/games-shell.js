@@ -10,6 +10,7 @@ export function ensureGamesShell(){
   if(!main)return;
 
   ensureStyle('src/modules/games/ui/games.css','games-platform');
+  ensureStyle('src/modules/games/ui/games-open-family.css','games-open-family');
 
   const hubActions=document.querySelector('#hubView .hub-heading-actions');
   if(hubActions&&!document.getElementById('gamesOpenBtn')){
