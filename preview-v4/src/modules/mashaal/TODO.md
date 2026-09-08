@@ -3,11 +3,19 @@
 - [x] Add Mashaal to parent report using qualitative summary.
 - [x] Replace backend fixed learner slug constraint with safe generic migration.
 - [x] Generalize backend learner initialization and sync validation.
+- [x] Preserve the complete Yasser/Khaled games, rewards and challenge platform in the family integration branch.
+- [x] Generalize games participation while keeping educational game providers stage-appropriate.
+- [x] Generalize rewards through learner capabilities without forcing academic percentages on Mashaal.
+- [x] Generalize parent reports and cloud sync through learner capabilities.
+- [x] Restore exact curriculum-specific cloud session history without duplication and keep it append-only in D1.
+- [x] Keep family backup open-ended while preserving legacy YasserKhaledLearning restore support.
 - [x] Run complete frontend/backend regression suites and PWA contract tests.
 - [x] Verify detailed KG3 curriculum content and authored activities against approved sources.
 - [x] Keep 24 verified activities playable while Quran recitation stays blocked from synthetic speech.
 - [x] Select an explicitly reusable human recitation source: King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim.
 - [x] Limit the recitation scope to one surah only: سورة الإخلاص (112).
 - [x] Build integrity-checked recitation media manifest, human-audio runtime, and automatic offline precache path.
-- [ ] Import the approved سورة الإخلاص audio file as a local offline asset, record its SHA-256, then open the recitation skill.
-- [ ] Apply the reviewed D1 migration only during the controlled production rollout.
+- [ ] Import the approved سورة الإخلاص audio file as a local offline asset and record its SHA-256.
+- [ ] Run manual Galaxy Tab visual QA in landscape and portrait.
+- [ ] Apply the reviewed D1 migrations only during the controlled production rollout.
+- [ ] Merge Draft PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves.
