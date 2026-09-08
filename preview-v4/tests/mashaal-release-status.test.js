@@ -7,11 +7,13 @@ const technicallyIntegrated={
   hubIntegrated:true,
   parentIntegrated:true,
   backendIntegrated:true,
-  regressionsGreen:true
+  regressionsGreen:true,
+  contentVerified:true
 };
 
-test('Mashaal release requires technical integration and verified curriculum content',()=>{
-  assert.equal(isMashaalReleaseReady({...technicallyIntegrated,contentVerified:false}),false);
-  assert.equal(isMashaalReleaseReady({...technicallyIntegrated,contentVerified:true}),true);
-  assert.equal(isMashaalReleaseReady({...technicallyIntegrated,regressionsGreen:false,contentVerified:true}),false);
+test('Mashaal release requires technical integration, verified content and required media',()=>{
+  assert.equal(isMashaalReleaseReady({...technicallyIntegrated,requiredMediaReady:false}),false);
+  assert.equal(isMashaalReleaseReady({...technicallyIntegrated,requiredMediaReady:true}),true);
+  assert.equal(isMashaalReleaseReady({...technicallyIntegrated,regressionsGreen:false,requiredMediaReady:true}),false);
+  assert.equal(isMashaalReleaseReady({...technicallyIntegrated,contentVerified:false,requiredMediaReady:true}),false);
 });
