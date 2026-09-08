@@ -44,9 +44,9 @@ test('composition root owns reward anchors and keeps shared presenter learner-ne
   assert.match(main,/rewardCapabilities\.register\('yasser',\{mode:'academic'/);
   assert.match(main,/rewardCapabilities\.register\('khaled',\{mode:'academic'/);
   assert.match(main,/rewardCapabilities\.register\('mashaal',\{mode:'developmental'/);
-  assert.match(main,/#homeView \.focus-strip/);assert.match(main,/#khaledHomeView \.khaled-stats/);
+  assert.match(main,/#homeView \.yasser-home-focus/);assert.match(main,/#khaledHomeView \.khaled-stats/);
   assert.match(presenter,/anchorSelector/);
-  assert.doesNotMatch(presenter,/#homeView \.focus-strip|#khaledHomeView \.khaled-stats/);
+  assert.doesNotMatch(presenter,/#homeView \.yasser-home-focus|#khaledHomeView \.khaled-stats/);
   assert.match(cabinet,/capabilityRegistry/);assert.match(cabinet,/academicCapabilities/);
   assert.doesNotMatch(cabinet,/const LEARNERS/);
   assert.match(worker,/src\/shared\/rewards\/reward-capability-registry\.js/);
