@@ -25,6 +25,28 @@ export const MASHAAL_KG3_ACTIVITY_CATALOG = Object.freeze([
     correctChoice:'star|ball'
   }),
   activity({
+    id:'kg3-oral-expression-01',
+    skillId:'oral-vocabulary-expression',
+    indicatorRefs:['LL 1.5.1','LL 1.5.2'],
+    interaction:'guided-play',
+    evidenceType:'activity-completion',
+    promptAr:'شوفي الصورة وقولي جملة عنها.',
+    audioPromptAr:'شوفي البنت وهي تشرب ماء. قولي جملة كاملة عنها، وبعد ما تخلصين اضغطي تم.',
+    stimulus:{kind:'picture-scene',scene:'girl-drinking-water'},
+    choices:['done']
+  }),
+  activity({
+    id:'kg3-story-sequence-01',
+    skillId:'story-sequencing',
+    indicatorRefs:['LL 2.5.1','LL 2.5.5'],
+    interaction:'sequencing',
+    promptAr:'رتبي أحداث القصة.',
+    audioPromptAr:'رتبي الصور: استيقظت البنت، ثم فرشت أسنانها، ثم أكلت فطورها.',
+    stimulus:{kind:'ordered-actions',actions:['wake','brush-teeth','breakfast']},
+    choices:['breakfast','wake','brush-teeth'],
+    correctChoice:'wake|brush-teeth|breakfast'
+  }),
+  activity({
     id:'kg3-sound-awareness-01',
     skillId:'sound-awareness',
     indicatorRefs:['LL 1.1.3'],
@@ -45,6 +67,17 @@ export const MASHAAL_KG3_ACTIVITY_CATALOG = Object.freeze([
     stimulus:{kind:'letter-sound',sound:'ب'},
     choices:['ب','ت','م'],
     correctChoice:'ب'
+  }),
+  activity({
+    id:'kg3-prewriting-path-01',
+    skillId:'prewriting-fine-motor',
+    indicatorRefs:['HP 2.2'],
+    interaction:'guided-play',
+    evidenceType:'activity-completion',
+    promptAr:'اتبعي الطريق بإصبعك.',
+    audioPromptAr:'ابدئي من الدائرة واتبعي الخط المتعرج بإصبعك حتى النجمة، وبعد ما تخلصين اضغطي تم.',
+    stimulus:{kind:'trace-path',path:'wave'},
+    choices:['done']
   }),
   activity({
     id:'kg3-count-quantity-01',
@@ -100,6 +133,17 @@ export const MASHAAL_KG3_ACTIVITY_CATALOG = Object.freeze([
     stimulus:{kind:'spatial-relation',relation:'above',subject:'ball',reference:'box'},
     choices:['ball-above-box','ball-inside-box','ball-below-box'],
     correctChoice:'ball-above-box'
+  }),
+  activity({
+    id:'kg3-observe-reason-01',
+    skillId:'observe-reason',
+    indicatorRefs:['CK 2.1.5','AL 3.0.2'],
+    interaction:'choice',
+    promptAr:'فكري واختاري الشيء المناسب.',
+    audioPromptAr:'المطر ينزل. أي شيء يساعد البنت تبقى جافة؟',
+    stimulus:{kind:'picture-scene',scene:'rainy-day'},
+    choices:['umbrella','sunglasses','ball'],
+    correctChoice:'umbrella'
   })
 ]);
 
