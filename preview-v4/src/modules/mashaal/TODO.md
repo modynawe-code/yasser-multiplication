@@ -4,5 +4,7 @@
 - [x] Replace backend fixed learner slug constraint with safe generic migration.
 - [x] Generalize backend learner initialization and sync validation.
 - [x] Run complete frontend/backend regression suites and PWA contract tests.
-- [ ] Verify detailed KG3 curriculum content against approved sources before release.
+- [x] Verify detailed KG3 curriculum content and authored activities against approved sources.
+- [x] Keep 24 verified activities playable while Quran recitation stays blocked from synthetic speech.
+- [ ] Add approved human recitation audio and validate it before opening the recitation skill.
 - [ ] Apply the reviewed D1 migration only during the controlled production rollout.
