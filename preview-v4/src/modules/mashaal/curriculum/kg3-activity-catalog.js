@@ -17,23 +17,23 @@ export const MASHAAL_KG3_ACTIVITY_CATALOG = Object.freeze([
     id:'kg3-listen-two-step-choice-01',
     skillId:'listen-follow-simple-directions',
     indicatorRefs:['LL 1.1.2'],
-    interaction:'choice',
-    promptAr:'اسمعي التعليمات ثم اختاري الصورة الصحيحة.',
-    audioPromptAr:'المسي النجمة ثم اختاري الكرة.',
+    interaction:'guided-play',
+    promptAr:'اسمعي ونفذي بالترتيب.',
+    audioPromptAr:'المسي النجمة ثم الكرة.',
     stimulus:{kind:'ordered-actions',actions:['star','ball']},
-    choices:['star-then-ball','ball-then-star','star-only'],
-    correctChoice:'star-then-ball'
+    choices:['star','ball','heart'],
+    correctChoice:'star|ball'
   }),
   activity({
     id:'kg3-sound-awareness-01',
     skillId:'sound-awareness',
     indicatorRefs:['LL 1.1.3'],
     interaction:'listening',
-    promptAr:'اسمعي الصوت واختاري الكلمة التي تبدأ به.',
-    audioPromptAr:'أي كلمة تبدأ بصوت ب؟',
+    promptAr:'اسمعي الصوت واختاري الصورة.',
+    audioPromptAr:'أي صورة اسمها يبدأ بصوت ب؟ باب، تفاحة، قمر.',
     stimulus:{kind:'initial-sound',sound:'ب'},
-    choices:['باب','تفاح','قمر'],
-    correctChoice:'باب'
+    choices:['door','apple','moon'],
+    correctChoice:'door'
   }),
   activity({
     id:'kg3-letter-sound-match-01',
@@ -73,11 +73,11 @@ export const MASHAAL_KG3_ACTIVITY_CATALOG = Object.freeze([
     skillId:'classify-sort',
     indicatorRefs:['CK 1.2.1'],
     interaction:'sorting',
-    promptAr:'ضعي الأشياء المتشابهة معًا.',
-    audioPromptAr:'اجمعي الأشياء الحمراء في مجموعة واحدة.',
+    promptAr:'اختاري كل الأشياء الحمراء.',
+    audioPromptAr:'المسي كل الأشياء الحمراء ثم اضغطي تحقق.',
     stimulus:{kind:'attribute-sort',attribute:'color',target:'red'},
-    choices:['red-circle','blue-circle','red-star','yellow-star'],
-    correctChoice:'red-circle|red-star'
+    choices:['red-circle','blue-circle','red-square','yellow-square'],
+    correctChoice:'red-circle|red-square'
   }),
   activity({
     id:'kg3-pattern-01',
@@ -103,14 +103,6 @@ export const MASHAAL_KG3_ACTIVITY_CATALOG = Object.freeze([
   })
 ]);
 
-export function listMashaalKg3Activities(){
-  return [...MASHAAL_KG3_ACTIVITY_CATALOG];
-}
-
-export function listMashaalKg3ActivitiesBySkill(skillId){
-  return MASHAAL_KG3_ACTIVITY_CATALOG.filter(item=>item.skillId===skillId);
-}
-
-export function getMashaalKg3Activity(activityId){
-  return MASHAAL_KG3_ACTIVITY_CATALOG.find(item=>item.id===activityId)||null;
-}
+export function listMashaalKg3Activities(){return [...MASHAAL_KG3_ACTIVITY_CATALOG];}
+export function listMashaalKg3ActivitiesBySkill(skillId){return MASHAAL_KG3_ACTIVITY_CATALOG.filter(item=>item.skillId===skillId);}
+export function getMashaalKg3Activity(activityId){return MASHAAL_KG3_ACTIVITY_CATALOG.find(item=>item.id===activityId)||null;}
