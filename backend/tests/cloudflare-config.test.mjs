@@ -22,6 +22,13 @@ test('Cloudflare config is pinned to the dedicated family-learning resources',as
   assert.doesNotMatch(JSON.stringify(config),/REPLACE_WITH_D1_DATABASE_ID/);
 });
 
+test('Cloudflare CORS includes the real Capacitor Android origin',async()=>{
+  const config=await readConfig();
+  const origins=String(config.vars?.ALLOWED_ORIGINS||'').split(',');
+  assert.ok(origins.includes('https://localhost'));
+  assert.ok(origins.includes('capacitor://localhost'));
+});
+
 test('backend source continues to use isolated DB AI and rate-limit bindings',async()=>{
   const source=await readFile(new URL('../src/index.mjs',import.meta.url),'utf8');
   const voice=await readFile(new URL('../src/voice.mjs',import.meta.url),'utf8');
