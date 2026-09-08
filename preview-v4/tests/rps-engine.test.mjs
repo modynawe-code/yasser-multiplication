@@ -9,6 +9,14 @@ test('RPS outcome matrix is correct',()=>{
   assert.equal(resolveRpsRound('scissors','paper'),'a');
 });
 
+test('RPS requires an explicit distinct player pair instead of hidden learner defaults',()=>{
+  assert.throws(()=>createRpsState(),/exactly two distinct players/);
+  assert.throws(()=>createRpsState({players:['same','same']}),/exactly two distinct players/);
+  const state=createRpsState({players:['mashaal','future-child']});
+  assert.deepEqual(state.players,['mashaal','future-child']);
+  assert.deepEqual(state.scores,{mashaal:0,'future-child':0});
+});
+
 test('RPS keeps the first choice hidden until both players choose',()=>{
   let state=createRpsState({players:['yasser','khaled'],targetScore:3});
   const first=submitRpsChoice(state,{playerId:'yasser',choice:'rock'});
