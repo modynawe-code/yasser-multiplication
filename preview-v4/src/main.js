@@ -1,4 +1,5 @@
 import { createLocalStorageRepository } from './infrastructure/storage/local-storage-repository.js';
+import { normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
 import { createAppController } from './ui/app-controller.js';
 import { registerServiceWorker } from './platform/pwa/register-service-worker.js';
 import { ensureLearningShell } from './modules/hub/learning-shell.js';
@@ -6,11 +7,14 @@ import { hydrateLearnerHub } from './modules/hub/learner-hub-registry.js';
 import { createHubController } from './modules/hub/hub-controller.js';
 import { createLearnerRuntimeRegistry } from './modules/hub/learner-runtime-registry.js';
 import { createKhaledRepository } from './modules/khaled/infrastructure/storage/local-storage-repository.js';
+import { normalizeKhaledState,applyKhaledAttemptEvent } from './modules/khaled/domain/state-model.js';
 import { createKhaledController } from './modules/khaled/ui/khaled-controller.js';
 import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
 import { ensureMashaalShell } from './modules/mashaal/ui/mashaal-shell.js';
 import { createMashaalController } from './modules/mashaal/ui/mashaal-controller.js';
 import { createMashaalLocalStorageRepository } from './modules/mashaal/infrastructure/local-storage-repository.js';
+import { normalizeMashaalState } from './modules/mashaal/domain/state-model.js';
+import { recordMashaalEvidence } from './modules/mashaal/application/progress-service.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
 import { createFamilyParentReportCapabilityRegistry } from './modules/parent/family-parent-report-capabilities.js';
 import { hydrateFamilyParentLearners } from './modules/parent/family-parent-shell-registry.js';
@@ -18,6 +22,7 @@ import { familyYasserReport,familyKhaledReport,familyMashaalReport,familyYasserO
 import { createGamesController } from './modules/games/games-controller.js';
 import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
+import { createFamilySyncCapabilityRegistry } from './shared/sync/family-sync-capability-registry.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 import { createLocalBackupService } from './shared/backup/local-backup-service.js';
 import { createRewardRepository } from './shared/rewards/reward-repository.js';
@@ -39,6 +44,7 @@ const rewardRepository=createRewardRepository({storage:localBackup.storage});
 const rewardService=createLearningRewardService({repository:rewardRepository});
 const rewardCapabilities=createRewardCapabilityRegistry();
 const parentReportCapabilities=createFamilyParentReportCapabilityRegistry();
+const syncCapabilities=createFamilySyncCapabilityRegistry();
 let cabinet=null,hub=null,games=null;
 function presentLearningStatus(learnerId,result){
   const capability=rewardCapabilities.get(learnerId);
@@ -53,8 +59,30 @@ const mashaalRepository=createMashaalLocalStorageRepository(localBackup.storage)
 const yasserRepository=createRewardingRepository({learnerId:'yasser',repository:yasserBaseRepository,rewardService,onEvaluated:(learnerId,_state,result)=>presentLearningStatus(learnerId,result)});
 const khaledRepository=createRewardingRepository({learnerId:'khaled',repository:khaledBaseRepository,rewardService,onEvaluated:(learnerId,_state,result)=>presentLearningStatus(learnerId,result)});
 
+syncCapabilities.register('yasser',{
+  repository:yasserRepository,
+  normalizeState,
+  getAttempts:state=>state.attemptLog||[],
+  applyAttempt:applyYasserAttemptEvent,
+  getSessions:state=>state.sessions||[]
+});
+syncCapabilities.register('khaled',{
+  repository:khaledRepository,
+  normalizeState:normalizeKhaledState,
+  getAttempts:state=>state.attemptLog||[],
+  applyAttempt:applyKhaledAttemptEvent,
+  getSessions:state=>state.sessions||[]
+});
+syncCapabilities.register('mashaal',{
+  repository:mashaalRepository,
+  normalizeState:normalizeMashaalState,
+  getEvidence:state=>state.evidenceLog||[],
+  applyEvidence:(state,evidence)=>recordMashaalEvidence(state,{skillId:evidence.skillId,evidence}),
+  getSessions:state=>state.sessions||[]
+});
+
 const cloudAuth=createFamilyAuthClient();
-const cloudSync=createFamilySyncService({authClient:cloudAuth,yasserRepository,khaledRepository,mashaalRepository});
+const cloudSync=createFamilySyncService({authClient:cloudAuth,capabilityRegistry:syncCapabilities});
 const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
 const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show()});
