@@ -29,6 +29,7 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 - Quran recitation remains closed until approved human recitation media exists; TTS is not recitation audio.
 - Specific content/outcomes stay source-bound to verified curriculum references.
 - 25 skills are verified; 24 activities are playable until the single Al-Ikhlas human-recitation asset is installed.
+- `PHASE.md` and `decision-log.md` now reflect that curriculum/content verification is complete; remaining work is controlled release readiness, not curriculum drafting.
 
 ## Compatibility contracts that must remain green
 
@@ -62,8 +63,8 @@ Do not move to the next architectural layer until:
 
 ## Current verified gate
 
-Latest verified implementation head: `ccf7c45e31b98cd7656370c7ea077be1f500b727`.
+Latest verified implementation head: `be2b32a7e0057afbef8ae1b9f9c82d40d27d5643`.
 
-`Preview V4 CI` run #1450 completed successfully for that head. The release-readiness tests confirm that technical/content integration is accepted while production readiness remains false for exactly the three blockers above.
+`Preview V4 CI` run #1460 completed successfully for that head. Learning-app tests, human-voice inventory, and family-backend tests are all green after the Mashaal phase/decision-log corrections.
 
 The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, and explicit release blockers rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
