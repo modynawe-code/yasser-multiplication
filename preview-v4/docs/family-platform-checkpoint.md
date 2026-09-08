@@ -26,14 +26,13 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 - Six official Saudi KG domains remain the curriculum structure.
 - Child UI is voice-first/image-first/play-oriented.
 - Parent reporting uses developmental states, not school-style percentages.
-- Quran recitation remains closed until approved human recitation media exists; TTS is not recitation audio.
 - Specific content/outcomes stay source-bound to verified curriculum references.
-- 25 skills are verified; 24 activities are playable until the single Al-Ikhlas human-recitation asset is installed.
-- `PHASE.md` and `decision-log.md` reflect that curriculum/content verification is complete; remaining work is controlled release readiness, not curriculum drafting.
-- The approved recitation source remains King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim, limited to Surat Al-Ikhlas (112).
-- `tools/import-mashaal-recitation.mjs` is the required import path for the official `akhdar-sura.zip`: it identifies Surah 112 explicitly, refuses ambiguous/non-112 selections, extracts only that MP3, validates MP3 structure, computes SHA-256, and generates the local media data record.
-- The importer being ready does not mean recitation media is ready; release remains blocked until the official package is actually processed and the extracted local asset is committed.
-- `GALAXY_TAB_VISUAL_QA.md` plus the tablet QA contract test define the required landscape/portrait device matrix. Automated QA preparation is tracked separately from the real-device result: `visualQaContractReady:true` does not satisfy `manualVisualQaReady:false`.
+- Quran recitation is human-only; TTS is not recitation audio.
+- The approved recitation source is King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim, limited to Surat Al-Ikhlas (112).
+- The verified local recitation asset is `assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3`, size `238696` bytes, SHA-256 `102112a78148e14a568679599d856b06ce830ac63e6e59fa2d6a5a423d8c9bd1`.
+- Source provenance remains the official KFGQPC `akhdar-sura.zip`; transport provenance is recorded in `recitation-media-data.js` against the pinned quran-ws KFGQPC extracted mirror metadata.
+- Mashaal content readiness is now 25/25 skills.
+- `GALAXY_TAB_VISUAL_QA.md` plus the tablet QA contract test define the required landscape/portrait device matrix. Automated QA preparation is tracked separately from the real-device result: `visualQaContractReady:true` does not satisfy the manual device pass.
 
 ## Compatibility contracts that must remain green
 
@@ -48,13 +47,12 @@ Mashaal is a Saudi KG3 developmental track, not a copy of Yasser/Khaled.
 
 ## Production readiness contract
 
-Technical integration success is not the same as production readiness. Mashaal release readiness must remain false until all three operational blockers are cleared:
+Technical integration success is not the same as production readiness. The Al-Ikhlas media blocker is closed. Mashaal release readiness must remain false until both remaining operational blockers are cleared:
 
-1. approved local Surat Al-Ikhlas human-recitation asset is present and SHA-256 verified;
-2. manual Galaxy Tab visual QA passes on the actual target device in landscape and portrait;
-3. reviewed D1 migrations are applied during the controlled production rollout.
+1. manual Galaxy Tab visual QA passes on the actual target device in landscape and portrait and PASS evidence is recorded;
+2. reviewed D1 migrations are applied during the controlled production rollout with the required backup/bookmark/row-count/trigger evidence.
 
-`release-gate.js` and `release-status.js` encode these blockers and must not silently weaken them. The visual-QA preparation flag is a required architectural contract, but it cannot replace the manual pass flag.
+`release-gate.js`, `release-status.js`, and the release-evidence validator encode these blockers and must not silently weaken them.
 
 ## Gate rule
 
@@ -67,8 +65,10 @@ Do not move to the next architectural layer until:
 
 ## Current verified gate
 
-Latest verified implementation head: `8eb251c0dd911108e060271ef7c6ee7969bd0770`.
+Latest verified implementation head: `4b0cf9de728231ead4b4c309b57eab29a4c3d9b9`.
 
-`Preview V4 CI` run #1488 completed successfully for that head. Learning-app tests, the recitation importer, tablet QA contract, release-readiness tests, human-voice inventory, and family-backend tests are green. The current release-readiness test confirms exactly three operational blockers: approved Al-Ikhlas media, real Galaxy Tab visual QA, and controlled production D1 migration.
+`Preview V4 CI` run #1528 completed successfully for that head. Learning-app tests, recitation runtime/media contracts, human-voice inventory, and family-backend tests are green with the committed Al-Ikhlas asset present.
 
-The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, explicit release blockers, verified recitation-import path, and separate visual-QA preparation/manual-evidence gates rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
+Current Mashaal content state: 25/25 skills ready. The audio blocker is closed. Production remains blocked only by real Galaxy Tab visual QA and the controlled production D1 rollout.
+
+The integration branch is the current source for PR #29. Future work must build on these registries/capabilities, exact cloud session restore, human-only Quran media, explicit evidence-backed release blockers, and separate visual-QA preparation/manual-evidence gates rather than reintroducing fixed learner-name branches or claiming readiness prematurely.
