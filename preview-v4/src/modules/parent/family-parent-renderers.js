@@ -54,6 +54,11 @@ export function familyMashaalReport(state={}){
   return`<h2>مشاعل — روضة ثالثة</h2><p class="muted">التقييم لمشاعل نمائي وليس نسبة مئوية. المجالات الستة مثبتة من دليل الخطط السعودي الحالي، أما المهارات التفصيلية فلا تُعرض كتقييم حتى اكتمال توثيقها من الأدلة التطبيقية.</p><div class="parent-cards"><div class="parent-card"><span>أدلة التعلم</span><strong>${evidenceCount}</strong></div><div class="parent-card"><span>الجلسات</span><strong>${sessionCount}</strong></div><div class="parent-card"><span>المجالات</span><strong>${MASHAAL_KG3_DOMAINS.length}</strong></div></div><div class="family-skill-grid">${domains}</div>`;
 }
 
+export function familyGenericLearnerReport(profile){
+  const name=profile?.displayName||'الطفل',stage=profile?.presentation?.subtitle||profile?.stage||'مسار تعلم';
+  return`<h2>${name} — ${stage}</h2><p class="muted">هذا الطفل مسجل في منصة التعلم، لكن تقرير مرحلته المتخصص لم يُركب بعد. يبقى ملفه منفصلًا ولا يتم إسقاط تقييم مرحلة أخرى عليه.</p>`;
+}
+
 export function familySessions(yasserState,khaledState,mashaalState={}){
   const yasser=(yasserState.sessions||[]).map(session=>({learner:'ياسر',at:session.endedAt,label:session.mode==='exam'?'اختبار جدول الضرب':'تدريب جدول الضرب',correct:Number(session.correct||0),wrong:Number(session.wrong||0),total:Number(session.completed||0),incomplete:Boolean(session.incomplete),scored:true}));
   const khaled=(khaledState.sessions||[]).map(session=>({learner:'خالد',at:session.at,label:KHALED_SKILLS.find(skill=>skill.id===session.skillId)?.title||'رياضيات خالد',correct:Number(session.correct||0),wrong:Number(session.wrong||0),total:Number(session.total||0),incomplete:Boolean(session.incomplete),scored:true}));
