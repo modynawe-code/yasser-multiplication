@@ -5,6 +5,7 @@ import { createMashaalActivityPlan } from '../application/activity-plan.js';
 import { createMashaalActivityViewModel,isMashaalActivityAnswerCorrect } from './activity-view-model.js';
 import { createMashaalDigitalAttempt } from '../application/digital-attempt.js';
 import { createMashaalActivityCompletion } from '../application/activity-completion.js';
+import { getMashaalTransferPrompt } from '../application/transfer-prompts.js';
 import { recordMashaalEvidence } from '../application/progress-service.js';
 
 const DOMAIN_SYMBOLS=Object.freeze({
@@ -91,17 +92,22 @@ export function createMashaalController({repository,onExitToHub}={}){
     renderStimulus(currentViewModel);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');speech.speak(currentViewModel.audioPromptAr);
   }
   function saveEvidence(evidence,skillId){if(recordMashaalEvidence(state,{skillId,evidence}))repository.save(state);}
+  function finishActivity(praise){
+    activityComplete=true;lockActivityControls();const transfer=getMashaalTransferPrompt(currentViewModel?.skillId);const feedback=byId('mashaalActivityFeedback');
+    if(feedback)feedback.textContent=transfer?`${praise}\nالحين جربي بعيد عن الشاشة: ${transfer}`:praise;
+    speech.speak(transfer?`${praise} الحين جربي بعيد عن الشاشة. ${transfer}`:praise);
+  }
   function completeCurrentActivity(){
     if(activityComplete||!currentViewModel||!currentActivity)return;
     const evidence=createMashaalActivityCompletion({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,activityType:currentViewModel.interaction,createdAt:new Date().toISOString()});
-    saveEvidence(evidence,currentViewModel.skillId);activityComplete=true;lockActivityControls();const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='رائع ✨';speech.speak('رائع يا مشاعل');
+    saveEvidence(evidence,currentViewModel.skillId);finishActivity('رائع يا مشاعل');
   }
   function submitAnswer(answer){
     if(activityComplete||!currentViewModel||!currentActivity)return;const isCorrect=isMashaalActivityAnswerCorrect(currentViewModel,answer);
     const evidence=createMashaalDigitalAttempt({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,isCorrect,responseMs:Date.now()-startedAt});
-    saveEvidence(evidence,currentViewModel.skillId);const feedback=byId('mashaalActivityFeedback');
-    if(isCorrect){activityComplete=true;lockActivityControls();if(feedback)feedback.textContent='أحسنتِ ✨';speech.speak('أحسنت يا مشاعل');}
-    else{if(currentViewModel.orderedSequence)clearSelections();if(feedback)feedback.textContent='جربي مرة ثانية 👀';speech.speak('جربي مرة ثانية');startedAt=Date.now();}
+    saveEvidence(evidence,currentViewModel.skillId);
+    if(isCorrect)finishActivity('أحسنت يا مشاعل');
+    else{if(currentViewModel.orderedSequence)clearSelections();const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='جربي مرة ثانية 👀';speech.speak('جربي مرة ثانية');startedAt=Date.now();}
   }
   function bind(){
     if(bound)return;bound=true;
