@@ -1,24 +1,11 @@
 import { gameRegistry } from './game-catalog.js';
-import { createPlayerContext } from './core/player-context.js';
 import { createXoState,passXoTurn,playXoMove } from './xo/xo-engine.js';
 import { createXoOnlineSession,normalizeOnlineXoRoom } from './xo/xo-online-session.js';
 import { createGameRoomClient } from './online/game-room-client.js';
 import { ensureGamesShell } from './ui/games-shell.js';
+import { getGameParticipant,listGameParticipants,gameParticipantMarkup } from './core/game-participant-registry.js';
 import { createSpeechService } from '../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../ui/audio/feedback-audio.js';
-
-const PLAYER_ASSETS=Object.freeze({
-  yasser:'assets/visual/original/yasser/welcome.png',
-  khaled:'assets/visual/original/khaled/khaled-point-thumbsup.png'
-});
-const CELEBRATION_ASSETS=Object.freeze({
-  yasser:'assets/visual/original/yasser/celebrate.png',
-  khaled:'assets/visual/original/khaled/khaled-celebration.png'
-});
-const PLAYERS=Object.freeze({
-  yasser:createPlayerContext({playerId:'yasser',learnerId:'yasser',displayName:'ياسر',theme:'yasser'}),
-  khaled:createPlayerContext({playerId:'khaled',learnerId:'khaled',displayName:'خالد',theme:'khaled'})
-});
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -27,19 +14,58 @@ function categoryLabel(category){return category==='educational'?'تعليمية
 function learningLabel(mode){return mode==='required'?'تعلم أساسي':mode==='optional'?'تعلم اختياري':mode==='adaptive'?'تعلم متكيف':'مرح فقط';}
 function gameIcon(id){return id==='xo'?'⭕':id==='rock-paper-scissors'?'✊':id==='number-race'?'🏁':'🎮';}
 function now(){return globalThis.performance?.now?.()??Date.now();}
+function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,nextStarter='yasser',challengeState=null,challengeRequest=0,passTimer=null,rpsController=null;
-  let playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
+  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null;
+  let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
   const speech=createSpeechService(),audio=createFeedbackAudio();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
+
+  function participant(id){return getGameParticipant(id)||fallbackParticipant(String(id||''));}
+  function educationalParticipants(){
+    return listGameParticipants({supportsLearning:id=>typeof learningAdapter?.supports==='function'?learningAdapter.supports(id):true});
+  }
+  function ensureLocalPair(){
+    const eligible=educationalParticipants(),ids=new Set(eligible.map(item=>item.learnerId));
+    localXoPlayers=localXoPlayers.filter(id=>ids.has(id));
+    for(const item of eligible){if(localXoPlayers.length>=2)break;if(!localXoPlayers.includes(item.learnerId))localXoPlayers.push(item.learnerId);}
+    if(localXoPlayers.length>2)localXoPlayers=localXoPlayers.slice(0,2);
+    return eligible;
+  }
+  function participantChoiceMarkup(item,{selected=false,attribute}={}){
+    return `<button class="xo-lobby-player ${item.theme} ${selected?'selected':''}" ${attribute}="${item.learnerId}" aria-pressed="${selected?'true':'false'}">${gameParticipantMarkup(item,{fallbackClass:'xo-participant-fallback'})}<strong>${item.displayName}</strong></button>`;
+  }
+  function renderLobbyParticipants(){
+    const eligible=ensureLocalPair(),localHost=byId('xoLocalPlayers'),onlineHost=byId('xoOnlinePlayers');
+    if(localHost){
+      localHost.innerHTML=eligible.map(item=>participantChoiceMarkup(item,{selected:localXoPlayers.includes(item.learnerId),attribute:'data-xo-local-learner'})).join('');
+      localHost.querySelectorAll('[data-xo-local-learner]').forEach(button=>button.addEventListener('click',()=>chooseLocalLearner(button.dataset.xoLocalLearner)));
+    }
+    if(onlineHost){
+      onlineHost.innerHTML=eligible.map(item=>participantChoiceMarkup(item,{selected:selectedOnlineLearner===item.learnerId,attribute:'data-xo-online-learner'})).join('');
+      onlineHost.querySelectorAll('[data-xo-online-learner]').forEach(button=>button.addEventListener('click',()=>chooseOnlineLearner(button.dataset.xoOnlineLearner)));
+    }
+    const start=byId('xoLocalStart');if(start)start.disabled=localXoPlayers.length!==2;
+  }
+  function chooseLocalLearner(learnerId){
+    if(localXoPlayers.includes(learnerId)){
+      if(localXoPlayers.length>1)localXoPlayers=localXoPlayers.filter(id=>id!==learnerId);
+    }else if(localXoPlayers.length<2)localXoPlayers=[...localXoPlayers,learnerId];
+    else localXoPlayers=[localXoPlayers[1],learnerId];
+    nextStarterIndex=0;renderLobbyParticipants();
+  }
+  function chooseOnlineLearner(learnerId){
+    if(!educationalParticipants().some(item=>item.learnerId===learnerId))return;
+    selectedOnlineLearner=learnerId;renderLobbyParticipants();lobbyStatus(`هذا الجهاز مع ${participant(learnerId).displayName}.`);
+  }
 
   function clearPassTimer(){if(passTimer){clearTimeout(passTimer);passTimer=null;}}
   function clearChallenge(){challengeRequest+=1;challengeState=null;clearPassTimer();speech.stop();}
   function setXoMode(active){document.body.classList.toggle('xo-game-mode',Boolean(active));}
   function lobbyStatus(message,error=false){const node=byId('xoLobbyStatus');if(node){node.textContent=message||'';node.classList.toggle('error',Boolean(error));}}
   function setRoomCode(code){const box=byId('xoRoomCodeBox'),value=byId('xoRoomCode');if(value)value.textContent=code||'------';if(box)box.hidden=!code;}
-  function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','family-parent-mode');document.body.classList.add('games-mode');}
+  function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode');document.body.classList.add('games-mode');}
 
   function leave(){
     document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode');
@@ -81,25 +107,19 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
 
   function openXoLobby(){
     clearChallenge();onlineSession.forget();xoState=null;setXoMode(false);document.body.classList.remove('rps-game-mode');playMode='local';selectedOnlineLearner=null;onlineTurnVersion=-1;onlineCelebrated='';
-    document.querySelectorAll('[data-xo-learner]').forEach(button=>button.classList.remove('selected'));
-    const input=byId('xoRoomCodeInput');if(input)input.value='';setRoomCode('');lobbyStatus('');show('xoLobbyView');
-  }
-
-  function chooseOnlineLearner(learnerId){
-    selectedOnlineLearner=learnerId;
-    document.querySelectorAll('[data-xo-learner]').forEach(button=>button.classList.toggle('selected',button.dataset.xoLearner===learnerId));
-    lobbyStatus(`هذا الجهاز مع ${PLAYERS[learnerId].displayName}.`);
+    const input=byId('xoRoomCodeInput');if(input)input.value='';setRoomCode('');lobbyStatus('');renderLobbyParticipants();show('xoLobbyView');
   }
 
   function startLocalXo(){
-    onlineSession.forget();playMode='local';nextStarter=nextStarter==='yasser'?'khaled':'yasser';
-    xoState=createXoState({players:['yasser','khaled'],startingPlayer:nextStarter});
-    clearChallenge();setXoMode(true);byId('xoModeLabel').textContent='نسخة محلية — جهاز واحد';
+    ensureLocalPair();if(localXoPlayers.length!==2){lobbyStatus('اختر لاعبين أولًا.',true);return;}
+    onlineSession.forget();playMode='local';const startingPlayer=localXoPlayers[nextStarterIndex%2];nextStarterIndex=(nextStarterIndex+1)%2;
+    xoState=createXoState({players:[...localXoPlayers],startingPlayer});
+    clearChallenge();setXoMode(true);if(byId('xoModeLabel'))byId('xoModeLabel').textContent='نسخة محلية — جهاز واحد';
     show('xoGameView');renderXo();beginTurnChallenge();
   }
 
   async function createOnlineRoom(){
-    if(!selectedOnlineLearner){lobbyStatus('اختر ياسر أو خالد لهذا الجهاز أولًا.',true);return;}
+    if(!selectedOnlineLearner){lobbyStatus('اختر الطفل صاحب هذا الجهاز أولًا.',true);return;}
     if(onlineBusy)return;onlineBusy=true;lobbyStatus('ننشئ الغرفة…');setRoomCode('');
     try{await onlineSession.create(selectedOnlineLearner);const snap=onlineSession.snapshot;setRoomCode(snap.code);lobbyStatus('بانتظار اللاعب الثاني…');}
     catch(error){handleOnlineError(error);}
@@ -107,7 +127,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   }
 
   async function joinOnlineRoom(){
-    if(!selectedOnlineLearner){lobbyStatus('اختر ياسر أو خالد لهذا الجهاز أولًا.',true);return;}
+    if(!selectedOnlineLearner){lobbyStatus('اختر الطفل صاحب هذا الجهاز أولًا.',true);return;}
     const code=String(byId('xoRoomCodeInput')?.value||'').replace(/\D/g,'').slice(0,6);if(code.length!==6){lobbyStatus('اكتب رمز الغرفة المكوّن من 6 أرقام.',true);return;}
     if(onlineBusy)return;onlineBusy=true;lobbyStatus('ندخل الغرفة…');
     try{await onlineSession.join(code,selectedOnlineLearner);}
@@ -134,7 +154,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
     if(!room)return;
     const snap=onlineSession.snapshot;selectedOnlineLearner=snap.selfLearnerId||selectedOnlineLearner;enterGamesChrome();setRoomCode(room.status==='waiting'?room.code:'');
     if(room.status==='waiting'){
-      playMode='online';setXoMode(false);show('xoLobbyView');document.querySelectorAll('[data-xo-learner]').forEach(button=>button.classList.toggle('selected',button.dataset.xoLearner===selectedOnlineLearner));lobbyStatus('بانتظار اللاعب الثاني…');return;
+      playMode='online';setXoMode(false);show('xoLobbyView');renderLobbyParticipants();lobbyStatus('بانتظار اللاعب الثاني…');return;
     }
     playMode='online';xoState=normalizeOnlineXoRoom(room);setXoMode(true);
     if(byId('xoModeLabel'))byId('xoModeLabel').textContent=`أونلاين — غرفة ${room.code}`;
@@ -143,7 +163,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
     if(xoState.status!=='playing'){
       clearChallenge();
       const key=`${xoState.round}:${xoState.status}:${xoState.winner||''}`;
-      if(onlineCelebrated!==key){onlineCelebrated=key;audio.achievement();speech.speak(xoState.status==='won'?`${PLAYERS[xoState.winner]?.displayName||''} فاز بالجولة. أحسنتم.`:'تعادل جميل. أحسنتم.');}
+      if(onlineCelebrated!==key){onlineCelebrated=key;audio.achievement();speech.speak(xoState.status==='won'?`${participant(xoState.winner).displayName} فاز بالجولة. أحسنتم.`:'تعادل جميل. أحسنتم.');}
       return;
     }
     onlineCelebrated='';
@@ -153,7 +173,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   }
 
   function renderWaitingForOpponent(){
-    const current=PLAYERS[xoState?.currentPlayer],box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');
+    const current=participant(xoState?.currentPlayer),box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');
     box?.classList.remove('unlocked','finished');if(hear)hear.hidden=true;
     if(prompt)prompt.textContent=`دور ${current?.displayName||'اللاعب الثاني'} الآن`;
     if(visual)visual.innerHTML='';if(options)options.innerHTML='';if(feedback)feedback.textContent='انتظر شوي…';
@@ -166,40 +186,55 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
       try{await onlineSession.reset();}catch(error){handleOnlineError(error);}finally{onlineBusy=false;}
       return;
     }
-    nextStarter=nextStarter==='yasser'?'khaled':'yasser';xoState=createXoState({players:['yasser','khaled'],startingPlayer:nextStarter});
-    clearChallenge();setXoMode(true);renderXo();beginTurnChallenge();
+    if(!xoState?.players?.length)return;const players=[...xoState.players],startingPlayer=players[nextStarterIndex%2];nextStarterIndex=(nextStarterIndex+1)%2;
+    xoState=createXoState({players,startingPlayer});clearChallenge();setXoMode(true);renderXo();beginTurnChallenge();
   }
 
-  function tokenMarkup(playerId){const player=PLAYERS[playerId];if(!player)return'';return `<span class="xo-token ${player.theme}" aria-hidden="true"><img src="${PLAYER_ASSETS[player.learnerId]}" alt="" decoding="async"></span>`;}
+  function participantVisualMarkup(player,{celebration=false}={}){
+    const image=celebration?player.celebrationAvatar:player.avatar;
+    if(image)return `<img src="${image}" alt="" decoding="async">`;
+    return `<span class="xo-participant-fallback" aria-hidden="true">${player.symbol}</span>`;
+  }
+  function tokenMarkup(playerId){const player=participant(playerId);return `<span class="xo-token ${player.theme}" aria-hidden="true">${participantVisualMarkup(player)}</span>`;}
   function isMoveUnlocked(){
     const base=Boolean(xoState?.status==='playing'&&challengeState?.playerId===xoState.currentPlayer&&challengeState.unlocked);
     return playMode==='online'?base&&onlineSession.isSelfTurn():base;
   }
   function statusText(){
-    if(!xoState)return'';if(xoState.status==='won')return`فاز ${PLAYERS[xoState.winner]?.displayName||''} 🎉`;if(xoState.status==='draw')return'تعادل جميل 🤝';
+    if(!xoState)return'';if(xoState.status==='won')return`فاز ${participant(xoState.winner).displayName} 🎉`;if(xoState.status==='draw')return'تعادل جميل 🤝';
     if(playMode==='online'&&!onlineSession.isSelfTurn())return'بانتظار اللاعب الثاني';if(isMoveUnlocked())return'اختر مربعًا';return'جاوب السؤال أولًا';
+  }
+  function renderPlayerStrip(){
+    if(!xoState?.players)return;
+    const labels=['الأول','الثاني'];
+    xoState.players.forEach((playerId,index)=>{
+      const player=participant(playerId),suffix=index===0?'A':'B',card=byId(`xoPlayer${suffix}`),avatar=byId(`xoPlayer${suffix}Avatar`),name=byId(`xoPlayer${suffix}Name`);
+      if(card){card.className=`xo-player-card ${player.theme}`;card.classList.toggle('active',xoState.currentPlayer===playerId||xoState.winner===playerId);card.dataset.playerId=playerId;}
+      if(avatar)avatar.innerHTML=participantVisualMarkup(player);if(name)name.textContent=player.displayName;
+      const role=card?.querySelector('span');if(role)role.textContent=`اللاعب ${labels[index]}`;
+    });
+    const title=byId('xoMatchTitle');if(title){const [a,b]=xoState.players.map(participant);title.textContent=`${a.displayName} ضد ${b.displayName}`;}
   }
 
   function renderXo(){
     if(!xoState)return;const board=byId('xoBoard');if(!board)return;
-    const current=xoState.currentPlayer?PLAYERS[xoState.currentPlayer]:null,reset=byId('xoReset');if(reset)reset.hidden=playMode==='online'||xoState.status!=='playing';
-    byId('xoTurnName').textContent=current?.displayName||(xoState.status==='draw'?'تعادل':PLAYERS[xoState.winner]?.displayName||'');byId('xoStatusText').textContent=statusText();
-    byId('xoPlayerYasser')?.classList.toggle('active',xoState.currentPlayer==='yasser'||xoState.winner==='yasser');byId('xoPlayerKhaled')?.classList.toggle('active',xoState.currentPlayer==='khaled'||xoState.winner==='khaled');
+    const current=xoState.currentPlayer?participant(xoState.currentPlayer):null,reset=byId('xoReset');if(reset)reset.hidden=playMode==='online'||xoState.status!=='playing';
+    renderPlayerStrip();byId('xoTurnName').textContent=current?.displayName||(xoState.status==='draw'?'تعادل':participant(xoState.winner).displayName||'');byId('xoStatusText').textContent=statusText();
     const wins=new Set(xoState.winningLine||[]),unlocked=isMoveUnlocked();board.classList.toggle('locked',xoState.status==='playing'&&!unlocked);
-    board.innerHTML=xoState.board.map((playerId,index)=>`<button class="xo-cell ${wins.has(index)?'win':''}" role="gridcell" data-xo-cell="${index}" ${playerId||xoState.status!=='playing'||!unlocked?'disabled':''} aria-label="${playerId?`الخانة للاعب ${PLAYERS[playerId].displayName}`:`خانة فارغة ${index+1}`}">${playerId?tokenMarkup(playerId):''}</button>`).join('');
+    board.innerHTML=xoState.board.map((playerId,index)=>`<button class="xo-cell ${wins.has(index)?'win':''}" role="gridcell" data-xo-cell="${index}" ${playerId||xoState.status!=='playing'||!unlocked?'disabled':''} aria-label="${playerId?`الخانة للاعب ${participant(playerId).displayName}`:`خانة فارغة ${index+1}`}">${playerId?tokenMarkup(playerId):''}</button>`).join('');
     board.querySelectorAll('[data-xo-cell]').forEach(button=>button.addEventListener('click',()=>playCell(Number(button.dataset.xoCell))));if(xoState.status!=='playing')renderFinishedChallenge();
   }
 
   function renderFinishedChallenge(){
     const box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');box?.classList.remove('unlocked');box?.classList.add('finished');if(hear)hear.hidden=true;
     if(xoState?.status==='won'){
-      const winner=PLAYERS[xoState.winner],asset=CELEBRATION_ASSETS[xoState.winner];if(prompt)prompt.textContent=`${winner?.displayName||''} فاز بالجولة 🎉`;if(visual)visual.innerHTML=`<div class="xo-finish-art"><img src="${asset}" alt="" decoding="async"></div>`;if(feedback)feedback.textContent='ممتاز! جاهزين لجولة ثانية؟';
-    }else{if(prompt)prompt.textContent='تعادل جميل 🤝';if(visual)visual.innerHTML=`<div class="xo-finish-art dual"><img src="${CELEBRATION_ASSETS.yasser}" alt="" decoding="async"><img src="${CELEBRATION_ASSETS.khaled}" alt="" decoding="async"></div>`;if(feedback)feedback.textContent='جولة قوية من الاثنين.';}
+      const winner=participant(xoState.winner);if(prompt)prompt.textContent=`${winner.displayName} فاز بالجولة 🎉`;if(visual)visual.innerHTML=`<div class="xo-finish-art">${participantVisualMarkup(winner,{celebration:true})}</div>`;if(feedback)feedback.textContent='ممتاز! جاهزين لجولة ثانية؟';
+    }else{
+      const pair=(xoState?.players||[]).map(id=>participantVisualMarkup(participant(id),{celebration:true})).join('');if(prompt)prompt.textContent='تعادل جميل 🤝';if(visual)visual.innerHTML=`<div class="xo-finish-art dual">${pair}</div>`;if(feedback)feedback.textContent='جولة قوية من الاثنين.';
+    }
     if(options){
       const ready=new Set(xoState?.rematchReady||[]),self=playMode==='online'?onlineSession.snapshot.selfLearnerId:null,selfReady=Boolean(self&&ready.has(self)),readyPlayer=[...ready][0];
-      if(playMode==='online'&&ready.size){
-        if(feedback)feedback.textContent=selfReady?'أنت جاهز 👍 ننتظر اللاعب الثاني.':`${PLAYERS[readyPlayer]?.displayName||'اللاعب الثاني'} جاهز لجولة ثانية.`;
-      }
+      if(playMode==='online'&&ready.size){if(feedback)feedback.textContent=selfReady?'أنت جاهز 👍 ننتظر اللاعب الثاني.':`${participant(readyPlayer).displayName||'اللاعب الثاني'} جاهز لجولة ثانية.`;}
       options.innerHTML=`<button class="btn primary xo-play-again" id="xoPlayAgain" ${selfReady?'disabled':''}>${selfReady?'بانتظار اللاعب الثاني…':'العبوا مرة ثانية'}</button>`;
       if(!selfReady)byId('xoPlayAgain')?.addEventListener('click',resetXo);
     }
@@ -216,7 +251,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
 
   async function beginTurnChallenge(){
     if(!xoState||xoState.status!=='playing')return;if(playMode==='online'&&!onlineSession.isSelfTurn()){renderWaitingForOpponent();return;}
-    const playerId=xoState.currentPlayer,player=PLAYERS[playerId],requestId=++challengeRequest;challengeState=null;
+    const playerId=xoState.currentPlayer,player=participant(playerId),requestId=++challengeRequest;challengeState=null;
     const prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');byId('xoChallenge')?.classList.remove('unlocked','finished');if(hear)hear.hidden=false;
     if(prompt)prompt.textContent=`نجهز سؤال ${player.displayName}…`;if(visual)visual.innerHTML='';if(options)options.innerHTML='';if(feedback)feedback.textContent='';renderXo();
     try{
@@ -228,7 +263,7 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   }
 
   async function answerChallenge(answer,button){
-    if(!challengeState||challengeState.unlocked||challengeState.playerId!==xoState?.currentPlayer)return;const {challenge}=challengeState,player=PLAYERS[challengeState.playerId];const isCorrect=String(answer)===String(challenge.correctAnswer),responseMs=Math.max(0,Math.round(now()-challengeState.startedAt));
+    if(!challengeState||challengeState.unlocked||challengeState.playerId!==xoState?.currentPlayer)return;const {challenge}=challengeState,player=participant(challengeState.playerId),isCorrect=String(answer)===String(challenge.correctAnswer),responseMs=Math.max(0,Math.round(now()-challengeState.startedAt));
     try{await learningAdapter?.recordChallenge?.(player,{gameId:'xo',challenge,answer,isCorrect,responseMs});}catch{}
     if(isCorrect){challengeState.unlocked=true;button?.classList.add('good');audio.correct();byId('xoChallengeFeedback').textContent='أحسنت ⭐ الآن اختر مربعك.';byId('xoChallenge')?.classList.add('unlocked');byId('xoChallengeOptions')?.querySelectorAll('button').forEach(item=>item.disabled=true);renderXo();return;}
     challengeState.attempts+=1;button?.classList.add('bad');if(button)button.disabled=true;audio.wrong();if(challengeState.attempts<2){byId('xoChallengeFeedback').textContent='جرّب مرة ثانية — تقدر عليها.';return;}
@@ -243,10 +278,9 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   async function playCell(cell){
     if(!xoState||xoState.status!=='playing'||!isMoveUnlocked())return;
     if(playMode==='online'){
-      if(onlineBusy)return;onlineBusy=true;clearChallenge();renderXo();
-      try{await onlineSession.move(cell);}catch(error){handleOnlineError(error);}finally{onlineBusy=false;}return;
+      if(onlineBusy)return;onlineBusy=true;clearChallenge();renderXo();try{await onlineSession.move(cell);}catch(error){handleOnlineError(error);}finally{onlineBusy=false;}return;
     }
-    const playerId=xoState.currentPlayer,result=playXoMove(xoState,{playerId,cell});if(!result.ok)return;xoState=result.state;clearChallenge();renderXo();if(xoState.status==='playing')beginTurnChallenge();else{audio.achievement();speech.speak(xoState.status==='won'?`${PLAYERS[xoState.winner]?.displayName||''} فاز بالجولة. أحسنتم.`:'تعادل جميل. أحسنتم.');}
+    const playerId=xoState.currentPlayer,result=playXoMove(xoState,{playerId,cell});if(!result.ok)return;xoState=result.state;clearChallenge();renderXo();if(xoState.status==='playing')beginTurnChallenge();else{audio.achievement();speech.speak(xoState.status==='won'?`${participant(xoState.winner).displayName} فاز بالجولة. أحسنتم.`:'تعادل جميل. أحسنتم.');}
   }
 
   async function restoreOnlineRoom(){
@@ -257,10 +291,9 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   function backToGames(){clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);renderCatalog();show('gamesHomeView');}
 
   function bind(){
-    if(bound)return;bound=true;ensureGamesShell();
+    if(bound)return;bound=true;ensureGamesShell();renderLobbyParticipants();
     byId('gamesOpenBtn')?.addEventListener('click',enterHome);byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});
     byId('xoLobbyBack')?.addEventListener('click',backToGames);byId('xoLocalStart')?.addEventListener('click',startLocalXo);byId('xoOnlineCreate')?.addEventListener('click',createOnlineRoom);byId('xoOnlineJoin')?.addEventListener('click',joinOnlineRoom);
-    document.querySelectorAll('[data-xo-learner]').forEach(button=>button.addEventListener('click',()=>chooseOnlineLearner(button.dataset.xoLearner)));
     byId('xoRoomCodeInput')?.addEventListener('input',event=>{event.target.value=String(event.target.value||'').replace(/\D/g,'').slice(0,6);});
     byId('xoBackToGames')?.addEventListener('click',backToGames);byId('xoReset')?.addEventListener('click',resetXo);byId('xoHearChallenge')?.addEventListener('click',()=>{const challenge=challengeState?.challenge;if(challenge)speech.speak(challenge.spokenPrompt||challenge.prompt||'');});
     Promise.resolve().then(restoreOnlineRoom).catch(()=>null);
