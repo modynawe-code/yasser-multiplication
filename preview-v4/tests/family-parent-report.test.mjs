@@ -9,26 +9,32 @@ test('family report is wired from main with live learner state getters',async()=
   assert.match(main,/createFamilyParentController/);
   assert.match(main,/getYasserState:\(\)=>yasser\.getState\(\)/);
   assert.match(main,/getKhaledState:\(\)=>khaled\.getState\(\)/);
+  assert.match(main,/getMashaalState:\(\)=>mashaal\.getState\(\)/);
   assert.match(main,/familyParent\.start\(\)/);
 });
 
-test('family shell exposes overview, learner and session report tabs',async()=>{
+test('family shell keeps legacy report tabs and hydrates registered learners',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
+  const registry=await read('src/modules/parent/family-parent-shell-registry.js');
   assert.match(shell,/id="familyParentBtn"/);
   assert.match(shell,/id="familyParentView"/);
   for(const tab of ['overview','yasser','khaled','sessions'])assert.match(shell,new RegExp(`data-family-parent-tab="${tab}"`));
+  assert.match(registry,/listLearnerProfiles/);
+  assert.match(registry,/data-family-parent-tab/);
   assert.match(shell,/modal\.id='familyPinModal'/);
   assert.match(shell,/id="familyPinInput"/);
 });
 
-test('family renderers use shared learning metrics for both learners without erasing historical errors',async()=>{
+test('family renderers preserve shared learning metrics for Yasser and Khaled and developmental Mashaal reporting',async()=>{
   const renderers=await read('src/modules/parent/family-parent-renderers.js');
   assert.match(renderers,/summarizeLearningWindows/);
   assert.match(renderers,/summarizeLearningAttempts/);
   assert.match(renderers,/KHALED_SKILLS/);
+  assert.match(renderers,/buildMashaalParentSummary/);
   assert.match(renderers,/الأخطاء التاريخية/);
   assert.match(renderers,/صح من أول مرة/);
   assert.match(renderers,/النجاح النهائي/);
+  assert.match(renderers,/التقييم نمائي/);
   assert.match(renderers,/sort\(\(a,b\)=>new Date\(b\.at\)-new Date\(a\.at\)\)/);
 });
 
@@ -43,10 +49,11 @@ test('parent access is shared, hashed and rate limited in application code',asyn
   assert.match(yasser,/createParentAccessGate/);
 });
 
-test('family report supports a single combined backup export',async()=>{
+test('family report exports one combined backup including Mashaal',async()=>{
   const controller=await read('src/modules/parent/family-parent-controller.js');
   assert.match(controller,/family-learning-backup/);
   assert.match(controller,/yasser:getYasserState\(\)/);
   assert.match(controller,/khaled:getKhaledState\(\)/);
-  assert.match(controller,/yasser-khaled-results/);
+  assert.match(controller,/mashaal:getMashaalState\(\)/);
+  assert.match(controller,/family-learning-results/);
 });
