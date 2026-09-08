@@ -26,16 +26,18 @@ test('installed app identity is learner-neutral while runtime keeps the full gam
   assert.match(main,/createGamesController/);
 });
 
-test('service worker shell includes cloud sync, games, shared UI contracts, currency assets and open-family modules',async()=>{
+test('service worker shell includes cloud session restore, games, shared UI contracts, currency assets and open-family modules',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-\d+/);
+  assert.match(worker,/shell-71/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
     'shared/data/attempt-ledger.js',
     'shared/config/family-api-config.js',
     'shared/sync/family-auth-client.js',
+    'shared/sync/family-sync-capability-registry.js',
     'shared/sync/family-sync-service.js',
+    'shared/sync/session-sync.js',
     'modules/games/games-controller.js',
     'modules/khaled/domain/money-question-bank.js',
     'modules/khaled/ui/saudi-money-assets.js',
