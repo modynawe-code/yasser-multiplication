@@ -52,9 +52,9 @@ test('Yasser home owns explicit Galaxy Tab landscape and narrow-screen layout ru
   assert.match(css,/@media\(max-width:430px\)/);
 });
 
-test('dedicated Yasser home presentation is part of the offline application shell',async()=>{
+test('dedicated Yasser home presentation is part of the versioned offline application shell',async()=>{
   const worker=await read('service-worker.js');
   assert.match(worker,/src\/modules\/yasser\/ui\/yasser-home-shell\.js/);
   assert.match(worker,/src\/modules\/yasser\/ui\/yasser-home\.css/);
-  assert.match(worker,/shell-73/);
+  assert.match(worker,/CACHE_VERSION=`\$\{CACHE_PREFIX\}shell-\d+`/);
 });
