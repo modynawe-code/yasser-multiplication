@@ -33,6 +33,26 @@ export function validateAttemptBatch(body,{maxBatch=250}={}){
   return{ok:true,value:attempts};
 }
 
+export function validateEvidencePayload(input){
+  if(!input||typeof input!=='object')return{ok:false,error:'invalid_evidence'};
+  const evidenceId=String(input.evidenceId||'').trim(),learnerId=normalizeLearnerSlug(input.learnerId),skillId=String(input.skillId||'').trim(),type=String(input.type||'').trim(),createdAt=String(input.createdAt||'');
+  if(!evidenceId||evidenceId.length>180)return{ok:false,error:'invalid_evidence_id'};
+  if(!learnerId)return{ok:false,error:'invalid_learner'};
+  if(!skillId||skillId.length>120)return{ok:false,error:'invalid_skill'};
+  if(!type||type.length>80)return{ok:false,error:'invalid_evidence_type'};
+  if(!isIsoDate(createdAt))return{ok:false,error:'invalid_created_at'};
+  const payloadJson=jsonSafe(input.payload,10000);if(payloadJson===null)return{ok:false,error:'evidence_payload_too_large'};
+  return{ok:true,value:{evidenceId,learnerId,skillId,type,payloadJson,createdAt}};
+}
+
+export function validateEvidenceBatch(body,{maxBatch=250}={}){
+  if(!body||!Array.isArray(body.evidence))return{ok:false,error:'evidence_array_required'};
+  if(body.evidence.length>maxBatch)return{ok:false,error:'batch_too_large'};
+  const evidence=[];
+  for(const raw of body.evidence){const result=validateEvidencePayload(raw);if(!result.ok)return result;evidence.push(result.value);}
+  return{ok:true,value:evidence};
+}
+
 export function validateSessionPayload(input){
   if(!input||typeof input!=='object')return{ok:false,error:'invalid_session'};
   const sessionId=String(input.sessionId||'').trim(),learnerId=normalizeLearnerSlug(input.learnerId);
