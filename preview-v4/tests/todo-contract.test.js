@@ -16,6 +16,7 @@ test('Mashaal technical integration and curriculum verification are complete whi
   const todo=await readFile(new URL('../src/modules/mashaal/TODO.md',import.meta.url),'utf8');
   assert.match(todo,/\[x\] Verify detailed KG3 curriculum content/);
   assert.match(todo,/\[x\] Select an explicitly reusable human recitation source/);
-  assert.match(todo,/\[ \] Import only the required approved recitation clip/);
+  assert.match(todo,/\[x\] Limit the recitation scope to one surah only: سورة الإخلاص \(112\)/);
+  assert.match(todo,/\[ \] Import the approved سورة الإخلاص audio file/);
   assert.match(todo,/\[ \] Apply the reviewed D1 migration/);
 });
