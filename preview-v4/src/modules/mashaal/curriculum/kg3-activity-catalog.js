@@ -107,6 +107,10 @@ export function listMashaalKg3Activities(){
   return [...MASHAAL_KG3_ACTIVITY_CATALOG];
 }
 
+export function listMashaalKg3ActivitiesBySkill(skillId){
+  return MASHAAL_KG3_ACTIVITY_CATALOG.filter(item=>item.skillId===skillId);
+}
+
 export function getMashaalKg3Activity(activityId){
   return MASHAAL_KG3_ACTIVITY_CATALOG.find(item=>item.id===activityId)||null;
 }
