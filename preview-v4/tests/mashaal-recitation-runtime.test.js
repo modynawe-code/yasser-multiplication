@@ -4,11 +4,20 @@ import { readFile } from 'node:fs/promises';
 import { createMashaalActivityPlan } from '../src/modules/mashaal/application/activity-plan.js';
 import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activity-view-model.js';
 import { validateMashaalRecitationActivity } from '../src/modules/mashaal/application/recitation-release-validator.js';
+import { getMashaalRecitationMediaStatus } from '../src/modules/mashaal/curriculum/recitation-source-registry.js';
 
-test('recitation remains closed while no integrity-verified local audio asset exists',()=>{
+test('recitation runtime opens only when integrity-verified local human audio exists',()=>{
+  const media=getMashaalRecitationMediaStatus();
   const plan=createMashaalActivityPlan('listen-repeat');
-  assert.equal(plan.contentReady,false);
-  assert.equal(plan.activities.length,0);
+  assert.equal(plan.contentReady,media.localMediaReady);
+  assert.equal(plan.activities.length,media.localMediaReady?1:0);
+  if(media.localMediaReady){
+    const activity=plan.activities[0];
+    assert.equal(activity.syntheticRecitationAllowed,false);
+    assert.equal(activity.stimulus.surahNumber,112);
+    assert.match(activity.mediaPath,/^\.\/assets\/recitation\/.*\.mp3$/);
+    assert.match(activity.mediaSha256,/^[a-f0-9]{64}$/);
+  }
 });
 
 test('recitation view model carries a local human-audio path separately from TTS instructions',()=>{
