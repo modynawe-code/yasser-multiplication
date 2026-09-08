@@ -11,17 +11,23 @@ import { createGamesController } from './modules/games/games-controller.js';
 import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
+import { createLocalBackupService } from './shared/backup/local-backup-service.js';
+import { createRewardRepository } from './shared/rewards/reward-repository.js';
 import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
 import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
 import { createRewardCabinetController } from './shared/ui/reward-cabinet.js';
 
+const localBackup=createLocalBackupService();
+await localBackup.restoreIfFresh();
+
 ensureLearningShell();
 
-const rewardService=createLearningRewardService();
+const rewardRepository=createRewardRepository({storage:localBackup.storage});
+const rewardService=createLearningRewardService({repository:rewardRepository});
 let cabinet=null;
 function presentLearningStatus(learnerId,result){renderLearningMotivation({learnerId,status:result});cabinet?.refresh(learnerId,result);}
-const yasserBaseRepository=createLocalStorageRepository();
-const khaledBaseRepository=createKhaledRepository();
+const yasserBaseRepository=createLocalStorageRepository(localBackup.storage);
+const khaledBaseRepository=createKhaledRepository(localBackup.storage);
 const yasserRepository=createRewardingRepository({learnerId:'yasser',repository:yasserBaseRepository,rewardService,onEvaluated:(learnerId,_state,result)=>presentLearningStatus(learnerId,result)});
 const khaledRepository=createRewardingRepository({learnerId:'khaled',repository:khaledBaseRepository,rewardService,onEvaluated:(learnerId,_state,result)=>presentLearningStatus(learnerId,result)});
 const cloudAuth=createFamilyAuthClient();
@@ -89,3 +95,7 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub']){
 presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
 presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
 cabinet.start();familyParent.start();games.start();hubVisuals.warm();hub.start();registerServiceWorker();
+
+void localBackup.flush();
+globalThis.addEventListener?.('pagehide',()=>{void localBackup.flush();});
+globalThis.addEventListener?.('visibilitychange',()=>{if(globalThis.document?.visibilityState==='hidden')void localBackup.flush();});
