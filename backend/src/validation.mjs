@@ -1,7 +1,7 @@
 import { normalizeLearnerSlug } from './learners.mjs';
 
 function isIsoDate(value){return typeof value==='string'&&!Number.isNaN(Date.parse(value));}
-function jsonSafe(value,max=2000){try{const text=JSON.stringify(value);return text.length<=max?text:null;}catch{return null;}}
+function jsonSafe(value,max=2000){try{const text=JSON.stringify(value);return typeof text==='string'&&text.length<=max?text:null;}catch{return null;}}
 function integerOrNull(value){if(value==null||value==='')return null;const n=Number(value);return Number.isInteger(n)?n:null;}
 
 export function validateAttemptPayload(input){
@@ -57,8 +57,8 @@ export function validateSessionPayload(input){
   if(!input||typeof input!=='object')return{ok:false,error:'invalid_session'};
   const sessionId=String(input.sessionId||'').trim(),learnerId=normalizeLearnerSlug(input.learnerId);
   if(!sessionId||sessionId.length>180||!learnerId)return{ok:false,error:'invalid_session_identity'};
-  const sessionJson=jsonSafe(input.session,50000);
-  if(sessionJson===null)return{ok:false,error:'session_payload_too_large'};
+  const sessionJson=input.session==null?null:jsonSafe(input.session,50000);
+  if(input.session!=null&&sessionJson===null)return{ok:false,error:'session_payload_too_large'};
   return{ok:true,value:{
     sessionId,learnerId,skillId:input.skillId==null?null:String(input.skillId).slice(0,120),mode:input.mode==null?null:String(input.mode).slice(0,40),
     startedAt:isIsoDate(input.startedAt)?input.startedAt:null,endedAt:isIsoDate(input.endedAt)?input.endedAt:null,
