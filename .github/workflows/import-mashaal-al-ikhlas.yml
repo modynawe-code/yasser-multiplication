@@ -26,16 +26,25 @@ jobs:
         with:
           node-version: 20
 
-      - name: Fetch only Surat Al-Ikhlas from the official KFGQPC archive
+      - name: Import Surat Al-Ikhlas from KFGQPC source
         working-directory: preview-v4
-        run: npm run recitation:fetch-official
+        run: |
+          set +e
+          npm run recitation:fetch-official
+          official_status=$?
+          set -e
+          if [ "$official_status" -ne 0 ]; then
+            echo "Direct KFGQPC host was unreachable from this runner; using the pinned quran-ws transport mirror for the extracted file while retaining KFGQPC as source authority."
+            node tools/fetch-mashaal-recitation-mirror.mjs
+          fi
 
-      - name: Verify generated recitation asset
+      - name: Verify generated recitation asset and provenance
         working-directory: preview-v4
         run: |
           test -s assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
           grep -q '"surahNumber": 112' src/modules/mashaal/curriculum/recitation-media-data.js
           grep -Eq '"sha256": "[a-f0-9]{64}"' src/modules/mashaal/curriculum/recitation-media-data.js
+          grep -q 'https://download.qurancomplex.gov.sa/new-sounds/akhdar/hafs/akhdar-sura.zip' src/modules/mashaal/curriculum/recitation-media-data.js
           sha256sum assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
 
       - name: Run learning-app regression suite with the real media manifest
