@@ -5,6 +5,7 @@ export function isMashaalReleaseReady(gate){
     gate?.parentIntegrated&&
     gate?.backendIntegrated&&
     gate?.regressionsGreen&&
-    gate?.contentVerified
+    gate?.contentVerified&&
+    gate?.requiredMediaReady
   );
 }
