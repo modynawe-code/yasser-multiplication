@@ -6,12 +6,8 @@ The Saudi Ministry of Education Curriculum Guide - Fifth Edition (2025) is the a
 ## Developmental indicators
 Detailed implementation skills are audited against **Saudi Early Learning Standards: Children 3 to 6 Years Old** (Ministry of Education / Tatweer / NAEYC, 2015). The current Ministry of Education Early Childhood page confirms that developmental early-learning standards for ages 3-6 remain an official reference for what children should know and be able to do.
 
-Every implementation skill must have an entry in `kg3-skill-provenance.js`. Evidence is classified as:
-- `direct-indicator`: explicit KG2/KG3 SELS indicator identified.
-- `standards-strand`: directly within a named SELS strand, but the exact indicator still needs final extraction before activity authoring.
-- `adult-strategy`: supported by SELS implementation guidance, not by itself a child outcome.
-- `pending-indicator`: plausible implementation decomposition that must not be released until matched to an explicit SELS indicator.
+Every implementation skill must have an entry in `kg3-skill-provenance.js` and must resolve to an explicit KG2-3 standards indicator before it is considered part of the verified skill map.
 
-Current audit: **25/25 skills have provenance records; 6 direct indicators, 11 standards-strand, 3 adult-strategy, 5 pending-indicator.**
+Current audit: **25/25 skills are mapped to direct SELS KG2-3 indicators.**
 
-`contentVerified` must remain `false` while any `pending-indicator` remains or while an activity relies only on `adult-strategy` evidence.
+This verifies the **skill map only**. It does not automatically verify child-facing activities, prompts, audio, assessment rules, Quran content selection, or national/social lesson copy. Those release artifacts must carry their own source bindings and tests before `contentVerified` may become `true`.
