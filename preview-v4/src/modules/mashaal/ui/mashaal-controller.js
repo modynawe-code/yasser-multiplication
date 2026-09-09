@@ -9,6 +9,7 @@ import { getMashaalTransferPrompt } from '../application/transfer-prompts.js';
 import { recordMashaalEvidence } from '../application/progress-service.js';
 import { mountQuranSurahPlayer } from '../quran/quran-surah-player.js';
 import { createMashaalChoiceVisual,createMashaalDomainArt,createMashaalStimulusVisual } from './mashaal-visuals.js';
+import { getMashaalWebMedia } from './mashaal-web-media.js';
 
 function byId(id){return document.getElementById(id);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -21,7 +22,10 @@ function renderWorldVisual(button,domainId){
 function renderSkillPreview(skill,domainId){
   const preview=document.createElement('span');preview.className='mashaal-skill-preview';preview.setAttribute('aria-hidden','true');
   const plan=createMashaalActivityPlan(skill.id);const activity=plan?.activities?.[0];const model=activity?createMashaalActivityViewModel(activity):null;
-  if(model&&!model.requiresHumanRecitation)preview.appendChild(createMashaalStimulusVisual(model.stimulus,{domainId,compact:true}));
+  const firstChoice=model?.choices?.[0]||null;
+  const illustratedChoice=firstChoice&&getMashaalWebMedia(firstChoice.visualKey)?firstChoice:null;
+  if(model&&!model.requiresHumanRecitation&&illustratedChoice)preview.appendChild(createMashaalChoiceVisual(illustratedChoice.visualKey,model,{compact:true}));
+  else if(model&&!model.requiresHumanRecitation)preview.appendChild(createMashaalStimulusVisual(model.stimulus,{domainId,compact:true}));
   else preview.appendChild(createMashaalDomainArt(domainId));
   return preview;
 }
