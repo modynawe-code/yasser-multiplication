@@ -34,6 +34,13 @@ jobs:
       - name: Verify full learning app
         working-directory: preview-v4
         run: npm test
+      - name: Package exact uploaded preview for visual QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: mashaal-uploaded-preview
+          path: preview-v4
+          include-hidden-files: true
+          retention-days: 1
       - name: Commit generated assets and visual contract
         shell: bash
         run: |
