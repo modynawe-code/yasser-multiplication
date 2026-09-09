@@ -114,7 +114,8 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
   const host=document.createElement('div');host.className=`mashaal-generated-stimulus ${compact?'compact':''}`;host.setAttribute('aria-hidden','true');
   if(!stimulus)return host;
   if(stimulus.kind==='picture'){
-    const img=document.createElement('img');img.className='mashaal-scene-art';img.src=SCENE_ART[stimulus.scene]||getMashaalDomainArt(domainId);img.alt='';img.decoding='async';img.draggable=false;host.appendChild(img);return host;
+    const media=getMashaalWebMedia(stimulus.scene);
+    const img=document.createElement('img');img.className='mashaal-scene-art';img.src=media?.url||SCENE_ART[stimulus.scene]||getMashaalDomainArt(domainId);img.alt='';img.decoding='async';img.draggable=false;host.appendChild(img);return host;
   }
   if(stimulus.kind==='items'){
     host.appendChild(createCountGroupVisual(stimulus.count,{compact,item:stimulus.item||'circle'}));return host;
@@ -134,7 +135,9 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     const bubble=document.createElement('span');bubble.className='mashaal-sound-visual';bubble.textContent=stimulus.sound||'';host.appendChild(bubble);return host;
   }
   if(stimulus.kind==='relation'){
-    const key=stimulus.relation==='above'?'ball-above-box':stimulus.relation==='below'?'ball-below-box':'ball-inside-box';host.appendChild(simpleVisual(key,{compact}));return host;
+    const key=stimulus.relation==='above'?'ball-above-box':stimulus.relation==='below'?'ball-below-box':'ball-inside-box';
+    const media=getMashaalWebMedia(key);
+    host.appendChild(media?mediaVisual(key,media,{compact}):simpleVisual(key,{compact}));return host;
   }
   if(stimulus.kind==='trace'){
     const trace=document.createElement('span');trace.className='mashaal-trace-visual';trace.innerHTML='<i></i><b></b>';host.appendChild(trace);return host;
