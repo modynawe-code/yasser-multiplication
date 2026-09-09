@@ -1,0 +1,53 @@
+name: Mashaal Visual QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/family-games-mashaal-integration-v1
+    paths:
+      - 'preview-v4/src/modules/mashaal/**'
+      - 'preview-v4/assets/mashaal/**'
+      - 'preview-v4/service-worker.js'
+      - 'preview-v4/src/platform/pwa/register-service-worker.js'
+      - 'preview-v4/tools/mashaal-visual-qa.mjs'
+      - '.github/workflows/mashaal-visual-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright Chromium
+        working-directory: preview-v4
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start preview
+        run: python3 -m http.server 4177 --bind 127.0.0.1 --directory preview-v4 >/tmp/mashaal-preview.log 2>&1 &
+      - name: Wait for preview
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4177/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/mashaal-preview.log
+          exit 1
+      - name: Visual acceptance sweep
+        working-directory: preview-v4
+        run: node tools/mashaal-visual-qa.mjs
+      - name: Upload visual QA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mashaal-visual-qa
+          path: preview-v4/artifacts/mashaal-visual-qa
+          if-no-files-found: error
+          retention-days: 7
