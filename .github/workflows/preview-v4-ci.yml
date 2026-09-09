@@ -35,10 +35,3 @@ jobs:
         working-directory: preview-v4
       - name: Test family backend
         run: node --test backend/tests/*.test.mjs
-      - name: Package preview for visual QA
-        uses: actions/upload-artifact@v4
-        with:
-          name: preview-v4-visual-qa
-          path: preview-v4
-          if-no-files-found: error
-          retention-days: 1
