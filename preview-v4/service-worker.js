@@ -1,8 +1,14 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-77`;
-const RECITATION_ASSETS=(globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[]).map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
+const CACHE_VERSION=`${CACHE_PREFIX}shell-78`;
+const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
+const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
+const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
+const MASHAAL_DOMAIN_ASSETS=[
+  './assets/mashaal/domains/language.webp','./assets/mashaal/domains/thinking.webp','./assets/mashaal/domains/feelings.webp',
+  './assets/mashaal/domains/health.webp','./assets/mashaal/domains/quran.webp','./assets/mashaal/domains/community.webp'
+];
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css',
@@ -34,7 +40,7 @@ const APP_SHELL=[
   './src/modules/mashaal/curriculum/kg3-curriculum.js','./src/modules/mashaal/curriculum/kg3-skill-map.js','./src/modules/mashaal/curriculum/kg3-skill-provenance.js','./src/modules/mashaal/curriculum/source-registry.js','./src/modules/mashaal/curriculum/kg3-activity-catalog.js','./src/modules/mashaal/curriculum/recitation-media-data.js','./src/modules/mashaal/curriculum/recitation-media-manifest.js','./src/modules/mashaal/curriculum/recitation-source-registry.js',
   './src/modules/mashaal/data/domain-labels.js','./src/modules/mashaal/data/kg3-domain-order.js','./src/modules/mashaal/domain/constants.js','./src/modules/mashaal/domain/progress-model.js','./src/modules/mashaal/domain/state-model.js',
   './src/modules/mashaal/application/skill-index.js','./src/modules/mashaal/application/activity-plan.js','./src/modules/mashaal/application/activity-release-validator.js','./src/modules/mashaal/application/recitation-activity-factory.js','./src/modules/mashaal/application/recitation-release-validator.js','./src/modules/mashaal/application/digital-attempt.js','./src/modules/mashaal/application/activity-completion.js','./src/modules/mashaal/application/transfer-prompts.js','./src/modules/mashaal/application/progress-service.js','./src/modules/mashaal/application/parent-labels.js','./src/modules/mashaal/application/parent-summary.js',
-  './src/modules/mashaal/infrastructure/local-storage-repository.js','./src/modules/mashaal/ui/home-copy.js','./src/modules/mashaal/ui/home-view-model.js','./src/modules/mashaal/ui/domain-view-model.js','./src/modules/mashaal/ui/activity-view-model.js','./src/modules/mashaal/ui/mashaal-shell.js','./src/modules/mashaal/ui/mashaal-controller.js','./src/modules/mashaal/ui/mashaal-visuals.js','./src/modules/mashaal/ui/mashaal.css','./src/modules/mashaal/ui/mashaal-home.css','./src/modules/mashaal/ui/mashaal-visuals.css','./src/modules/mashaal/quran/quran-surah-player.js','./src/modules/mashaal/quran/quran-surah-player.css',
+  './src/modules/mashaal/infrastructure/local-storage-repository.js','./src/modules/mashaal/ui/home-copy.js','./src/modules/mashaal/ui/home-view-model.js','./src/modules/mashaal/ui/domain-view-model.js','./src/modules/mashaal/ui/activity-view-model.js','./src/modules/mashaal/ui/mashaal-shell.js','./src/modules/mashaal/ui/mashaal-controller.js','./src/modules/mashaal/ui/mashaal-visuals.js','./src/modules/mashaal/ui/mashaal-web-media.js','./src/modules/mashaal/ui/mashaal.css','./src/modules/mashaal/ui/mashaal-home.css','./src/modules/mashaal/ui/mashaal-visuals.css','./src/modules/mashaal/ui/mashaal-web-media.css','./src/modules/mashaal/quran/quran-surah-player.js','./src/modules/mashaal/quran/quran-surah-player.css',
 
   './src/modules/parent/family-parent-controller.js','./src/modules/parent/family-parent-report-capabilities.js','./src/modules/parent/family-parent-renderers.js','./src/modules/parent/family-parent-shell-registry.js','./src/modules/parent/family-parent.css','./src/modules/parent/family-parent-open-learners.css',
 
@@ -42,7 +48,9 @@ const APP_SHELL=[
   './assets/visual/yasser/welcome.b64.txt','./assets/visual/yasser/thinking.b64.txt','./assets/visual/yasser/encourage.b64.txt','./assets/visual/yasser/celebrate.b64.txt','./assets/visual/yasser/mastered.b64.txt',
   './assets/visual/assistant/idle.b64.txt','./assets/visual/assistant/thinking.b64.txt','./assets/visual/assistant/celebrate.b64.txt',
   './assets/rewards/mastery-cup.b64.txt','./assets/rewards/weekly-cup.b64.txt','./assets/rewards/accuracy-medal.b64.txt','./assets/rewards/mastery-shield.b64.txt','./assets/rewards/distinction-crown.b64.txt','./assets/rewards/streak-flame.b64.txt','./assets/rewards/surprise-box.b64.txt','./assets/rewards/progress-badge.b64.txt',
-  ...RECITATION_ASSETS
+  ...MASHAAL_DOMAIN_ASSETS,
+  ...RECITATION_ASSETS,
+  ...RECITATION_COMPANION_ASSETS
 ];
 
 function absolute(path){return new URL(path,self.location.href).href;}
@@ -57,7 +65,9 @@ function isVerifiedQuranPageImage(request){
   if(request.destination!=='image')return false;
   try{
     const url=new URL(request.url);
-    return url.hostname==='raw.githubusercontent.com'&&url.pathname.startsWith('/quranpedia/quran-svg/main/mushafs/hafs/kfqc/svg/')&&url.pathname.endsWith('.svg');
+    const rawPinned=url.hostname==='raw.githubusercontent.com'&&/^\/quranpedia\/quran-svg\/[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/i.test(url.pathname);
+    const jsdelivrPinned=url.hostname==='cdn.jsdelivr.net'&&/^\/gh\/quranpedia\/quran-svg@[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/i.test(url.pathname);
+    return rawPinned||jsdelivrPinned;
   }catch{return false;}
 }
 async function runtimeCacheImage(request,cache){
