@@ -64,3 +64,6 @@
 }
 
 @media(prefers-reduced-motion:reduce){#mashaalActivityView .mashaal-choice{transition:none!important}}
+
+/* activity media containment */
+#mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{width:100%;height:100%;min-height:0;border-radius:16px}

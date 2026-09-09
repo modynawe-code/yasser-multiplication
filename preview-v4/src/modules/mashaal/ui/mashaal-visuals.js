@@ -151,10 +151,10 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     const row=document.createElement('div');row.className='mashaal-visual-sequence';for(const key of ['happy','sad','angry'])row.appendChild(createMashaalChoiceVisual(key,null,{compact:true}));host.appendChild(row);return host;
   }
   if(stimulus.kind==='movement'){
-    host.appendChild(simpleVisual('balance',{compact}));return host;
+    const media=getMashaalWebMedia('balance'); host.appendChild(media?mediaVisual('balance',media,{compact}):simpleVisual('balance',{compact}));return host;
   }
   if(stimulus.kind==='fine-motor'){
-    host.appendChild(simpleVisual('fine-motor',{compact}));return host;
+    const media=getMashaalWebMedia('fine-motor'); host.appendChild(media?mediaVisual('fine-motor',media,{compact}):simpleVisual('fine-motor',{compact}));return host;
   }
   const fallback=createMashaalDomainArt(domainId,{className:'mashaal-scene-art'});host.appendChild(fallback);return host;
 }

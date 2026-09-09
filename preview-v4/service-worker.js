@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-79`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-81`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -9,6 +9,7 @@ const MASHAAL_DOMAIN_ASSETS=[
   './assets/mashaal/domains/language.webp','./assets/mashaal/domains/thinking.webp','./assets/mashaal/domains/feelings.webp',
   './assets/mashaal/domains/health.webp','./assets/mashaal/domains/quran.webp','./assets/mashaal/domains/community.webp'
 ];
+const MASHAAL_CHOICE_ASSETS=['./assets/mashaal/choices/angry.webp','./assets/mashaal/choices/apple.webp','./assets/mashaal/choices/ask-help.webp','./assets/mashaal/choices/baker.webp','./assets/mashaal/choices/balance.webp','./assets/mashaal/choices/ball-above-box.webp','./assets/mashaal/choices/ball-below-box.webp','./assets/mashaal/choices/ball-inside-box.webp','./assets/mashaal/choices/ball.webp','./assets/mashaal/choices/brazil-flag.webp','./assets/mashaal/choices/breakfast.webp','./assets/mashaal/choices/brush-teeth.webp','./assets/mashaal/choices/candy.webp','./assets/mashaal/choices/compare-five-apples.webp','./assets/mashaal/choices/compare-four-apples.webp','./assets/mashaal/choices/compare-three-apples.webp','./assets/mashaal/choices/damage-book.webp','./assets/mashaal/choices/doctor.webp','./assets/mashaal/choices/duck-reference-unused.webp','./assets/mashaal/choices/fallen-block-tower.webp','./assets/mashaal/choices/fine-motor.webp','./assets/mashaal/choices/fries.webp','./assets/mashaal/choices/girl-drinking-water.webp','./assets/mashaal/choices/girl-lost-toy.webp','./assets/mashaal/choices/grab-ball.webp','./assets/mashaal/choices/happy.webp','./assets/mashaal/choices/healthy-apple.webp','./assets/mashaal/choices/help-tidy.webp','./assets/mashaal/choices/hot-surface.webp','./assets/mashaal/choices/japan-flag.webp','./assets/mashaal/choices/kick-blocks.webp','./assets/mashaal/choices/leave-book-floor.webp','./assets/mashaal/choices/leave-mess.webp','./assets/mashaal/choices/moon.webp','./assets/mashaal/choices/play-near-hot.webp','./assets/mashaal/choices/playtime-cleanup.webp','./assets/mashaal/choices/rainy-day.webp','./assets/mashaal/choices/return-book.webp','./assets/mashaal/choices/rinse-hands.webp','./assets/mashaal/choices/rub-hands.webp','./assets/mashaal/choices/sad.webp','./assets/mashaal/choices/saudi-flag.webp','./assets/mashaal/choices/scatter-toys.webp','./assets/mashaal/choices/soap.webp','./assets/mashaal/choices/stay-away.webp','./assets/mashaal/choices/sunglasses.webp','./assets/mashaal/choices/teacher.webp','./assets/mashaal/choices/throw-blocks.webp','./assets/mashaal/choices/touch-hot.webp','./assets/mashaal/choices/umbrella.webp','./assets/mashaal/choices/wait-turn.webp','./assets/mashaal/choices/wake.webp','./assets/mashaal/choices/walk-away-angry.webp','./assets/mashaal/choices/wet-hands.webp'];
 const APP_SHELL=[
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css',
@@ -49,6 +50,7 @@ const APP_SHELL=[
   './assets/visual/assistant/idle.b64.txt','./assets/visual/assistant/thinking.b64.txt','./assets/visual/assistant/celebrate.b64.txt',
   './assets/rewards/mastery-cup.b64.txt','./assets/rewards/weekly-cup.b64.txt','./assets/rewards/accuracy-medal.b64.txt','./assets/rewards/mastery-shield.b64.txt','./assets/rewards/distinction-crown.b64.txt','./assets/rewards/streak-flame.b64.txt','./assets/rewards/surprise-box.b64.txt','./assets/rewards/progress-badge.b64.txt',
   ...MASHAAL_DOMAIN_ASSETS,
+  ...MASHAAL_CHOICE_ASSETS,
   ...RECITATION_ASSETS,
   ...RECITATION_COMPANION_ASSETS
 ];
