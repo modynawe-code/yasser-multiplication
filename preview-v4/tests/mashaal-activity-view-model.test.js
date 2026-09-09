@@ -39,6 +39,6 @@ test('oral expression and prewriting use completion evidence instead of fake cor
     assert.equal(model.completionOnly,true);
     assert.deepEqual(model.correctValues,[]);
     assert.equal(isMashaalActivityAnswerCorrect(model,'done'),false);
-    assert.equal(model.choices[0].label,'تم ✓');
+    assert.equal(model.choices[0].label,'تم');
   }
 });
