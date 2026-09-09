@@ -4,7 +4,9 @@ import { getMashaalWebMedia } from '../src/modules/mashaal/ui/mashaal-web-media.
 
 const LOCAL_SCENARIOS=[
   'doctor','teacher','baker','wait-turn','grab-ball','ask-help',
-  'return-book','leave-book-floor','damage-book','apple','moon'
+  'return-book','leave-book-floor','damage-book','duck','apple','moon',
+  'compare-three-apples','compare-four-apples','compare-five-apples',
+  'healthy-apple','candy','fries'
 ];
 
 test('Mashaal scenario choices prefer committed local artwork',()=>{
