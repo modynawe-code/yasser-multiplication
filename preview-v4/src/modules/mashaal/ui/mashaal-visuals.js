@@ -33,7 +33,7 @@ const SCENE_ART=Object.freeze({
 });
 
 const SIMPLE_VISUALS=new Set([
-  'star','ball','heart','door','apple','moon','circle','square','box','red-circle','blue-circle','red-square','yellow-square',
+  'star','ball','heart','door','duck','apple','moon','circle','square','box','red-circle','blue-circle','red-square','yellow-square',
   'wake','brush-teeth','breakfast','umbrella','sunglasses','happy','sad','angry','wait-turn','grab-ball','walk-away-angry','ask-help','throw-blocks','kick-blocks',
   'wet-hands','soap','rub-hands','rinse-hands','stay-away','touch-hot','play-near-hot','return-book','leave-book-floor','damage-book','help-tidy','leave-mess','scatter-toys',
   'saudi-flag','japan-flag','brazil-flag','doctor','teacher','baker','hospital','school','bakery','car','airplane','boat',
@@ -81,10 +81,17 @@ function mediaVisual(key,media,{compact=false}={}){
   return host;
 }
 
+function illustratedGroupVisual(count,item,{compact=false}={}){
+  if(item!=='apple')return null;
+  const media=getMashaalWebMedia(`compare-${count}-apples`);
+  return media?mediaVisual(`compare-${count}-apples`,media,{compact}):null;
+}
+
 export function createMashaalChoiceVisual(key,viewModel,{compact=false}={}){
   if((key==='left'||key==='right')&&viewModel?.stimulus?.kind==='groups'){
     const count=key==='left'?viewModel.stimulus.leftCount:viewModel.stimulus.rightCount;
-    return createCountGroupVisual(count,{compact});
+    const item=viewModel.stimulus.item||'circle';
+    return illustratedGroupVisual(count,item,{compact})||createCountGroupVisual(count,{compact,item});
   }
   const media=getMashaalWebMedia(key);
   if(media)return mediaVisual(String(key),media,{compact});
@@ -99,7 +106,7 @@ export function createMashaalChoiceVisual(key,viewModel,{compact=false}={}){
 
 export function createCountGroupVisual(count,{compact=false,item='circle'}={}){
   const group=document.createElement('span');group.className=`mashaal-count-group ${compact?'compact':''}`;group.setAttribute('aria-hidden','true');
-  for(let index=0;index<Math.max(0,Number(count)||0);index++)group.appendChild(simpleVisual(item,{compact:true}));
+  for(let index=0;index<Math.max(0,Number(count)||0);index++)group.appendChild(createMashaalChoiceVisual(item,null,{compact:true}));
   return group;
 }
 
@@ -113,7 +120,12 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     host.appendChild(createCountGroupVisual(stimulus.count,{compact,item:stimulus.item||'circle'}));return host;
   }
   if(stimulus.kind==='groups'){
-    const pair=document.createElement('div');pair.className='mashaal-group-pair';pair.append(createCountGroupVisual(stimulus.leftCount,{compact}),createCountGroupVisual(stimulus.rightCount,{compact}));host.appendChild(pair);return host;
+    const pair=document.createElement('div');pair.className='mashaal-group-pair';
+    pair.append(
+      illustratedGroupVisual(stimulus.leftCount,stimulus.item,{compact})||createCountGroupVisual(stimulus.leftCount,{compact,item:stimulus.item||'circle'}),
+      illustratedGroupVisual(stimulus.rightCount,stimulus.item,{compact})||createCountGroupVisual(stimulus.rightCount,{compact,item:stimulus.item||'circle'})
+    );
+    host.appendChild(pair);return host;
   }
   if(stimulus.kind==='sequence'||stimulus.kind==='ordered-actions'){
     const row=document.createElement('div');row.className='mashaal-visual-sequence';for(const item of stimulus.items||[])row.appendChild(createMashaalChoiceVisual(item,null,{compact:true}));host.appendChild(row);return host;
