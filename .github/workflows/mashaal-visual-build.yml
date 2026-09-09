@@ -1,4 +1,4 @@
-name: Mashaal Visual Build
+name: Mashaal Uploaded Preview QA
 
 on:
   push:
@@ -8,48 +8,20 @@ on:
       - '.github/workflows/mashaal-visual-build.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
+  package:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           ref: feature/family-games-mashaal-integration-v1
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install Pillow
-        run: python -m pip install --disable-pip-version-check pillow
-      - name: Generate unified Mashaal visual system
-        run: python preview-v4/tools/apply-mashaal-visual-system.py
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Verify Mashaal visual contracts
-        working-directory: preview-v4
-        run: node --test tests/mashaal-scenario-media.test.js tests/mashaal-activity-layout.test.js tests/mashaal-comparison-visual.test.js tests/mashaal-tablet-qa-contract.test.mjs
-      - name: Verify full learning app
-        working-directory: preview-v4
-        run: npm test
-      - name: Package exact uploaded preview for visual QA
+      - name: Package exact uploaded preview
         uses: actions/upload-artifact@v4
         with:
           name: mashaal-uploaded-preview
           path: preview-v4
           include-hidden-files: true
           retention-days: 1
-      - name: Commit generated assets and visual contract
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add preview-v4/assets/mashaal/choices preview-v4/src/modules/mashaal/ui preview-v4/service-worker.js preview-v4/tests/mashaal-scenario-media.test.js preview-v4/tests/mashaal-activity-layout.test.js
-          if git diff --cached --quiet; then
-            echo "No generated changes"
-            exit 0
-          fi
-          git commit -m "feat(mashaal): unify KG3 illustrated activity media"
-          git push origin HEAD:feature/family-games-mashaal-integration-v1
