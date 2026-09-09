@@ -2,14 +2,29 @@
 .mashaal-media-visual.compact{width:74px;height:66px;border-radius:16px;box-shadow:none}
 .mashaal-media-visual img{display:block;width:100%;height:100%;object-fit:contain;padding:6px;box-sizing:border-box}
 .mashaal-media-visual[data-media-kind="flag"]{width:min(150px,100%);height:104px;border-radius:18px;background:#f8f8f8}
-.mashaal-media-visual[data-media-kind="flag"] img{padding:0;object-fit:cover}
-.mashaal-choice .mashaal-media-visual{width:min(150px,100%);height:108px}
-.mashaal-choice .mashaal-media-visual img{padding:7px}
+.mashaal-media-visual[data-media-kind="flag"] img{padding:0;object-fit:contain}
+
+/* KG3 choice cards are visual-first: the picture carries the meaning and the
+   label only supports it. Full scenario art must not be reduced to an icon. */
+.mashaal-choice .mashaal-media-visual{width:100%;height:clamp(190px,25vw,280px);border-radius:22px;background:#fff}
+.mashaal-choice .mashaal-media-visual img{padding:0;object-fit:cover;object-position:center}
+.mashaal-choice .mashaal-media-visual[data-media-kind="flag"]{width:100%;height:clamp(180px,22vw,250px);background:#fff}
+.mashaal-choice .mashaal-media-visual[data-media-kind="flag"] img{object-fit:contain;padding:10px}
+.mashaal-choice-visual{width:100%!important;min-height:0!important}
+.mashaal-choice{justify-content:flex-start!important;min-height:270px!important;padding:10px!important;overflow:hidden}
+.mashaal-choice-label{font-size:18px!important;line-height:1.35;text-align:center;padding:2px 6px 6px}
+
 .mashaal-skill-preview{position:relative;isolation:isolate}
 .mashaal-skill-domain-art{position:absolute;inset:0;z-index:0;width:100%!important;height:100%!important;object-fit:contain;opacity:.2;filter:saturate(.85)}
 .mashaal-skill-concept{position:relative;z-index:1;width:100%;height:100%;display:grid;place-items:center}
 .mashaal-skill-concept .mashaal-generated-stimulus{background:transparent}
 .mashaal-choice--completion{min-height:74px!important;width:min(260px,100%);justify-self:center;align-self:center;background:#fff7fd;border-color:#d9bdd3}
 .mashaal-choice--completion .mashaal-choice-visual{display:none}
-.mashaal-choice--completion .mashaal-choice-label{font-size:22px}
-@media(max-width:760px){.mashaal-media-visual{width:96px;height:88px}.mashaal-choice .mashaal-media-visual{height:96px}}
+.mashaal-choice--completion .mashaal-choice-label{font-size:22px!important;padding:0}
+
+@media(max-width:760px){
+  .mashaal-media-visual{width:96px;height:88px}
+  .mashaal-choice .mashaal-media-visual{height:170px}
+  .mashaal-choice .mashaal-media-visual[data-media-kind="flag"]{height:160px}
+  .mashaal-choice{min-height:230px!important}
+}
