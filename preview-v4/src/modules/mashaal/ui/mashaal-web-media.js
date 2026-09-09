@@ -2,6 +2,7 @@
 // KG3 experience remains image-first and works offline. Pinned web media is
 // retained only as a temporary fallback for concepts that do not yet have a
 // local scenario illustration.
+// Local WebP scene coverage is protected by mashaal-scenario-media.test.js.
 const LOCAL_BASE='assets/mashaal/choices';
 const FLAG_BASE='https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/flags/4x3';
 const TABLER_BASE='https://cdn.jsdelivr.net/npm/@tabler/icons@3.34.1/icons/outline';
