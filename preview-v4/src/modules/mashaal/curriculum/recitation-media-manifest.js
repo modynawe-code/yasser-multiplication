@@ -1,18 +1,18 @@
 import './recitation-media-data.js';
 
 const SHA256_RE=/^[a-f0-9]{64}$/i;
-const VERIFIED_MUSHAF_URL_PREFIX='https://raw.githubusercontent.com/quranpedia/quran-svg/main/mushafs/hafs/kfqc/svg/';
+const VERIFIED_MUSHAF_SOURCE_ID='kfgqpc-hafs-madinah-svg';
+const BUNDLED_MUSHAF_PREFIX='./assets/recitation/kfqc-hafs-page-';
 const media=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__;
 export const MASHAAL_RECITATION_MEDIA=Object.freeze(Array.isArray(media)?[...media]:[]);
 
 export function validateMashaalMushafPage(page){
   const errors=[];
   if(!page||typeof page!=='object')return Object.freeze({valid:false,errors:Object.freeze(['mushaf-page-required'])});
-  if(typeof page.sourceId!=='string'||!page.sourceId.trim())errors.push('mushaf-source-id-required');
+  if(page.sourceId!==VERIFIED_MUSHAF_SOURCE_ID)errors.push('mushaf-source-id-required');
   if(!Number.isInteger(page.pageNumber)||page.pageNumber<1||page.pageNumber>604)errors.push('mushaf-page-number-invalid');
-  const localPath=typeof page.imagePath==='string'&&page.imagePath.startsWith('./assets/quran/');
-  const verifiedRemote=typeof page.imageUrl==='string'&&page.imageUrl.startsWith(VERIFIED_MUSHAF_URL_PREFIX)&&page.imageUrl.endsWith('.svg');
-  if(!localPath&&!verifiedRemote)errors.push('verified-mushaf-image-required');
+  const localPath=page.offlineBundled===true&&typeof page.imagePath==='string'&&page.imagePath.startsWith(BUNDLED_MUSHAF_PREFIX)&&page.imagePath.endsWith('.svg');
+  if(!localPath)errors.push('verified-bundled-mushaf-image-required');
   if(typeof page.riwayahAr!=='string'||!page.riwayahAr.includes('حفص'))errors.push('hafs-mushaf-required');
   return Object.freeze({valid:errors.length===0,errors:Object.freeze(errors)});
 }
