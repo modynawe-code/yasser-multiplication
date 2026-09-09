@@ -1,6 +1,6 @@
 const LABELS=Object.freeze({
   star:'نجمة',ball:'كرة',heart:'قلب',door:'باب',apple:'تفاحة',moon:'قمر',circle:'دائرة',square:'مربع',box:'صندوق',
-  'red-circle':'دائرة حمراء','blue-circle':'دائرة زرقاء','red-square':'مربع أحمر','yellow-square':'مربع أصفر',wake:'استيقاظ','brush-teeth':'تنظيف الأسنان',breakfast:'فطور',umbrella:'مظلة',sunglasses:'نظارة شمسية',done:'تم ✓',
+  'red-circle':'دائرة حمراء','blue-circle':'دائرة زرقاء','red-square':'مربع أحمر','yellow-square':'مربع أصفر',wake:'استيقاظ','brush-teeth':'تنظيف الأسنان',breakfast:'فطور',umbrella:'مظلة',sunglasses:'نظارة شمسية',done:'تم',
   happy:'فرحانة',sad:'حزينة',angry:'زعلانة','wait-turn':'أنتظر دوري','grab-ball':'آخذ الكرة','walk-away-angry':'أبتعد وأنا غاضبة',
   'ask-help':'أطلب المساعدة','throw-blocks':'أرمي المكعبات','kick-blocks':'أركل المكعبات','wet-hands':'أبلل يدي','soap':'أستخدم الصابون','rub-hands':'أفرك يدي','rinse-hands':'أشطف يدي',
   'stay-away':'أبتعد','touch-hot':'ألمس','play-near-hot':'ألعب قربه','return-book':'أرجع الكتاب','leave-book-floor':'أتركه على الأرض','damage-book':'أتلفه',
