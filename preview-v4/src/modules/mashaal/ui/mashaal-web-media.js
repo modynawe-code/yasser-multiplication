@@ -24,8 +24,15 @@ export const MASHAAL_WEB_MEDIA=Object.freeze({
   'return-book':local('return-book','أرجع الكتاب'),
   'leave-book-floor':local('leave-book-floor','أترك الكتاب على الأرض'),
   'damage-book':local('damage-book','أتلف الكتاب'),
+  duck:local('duck-reference-unused','بطة'),
   apple:local('apple','تفاحة'),
   moon:local('moon','قمر'),
+  'compare-three-apples':local('compare-three-apples','ثلاث تفاحات'),
+  'compare-four-apples':local('compare-four-apples','أربع تفاحات'),
+  'compare-five-apples':local('compare-five-apples','خمس تفاحات'),
+  'healthy-apple':local('healthy-apple','تفاحة'),
+  candy:local('candy','حلوى'),
+  fries:local('fries','بطاطس مقلية'),
 
   // Temporary source-backed fallbacks until their matching scenario cards land.
   hospital:Object.freeze({url:`${TABLER_BASE}/building-hospital.svg`,altAr:'مستشفى',source:'Tabler Icons 3.34.1',license:'MIT'}),
