@@ -1,0 +1,66 @@
+/* Activity layouts are driven by data-layout/data-choice-count on the activity view.
+   The goal is to keep the question, scene and primary choices visible together on a
+   Galaxy-class tablet instead of making KG3 learners scroll through one question. */
+#mashaalActivityView .mashaal-wrap{max-width:1120px;padding-top:10px;padding-bottom:16px}
+#mashaalActivityView .mashaal-domain-actions{max-width:980px;width:100%;margin:0 auto 8px}
+#mashaalActivityView .mashaal-domain-actions .icon-btn{min-height:44px;padding-block:8px}
+#mashaalActivityView .mashaal-activity-card{max-width:980px;min-height:0;padding:16px 20px 14px}
+#mashaalActivityView .mashaal-activity-topline{min-height:52px}
+#mashaalActivityView .mashaal-activity-card h2{font-size:clamp(24px,2.6vw,30px);line-height:1.35;margin:4px 0 8px}
+#mashaalActivityView .mashaal-stimulus{min-height:0;margin:2px 0 10px}
+#mashaalActivityView .mashaal-generated-stimulus{min-height:0}
+#mashaalActivityView .mashaal-scene-art{height:clamp(116px,20dvh,170px);width:min(100%,300px)}
+#mashaalActivityView .mashaal-activity-choices{gap:10px;align-items:stretch}
+#mashaalActivityView[data-choice-count="1"] .mashaal-activity-choices{grid-template-columns:minmax(0,220px);justify-content:center}
+#mashaalActivityView[data-choice-count="2"] .mashaal-activity-choices{grid-template-columns:repeat(2,minmax(0,1fr));max-width:700px;margin-inline:auto}
+#mashaalActivityView[data-choice-count="3"] .mashaal-activity-choices{grid-template-columns:repeat(3,minmax(0,1fr))}
+#mashaalActivityView[data-choice-count="4"] .mashaal-activity-choices{grid-template-columns:repeat(4,minmax(0,1fr))}
+#mashaalActivityView .mashaal-choice{position:relative;min-height:0!important;padding:7px!important;gap:5px!important;border-radius:18px}
+#mashaalActivityView .mashaal-choice>.mashaal-choice-visual{min-height:0!important;height:clamp(118px,20dvh,156px)}
+#mashaalActivityView[data-choice-count="4"] .mashaal-choice>.mashaal-choice-visual{height:clamp(102px,17dvh,132px)}
+#mashaalActivityView[data-layout="comparison"] .mashaal-choice>.mashaal-choice-visual{height:clamp(145px,24dvh,190px)}
+#mashaalActivityView .mashaal-choice-label{font-size:clamp(15px,1.6vw,18px)!important;line-height:1.25;padding:2px 4px 3px}
+#mashaalActivityView .mashaal-choice[data-order]::after{content:attr(data-order);position:absolute;inset:8px 8px auto auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#765276;color:#fff;border:3px solid #fff;font-size:18px;font-weight:950;box-shadow:0 4px 10px rgba(70,47,78,.18)}
+#mashaalActivityView[data-layout="guided"] .mashaal-stimulus{margin-top:10px;margin-bottom:14px}
+#mashaalActivityView[data-layout="guided"] .mashaal-generated-stimulus{min-height:210px}
+#mashaalActivityView[data-layout="guided"] .mashaal-visual{width:170px;height:170px;border-radius:34px}
+#mashaalActivityView[data-layout="guided"] .mashaal-activity-choices{max-width:210px;margin-inline:auto}
+#mashaalActivityView[data-layout="guided"] .mashaal-choice{min-height:62px!important;display:grid!important;grid-template-columns:1fr;place-items:center;padding:8px 16px!important}
+#mashaalActivityView[data-layout="guided"] .mashaal-choice-visual{display:none}
+#mashaalActivityView[data-layout="guided"] .mashaal-choice-label{font-size:20px!important;padding:0}
+#mashaalActivityView .mashaal-check{min-height:52px;margin-top:10px}
+#mashaalActivityView .mashaal-activity-feedback{min-height:30px;margin-top:8px;font-size:20px;line-height:1.35}
+
+@media(min-width:900px) and (orientation:landscape) and (max-height:700px){
+  #mashaalActivityView .mashaal-wrap{padding-top:6px;padding-bottom:8px}
+  #mashaalActivityView .mashaal-domain-actions{margin-bottom:4px}
+  #mashaalActivityView .mashaal-domain-actions .icon-btn{min-height:40px}
+  #mashaalActivityView .mashaal-activity-card{padding:10px 16px 10px}
+  #mashaalActivityView .mashaal-activity-topline{min-height:44px}
+  #mashaalActivityView .mashaal-hear{width:48px;height:48px;min-width:48px;min-height:48px}
+  #mashaalActivityView .mashaal-activity-card h2{font-size:24px;margin:0 0 5px}
+  #mashaalActivityView .mashaal-stimulus{margin:0 0 6px}
+  #mashaalActivityView .mashaal-scene-art{height:min(18dvh,122px)}
+  #mashaalActivityView .mashaal-choice>.mashaal-choice-visual{height:min(21dvh,138px)}
+  #mashaalActivityView[data-choice-count="4"] .mashaal-choice>.mashaal-choice-visual{height:min(18dvh,112px)}
+  #mashaalActivityView[data-layout="comparison"] .mashaal-choice>.mashaal-choice-visual{height:min(23dvh,160px)}
+  #mashaalActivityView[data-layout="guided"] .mashaal-generated-stimulus{min-height:150px}
+  #mashaalActivityView[data-layout="guided"] .mashaal-visual{width:132px;height:132px}
+  #mashaalActivityView .mashaal-activity-feedback{font-size:18px;min-height:24px;margin-top:5px}
+}
+
+@media(max-width:760px){
+  #mashaalActivityView .mashaal-activity-card{padding:14px}
+  #mashaalActivityView[data-choice-count="3"] .mashaal-activity-choices,
+  #mashaalActivityView[data-choice-count="4"] .mashaal-activity-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-choice>.mashaal-choice-visual{height:150px}
+}
+
+@media(max-width:430px){
+  #mashaalActivityView[data-choice-count="2"] .mashaal-activity-choices,
+  #mashaalActivityView[data-choice-count="3"] .mashaal-activity-choices,
+  #mashaalActivityView[data-choice-count="4"] .mashaal-activity-choices{grid-template-columns:1fr}
+  #mashaalActivityView .mashaal-choice>.mashaal-choice-visual{height:140px}
+}
+
+@media(prefers-reduced-motion:reduce){#mashaalActivityView .mashaal-choice{transition:none!important}}

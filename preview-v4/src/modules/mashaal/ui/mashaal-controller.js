@@ -10,6 +10,7 @@ import { recordMashaalEvidence } from '../application/progress-service.js';
 import { mountQuranSurahPlayer } from '../quran/quran-surah-player.js';
 import { createMashaalChoiceVisual,createMashaalDomainArt,createMashaalStimulusVisual } from './mashaal-visuals.js';
 import { getMashaalWebMedia } from './mashaal-web-media.js';
+import { getMashaalActivityLayout } from './activity-layout.js';
 
 function byId(id){return document.getElementById(id);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -41,6 +42,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     selectedChoices.clear();
     byId('mashaalActivityChoices')?.querySelectorAll('.mashaal-choice').forEach(button=>{
       button.classList.remove('selected');
+      delete button.dataset.order;
       if(button.hasAttribute('aria-pressed'))button.setAttribute('aria-pressed','false');
     });
   }
@@ -63,8 +65,9 @@ export function createMashaalController({repository,onExitToHub}={}){
       if(!skill.contentReady){button.disabled=true;button.setAttribute('aria-disabled','true');}grid.appendChild(button);
     }
   }
-  function renderStimulus(model){
+  function renderStimulus(model,layout){
     const host=byId('mashaalActivityStimulus');if(!host)return null;host.innerHTML='';host.hidden=false;host.setAttribute('aria-hidden','true');const stimulus=model?.stimulus||{};
+    if(layout?.hideStimulus){host.hidden=true;return null;}
     if(stimulus.kind==='recitation'){
       return mountQuranSurahPlayer(host,{
         surahNameAr:stimulus.surahNameAr,
@@ -98,7 +101,7 @@ export function createMashaalController({repository,onExitToHub}={}){
   function exit(){leave();onExitToHub?.();}
 
   function renderActivityChoices(){
-    const host=byId('mashaalActivityChoices');if(!host||!currentViewModel)return;host.innerHTML='';host.style.gridTemplateColumns=currentViewModel.stimulus.kind==='groups'?'repeat(2,minmax(0,1fr))':'';clearSelections();
+    const host=byId('mashaalActivityChoices');if(!host||!currentViewModel)return;host.innerHTML='';host.style.gridTemplateColumns='';clearSelections();
     const check=byId('mashaalActivityCheck');if(check){check.hidden=!currentViewModel.multiSelect;check.disabled=false;}
     for(const choice of currentViewModel.choices){
       const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.setAttribute('aria-label',choice.label);
@@ -110,7 +113,7 @@ export function createMashaalController({repository,onExitToHub}={}){
         if(activityComplete)return;
         if(currentViewModel.completionOnly){completeCurrentActivity();return;}
         if(currentViewModel.orderedSequence){
-          if(selectedChoices.has(choice.value))return;selectedChoices.add(choice.value);button.classList.add('selected');button.setAttribute('aria-pressed','true');
+          if(selectedChoices.has(choice.value))return;selectedChoices.add(choice.value);button.classList.add('selected');button.dataset.order=String(selectedChoices.size);button.setAttribute('aria-pressed','true');
           if(selectedChoices.size===currentViewModel.correctValues.length)submitAnswer([...selectedChoices]);return;
         }
         if(currentViewModel.multiSelect){
@@ -126,9 +129,10 @@ export function createMashaalController({repository,onExitToHub}={}){
   function openSkill(skillId){
     const plan=createMashaalActivityPlan(skillId);if(!plan?.contentReady)return;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===skillId)||null;
     destroyRecitation();currentActivity=plan.activities[0]||null;currentViewModel=createMashaalActivityViewModel(currentActivity);if(!currentViewModel)return;activityComplete=false;recitationPlayed=false;
-    const activityView=byId('mashaalActivityView');if(activityView){activityView.dataset.domainId=plan.domainId;activityView.dataset.activityKind=currentViewModel.requiresHumanRecitation?'quran-recitation':'standard';}
+    const layout=getMashaalActivityLayout(currentViewModel);
+    const activityView=byId('mashaalActivityView');if(activityView){activityView.dataset.domainId=plan.domainId;activityView.dataset.activityKind=currentViewModel.requiresHumanRecitation?'quran-recitation':'standard';activityView.dataset.layout=layout.mode;activityView.dataset.choiceCount=String(layout.choiceCount);}
     byId('mashaalActivitySkill').textContent=currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;byId('mashaalActivityFeedback').textContent='';
-    recitationPlayer=renderStimulus(currentViewModel);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');speech.speak(currentViewModel.audioPromptAr);
+    recitationPlayer=renderStimulus(currentViewModel,layout);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');speech.speak(currentViewModel.audioPromptAr);
   }
   function hearCurrentActivity(){if(!currentViewModel)return;speech.speak(currentViewModel.audioPromptAr,{interrupt:true});}
   function saveEvidence(evidence,skillId){if(recordMashaalEvidence(state,{skillId,evidence}))repository.save(state);}

@@ -81,11 +81,16 @@ function mediaVisual(key,media,{compact=false}={}){
   return host;
 }
 
+const COUNT_WORDS=Object.freeze({3:'three',4:'four',5:'five'});
 function illustratedGroupVisual(count,item,{compact=false}={}){
   if(item!=='apple')return null;
-  const media=getMashaalWebMedia(`compare-${count}-apples`);
-  return media?mediaVisual(`compare-${count}-apples`,media,{compact}):null;
+  const countWord=COUNT_WORDS[Number(count)];
+  if(!countWord)return null;
+  const key=`compare-${countWord}-apples`;
+  const media=getMashaalWebMedia(key);
+  return media?mediaVisual(key,media,{compact}):null;
 }
+
 
 export function createMashaalChoiceVisual(key,viewModel,{compact=false}={}){
   if((key==='left'||key==='right')&&viewModel?.stimulus?.kind==='groups'){

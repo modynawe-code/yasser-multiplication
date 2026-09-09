@@ -6,10 +6,10 @@
 
 /* KG3 choice cards are visual-first: the picture carries the meaning and the
    label only supports it. Full scenario art must not be reduced to an icon. */
-.mashaal-choice .mashaal-media-visual{width:100%;height:clamp(190px,25vw,280px);border-radius:22px;background:#fff}
-.mashaal-choice .mashaal-media-visual img{padding:0;object-fit:cover;object-position:center}
-.mashaal-choice .mashaal-media-visual[data-media-kind="flag"]{width:100%;height:clamp(180px,22vw,250px);background:#fff}
-.mashaal-choice .mashaal-media-visual[data-media-kind="flag"] img{object-fit:contain;padding:10px}
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{width:100%;height:clamp(190px,25vw,280px);border-radius:22px;background:#fff}
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual img{padding:0;object-fit:cover;object-position:center}
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual[data-media-kind="flag"]{width:100%;height:clamp(180px,22vw,250px);background:#fff}
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual[data-media-kind="flag"] img{object-fit:contain;padding:10px}
 .mashaal-choice-visual{width:100%!important;min-height:0!important}
 .mashaal-choice{justify-content:flex-start!important;min-height:270px!important;padding:10px!important;overflow:hidden}
 .mashaal-choice-label{font-size:18px!important;line-height:1.35;text-align:center;padding:2px 6px 6px}
@@ -24,7 +24,7 @@
 
 @media(max-width:760px){
   .mashaal-media-visual{width:96px;height:88px}
-  .mashaal-choice .mashaal-media-visual{height:170px}
-  .mashaal-choice .mashaal-media-visual[data-media-kind="flag"]{height:160px}
+  .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{height:170px}
+  .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual[data-media-kind="flag"]{height:160px}
   .mashaal-choice{min-height:230px!important}
 }
