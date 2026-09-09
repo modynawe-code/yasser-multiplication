@@ -8,22 +8,23 @@ import { getMashaalRecitationMediaStatus } from '../src/modules/mashaal/curricul
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('recitation runtime opens only when integrity-verified local human audio exists',()=>{
+test('recitation runtime opens only when integrity-verified local human audio and bundled Mushaf artwork exist',()=>{
   const media=getMashaalRecitationMediaStatus();
   const plan=createMashaalActivityPlan('listen-repeat');
-  assert.equal(plan.contentReady,media.localMediaReady);
-  assert.equal(plan.activities.length,media.localMediaReady?1:0);
-  if(media.localMediaReady){
-    const activity=plan.activities[0];
-    assert.equal(activity.syntheticRecitationAllowed,false);
-    assert.equal(activity.stimulus.surahNumber,112);
-    assert.match(activity.mediaPath,/^\.\/assets\/recitation\/.*\.mp3$/);
-    assert.match(activity.mediaSha256,/^[a-f0-9]{64}$/);
-    assert.equal(activity.mushafPage.pageNumber,604);
-    assert.match(activity.mushafPage.imageUrl,/quranpedia\/quran-svg\/main\/mushafs\/hafs\/kfqc\/svg\/604\.svg$/);
-    assert.equal(activity.mushafPage.focusRegion.surahNumber,112);
-    assert.ok(activity.mushafPage.focusRegion.height>0&&activity.mushafPage.focusRegion.height<1);
-  }
+  assert.equal(media.localMediaReady,true);
+  assert.equal(plan.contentReady,true);
+  assert.equal(plan.activities.length,1);
+  const activity=plan.activities[0];
+  assert.equal(activity.syntheticRecitationAllowed,false);
+  assert.equal(activity.stimulus.surahNumber,112);
+  assert.match(activity.mediaPath,/^\.\/assets\/recitation\/.*\.mp3$/);
+  assert.match(activity.mediaSha256,/^[a-f0-9]{64}$/);
+  assert.equal(activity.mushafPage.pageNumber,604);
+  assert.equal(activity.mushafPage.imagePath,'./assets/recitation/kfqc-hafs-page-604.svg');
+  assert.equal(activity.mushafPage.offlineBundled,true);
+  assert.equal(activity.mushafPage.distributionCommit,'b91d39e1065b57bdda3e94aca8ecf3575e50e1e6');
+  assert.equal(activity.mushafPage.focusRegion.surahNumber,112);
+  assert.ok(activity.mushafPage.focusRegion.height>0&&activity.mushafPage.focusRegion.height<1);
 });
 
 test('recitation view model carries human audio and verified Mushaf artwork separately from spoken instructions',()=>{
@@ -31,7 +32,7 @@ test('recitation view model carries human audio and verified Mushaf artwork sepa
     id:'recitation-demo',skillId:'listen-repeat',interaction:'listening',evidenceType:'activity-completion',
     promptAr:'اسمعي ثم رددي.',audioPromptAr:'اضغطي تشغيل ثم رددي بعد القارئ.',
     stimulus:{kind:'recitation-audio',surahNameAr:'الإخلاص',surahNumber:112},choices:['done'],mediaPath:'./assets/recitation/demo.mp3',
-    mushafPage:{sourceId:'kfgqpc-hafs-madinah-svg',pageNumber:604,imageUrl:'https://example.test/604.svg'}
+    mushafPage:{sourceId:'kfgqpc-hafs-madinah-svg',pageNumber:604,imagePath:'./assets/recitation/kfqc-hafs-page-604.svg',offlineBundled:true}
   });
   assert.equal(model.requiresHumanRecitation,true);
   assert.equal(model.recitationAudioPath,'./assets/recitation/demo.mp3');
@@ -76,10 +77,9 @@ test('Mashaal controller delegates Quran recitation to reusable player and only 
   assert.doesNotMatch(controller,/new Audio\(/);
 });
 
-test('service worker caches the Quran player and runtime-caches only the verified KFGQPC Hafs SVG path',async()=>{
+test('service worker caches the Quran player and keeps recitation assets under the verified local media contract',async()=>{
   const worker=await read('service-worker.js');
   assert.match(worker,/modules\/mashaal\/quran\/quran-surah-player\.js/);
   assert.match(worker,/modules\/mashaal\/quran\/quran-surah-player\.css/);
-  assert.match(worker,/quranpedia\/quran-svg\/main\/mushafs\/hafs\/kfqc\/svg/);
-  assert.match(worker,/isVerifiedQuranPageImage/);
+  assert.match(worker,/RECITATION_ASSETS/);
 });
