@@ -1,7 +1,10 @@
 #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card{max-width:980px;min-height:0;padding:18px 22px}
 #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card h2{margin:8px 0 12px;font-size:clamp(24px,2.8vw,29px)}
-#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-choices{max-width:280px;margin-top:0}
-#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-choice{min-height:62px}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-choices{max-width:220px;margin:18px auto 0}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-choice[data-choice="done"]{min-height:70px!important;display:grid!important;grid-template-columns:46px minmax(0,1fr);align-items:center;justify-content:center;gap:12px;padding:10px 18px!important;border-radius:20px}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-choice[data-choice="done"] .mashaal-choice-visual{width:46px;min-height:46px;display:grid;place-items:center}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-choice[data-choice="done"] .mashaal-choice-visual .mashaal-visual{width:46px;height:46px;border-radius:15px;box-shadow:none}
+#mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-choice[data-choice="done"] .mashaal-choice-label{font-size:19px;line-height:1;font-weight:950;text-align:center}
 .quran-player-host{min-height:0!important;margin:0!important;display:block!important}
 .quran-surah-player{width:min(100%,880px);margin:auto;display:grid;gap:14px;justify-items:stretch}
 .quran-page-frame{width:min(100%,420px);margin:0 auto;padding:10px;border:1px solid #ded7bf;border-radius:24px;background:#fffef7;box-shadow:0 14px 30px rgba(67,58,35,.10)}
