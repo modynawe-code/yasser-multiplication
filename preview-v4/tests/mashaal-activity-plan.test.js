@@ -20,11 +20,11 @@ test('all reviewed non-recitation KG3 skills have starter activity content',()=>
   for(const skillId of READY_SKILLS){const plan=createMashaalActivityPlan(skillId);assert.equal(plan.contentReady,true,skillId);assert.ok(plan.activities.length>=1,skillId);}
 });
 
-test('Quran recitation readiness follows integrity-verified human media instead of a hardcoded state',()=>{
+test('Quran recitation remains unlocked when approved local audio and bundled Mushaf page are present',()=>{
   const media=getMashaalRecitationMediaStatus();
   const plan=createMashaalActivityPlan('listen-repeat');
-  assert.equal(plan.contentReady,media.localMediaReady);
-  if(!media.localMediaReady){assert.deepEqual(plan.activities,[]);return;}
+  assert.equal(media.localMediaReady,true,'approved Al-Ikhlas media must remain release-ready');
+  assert.equal(plan.contentReady,true,'listen-repeat must not regress to قريبًا');
   assert.equal(plan.activities.length,1);
   const activity=plan.activities[0];
   assert.equal(activity.skillId,'listen-repeat');
@@ -32,4 +32,7 @@ test('Quran recitation readiness follows integrity-verified human media instead 
   assert.equal(activity.syntheticRecitationAllowed,false);
   assert.match(activity.mediaPath,/^\.\/assets\/recitation\/.*\.mp3$/);
   assert.match(activity.mediaSha256,/^[a-f0-9]{64}$/);
+  assert.equal(activity.mushafPage.pageNumber,604);
+  assert.equal(activity.mushafPage.imagePath,'./assets/recitation/kfqc-hafs-page-604.svg');
+  assert.equal(activity.mushafPage.offlineBundled,true);
 });
