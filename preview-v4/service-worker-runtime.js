@@ -1,7 +1,7 @@
 importScripts('./service-worker.js');
 
 const EXTENSION_CACHE_PREFIX='family-learning-runtime-extensions-';
-const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}4`;
+const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}5`;
 const EXTENSION_ASSETS=Object.freeze([
   './src/composition/game-reward-runtime.js',
   './src/modules/games/core/challenge-presentation-registry.js',
@@ -16,6 +16,7 @@ const EXTENSION_ASSETS=Object.freeze([
   './src/modules/mashaal/encouragement/mashaal-encouragement-pack.js',
   './src/modules/mashaal/rewards/mashaal-reward-catalog.js',
   './src/modules/mashaal/rewards/mashaal-reward-rules.js',
+  './src/modules/mashaal/ui/mashaal-character-state-pack.js',
   './src/modules/mashaal/ui/mashaal-game-challenge-presenter.js',
   './src/modules/mashaal/ui/mashaal-reward-graphics.js',
   './src/modules/mashaal/ui/mashaal-reward-theme.js',
@@ -25,6 +26,7 @@ const EXTENSION_ASSETS=Object.freeze([
   './src/shared/rewards/event-reward-service.js',
   './src/shared/rewards/reward-catalog-registry.js',
   './src/shared/rewards/reward-rule-registry.js',
+  './src/shared/ui/character-state-registry.js',
   './src/shared/ui/reward-collection-view-state.js'
 ]);
 

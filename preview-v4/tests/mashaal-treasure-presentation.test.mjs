@@ -19,9 +19,11 @@ test('Mashaal treasures expose durable locked, unlocked and new presentation sta
 test('Mashaal treasure presentation dependencies are available to first-install offline mode',async()=>{
   const sw=await readFile(swUrl,'utf8');
   assert.match(sw,/EXTENSION_CACHE_PREFIX='family-learning-runtime-extensions-'/);
-  assert.match(sw,/EXTENSION_CACHE_VERSION=`\$\{EXTENSION_CACHE_PREFIX\}4`/);
+  assert.match(sw,/EXTENSION_CACHE_VERSION=`\$\{EXTENSION_CACHE_PREFIX\}5`/);
   assert.match(sw,/mashaal-reward-theme\.js/);
   assert.match(sw,/reward-collection-view-state\.js/);
   assert.match(sw,/mashaal-treasure-controller\.js/);
   assert.match(sw,/mashaal-treasures\.css/);
+  assert.match(sw,/character-state-registry\.js/);
+  assert.match(sw,/mashaal-character-state-pack\.js/);
 });
