@@ -14,10 +14,18 @@ const SHAPES=Object.freeze({
 });
 
 function shapeKey(graphicKey){return String(graphicKey||'').split('.').pop()||'';}
+function safeAssetPath(path){return String(path||'').replace(/["<>]/g,'');}
 
-export function mashaalRewardGraphicMarkup(graphicKey,{locked=false}={}){
-  const key=shapeKey(graphicKey),shape=SHAPES[key]||SHAPES['consistency-star'];
-  return `<span class="mashaal-treasure-graphic ${locked?'locked':''}" data-mashaal-reward-art="${key}" aria-hidden="true"><svg viewBox="0 0 120 120" focusable="false">${shape}</svg></span>`;
+export function mashaalRewardGraphicMarkup(graphicKey,{locked=false,assetPath=null}={}){
+  const key=shapeKey(graphicKey),stateClass=locked?'locked':'';
+  if(assetPath){
+    const src=safeAssetPath(assetPath);
+    return `<span class="mashaal-treasure-graphic ${stateClass}" data-mashaal-reward-art="${key}" aria-hidden="true"><img src="${src}" alt="" loading="lazy" decoding="async"></span>`;
+  }
+  const shape=SHAPES[key]||SHAPES['consistency-star'];
+  return `<span class="mashaal-treasure-graphic ${stateClass}" data-mashaal-reward-art="${key}" aria-hidden="true"><svg viewBox="0 0 120 120" focusable="false">${shape}</svg></span>`;
 }
 
-export function hasMashaalRewardGraphic(graphicKey){return Object.prototype.hasOwnProperty.call(SHAPES,shapeKey(graphicKey));}
+export function hasMashaalRewardGraphic(graphicKey,{assetPath=null}={}){
+  return Boolean(assetPath)||Object.prototype.hasOwnProperty.call(SHAPES,shapeKey(graphicKey));
+}

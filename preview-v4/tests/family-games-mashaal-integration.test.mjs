@@ -50,7 +50,7 @@ test('offline shell contains both the restored games platform and Mashaal KG3',a
 
 test('durable local backup uses open family namespaces while preserving legacy Yasser and Khaled migration keys',async()=>{
   const backup=await read('src/shared/backup/local-backup-service.js');
-  assert.match(backup,/TRACKED_PREFIXES=Object\.freeze\(\['family_learning:','family-learning-rewards-v1:'\]\)/);
+  assert.match(backup,/TRACKED_PREFIXES=Object\.freeze\(\['family_learning:','family-learning-rewards-v1:','family-learning-game-reward-progress-v1:'\]\)/);
   assert.match(backup,/LOCAL_BACKUP_DIRECTORY='FamilyLearning'/);
   assert.match(backup,/LEGACY_LOCAL_BACKUP_DIRECTORY='YasserKhaledLearning'/);
   assert.match(backup,/yasser_mul_v4_preview/);

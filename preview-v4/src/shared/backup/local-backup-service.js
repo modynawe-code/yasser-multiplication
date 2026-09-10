@@ -9,7 +9,7 @@ export const LEGACY_LOCAL_BACKUP_PREVIOUS_PATH=`${LEGACY_LOCAL_BACKUP_DIRECTORY}
 const CURRENT_BACKUP_APP='family-learning';
 const LEGACY_BACKUP_APPS=new Set(['com.modynawe.yasserkhaled']);
 const LEGACY_PRIMARY_KEYS=new Set(['yasser_mul_v4_preview','khaled_grade1_math_v1']);
-const TRACKED_PREFIXES=Object.freeze(['family_learning:','family-learning-rewards-v1:']);
+const TRACKED_PREFIXES=Object.freeze(['family_learning:','family-learning-rewards-v1:','family-learning-game-reward-progress-v1:']);
 const DOCUMENTS_DIRECTORY='DOCUMENTS';
 const UTF8_ENCODING='utf8';
 
