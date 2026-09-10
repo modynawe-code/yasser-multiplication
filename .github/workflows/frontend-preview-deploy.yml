@@ -1,0 +1,68 @@
+name: Frontend Preview Deploy
+
+on:
+  push:
+    branches:
+      - 'feature/family-games-mashaal-integration-v1'
+    paths:
+      - 'preview-v4/**'
+      - 'tools/build-web-preview.mjs'
+      - 'wrangler.frontend-preview.jsonc'
+      - '.github/workflows/frontend-preview-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-preview-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
+      PREVIEW_URL: https://family-learning-preview.modynawe.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify Cloudflare credentials
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Missing repository secret CLOUDFLARE_API_TOKEN"
+            exit 1
+          fi
+
+      - name: Test learning app
+        run: npm test
+        working-directory: preview-v4
+
+      - name: Build isolated web preview
+        run: node tools/build-web-preview.mjs
+
+      - name: Verify preview isolation
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const html=fs.readFileSync('dist-web-preview/index.html','utf8');
+          const meta=JSON.parse(fs.readFileSync('dist-web-preview/deployment-meta.json','utf8'));
+          if(!html.includes('__FAMILY_API_DISABLED__=true'))throw new Error('Preview cloud-disable bootstrap is missing');
+          if(meta.mode!=='web-preview'||meta.cloudSync!==false)throw new Error('Preview deployment metadata is invalid');
+          if(fs.existsSync('dist-web-preview/tests')||fs.existsSync('dist-web-preview/tools'))throw new Error('Non-runtime files leaked into preview package');
+          NODE
+
+      - name: Deploy static PWA preview
+        run: npx --yes wrangler@4.129.0 deploy --config wrangler.frontend-preview.jsonc
+
+      - name: Smoke test deployed preview
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/" | grep -q 'تعلم العائلة'
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/manifest.webmanifest" > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/service-worker.js" > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -q '"cloudSync": false'

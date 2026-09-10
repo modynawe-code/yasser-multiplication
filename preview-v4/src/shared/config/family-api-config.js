@@ -25,6 +25,10 @@ function mayUseStoredDevelopmentOverride(location=globalThis.location){
 }
 
 export function getFamilyApiBase(storage=globalThis.localStorage,location=globalThis.location){
+  // Preview deployments can explicitly disable cloud access before main.js loads.
+  // This keeps tablet/UI testing isolated from production D1 without changing
+  // the normal browser or Capacitor production behavior.
+  if(globalThis.__FAMILY_API_DISABLED__===true)return '';
   const injected=String(globalThis.__FAMILY_API_BASE_URL__||'').trim();
   if(injected)return injected.replace(/\/$/,'');
   if(mayUseStoredDevelopmentOverride(location)){
