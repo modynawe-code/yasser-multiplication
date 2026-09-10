@@ -51,3 +51,34 @@
 .mashaal-guided-action-art.compact{width:180px;border-radius:18px;box-shadow:none}
 #mashaalActivityView[data-layout="guided-movement"] .mashaal-guided-action-art,
 #mashaalActivityView[data-layout="guided-fine-motor"] .mashaal-guided-action-art{width:min(100%,560px)}
+
+/* Domain screens are navigation, not worksheets. Keep the six skill choices visible
+   in landscape and switch to one readable column on an 800px portrait tablet. */
+#mashaalDomainView .mashaal-skill-copy{white-space:normal;overflow-wrap:anywhere}
+#mashaalDomainView .mashaal-skill-copy span{white-space:normal}
+@media(min-width:900px) and (orientation:landscape) and (max-height:900px){
+  #mashaalDomainView .mashaal-domain-focus{padding:14px 20px!important}
+  #mashaalDomainView .mashaal-domain-symbol{width:84px;height:84px;border-radius:25px}
+  #mashaalDomainView .mashaal-domain-focus h2{font-size:28px;margin:7px 0}
+  #mashaalDomainView .mashaal-domain-focus p{margin:0;font-size:16px}
+  #mashaalDomainView .mashaal-skill-grid{margin-top:8px;gap:10px}
+  #mashaalDomainView .mashaal-skill-card{grid-template-columns:88px minmax(0,1fr) auto!important;min-height:94px!important;padding:7px 10px!important;gap:10px}
+  #mashaalDomainView .mashaal-skill-preview{width:82px;height:70px;border-radius:15px}
+  #mashaalDomainView .mashaal-skill-copy{gap:2px}
+  #mashaalDomainView .mashaal-skill-copy strong{font-size:16px;line-height:1.25}
+  #mashaalDomainView .mashaal-skill-copy span{font-size:12px;line-height:1.2}
+  #mashaalDomainView .mashaal-skill-start{min-width:62px;min-height:38px;font-size:14px}
+}
+@media(orientation:portrait) and (min-width:761px) and (max-width:900px){
+  #mashaalDomainView .mashaal-domain-focus{padding:18px!important}
+  #mashaalDomainView .mashaal-domain-symbol{width:92px;height:92px;border-radius:26px}
+  #mashaalDomainView .mashaal-domain-focus h2{font-size:29px;margin:8px 0}
+  #mashaalDomainView .mashaal-domain-focus p{margin:0;font-size:16px}
+  #mashaalDomainView .mashaal-skill-grid{grid-template-columns:1fr!important;margin-top:10px;gap:9px}
+  #mashaalDomainView .mashaal-skill-card{grid-template-columns:92px minmax(0,1fr) auto!important;min-height:92px!important;padding:7px 12px!important;gap:12px}
+  #mashaalDomainView .mashaal-skill-preview{width:84px;height:72px;border-radius:15px}
+  #mashaalDomainView .mashaal-skill-copy{gap:2px}
+  #mashaalDomainView .mashaal-skill-copy strong{font-size:17px;line-height:1.25}
+  #mashaalDomainView .mashaal-skill-copy span{font-size:12px;line-height:1.2}
+  #mashaalDomainView .mashaal-skill-start{min-width:66px;min-height:40px;font-size:14px}
+}
