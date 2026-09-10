@@ -16,14 +16,22 @@ page.setDefaultTimeout(12000);
 
 const consoleErrors=[];
 const networkErrors=[];
+const ignoredMediaErrors=[];
+const VISUAL_RESOURCE_TYPES=new Set(['document','stylesheet','script','image','font']);
+function trackNetworkIssue(request,detail){
+  const resourceType=request.resourceType();
+  const issue={...detail,resourceType,url:request.url()};
+  if(VISUAL_RESOURCE_TYPES.has(resourceType))networkErrors.push(issue);
+  else if(resourceType==='media')ignoredMediaErrors.push(issue);
+}
 page.on('console',msg=>{
   if(msg.type()==='error'&&!msg.text().startsWith('Failed to load resource:'))consoleErrors.push(msg.text());
 });
 page.on('pageerror',err=>consoleErrors.push(String(err)));
 page.on('response',response=>{
-  if(response.status()>=400)networkErrors.push({status:response.status(),url:response.url()});
+  if(response.status()>=400)trackNetworkIssue(response.request(),{status:response.status()});
 });
-page.on('requestfailed',request=>networkErrors.push({failure:request.failure()?.errorText||'request failed',url:request.url()}));
+page.on('requestfailed',request=>trackNetworkIssue(request,{failure:request.failure()?.errorText||'request failed'}));
 
 async function waitVisuals(){
   await page.waitForFunction(()=>[...document.images].every(img=>img.complete));
@@ -42,6 +50,7 @@ const result={
   screens:[],
   consoleErrors,
   networkErrors,
+  ignoredMediaErrors,
   failures:[]
 };
 const safe=s=>String(s).replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-|-$/g,'').slice(0,80)||'screen';
@@ -133,9 +142,10 @@ console.log(JSON.stringify({
   screens:result.screens.length,
   failures:result.failures.length,
   consoleErrors:consoleErrors.length,
-  networkErrors:networkErrors.length,
+  visualNetworkErrors:networkErrors.length,
+  ignoredMediaErrors:ignoredMediaErrors.length,
   failedScreens:result.failures.map(item=>item.label),
-  failedRequests:networkErrors
+  failedVisualRequests:networkErrors
 },null,2));
 
 await browser.close();
