@@ -1,6 +1,7 @@
 import { createRpsState,nextRpsRound,resetRpsMatch,submitRpsChoice } from './rps-engine.js';
 import { RPS_CHOICE_META,rpsChoiceGraphic } from './rps-graphics.js';
 import { createRpsAudio } from './rps-audio.js';
+import { createRpsEventBridge } from './rps-events.js';
 import { ensureRpsShell } from './rps-shell.js';
 import { getGameParticipant,listGameParticipants,gameParticipantMarkup } from '../core/game-participant-registry.js';
 
@@ -9,9 +10,9 @@ const RPS_INTRO_DURATION_MS=2200;
 const RPS_INTRO_REDUCED_MOTION_DURATION_MS=1800;
 const byId=id=>document.getElementById(id);
 
-export function createRpsController({showView,onBack}={}){
+export function createRpsController({showView,onBack,onGameEvent}={}){
   let bound=false,state=null,introTimer=null,transitionTimer=null,interactionLocked=false,selectedPlayers=[];
-  const gameAudio=createRpsAudio();
+  const gameAudio=createRpsAudio(),gameEvents=createRpsEventBridge({onEvent:onGameEvent});
 
   function participant(id){return getGameParticipant(id);}
   function participants(){return listGameParticipants();}
@@ -85,12 +86,12 @@ export function createRpsController({showView,onBack}={}){
     renderPicker();syncScore();
   }
   function renderSetup(){
-    clearTimers();gameAudio.stop();state=null;interactionLocked=false;hideSections();setStageState('setup');applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);ensureSelectedPair();syncScore();renderPicker();
+    clearTimers();gameAudio.stop();gameEvents.reset();state=null;interactionLocked=false;hideSections();setStageState('setup');applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);ensureSelectedPair();syncScore();renderPicker();
     const setup=byId('rpsSetup');if(setup)setup.hidden=false;
   }
   function beginMatch(){
     ensureSelectedPair();if(selectedPlayers.length!==2)return;
-    state=createRpsState({players:[...selectedPlayers],targetScore:3});syncScore();renderIntro();
+    state=createRpsState({players:[...selectedPlayers],targetScore:3});gameEvents.begin(state.players);syncScore();renderIntro();
   }
 
   function renderIntro(){
@@ -149,13 +150,14 @@ export function createRpsController({showView,onBack}={}){
     const [a,b]=state?.players||[],playerA=participant(a),playerB=participant(b);
     if(byId('rpsFinalScore'))byId('rpsFinalScore').textContent=`${playerA?.displayName||''} ${state?.scores?.[a]||0}  —  ${state?.scores?.[b]||0} ${playerB?.displayName||''}`;
     const art=byId('rpsFinishArt');if(art)art.innerHTML=winner?(winner.celebrationAvatar?`<img src="${winner.celebrationAvatar}" alt="" decoding="async">`:playerVisual(winner)):'';
+    gameEvents.complete({players:state?.players||[],winner:winnerId,scores:state?.scores||{},round:state?.round||null});
     if(winner)gameAudio.win(winner);
   }
 
   function choose(choice,button){
     if(interactionLocked||!state||state.status!=='choosing')return;
     const playerId=currentPlayer(),result=submitRpsChoice(state,{playerId,choice});if(!result.ok)return;
-    interactionLocked=true;state=result.state;button?.classList.add('picked');gameAudio.choose();
+    interactionLocked=true;state=result.state;gameEvents.choice(playerId,{choice,round:state.round});button?.classList.add('picked');gameAudio.choose();
     transitionTimer=setTimeout(()=>{
       transitionTimer=null;
       if(result.reveal)renderReveal();else renderHandoff();
@@ -169,12 +171,12 @@ export function createRpsController({showView,onBack}={}){
   }
   function reset(){
     clearTimers();gameAudio.stop();if(!state){renderSetup();return;}
-    const result=resetRpsMatch(state);if(!result.ok)return;state=result.state;renderIntro();
+    const result=resetRpsMatch(state);if(!result.ok)return;state=result.state;gameEvents.begin(state.players);renderIntro();
   }
   function start(){
     ensureRpsShell();bind();setMode(true);showView?.('rpsGameView');renderSetup();
   }
-  function leave(){clearTimers();interactionLocked=false;setMode(false);gameAudio.stop();state=null;applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);onBack?.();}
+  function leave(){clearTimers();interactionLocked=false;setMode(false);gameAudio.stop();gameEvents.reset();state=null;applyPlayerTheme(null);applyWinnerTheme(null);applyScoreFocus(null);onBack?.();}
 
   function bind(){
     if(bound)return;bound=true;ensureRpsShell();

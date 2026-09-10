@@ -7,6 +7,7 @@ function weekKey(value=new Date()){
   const date=value instanceof Date?new Date(value):new Date(value);date.setHours(0,0,0,0);date.setDate(date.getDate()-date.getDay());
   return date.toISOString().slice(0,10);
 }
+function rewardExists(rewardId,isKnownReward){return typeof isKnownReward==='function'?Boolean(isKnownReward(rewardId)):Boolean(REWARD_BY_ID[rewardId]);}
 
 export function createRewardLedger(learnerId){return{schemaVersion:REWARD_LEDGER_VERSION,learnerId:String(learnerId||''),unlocks:[]};}
 export function normalizeRewardLedger(candidate,learnerId){
@@ -16,9 +17,9 @@ export function normalizeRewardLedger(candidate,learnerId){
   return{schemaVersion:REWARD_LEDGER_VERSION,learnerId:expected,unlocks:[...unlocks]};
 }
 
-export function recordRewardUnlock(ledger,{learnerId,rewardId,awardKey,source='learning',at=new Date(),meta={}}={}){
+export function recordRewardUnlock(ledger,{learnerId,rewardId,awardKey,source='learning',at=new Date(),meta={}}={},options={}){
   if(!ledger||String(ledger.learnerId)!==String(learnerId))return false;
-  if(!REWARD_BY_ID[rewardId]||!awardKey)return false;
+  if(!rewardExists(rewardId,options?.isKnownReward)||!awardKey)return false;
   const key=String(awardKey);if(ledger.unlocks.some(item=>item.awardKey===key))return false;
   ledger.unlocks.push(Object.freeze({rewardId,awardKey:key,source,at:iso(at),meta:Object.freeze({...meta})}));
   return true;
@@ -42,9 +43,9 @@ export function deriveLearningRewardCandidates({learnerId,windows,skillLevels=[]
   return candidates;
 }
 
-export function applyRewardCandidates(ledger,candidates,{at=new Date()}={}){
+export function applyRewardCandidates(ledger,candidates,{at=new Date(),isKnownReward=null}={}){
   let added=0;
-  for(const candidate of candidates||[])if(recordRewardUnlock(ledger,{...candidate,at}))added++;
+  for(const candidate of candidates||[])if(recordRewardUnlock(ledger,{...candidate,at},{isKnownReward}))added++;
   return added;
 }
 

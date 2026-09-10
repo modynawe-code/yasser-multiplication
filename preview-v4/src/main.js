@@ -14,15 +14,19 @@ import { createKhaledController } from './modules/khaled/ui/khaled-controller.js
 import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
 import { ensureMashaalShell } from './modules/mashaal/ui/mashaal-shell.js';
 import { createMashaalController } from './modules/mashaal/ui/mashaal-controller.js';
+import { createMashaalTreasureController } from './modules/mashaal/ui/mashaal-treasure-controller.js';
+import { createMashaalGameChallengePresenter } from './modules/mashaal/ui/mashaal-game-challenge-presenter.js';
 import { createMashaalLocalStorageRepository } from './modules/mashaal/infrastructure/local-storage-repository.js';
 import { normalizeMashaalState } from './modules/mashaal/domain/state-model.js';
 import { recordMashaalEvidence } from './modules/mashaal/application/progress-service.js';
+import { createMashaalGameLearningProvider } from './modules/mashaal/application/game-learning-provider.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
 import { createFamilyParentReportCapabilityRegistry } from './modules/parent/family-parent-report-capabilities.js';
 import { hydrateFamilyParentLearners } from './modules/parent/family-parent-shell-registry.js';
 import { familyYasserReport,familyKhaledReport,familyMashaalReport,familyYasserOverview,familyKhaledOverview,familyMashaalOverview,familyYasserSessions,familyKhaledSessions,familyMashaalSessions } from './modules/parent/family-parent-renderers.js';
 import { createGamesController } from './modules/games/games-controller.js';
 import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
+import { createChallengePresentationRegistry } from './modules/games/core/challenge-presentation-registry.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncCapabilityRegistry } from './shared/sync/family-sync-capability-registry.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
@@ -33,6 +37,7 @@ import { createLearningRewardService,createRewardingRepository } from './shared/
 import { createRewardCapabilityRegistry } from './shared/rewards/reward-capability-registry.js';
 import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
 import { createRewardCabinetController } from './shared/ui/reward-cabinet.js';
+import { createFamilyGameRewardRuntime } from './composition/game-reward-runtime.js';
 
 document.title='تعلم العائلة';
 const localBackup=createLocalBackupService();
@@ -50,7 +55,9 @@ const rewardService=createLearningRewardService({repository:rewardRepository});
 const rewardCapabilities=createRewardCapabilityRegistry();
 const parentReportCapabilities=createFamilyParentReportCapabilityRegistry();
 const syncCapabilities=createFamilySyncCapabilityRegistry();
-let cabinet=null,hub=null,games=null;
+const challengePresentations=createChallengePresentationRegistry();
+challengePresentations.register('kg3-choice',createMashaalGameChallengePresenter());
+let cabinet=null,mashaalTreasures=null,hub=null,games=null;
 function presentLearningStatus(learnerId,result){
   const capability=rewardCapabilities.get(learnerId);
   if(capability?.mode!=='academic')return false;
@@ -94,6 +101,8 @@ const cloudSync=createFamilySyncService({authClient:cloudAuth,capabilityRegistry
 const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
 const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show()});
+const gameRewardRuntime=createFamilyGameRewardRuntime({repository:rewardRepository,onReward:announcement=>mashaalTreasures?.announce(announcement)});
+mashaalTreasures=createMashaalTreasureController({getSummary:()=>gameRewardRuntime.getSummary('mashaal'),onExit:()=>mashaal.enter()});
 const learnerRuntimes=createLearnerRuntimeRegistry();
 const hubVisuals=createKhaledSceneController();
 let yasserStarted=false,khaledStarted=false;
@@ -115,9 +124,14 @@ cabinet=createRewardCabinetController({
   onExit:learnerId=>rewardCapabilities.get(learnerId)?.onEnter?.()
 });
 
+const mashaalGameLearning=createMashaalGameLearningProvider({
+  getState:()=>mashaal.getState(),
+  saveState:state=>mashaalRepository.save(state)
+});
 const gameLearning=createGameLearningAdapter({
   getYasserState:()=>yasser.getState(),saveYasserState:state=>yasserRepository.save(state),
-  getKhaledState:()=>khaled.getState(),saveKhaledState:state=>khaledRepository.save(state)
+  getKhaledState:()=>khaled.getState(),saveKhaledState:state=>khaledRepository.save(state),
+  additionalProviders:{mashaal:mashaalGameLearning}
 });
 
 const familyParent=createFamilyParentController({
@@ -125,17 +139,17 @@ const familyParent=createFamilyParentController({
   cloudAuth,cloudSync,onCloudRestore:result=>{if(result?.requiresReload)window.location.reload();},onExitToHub:()=>hub?.show()
 });
 
-function leaveLearningAreas(){cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
+function leaveLearningAreas(){cabinet?.leave();mashaalTreasures?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
 
-learnerRuntimes.register('yasser',{leave:()=>yasser.leave(),enter:()=>{games?.leave();cabinet?.leave();khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode');if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();}});
-learnerRuntimes.register('khaled',{leave:()=>khaled.leave(),enter:()=>{games?.leave();cabinet?.leave();yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}});
-learnerRuntimes.register('mashaal',{leave:()=>mashaal.leave(),enter:()=>{games?.leave();cabinet?.leave();yasser.leave();khaled.leave();familyParent.leave();mashaal.enter();}});
+learnerRuntimes.register('yasser',{leave:()=>yasser.leave(),enter:()=>{games?.leave();cabinet?.leave();mashaalTreasures?.leave();khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode');if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();}});
+learnerRuntimes.register('khaled',{leave:()=>khaled.leave(),enter:()=>{games?.leave();cabinet?.leave();mashaalTreasures?.leave();yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}});
+learnerRuntimes.register('mashaal',{leave:()=>mashaal.leave(),enter:()=>{games?.leave();cabinet?.leave();mashaalTreasures?.leave();yasser.leave();khaled.leave();familyParent.leave();mashaal.enter();}});
 
 function enterLearner(learnerId){if(!learnerRuntimes.activate(learnerId))hub?.show();}
 
 hub=createHubController({onBeforeShow:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();games?.leave();},onAfterShow:()=>hubVisuals.hub(),onSelectLearner:enterLearner});
 
-games=createGamesController({learningAdapter:gameLearning,onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
+games=createGamesController({learningAdapter:gameLearning,challengePresentations,onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
 
 function exitKhaledToHub(){
   khaled.leave();
@@ -146,7 +160,7 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub'])docume
 mashaal.start();
 presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
 presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
-cabinet.start();familyParent.start();games.start();hubVisuals.warm();hub.start();registerServiceWorker();
+cabinet.start();mashaalTreasures.start();familyParent.start();games.start();hubVisuals.warm();hub.start();registerServiceWorker();
 void localBackup.flush();
 globalThis.addEventListener?.('pagehide',()=>{void localBackup.flush();});
 globalThis.addEventListener?.('visibilitychange',()=>{if(globalThis.document?.visibilityState==='hidden')void localBackup.flush();});
