@@ -1,4 +1,6 @@
 import { getMashaalWebMedia } from './mashaal-web-media.js';
+import { getMashaalAssetContract } from './mashaal-asset-contracts.js';
+import { createMashaalGuidedActionVisual } from './mashaal-guided-action-visuals.js';
 
 const STYLE_KEY='mashaal-web-media';
 function ensureWebMediaStyle(){
@@ -65,9 +67,13 @@ function simpleVisual(key,{compact=false}={}){
 
 function mediaVisual(key,media,{compact=false}={}){
   ensureWebMediaStyle();
+  const contract=getMashaalAssetContract(key);
   const host=document.createElement('span');
   host.className=`mashaal-media-visual${compact?' compact':''}`;
   host.dataset.mediaKind=key.endsWith('-flag')?'flag':'illustration';
+  host.dataset.assetRole=contract.role;
+  host.dataset.semanticFocus=contract.semanticFocus;
+  host.dataset.assetFit=contract.fit;
   host.setAttribute('aria-hidden','true');
   const img=document.createElement('img');
   img.src=media.url;
@@ -76,6 +82,8 @@ function mediaVisual(key,media,{compact=false}={}){
   img.loading='eager';
   img.referrerPolicy='no-referrer';
   img.draggable=false;
+  img.style.objectFit=contract.fit;
+  img.style.objectPosition=contract.position;
   img.addEventListener('error',()=>{host.replaceChildren(simpleVisual(key,{compact}));},{once:true});
   host.appendChild(img);
   return host;
@@ -90,7 +98,6 @@ function illustratedGroupVisual(count,item,{compact=false}={}){
   const media=getMashaalWebMedia(key);
   return media?mediaVisual(key,media,{compact}):null;
 }
-
 
 export function createMashaalChoiceVisual(key,viewModel,{compact=false}={}){
   if((key==='left'||key==='right')&&viewModel?.stimulus?.kind==='groups'){
@@ -120,7 +127,8 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
   if(!stimulus)return host;
   if(stimulus.kind==='picture'){
     const media=getMashaalWebMedia(stimulus.scene);
-    const img=document.createElement('img');img.className='mashaal-scene-art';img.src=media?.url||SCENE_ART[stimulus.scene]||getMashaalDomainArt(domainId);img.alt='';img.decoding='async';img.draggable=false;host.appendChild(img);return host;
+    if(media){host.appendChild(mediaVisual(stimulus.scene,media,{compact}));return host;}
+    const img=document.createElement('img');img.className='mashaal-scene-art';img.src=SCENE_ART[stimulus.scene]||getMashaalDomainArt(domainId);img.alt='';img.decoding='async';img.draggable=false;host.appendChild(img);return host;
   }
   if(stimulus.kind==='items'){
     host.appendChild(createCountGroupVisual(stimulus.count,{compact,item:stimulus.item||'circle'}));return host;
@@ -151,10 +159,14 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     const row=document.createElement('div');row.className='mashaal-visual-sequence';for(const key of ['happy','sad','angry'])row.appendChild(createMashaalChoiceVisual(key,null,{compact:true}));host.appendChild(row);return host;
   }
   if(stimulus.kind==='movement'){
-    const media=getMashaalWebMedia('balance'); host.appendChild(media?mediaVisual('balance',media,{compact}):simpleVisual('balance',{compact}));return host;
+    const guided=createMashaalGuidedActionVisual(stimulus.movement||'balance-one-foot',{compact});
+    if(guided){host.appendChild(guided);return host;}
+    const media=getMashaalWebMedia('balance');host.appendChild(media?mediaVisual('balance',media,{compact}):simpleVisual('balance',{compact}));return host;
   }
   if(stimulus.kind==='fine-motor'){
-    const media=getMashaalWebMedia('fine-motor'); host.appendChild(media?mediaVisual('fine-motor',media,{compact}):simpleVisual('fine-motor',{compact}));return host;
+    const guided=createMashaalGuidedActionVisual(stimulus.task||'transfer-three-safe-pieces',{compact});
+    if(guided){host.appendChild(guided);return host;}
+    const media=getMashaalWebMedia('fine-motor');host.appendChild(media?mediaVisual('fine-motor',media,{compact}):simpleVisual('fine-motor',{compact}));return host;
   }
   const fallback=createMashaalDomainArt(domainId,{className:'mashaal-scene-art'});host.appendChild(fallback);return host;
 }
