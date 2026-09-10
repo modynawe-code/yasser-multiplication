@@ -96,9 +96,11 @@ export function mountQuranSurahPlayer(host,{
   play.type='button';play.className='quran-control quran-control-primary';play.innerHTML='<span aria-hidden="true">▶</span><strong>تشغيل</strong>';
   const pause=document.createElement('button');
   pause.type='button';pause.className='quran-control';pause.innerHTML='<span aria-hidden="true">Ⅱ</span><strong>إيقاف مؤقت</strong>';
+  const stop=document.createElement('button');
+  stop.type='button';stop.className='quran-control';stop.innerHTML='<span aria-hidden="true">■</span><strong>إيقاف</strong>';
   const restart=document.createElement('button');
   restart.type='button';restart.className='quran-control';restart.innerHTML='<span aria-hidden="true">↺</span><strong>من البداية</strong>';
-  transport.append(play,pause,restart);
+  transport.append(play,pause,stop,restart);
 
   const progressWrap=document.createElement('div');
   progressWrap.className='quran-progress-wrap';
@@ -132,10 +134,11 @@ export function mountQuranSurahPlayer(host,{
   };
   const pauseAudio=()=>{audio.pause();status.textContent='متوقفة مؤقتًا';};
   const restartAudio=async()=>{audio.pause();audio.currentTime=0;completed=false;updateProgress();return playAudio();};
-  const stopAudio=()=>{audio.pause();try{audio.currentTime=0;}catch{}updateProgress();};
+  const stopAudio=()=>{audio.pause();try{audio.currentTime=0;}catch{}completed=false;updateProgress();status.textContent='متوقفة';};
 
   play.addEventListener('click',()=>{void playAudio();});
   pause.addEventListener('click',pauseAudio);
+  stop.addEventListener('click',stopAudio);
   restart.addEventListener('click',()=>{void restartAudio();});
   audio.addEventListener('timeupdate',updateProgress);
   audio.addEventListener('loadedmetadata',updateProgress);
