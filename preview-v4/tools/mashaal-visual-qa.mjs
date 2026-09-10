@@ -15,12 +15,19 @@ const page=await context.newPage();
 page.setDefaultTimeout(12000);
 
 const consoleErrors=[];
-page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text());});
+const networkErrors=[];
+page.on('console',msg=>{
+  if(msg.type()==='error'&&!msg.text().startsWith('Failed to load resource:'))consoleErrors.push(msg.text());
+});
 page.on('pageerror',err=>consoleErrors.push(String(err)));
+page.on('response',response=>{
+  if(response.status()>=400)networkErrors.push({status:response.status(),url:response.url()});
+});
+page.on('requestfailed',request=>networkErrors.push({failure:request.failure()?.errorText||'request failed',url:request.url()}));
 
 async function waitVisuals(){
   await page.waitForFunction(()=>[...document.images].every(img=>img.complete));
-  await page.waitForTimeout(80);
+  await page.waitForTimeout(100);
 }
 
 await page.goto('http://127.0.0.1:4177/?qa=visual',{waitUntil:'domcontentloaded'});
@@ -34,6 +41,7 @@ const result={
   viewport:{width:1366,height:768},
   screens:[],
   consoleErrors,
+  networkErrors,
   failures:[]
 };
 const safe=s=>String(s).replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-|-$/g,'').slice(0,80)||'screen';
@@ -46,15 +54,20 @@ async function metrics(label){
     const imgs=[...(view?.querySelectorAll('img')||[])];
     const stimulusImgs=[...(view?.querySelectorAll('#mashaalActivityStimulus img')||[])];
     const choiceImgs=[...(view?.querySelectorAll('.mashaal-choice img')||[])];
+    const guidedMedia=[...(view?.querySelectorAll('#mashaalActivityStimulus .mashaal-media-visual')||[])];
     const srcOf=img=>new URL(img.currentSrc||img.src,location.href).pathname;
     const choiceSrcs=new Set(choiceImgs.map(srcOf));
     const duplicatedStimulusChoiceImages=stimulusImgs.map(srcOf).filter(src=>choiceSrcs.has(src));
     const rect=e=>{const r=e.getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height),bottom:Math.round(r.bottom),right:Math.round(r.right)};};
     const doc=document.documentElement;
+    const layout=view?.dataset.layout||null;
+    const guidedMediaRects=guidedMedia.map(rect);
+    let undersizedGuidedVisuals=[];
+    if(layout==='guided-emotion')undersizedGuidedVisuals=guidedMediaRects.filter(r=>r.width<130||r.height<130);
+    if(layout==='guided-movement'||layout==='guided-fine-motor')undersizedGuidedVisuals=guidedMediaRects.filter(r=>r.width<250||r.height<180);
     return {
       label,
-      layout:view?.dataset.layout||null,
-      stimulusKind:view?.dataset.stimulusKind||null,
+      layout,
       bodyScrollHeight:doc.scrollHeight,
       bodyScrollWidth:doc.scrollWidth,
       viewportHeight:innerHeight,
@@ -73,6 +86,8 @@ async function metrics(label){
         naturalHeight:img.naturalHeight,
         rect:rect(img)
       })),
+      guidedMediaRects,
+      undersizedGuidedVisuals,
       duplicatedStimulusChoiceImages
     };
   },label);
@@ -109,7 +124,8 @@ result.failures=result.screens.filter(screen=>
   screen.overflowsViewportX||
   screen.choices.some(choice=>!choice.visible)||
   screen.images.some(img=>img.naturalWidth===0||img.naturalHeight===0)||
-  screen.duplicatedStimulusChoiceImages.length>0
+  screen.duplicatedStimulusChoiceImages.length>0||
+  screen.undersizedGuidedVisuals.length>0
 );
 
 await writeFile(path.join(OUT,'report.json'),JSON.stringify(result,null,2));
@@ -117,8 +133,10 @@ console.log(JSON.stringify({
   screens:result.screens.length,
   failures:result.failures.length,
   consoleErrors:consoleErrors.length,
-  failedScreens:result.failures.map(item=>item.label)
+  networkErrors:networkErrors.length,
+  failedScreens:result.failures.map(item=>item.label),
+  failedRequests:networkErrors
 },null,2));
 
 await browser.close();
-if(result.failures.length||consoleErrors.length)process.exitCode=1;
+if(result.failures.length||consoleErrors.length||networkErrors.length)process.exitCode=1;

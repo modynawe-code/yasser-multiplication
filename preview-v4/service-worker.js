@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-81`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-82`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -98,7 +98,7 @@ self.addEventListener('activate',event=>{event.waitUntil((async()=>{
   await self.clients.claim();
   if(oldKeys.length){
     const windows=await self.clients.matchAll({type:'window'});
-    await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null));
+    await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null)));
   }
 })());});
 
