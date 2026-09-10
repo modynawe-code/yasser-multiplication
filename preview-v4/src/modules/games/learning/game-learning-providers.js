@@ -18,16 +18,30 @@ function multiplicationOptions(correct,random=Math.random){
   return shuffle([...values].slice(0,3),random);
 }
 
+function mergeAdditionalProviders(baseProviders,additionalProviders){
+  if(!additionalProviders||typeof additionalProviders!=='object'||Array.isArray(additionalProviders))throw new TypeError('additionalProviders must be an object');
+  const providers={...baseProviders};
+  for(const [rawId,provider] of Object.entries(additionalProviders)){
+    const id=String(rawId||'').trim().toLowerCase();
+    if(!id)throw new TypeError('additional learning provider id is required');
+    if(Object.prototype.hasOwnProperty.call(providers,id))throw new Error(`learning provider already configured: ${id}`);
+    if(!provider||typeof provider.nextChallenge!=='function')throw new TypeError(`learning provider must implement nextChallenge: ${id}`);
+    providers[id]=provider;
+  }
+  return providers;
+}
+
 export function createGameLearningAdapter({
   getYasserState,
   saveYasserState,
   getKhaledState,
   saveKhaledState,
+  additionalProviders={},
   random=Math.random
 }={}){
   if(typeof getYasserState!=='function'||typeof getKhaledState!=='function')throw new TypeError('learner state getters are required');
 
-  const providers={
+  const baseProviders={
     yasser:{
       nextChallenge(){
         const state=getYasserState();
@@ -84,5 +98,5 @@ export function createGameLearningAdapter({
     }
   };
 
-  return createLearningAdapter({providers});
+  return createLearningAdapter({providers:mergeAdditionalProviders(baseProviders,additionalProviders)});
 }
