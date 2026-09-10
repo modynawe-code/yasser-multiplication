@@ -176,9 +176,12 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     const row=document.createElement('div');row.className='mashaal-visual-sequence';for(const key of ['happy','sad','angry'])row.appendChild(createMashaalChoiceVisual(key,null,{compact:true}));host.appendChild(row);return host;
   }
   if(stimulus.kind==='movement'){
+    const contract=getMashaalAssetContract('balance');
+    const media=getMashaalWebMedia('balance');
+    if(contract.renderMode==='media'&&media){host.appendChild(mediaVisual('balance',media,{compact}));return host;}
     const guided=createMashaalGuidedActionVisual(stimulus.movement||'balance-one-foot',{compact});
     if(guided){host.appendChild(guided);return host;}
-    const media=getMashaalWebMedia('balance');host.appendChild(media?mediaVisual('balance',media,{compact}):simpleVisual('balance',{compact}));return host;
+    host.appendChild(media?mediaVisual('balance',media,{compact}):simpleVisual('balance',{compact}));return host;
   }
   if(stimulus.kind==='fine-motor'){
     const guided=createMashaalGuidedActionVisual(stimulus.task||'transfer-three-safe-pieces',{compact});

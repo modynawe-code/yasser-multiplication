@@ -19,6 +19,10 @@ const exactObject=(semanticFocus)=>Object.freeze({
   role:'isolated-object',fit:'contain',position:'50% 50%',semanticFocus,renderMode:'media',cropScale:1
 });
 
+const illustratedScene=(semanticFocus)=>Object.freeze({
+  role:'semantic-scene',fit:'cover',position:'50% 50%',semanticFocus,renderMode:'media',cropScale:1
+});
+
 const vectorScene=(semanticFocus)=>Object.freeze({
   role:'semantic-scene',fit:'contain',position:'50% 50%',semanticFocus,renderMode:'vector',cropScale:1
 });
@@ -33,13 +37,13 @@ const CONTRACTS=Object.freeze({
   umbrella:exactObject('umbrella'),sunglasses:exactObject('sunglasses'),
   'wait-turn':actionCrop('waiting-for-turn','86% 50%',1.2),'grab-ball':actionCrop('taking-ball','88% 50%',1.2),'walk-away-angry':actionCrop('walking-away-angry','88% 50%',1.2),
   'ask-help':actionCrop('asking-for-help','88% 50%',1.2),'throw-blocks':actionCrop('throwing-blocks','88% 50%',1.2),'kick-blocks':actionCrop('kicking-blocks','88% 50%',1.2),
-  'wet-hands':vectorScene('hands-under-water'),soap:vectorScene('soap-on-hands'),'rub-hands':vectorScene('rubbing-hands'),'rinse-hands':vectorScene('rinsing-hands'),
-  'stay-away':vectorScene('safe-distance-from-hot-surface'),'touch-hot':vectorScene('touching-hot-surface'),'play-near-hot':vectorScene('playing-near-hot-surface'),
+  'wet-hands':illustratedScene('hands-under-water'),soap:illustratedScene('soap-on-hands'),'rub-hands':illustratedScene('rubbing-hands'),'rinse-hands':illustratedScene('rinsing-hands'),
+  'stay-away':illustratedScene('safe-distance-from-hot-surface'),'touch-hot':illustratedScene('touching-hot-surface'),'play-near-hot':illustratedScene('playing-near-hot-surface'),
   'return-book':actionCrop('returning-book','90% 52%',1.24),'leave-book-floor':actionCrop('book-left-on-floor','90% 52%',1.24),'damage-book':actionCrop('damaging-book','90% 52%',1.24),
   'help-tidy':vectorScene('helping-tidy'),'leave-mess':vectorScene('leaving-mess'),'scatter-toys':vectorScene('scattering-toys'),
   wake:vectorScene('wake-up'),'brush-teeth':vectorScene('brushing-teeth'),breakfast:vectorScene('eating-breakfast'),
   'ball-above-box':exactObject('ball-above-box'),'ball-inside-box':exactObject('ball-inside-box'),'ball-below-box':exactObject('ball-below-box'),
-  balance:Object.freeze({role:'guided-action',fit:'contain',position:'50% 50%',semanticFocus:'balance-one-foot',renderMode:'vector',cropScale:1}),
+  balance:Object.freeze({role:'guided-action',fit:'cover',position:'50% 50%',semanticFocus:'balance-one-foot',renderMode:'media',cropScale:1}),
   'fine-motor':Object.freeze({role:'guided-action',fit:'contain',position:'50% 50%',semanticFocus:'transfer-three-safe-pieces',renderMode:'vector',cropScale:1})
 });
 
