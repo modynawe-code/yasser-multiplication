@@ -15,9 +15,9 @@ export function voiceTextKey(text){
   return normalized?`text:${normalized}`:null;
 }
 
-export function resolveVoiceAsset(id,manifest=VOICE_MANIFEST,text=''){
+export function resolveVoiceAsset(id,manifest=VOICE_MANIFEST,text='',{allowDynamicTextPath=true}={}){
   const textKey=voiceTextKey(text);
   const explicit=(id&&manifest?.[id])||(textKey&&manifest?.[textKey]);
   if(typeof explicit==='string'&&explicit.trim())return explicit;
-  return humanVoiceAssetPath(text);
+  return allowDynamicTextPath?humanVoiceAssetPath(text):null;
 }
