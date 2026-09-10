@@ -33,6 +33,7 @@ import { createLearningRewardService,createRewardingRepository } from './shared/
 import { createRewardCapabilityRegistry } from './shared/rewards/reward-capability-registry.js';
 import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
 import { createRewardCabinetController } from './shared/ui/reward-cabinet.js';
+import { createFamilyGameRewardRuntime } from './composition/game-reward-runtime.js';
 
 document.title='تعلم العائلة';
 const localBackup=createLocalBackupService();
@@ -47,6 +48,7 @@ hydrateFamilyParentLearners();
 
 const rewardRepository=createRewardRepository({storage:localBackup.storage});
 const rewardService=createLearningRewardService({repository:rewardRepository});
+const gameRewardRuntime=createFamilyGameRewardRuntime({repository:rewardRepository});
 const rewardCapabilities=createRewardCapabilityRegistry();
 const parentReportCapabilities=createFamilyParentReportCapabilityRegistry();
 const syncCapabilities=createFamilySyncCapabilityRegistry();
@@ -150,3 +152,4 @@ cabinet.start();familyParent.start();games.start();hubVisuals.warm();hub.start()
 void localBackup.flush();
 globalThis.addEventListener?.('pagehide',()=>{void localBackup.flush();});
 globalThis.addEventListener?.('visibilitychange',()=>{if(globalThis.document?.visibilityState==='hidden')void localBackup.flush();});
+globalThis.addEventListener?.('pagehide',()=>gameRewardRuntime.stop());
