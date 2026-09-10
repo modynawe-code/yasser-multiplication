@@ -32,3 +32,17 @@
 /* unified activity media slot */
 #mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{width:100%;height:100%;min-height:0}
 #mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual img{width:auto;height:100%;max-width:100%;max-height:100%;margin:auto;object-fit:contain!important}
+
+/* Asset contracts own semantic crop instead of one global fit rule. Action tiles
+   generated from the source boards keep the action/object side in frame. */
+#mashaalActivityView .mashaal-media-visual[data-asset-fit="cover"] img{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:78% 52%!important;padding:0!important}
+#mashaalActivityView .mashaal-media-visual[data-asset-fit="contain"] img{object-fit:contain!important}
+#mashaalActivityView .mashaal-media-visual[data-asset-role="isolated-object"] img{padding:4px!important}
+
+/* The two guided physical activities previously used semantically wrong bitmap
+   crops. Static local SVG scenes now depict the actual requested action. */
+.mashaal-guided-action-art{display:block;width:min(100%,560px);aspect-ratio:16/9;margin-inline:auto;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 10px 24px rgba(70,47,78,.08)}
+.mashaal-guided-action-art svg{display:block;width:100%;height:100%}
+.mashaal-guided-action-art.compact{width:180px;border-radius:18px;box-shadow:none}
+#mashaalActivityView[data-layout="guided-movement"] .mashaal-guided-action-art,
+#mashaalActivityView[data-layout="guided-fine-motor"] .mashaal-guided-action-art{width:min(100%,560px)}
