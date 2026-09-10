@@ -12,6 +12,7 @@ const EXPECTED=[
   'src/modules/games/xo/xo-events.js',
   'src/modules/games/rps/rps-events.js',
   'src/modules/games/ui/xo-challenge-presentation.js',
+  'src/modules/games/ui/xo-challenge-presentation.css',
   'src/modules/mashaal/application/game-learning-provider.js',
   'src/modules/mashaal/encouragement/mashaal-encouragement-pack.js',
   'src/modules/mashaal/rewards/mashaal-reward-catalog.js',

@@ -1,3 +1,14 @@
+const STYLE_KEY='xo-challenge-presentation';
+
+function ensurePresentationStyle(){
+  if(document.querySelector(`link[data-module-style="${STYLE_KEY}"]`))return;
+  const link=document.createElement('link');
+  link.rel='stylesheet';
+  link.href='src/modules/games/ui/xo-challenge-presentation.css';
+  link.dataset.moduleStyle=STYLE_KEY;
+  document.head.appendChild(link);
+}
+
 function setFallbackStimulus(host,challenge,fallbackVisualMarkup){
   if(!host)return;
   host.replaceChildren();
@@ -31,6 +42,7 @@ export function renderXoChallengePresentation({
   fallbackVisualMarkup=null,
   onAnswer=null
 }={}){
+  ensurePresentationStyle();
   if(visualHost){
     visualHost.replaceChildren();
     const custom=registry?.renderStimulus?.(challenge,{compact:true});
@@ -40,14 +52,23 @@ export function renderXoChallengePresentation({
 
   if(!optionsHost)return;
   optionsHost.replaceChildren();
-  for(const value of challenge?.options||[]){
+  let hasVisual=false;
+  const values=[...(challenge?.options||[])];
+  for(const value of values){
     const button=document.createElement('button');
     button.type='button';
     button.className='xo-challenge-option';
     button.dataset.challengeAnswer=String(value);
     button.disabled=Boolean(disabled);
-    appendOptionContent(button,registry,challenge,value);
+    if(appendOptionContent(button,registry,challenge,value))hasVisual=true;
     button.addEventListener('click',()=>onAnswer?.(button.dataset.challengeAnswer,button));
     optionsHost.appendChild(button);
+  }
+  if(hasVisual){
+    optionsHost.dataset.presentation='visual';
+    optionsHost.dataset.optionCount=String(values.length);
+  }else{
+    delete optionsHost.dataset.presentation;
+    delete optionsHost.dataset.optionCount;
   }
 }
