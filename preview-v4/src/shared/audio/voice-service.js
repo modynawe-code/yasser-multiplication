@@ -18,9 +18,10 @@ export function createVoiceService({
   mode=HUMAN_VOICE_POLICY.runtimeMode,
   providers=null
 }={}){
-  const local=createLocalAudioProvider({manifest,AudioClass});
+  const humanOnly=isHumanOnlyVoiceMode(mode);
+  const local=createLocalAudioProvider({manifest,AudioClass,allowDynamicTextPath:humanOnly});
   const cloud=neuralProvider===undefined?createCloudTtsProvider({AudioClass}):neuralProvider;
-  const defaultChain=isHumanOnlyVoiceMode(mode)
+  const defaultChain=humanOnly
     ?[local]
     :[local,cloud,createNativeTtsProvider({nativeTts}),createBrowserTtsProvider({synth,Utterance})];
   const chain=(providers||defaultChain).filter(provider=>provider&&typeof provider.speak==='function');
