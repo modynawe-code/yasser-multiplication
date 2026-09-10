@@ -1,4 +1,5 @@
 import { isSupportedActivityType } from '../../../shared/activities/activity-types.js';
+import { isSupportedActivityPresentationType } from '../../../shared/activities/activity-renderer-contracts.js';
 import { getMashaalSkill } from './skill-index.js';
 import { getMashaalKg3SkillProvenance } from '../curriculum/kg3-skill-provenance.js';
 import { MASHAAL_SOURCE_REGISTRY } from '../curriculum/source-registry.js';
@@ -24,6 +25,7 @@ export function validateMashaalKg3Activity(activity){
   }
 
   if(!isSupportedActivityType(activity.interaction))errors.push('unsupported-interaction');
+  if(!isSupportedActivityPresentationType(activity.activityType))errors.push('unsupported-activity-type');
   if(activity.stage!=='kg3')errors.push('invalid-stage');
   if(activity.status!=='verified')errors.push('activity-not-verified');
   if(activity.childFacingScore!==false)errors.push('child-score-not-allowed');
