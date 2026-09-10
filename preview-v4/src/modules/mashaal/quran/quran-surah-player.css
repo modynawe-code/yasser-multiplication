@@ -13,7 +13,7 @@
 .quran-page-viewport[data-focused="true"] .quran-page-image{position:absolute;inset:0 auto auto 0;max-width:none;max-height:none;border-radius:0;transform-origin:center top}
 .quran-page-caption{padding:9px 8px 2px;text-align:center;color:#756b53;font-size:13px;font-weight:800;line-height:1.45}
 .quran-page-frame[data-image-error="true"]{min-height:180px;display:grid;place-items:center}.quran-page-frame[data-image-error="true"] .quran-page-viewport{display:none}
-.quran-transport{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.quran-transport{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .quran-control{min-height:72px;border:2px solid #e4d6ea;border-radius:20px;background:#fff;padding:11px 14px;color:var(--text);font:inherit;font-weight:950;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 14px rgba(74,48,84,.05);touch-action:manipulation}
 .quran-control span{font-size:25px}.quran-control strong{font-size:18px}.quran-control-primary{background:#fff3fb;border-color:#bb78aa;color:#6c3d62;box-shadow:0 8px 18px rgba(183,121,170,.16)}
 .quran-control:active{transform:scale(.985)}
@@ -27,7 +27,7 @@
   #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card{padding:12px 18px}
   #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-card h2{font-size:24px;margin:4px 0 8px}
   .quran-surah-player{grid-template-columns:minmax(330px,390px) minmax(0,1fr);grid-template-areas:"page controls" "page progress" "page status";align-items:center;column-gap:28px;row-gap:10px}
-  .quran-page-frame{grid-area:page;width:100%;padding:9px}.quran-transport{grid-area:controls}.quran-progress-wrap{grid-area:progress}.quran-player-status{grid-area:status}
+  .quran-page-frame{grid-area:page;width:100%;padding:9px}.quran-transport{grid-area:controls;grid-template-columns:repeat(2,minmax(0,1fr))}.quran-progress-wrap{grid-area:progress}.quran-player-status{grid-area:status}
   .quran-control{min-height:66px;padding:9px 10px}.quran-control strong{font-size:17px}.quran-control span{font-size:23px}
   #mashaalActivityView[data-activity-kind="quran-recitation"] .mashaal-activity-feedback{margin-top:8px;min-height:28px;font-size:20px}
 }
