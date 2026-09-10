@@ -47,8 +47,9 @@ export function createMashaalGameLearningProvider({getState,saveState,random=Mat
       const state=getState();
       if(!activity||!state)return null;
       const isCorrect=String(result.answer)===String(activity.correctChoice);
+      const attemptNumber=Math.max(1,Number(result.attemptNumber)||1);
       const evidence=createMashaalDigitalAttempt({
-        evidenceId:`${result.challenge.id}:attempt`,
+        evidenceId:`${result.challenge.id}:attempt:${attemptNumber}`,
         skillId:activity.skillId,
         isCorrect,
         responseMs:result.responseMs

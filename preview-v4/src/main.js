@@ -15,15 +15,18 @@ import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-co
 import { ensureMashaalShell } from './modules/mashaal/ui/mashaal-shell.js';
 import { createMashaalController } from './modules/mashaal/ui/mashaal-controller.js';
 import { createMashaalTreasureController } from './modules/mashaal/ui/mashaal-treasure-controller.js';
+import { createMashaalGameChallengePresenter } from './modules/mashaal/ui/mashaal-game-challenge-presenter.js';
 import { createMashaalLocalStorageRepository } from './modules/mashaal/infrastructure/local-storage-repository.js';
 import { normalizeMashaalState } from './modules/mashaal/domain/state-model.js';
 import { recordMashaalEvidence } from './modules/mashaal/application/progress-service.js';
+import { createMashaalGameLearningProvider } from './modules/mashaal/application/game-learning-provider.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
 import { createFamilyParentReportCapabilityRegistry } from './modules/parent/family-parent-report-capabilities.js';
 import { hydrateFamilyParentLearners } from './modules/parent/family-parent-shell-registry.js';
 import { familyYasserReport,familyKhaledReport,familyMashaalReport,familyYasserOverview,familyKhaledOverview,familyMashaalOverview,familyYasserSessions,familyKhaledSessions,familyMashaalSessions } from './modules/parent/family-parent-renderers.js';
 import { createGamesController } from './modules/games/games-controller.js';
 import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
+import { createChallengePresentationRegistry } from './modules/games/core/challenge-presentation-registry.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncCapabilityRegistry } from './shared/sync/family-sync-capability-registry.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
@@ -52,6 +55,8 @@ const rewardService=createLearningRewardService({repository:rewardRepository});
 const rewardCapabilities=createRewardCapabilityRegistry();
 const parentReportCapabilities=createFamilyParentReportCapabilityRegistry();
 const syncCapabilities=createFamilySyncCapabilityRegistry();
+const challengePresentations=createChallengePresentationRegistry();
+challengePresentations.register('kg3-choice',createMashaalGameChallengePresenter());
 let cabinet=null,mashaalTreasures=null,hub=null,games=null;
 function presentLearningStatus(learnerId,result){
   const capability=rewardCapabilities.get(learnerId);
@@ -119,9 +124,14 @@ cabinet=createRewardCabinetController({
   onExit:learnerId=>rewardCapabilities.get(learnerId)?.onEnter?.()
 });
 
+const mashaalGameLearning=createMashaalGameLearningProvider({
+  getState:()=>mashaal.getState(),
+  saveState:state=>mashaalRepository.save(state)
+});
 const gameLearning=createGameLearningAdapter({
   getYasserState:()=>yasser.getState(),saveYasserState:state=>yasserRepository.save(state),
-  getKhaledState:()=>khaled.getState(),saveKhaledState:state=>khaledRepository.save(state)
+  getKhaledState:()=>khaled.getState(),saveKhaledState:state=>khaledRepository.save(state),
+  additionalProviders:{mashaal:mashaalGameLearning}
 });
 
 const familyParent=createFamilyParentController({
@@ -139,7 +149,7 @@ function enterLearner(learnerId){if(!learnerRuntimes.activate(learnerId))hub?.sh
 
 hub=createHubController({onBeforeShow:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();games?.leave();},onAfterShow:()=>hubVisuals.hub(),onSelectLearner:enterLearner});
 
-games=createGamesController({learningAdapter:gameLearning,onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
+games=createGamesController({learningAdapter:gameLearning,challengePresentations,onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
 
 function exitKhaledToHub(){
   khaled.leave();

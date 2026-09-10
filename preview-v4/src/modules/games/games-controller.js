@@ -3,6 +3,7 @@ import { createXoState,passXoTurn,playXoMove } from './xo/xo-engine.js';
 import { createXoOnlineSession,normalizeOnlineXoRoom } from './xo/xo-online-session.js';
 import { createGameRoomClient } from './online/game-room-client.js';
 import { ensureGamesShell } from './ui/games-shell.js';
+import { renderXoChallengePresentation } from './ui/xo-challenge-presentation.js';
 import { getGameParticipant,listGameParticipants,gameParticipantMarkup } from './core/game-participant-registry.js';
 import { createSpeechService } from '../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../ui/audio/feedback-audio.js';
@@ -16,7 +17,7 @@ function gameIcon(id){return id==='xo'?'⭕':id==='rock-paper-scissors'?'✊':id
 function now(){return globalThis.performance?.now?.()??Date.now();}
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
-export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
+export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
   let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null;
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
   const speech=createSpeechService(),audio=createFeedbackAudio();
@@ -244,8 +245,8 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
 
   function renderChallenge(){
     if(!challengeState)return;const {challenge,unlocked}=challengeState,box=byId('xoChallenge'),prompt=byId('xoChallengePrompt'),visual=byId('xoChallengeVisual'),options=byId('xoChallengeOptions'),feedback=byId('xoChallengeFeedback'),hear=byId('xoHearChallenge');
-    box?.classList.remove('finished');box?.classList.toggle('unlocked',Boolean(unlocked));if(hear)hear.hidden=false;if(prompt)prompt.textContent=challenge.prompt;if(visual)visual.innerHTML=challengeVisualMarkup(challenge);
-    if(options){options.innerHTML=challenge.options.map(value=>`<button class="xo-challenge-option" data-challenge-answer="${String(value)}" ${unlocked?'disabled':''}>${value}</button>`).join('');options.querySelectorAll('[data-challenge-answer]').forEach(button=>button.addEventListener('click',()=>answerChallenge(button.dataset.challengeAnswer,button)));}
+    box?.classList.remove('finished');box?.classList.toggle('unlocked',Boolean(unlocked));if(hear)hear.hidden=false;if(prompt)prompt.textContent=challenge.prompt;
+    renderXoChallengePresentation({registry:challengePresentations,challenge,visualHost:visual,optionsHost:options,disabled:unlocked,fallbackVisualMarkup:challengeVisualMarkup,onAnswer:answerChallenge});
     if(feedback)feedback.textContent=unlocked?'أحسنت ⭐ الآن اختر مربعك.':'';renderXo();
   }
 
@@ -263,8 +264,8 @@ export function createGamesController({learningAdapter,onBeforeEnter,onExitToHub
   }
 
   async function answerChallenge(answer,button){
-    if(!challengeState||challengeState.unlocked||challengeState.playerId!==xoState?.currentPlayer)return;const {challenge}=challengeState,player=participant(challengeState.playerId),isCorrect=String(answer)===String(challenge.correctAnswer),responseMs=Math.max(0,Math.round(now()-challengeState.startedAt));
-    try{await learningAdapter?.recordChallenge?.(player,{gameId:'xo',challenge,answer,isCorrect,responseMs});}catch{}
+    if(!challengeState||challengeState.unlocked||challengeState.playerId!==xoState?.currentPlayer)return;const {challenge}=challengeState,player=participant(challengeState.playerId),isCorrect=String(answer)===String(challenge.correctAnswer),responseMs=Math.max(0,Math.round(now()-challengeState.startedAt)),attemptNumber=challengeState.attempts+1;
+    try{await learningAdapter?.recordChallenge?.(player,{gameId:'xo',challenge,answer,isCorrect,responseMs,attemptNumber});}catch{}
     if(isCorrect){challengeState.unlocked=true;button?.classList.add('good');audio.correct();byId('xoChallengeFeedback').textContent='أحسنت ⭐ الآن اختر مربعك.';byId('xoChallenge')?.classList.add('unlocked');byId('xoChallengeOptions')?.querySelectorAll('button').forEach(item=>item.disabled=true);renderXo();return;}
     challengeState.attempts+=1;button?.classList.add('bad');if(button)button.disabled=true;audio.wrong();if(challengeState.attempts<2){byId('xoChallengeFeedback').textContent='جرّب مرة ثانية — تقدر عليها.';return;}
     byId('xoChallengeFeedback').textContent='ننتقل للدور الثاني، ونرجع أقوى.';const playerId=challengeState.playerId;byId('xoChallengeOptions')?.querySelectorAll('button').forEach(item=>item.disabled=true);
