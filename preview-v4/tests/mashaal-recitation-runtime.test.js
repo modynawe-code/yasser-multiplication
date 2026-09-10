@@ -16,6 +16,7 @@ test('recitation runtime opens only when integrity-verified local human audio an
   assert.equal(plan.activities.length,1);
   const activity=plan.activities[0];
   assert.equal(activity.syntheticRecitationAllowed,false);
+  assert.equal(activity.activityType,'quran-recitation');
   assert.equal(activity.stimulus.surahNumber,112);
   assert.match(activity.mediaPath,/^\.\/assets\/recitation\/.*\.mp3$/);
   assert.match(activity.mediaSha256,/^[a-f0-9]{64}$/);
@@ -29,12 +30,13 @@ test('recitation runtime opens only when integrity-verified local human audio an
 
 test('recitation view model carries human audio and verified Mushaf artwork separately from spoken instructions',()=>{
   const model=createMashaalActivityViewModel({
-    id:'recitation-demo',skillId:'listen-repeat',interaction:'listening',evidenceType:'activity-completion',
+    id:'recitation-demo',skillId:'listen-repeat',interaction:'listening',activityType:'quran-recitation',evidenceType:'activity-completion',
     promptAr:'اسمعي ثم رددي.',audioPromptAr:'اضغطي تشغيل ثم رددي بعد القارئ.',
     stimulus:{kind:'recitation-audio',surahNameAr:'الإخلاص',surahNumber:112},choices:['done'],mediaPath:'./assets/recitation/demo.mp3',
     mushafPage:{sourceId:'kfgqpc-hafs-madinah-svg',pageNumber:604,imagePath:'./assets/recitation/kfqc-hafs-page-604.svg',offlineBundled:true}
   });
   assert.equal(model.requiresHumanRecitation,true);
+  assert.equal(model.activityType,'quran-recitation');
   assert.equal(model.recitationAudioPath,'./assets/recitation/demo.mp3');
   assert.equal(model.stimulus.kind,'recitation');
   assert.equal(model.stimulus.surahNameAr,'الإخلاص');
@@ -48,11 +50,13 @@ test('recitation validator rejects media that is not present in the verified man
   assert.ok(result.errors.includes('approved-recitation-media-required'));
 });
 
-test('reusable Quran player exposes explicit play pause and restart controls without Quran TTS',async()=>{
+test('reusable Quran player exposes explicit play pause stop and restart controls without Quran TTS',async()=>{
   const player=await read('src/modules/mashaal/quran/quran-surah-player.js');
   assert.match(player,/تشغيل/);
   assert.match(player,/إيقاف مؤقت/);
+  assert.match(player,/إيقاف/);
   assert.match(player,/من البداية/);
+  assert.match(player,/stop\.addEventListener\('click',stopAudio\)/);
   assert.match(player,/audio\.play\(\)/);
   assert.match(player,/audio\.pause\(\)/);
   assert.match(player,/audio\.currentTime=0/);
@@ -65,7 +69,9 @@ test('Quran player presentation keeps KG3 controls large and uses a clipped offi
   const css=await read('src/modules/mashaal/quran/quran-surah-player.css');
   assert.match(css,/\.quran-page-viewport\{position:relative;overflow:hidden/);
   assert.match(css,/\.quran-control\{min-height:72px/);
+  assert.match(css,/\.quran-transport\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(css,/grid-template-columns:minmax\(330px,390px\)/);
+  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
 
 test('Mashaal controller delegates Quran recitation to reusable player and only speaks instructions',async()=>{
