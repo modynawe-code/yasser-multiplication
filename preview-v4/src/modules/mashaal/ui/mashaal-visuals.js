@@ -184,9 +184,12 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
     host.appendChild(media?mediaVisual('balance',media,{compact}):simpleVisual('balance',{compact}));return host;
   }
   if(stimulus.kind==='fine-motor'){
+    const contract=getMashaalAssetContract('fine-motor');
+    const media=getMashaalWebMedia('fine-motor');
+    if(contract.renderMode==='media'&&media){host.appendChild(mediaVisual('fine-motor',media,{compact}));return host;}
     const guided=createMashaalGuidedActionVisual(stimulus.task||'transfer-three-safe-pieces',{compact});
     if(guided){host.appendChild(guided);return host;}
-    const media=getMashaalWebMedia('fine-motor');host.appendChild(media?mediaVisual('fine-motor',media,{compact}):simpleVisual('fine-motor',{compact}));return host;
+    host.appendChild(media?mediaVisual('fine-motor',media,{compact}):simpleVisual('fine-motor',{compact}));return host;
   }
   const fallback=createMashaalDomainArt(domainId,{className:'mashaal-scene-art'});host.appendChild(fallback);return host;
 }
