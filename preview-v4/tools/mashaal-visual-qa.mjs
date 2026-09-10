@@ -62,6 +62,17 @@ async function runViewport(viewport){
       const doc=document.documentElement;
       const active=document.querySelector('.view.active');
       const rect=e=>{const r=e.getBoundingClientRect();return {x:Math.round(r.x),y:Math.round(r.y),width:Math.round(r.width),height:Math.round(r.height),bottom:Math.round(r.bottom),right:Math.round(r.right)};};
+      const skillCards=[...(active?.querySelectorAll('.mashaal-skill-card')||[])];
+      const skillCardContentOverflows=[];
+      for(const [index,card] of skillCards.entries()){
+        const cardRect=card.getBoundingClientRect();
+        const meaningful=[...card.querySelectorAll('.mashaal-skill-preview,.mashaal-skill-copy,.mashaal-skill-copy strong,.mashaal-skill-start')];
+        const overflow=meaningful.some(node=>{
+          const r=node.getBoundingClientRect();
+          return r.left<cardRect.left-1||r.right>cardRect.right+1||r.top<cardRect.top-1||r.bottom>cardRect.bottom+1;
+        });
+        if(overflow)skillCardContentOverflows.push({index,label:card.innerText.trim(),rect:rect(card)});
+      }
       return {
         label,
         activeViewId:active?.id||null,
@@ -71,6 +82,7 @@ async function runViewport(viewport){
         bodyScrollHeight:doc.scrollHeight,
         overflowsViewportX:doc.scrollWidth>innerWidth+4,
         overflowsViewportY:doc.scrollHeight>innerHeight+4,
+        skillCardContentOverflows,
         activeRect:active?rect(active):null
       };
     },label);
@@ -202,6 +214,13 @@ async function runViewport(viewport){
     await page.waitForSelector('#mashaalHomeView.active');
   }
 
+  for(const screen of result.coreScreens){
+    const reasons=[];
+    if(screen.overflowsViewportX)reasons.push('core-overflow-x');
+    if(screen.skillCardContentOverflows.length)reasons.push('skill-card-content-overflow');
+    if((screen.label==='family-chooser'||screen.label==='mashaal-home')&&screen.overflowsViewportY)reasons.push('core-primary-screen-overflow-y');
+    if(reasons.length)result.failures.push({screen:screen.label,reasons});
+  }
   for(const screen of result.activityScreens){
     const reasons=[];
     if(screen.overflowsViewportY)reasons.push('viewport-overflow-y');
@@ -221,6 +240,8 @@ async function runViewport(viewport){
   if(domains.length!==6)result.failures.push({screen:'domain-coverage',reasons:[`expected-6-found-${domains.length}`]});
   if(consoleErrors.length)result.failures.push({screen:'console',reasons:[`${consoleErrors.length}-console-errors`]});
   if(networkErrors.length)result.failures.push({screen:'network',reasons:[`${networkErrors.length}-visual-network-errors`]});
+  const mediaHttpErrors=mediaErrors.filter(issue=>Number(issue.status)>=400);
+  if(mediaHttpErrors.length)result.failures.push({screen:'media-http',reasons:[`${mediaHttpErrors.length}-media-http-errors`]});
 
   await writeFile(path.join(viewportOut,'report.json'),JSON.stringify(result,null,2));
   await context.close();
@@ -243,7 +264,8 @@ console.log(JSON.stringify({
     failures:item.failures.length,
     consoleErrors:item.consoleErrors.length,
     visualNetworkErrors:item.networkErrors.length,
-    mediaErrors:item.mediaErrors.length
+    mediaErrors:item.mediaErrors.length,
+    mediaHttpErrors:item.mediaErrors.filter(issue=>Number(issue.status)>=400).length
   })),
   failedViewports:report.failures.map(item=>item.viewport)
 },null,2));
