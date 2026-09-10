@@ -82,8 +82,8 @@ function mediaVisual(key,media,{compact=false}={}){
   img.loading='eager';
   img.referrerPolicy='no-referrer';
   img.draggable=false;
-  img.style.objectFit=contract.fit;
-  img.style.objectPosition=contract.position;
+  img.style.setProperty('object-fit',contract.fit,'important');
+  img.style.setProperty('object-position',contract.position,'important');
   img.addEventListener('error',()=>{host.replaceChildren(simpleVisual(key,{compact}));},{once:true});
   host.appendChild(img);
   return host;
