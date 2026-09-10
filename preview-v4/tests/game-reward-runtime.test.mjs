@@ -14,6 +14,8 @@ test('family game reward runtime composes learner-specific rules over shared ser
   assert.equal(runtime.getSummary('mashaal').counts['mashaal-attempt-flower'],1);
   assert.equal(announcements.length,1);
   assert.equal(announcements[0].cue?.characterState,'receiving-reward');
+  assert.equal(announcements[0].characterState?.assetKey,'mashaal.character.receiving-reward');
+  assert.equal(runtime.characterStates.supports('mashaal','receiving-reward'),true);
   bus.publish(createGameEvent({type:'game.completed',gameId:'rock-paper-scissors',learnerId:'khaled',sessionId:'k-1'}));
   assert.equal(runtime.getSummary('khaled').total,0);
   runtime.stop();
