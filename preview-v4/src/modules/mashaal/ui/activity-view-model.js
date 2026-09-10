@@ -37,6 +37,7 @@ export function createMashaalActivityViewModel(activity){
     id:activity.id,
     skillId:activity.skillId,
     interaction:activity.interaction,
+    activityType:activity.activityType,
     evidenceType:activity.evidenceType,
     promptAr:activity.promptAr,
     audioPromptAr:activity.audioPromptAr,
