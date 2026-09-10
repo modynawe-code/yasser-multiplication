@@ -1,13 +1,14 @@
 importScripts('./service-worker.js');
 
 const EXTENSION_CACHE_PREFIX='family-learning-runtime-extensions-';
-const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}1`;
+const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}2`;
 const EXTENSION_ASSETS=Object.freeze([
   './src/composition/game-reward-runtime.js',
   './src/modules/games/core/challenge-presentation-registry.js',
   './src/modules/games/core/game-eligibility-service.js',
   './src/modules/games/core/game-event-bus.js',
   './src/modules/games/core/game-event-contract.js',
+  './src/modules/games/xo/xo-events.js',
   './src/modules/games/rps/rps-events.js',
   './src/modules/games/ui/xo-challenge-presentation.js',
   './src/modules/mashaal/application/game-learning-provider.js',

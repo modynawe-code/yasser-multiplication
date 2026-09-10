@@ -9,6 +9,7 @@ const EXPECTED=[
   'src/modules/games/core/game-eligibility-service.js',
   'src/modules/games/core/game-event-bus.js',
   'src/modules/games/core/game-event-contract.js',
+  'src/modules/games/xo/xo-events.js',
   'src/modules/games/rps/rps-events.js',
   'src/modules/games/ui/xo-challenge-presentation.js',
   'src/modules/mashaal/application/game-learning-provider.js',
