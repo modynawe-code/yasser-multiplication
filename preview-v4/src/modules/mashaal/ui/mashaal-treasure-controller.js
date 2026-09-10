@@ -2,15 +2,25 @@ import { MASHAAL_REWARD_CATALOG } from '../rewards/mashaal-reward-catalog.js';
 import { mashaalRewardGraphicMarkup } from './mashaal-reward-graphics.js';
 import { MASHAAL_TREASURE_THEME,mashaalRewardScopeCopy,mashaalRewardStateLabel } from './mashaal-reward-theme.js';
 import { createRewardCollectionViewState } from '../../../shared/ui/reward-collection-view-state.js';
+import { rewardRequirementProgress } from '../../../shared/rewards/reward-requirement-progress.js';
 
 const byId=id=>document.getElementById(id);
 const REWARD_BY_ID=Object.freeze(Object.fromEntries(MASHAAL_REWARD_CATALOG.map(item=>[item.id,item])));
+const TIER_COPY=Object.freeze({
+  basic:Object.freeze({title:'الجوائز الأساسية',subtitle:'ابدئي بهذه الكنوز واجمعيها خطوة خطوة'}),
+  premium:Object.freeze({title:'جوائز بيريموم',subtitle:'كنوز أميرة تحتاج إنجازات أكبر'})
+});
 
 function ensureStyle(){
-  if(document.querySelector('link[data-module-style="mashaal-treasures"]'))return;
-  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/mashaal/ui/mashaal-treasures.css';link.dataset.moduleStyle='mashaal-treasures';document.head.appendChild(link);
+  for(const [name,href] of [
+    ['mashaal-treasures','src/modules/mashaal/ui/mashaal-treasures.css'],
+    ['mashaal-reward-tiers','src/modules/mashaal/ui/mashaal-reward-tiers.css']
+  ]){
+    if(document.querySelector(`link[data-module-style="${name}"]`))continue;
+    const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.moduleStyle=name;document.head.appendChild(link);
+  }
 }
-function safeSummary(summary){return summary&&typeof summary==='object'?summary:{total:0,counts:{},unlocks:[]};}
+function safeSummary(summary){return summary&&typeof summary==='object'?summary:{total:0,counts:{},unlocks:[],progress:{}};}
 function latestUnlock(summary){return [...(summary?.unlocks||[])].sort((a,b)=>new Date(b?.at||0)-new Date(a?.at||0))[0]||null;}
 function unlocked(summary,rewardId){return Number(summary?.counts?.[rewardId]||0)>0;}
 function showOnly(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -19,6 +29,7 @@ function unseenRewardIds(summary,viewState){
   for(const unlock of summary?.unlocks||[])if(viewState?.isNew?.(unlock)&&unlock?.rewardId)ids.add(unlock.rewardId);
   return ids;
 }
+function tierLabel(reward){return reward?.tier==='premium'?'بيريموم':'أساسية';}
 
 function ensureOpenButton(){
   let button=byId('mashaalTreasuresOpen');if(button)return button;
@@ -38,7 +49,7 @@ function ensureView(){
       <div class="mashaal-treasure-count" id="mashaalTreasureCount" aria-label="عدد الجوائز المفتوحة"></div>
     </header>
     <section class="mashaal-treasure-feature" id="mashaalTreasureFeature" aria-label="${MASHAAL_TREASURE_THEME.featureAria}"></section>
-    <section class="mashaal-treasure-grid" id="mashaalTreasureGrid" aria-label="${MASHAAL_TREASURE_THEME.collectionAria}"></section>
+    <div class="mashaal-treasure-tiers" id="mashaalTreasureTiers" aria-label="${MASHAAL_TREASURE_THEME.collectionAria}"></div>
   </div>`;
   main.appendChild(view);
   return view;
@@ -55,18 +66,36 @@ function featureMarkup(summary,viewState){
   const latest=latestUnlock(summary),reward=REWARD_BY_ID[latest?.rewardId]||MASHAAL_REWARD_CATALOG[0],isOpen=Boolean(latest&&reward),isNew=Boolean(latest&&viewState?.isNew?.(latest));
   const label=isNew?MASHAAL_TREASURE_THEME.feature.latestNewLabel:(isOpen?MASHAAL_TREASURE_THEME.feature.latestLabel:MASHAAL_TREASURE_THEME.feature.firstLabel);
   const body=isOpen?MASHAAL_TREASURE_THEME.feature.latestBody:MASHAAL_TREASURE_THEME.feature.firstBody;
-  return `<div class="mashaal-treasure-feature-art ${isNew?'is-new':''}">${mashaalRewardGraphicMarkup(reward.graphicKey,{locked:!isOpen})}</div><div class="mashaal-treasure-feature-copy"><small>${label}</small><h2>${reward.label}</h2><p>${body}</p>${isOpen?`<span class="mashaal-treasure-reason">${mashaalRewardScopeCopy(reward.scope)}</span>`:''}</div>`;
+  return `<div class="mashaal-treasure-feature-art ${isNew?'is-new':''}">${mashaalRewardGraphicMarkup(reward.graphicKey,{locked:!isOpen,assetPath:reward.assetPath})}</div><div class="mashaal-treasure-feature-copy"><small>${label}</small><h2>${reward.label}</h2><p>${body}</p><span class="mashaal-tier-chip ${reward.tier||'basic'}">${tierLabel(reward)}</span>${isOpen?`<span class="mashaal-treasure-reason">${mashaalRewardScopeCopy(reward.scope)}</span>`:''}</div>`;
 }
 
-function gridMarkup(summary,viewState){
+function requirementMarkup(reward,metrics,isOpen){
+  const detail=rewardRequirementProgress(reward,metrics);
+  const criteria=detail.criteria.map(item=>`<li class="${item.complete?'complete':'pending'}"><span>${item.label}</span><b>${item.current} / ${item.target}</b><small>${item.complete?'تم':`باقي ${item.remaining}`}</small></li>`).join('');
+  return `<div class="mashaal-reward-requirements"><strong>كيف تحصلين عليها؟</strong><ul>${criteria}</ul><div class="mashaal-reward-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${detail.percent}"><span style="width:${detail.percent}%"></span></div><em>${isOpen?'اكتملت الشروط':`التقدم ${detail.percent}%`}</em></div>`;
+}
+
+function cardMarkup(reward,summary,viewState,newIds){
+  const isOpen=unlocked(summary,reward.id),isNew=newIds.has(reward.id),count=Number(summary?.counts?.[reward.id]||0);
+  return `<article class="mashaal-treasure-card ${isOpen?'unlocked':'locked'} ${isNew?'new':''} ${reward.tier==='premium'?'premium':''}" data-reward-id="${reward.id}" data-reward-tier="${reward.tier||'basic'}" data-reward-state="${isNew?'new':(isOpen?'unlocked':'locked')}">
+    <span class="state">${mashaalRewardStateLabel({unlocked:isOpen,isNew})}</span>
+    <span class="mashaal-tier-chip ${reward.tier||'basic'}">${tierLabel(reward)}</span>
+    ${mashaalRewardGraphicMarkup(reward.graphicKey,{locked:!isOpen,assetPath:reward.assetPath})}
+    <strong>${reward.label}</strong><span class="reason">${mashaalRewardScopeCopy(reward.scope)}</span>
+    ${requirementMarkup(reward,summary?.progress||{},isOpen)}
+    ${count>1?`<small class="mashaal-reward-count">حصلتي عليها ${count} مرات</small>`:''}
+  </article>`;
+}
+
+function tiersMarkup(summary,viewState){
   const newIds=unseenRewardIds(summary,viewState);
-  return MASHAAL_REWARD_CATALOG.map(reward=>{
-    const isOpen=unlocked(summary,reward.id),isNew=newIds.has(reward.id),count=Number(summary?.counts?.[reward.id]||0);
-    return `<article class="mashaal-treasure-card ${isOpen?'unlocked':'locked'} ${isNew?'new':''}" data-reward-id="${reward.id}" data-reward-state="${isNew?'new':(isOpen?'unlocked':'locked')}">
-      <span class="state">${mashaalRewardStateLabel({unlocked:isOpen,isNew})}</span>
-      ${mashaalRewardGraphicMarkup(reward.graphicKey,{locked:!isOpen})}
-      <strong>${reward.label}</strong><span class="reason">${mashaalRewardScopeCopy(reward.scope)}</span>${count>1?`<small>حصلتي عليها ${count} مرات</small>`:''}
-    </article>`;
+  return ['basic','premium'].map(tier=>{
+    const copy=TIER_COPY[tier],items=MASHAAL_REWARD_CATALOG.filter(reward=>(reward.tier||'basic')===tier);
+    const opened=items.filter(item=>unlocked(summary,item.id)).length;
+    return `<section class="mashaal-treasure-tier ${tier}" data-reward-tier-section="${tier}">
+      <header><div><h2>${copy.title}</h2><p>${copy.subtitle}</p></div><span>${opened} / ${items.length}</span></header>
+      <div class="mashaal-treasure-grid">${items.map(reward=>cardMarkup(reward,summary,viewState,newIds)).join('')}</div>
+    </section>`;
   }).join('');
 }
 
@@ -77,7 +106,7 @@ export function createMashaalTreasureController({getSummary,onExit,viewState=cre
     const data=summary(),opened=MASHAAL_REWARD_CATALOG.filter(item=>unlocked(data,item.id)).length;
     if(byId('mashaalTreasureCount'))byId('mashaalTreasureCount').textContent=`${opened} / ${MASHAAL_REWARD_CATALOG.length}`;
     if(byId('mashaalTreasureFeature'))byId('mashaalTreasureFeature').innerHTML=featureMarkup(data,viewState);
-    if(byId('mashaalTreasureGrid'))byId('mashaalTreasureGrid').innerHTML=gridMarkup(data,viewState);
+    if(byId('mashaalTreasureTiers'))byId('mashaalTreasureTiers').innerHTML=tiersMarkup(data,viewState);
     return data;
   }
   function markCurrentSeen(){const latest=latestUnlock(summary());if(latest)viewState?.markSeen?.(latest);}
@@ -90,7 +119,7 @@ export function createMashaalTreasureController({getSummary,onExit,viewState=cre
   function announce({result,cue}={}){
     const data=safeSummary(result?.summary||summary()),latest=latestUnlock(data),reward=REWARD_BY_ID[latest?.rewardId];if(!reward)return false;
     popupUnlock=latest;render();const popup=ensurePopup(),art=byId('mashaalRewardPopArt'),title=byId('mashaalRewardPopTitle'),text=byId('mashaalRewardPopText');
-    if(art)art.innerHTML=mashaalRewardGraphicMarkup(reward.graphicKey);if(title)title.textContent=reward.label;if(text)text.textContent=cue?.text||'فتحتي كنزًا جديدًا';popup.hidden=false;return true;
+    if(art)art.innerHTML=mashaalRewardGraphicMarkup(reward.graphicKey,{assetPath:reward.assetPath});if(title)title.textContent=reward.label;if(text)text.textContent=cue?.text||'فتحتي كنزًا جديدًا';popup.hidden=false;return true;
   }
   function start(){
     ensureStyle();ensureView();ensurePopup();const openButton=ensureOpenButton();
