@@ -1,6 +1,7 @@
 import { getMashaalWebMedia } from './mashaal-web-media.js';
 import { getMashaalAssetContract } from './mashaal-asset-contracts.js';
 import { createMashaalGuidedActionVisual } from './mashaal-guided-action-visuals.js';
+import { createMashaalSemanticChoiceVisual } from './mashaal-semantic-choice-visuals.js';
 
 const STYLE_KEY='mashaal-web-media';
 function ensureWebMediaStyle(){
@@ -68,7 +69,7 @@ function simpleVisual(key,{compact=false}={}){
 function contractVectorVisual(key,{compact=false}={}){
   const contract=getMashaalAssetContract(key);
   if(contract.renderMode!=='vector')return null;
-  return createMashaalGuidedActionVisual(contract.semanticFocus,{compact});
+  return createMashaalGuidedActionVisual(contract.semanticFocus,{compact})||createMashaalSemanticChoiceVisual(contract.semanticFocus,{compact});
 }
 
 function mediaVisual(key,media,{compact=false}={}){
