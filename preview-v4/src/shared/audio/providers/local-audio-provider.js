@@ -1,6 +1,6 @@
 import { resolveVoiceAsset } from '../voice-manifest.js';
 
-export function createLocalAudioProvider({manifest,AudioClass=globalThis.Audio}={}){
+export function createLocalAudioProvider({manifest,AudioClass=globalThis.Audio,allowDynamicTextPath=true}={}){
   let current=null;
 
   function stop(){
@@ -10,7 +10,7 @@ export function createLocalAudioProvider({manifest,AudioClass=globalThis.Audio}=
   }
 
   async function speak(request={}){
-    const src=resolveVoiceAsset(request.id,manifest,request.text);
+    const src=resolveVoiceAsset(request.id,manifest,request.text,{allowDynamicTextPath});
     if(!src||typeof AudioClass!=='function'||request.isCurrent?.()===false)return false;
     stop();
     let audio;
