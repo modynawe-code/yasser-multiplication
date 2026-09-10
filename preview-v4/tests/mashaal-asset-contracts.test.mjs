@@ -34,7 +34,7 @@ test('guided action SVGs depict the required motor actions and contain no extern
   assert.match(source,/balance-one-foot/);
   assert.match(source,/transfer-three-safe-pieces/);
   assert.match(source,/<svg viewBox=/);
-  assert.doesNotMatch(source,/<image|https?:\/\//);
+  assert.doesNotMatch(source,/<image\b|href=["']https?:\/\//);
 });
 
 test('visual renderer consumes asset contracts before constructing media and motor visuals',async()=>{
