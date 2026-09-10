@@ -9,16 +9,11 @@ const ACTION_KEYS=[
   'wait-turn','grab-ball','walk-away-angry','ask-help','throw-blocks','kick-blocks',
   'return-book','leave-book-floor','damage-book'
 ];
-const SEMANTIC_VECTOR_KEYS=Object.freeze({
+const ILLUSTRATED_MEDIA_KEYS=Object.freeze({
   'girl-drinking-water':'child-drinking-water',
   wake:'wake-up',
   'brush-teeth':'brushing-teeth',
   breakfast:'eating-breakfast',
-  'help-tidy':'helping-tidy',
-  'leave-mess':'leaving-mess',
-  'scatter-toys':'scattering-toys'
-});
-const ILLUSTRATED_MEDIA_KEYS=Object.freeze({
   'wet-hands':'hands-under-water',
   soap:'soap-on-hands',
   'rub-hands':'rubbing-hands',
@@ -26,7 +21,11 @@ const ILLUSTRATED_MEDIA_KEYS=Object.freeze({
   'stay-away':'safe-distance-from-hot-surface',
   'touch-hot':'touching-hot-surface',
   'play-near-hot':'playing-near-hot-surface',
-  balance:'balance-one-foot'
+  'help-tidy':'helping-tidy',
+  'leave-mess':'leaving-mess',
+  'scatter-toys':'scattering-toys',
+  balance:'balance-one-foot',
+  'fine-motor':'transfer-three-safe-pieces'
 });
 
 test('remaining scenario boards carry explicit semantic crop contracts',()=>{
@@ -34,36 +33,28 @@ test('remaining scenario boards carry explicit semantic crop contracts',()=>{
     const contract=getMashaalAssetContract(key);
     assert.equal(contract.role,'action-scene',key);
     assert.equal(contract.fit,'cover',key);
+    assert.equal(contract.renderMode,'media',key);
     assert.ok(contract.semanticFocus&&contract.semanticFocus!=='whole-subject',key);
     assert.ok(Number(contract.cropScale)>=1.18,key);
   }
 });
 
-test('remaining ambiguous task boards use explicit semantic vector scenes',()=>{
-  for(const [key,semanticFocus] of Object.entries(SEMANTIC_VECTOR_KEYS)){
-    const contract=getMashaalAssetContract(key);
-    assert.equal(contract.role,'semantic-scene',key);
-    assert.equal(contract.renderMode,'vector',key);
-    assert.equal(contract.semanticFocus,semanticFocus,key);
-    assert.equal(contract.cropScale,1,key);
-  }
-});
-
-test('approved Mashaal action scenes use illustrated media contracts',()=>{
+test('approved Mashaal narrative and action scenes use illustrated media contracts',()=>{
   for(const [key,semanticFocus] of Object.entries(ILLUSTRATED_MEDIA_KEYS)){
     const contract=getMashaalAssetContract(key);
     assert.equal(contract.renderMode,'media',key);
+    assert.equal(contract.fit,'cover',key);
     assert.equal(contract.semanticFocus,semanticFocus,key);
     assert.equal(contract.cropScale,1,key);
   }
 });
 
-test('gross motor uses illustrated media while fine motor still rejects its wrong bitmap',()=>{
+test('gross and fine motor activities both prefer illustrated media',()=>{
   const balance=getMashaalAssetContract('balance');
   const fine=getMashaalAssetContract('fine-motor');
   assert.equal(balance.renderMode,'media');
   assert.equal(balance.semanticFocus,'balance-one-foot');
-  assert.equal(fine.renderMode,'vector');
+  assert.equal(fine.renderMode,'media');
   assert.equal(fine.semanticFocus,'transfer-three-safe-pieces');
 });
 
@@ -88,7 +79,7 @@ test('semantic choice SVG fallbacks remain local while illustrated media takes p
   assert.doesNotMatch(source,/<image\b|href=["']https?:\/\//);
 });
 
-test('visual renderer prioritizes contract media for gross motor and vectors for remaining fallbacks',async()=>{
+test('visual renderer prioritizes contract media for motor activities and keeps vectors as fallbacks',async()=>{
   const source=await read('src/modules/mashaal/ui/mashaal-visuals.js');
   assert.match(source,/createMashaalSemanticChoiceVisual/);
   assert.match(source,/function contractVectorVisual/);
@@ -103,6 +94,7 @@ test('visual renderer prioritizes contract media for gross motor and vectors for
   assert.match(source,/const cropScale=compact\?1:Number\(contract\.cropScale\|\|1\)/);
   assert.match(source,/transform-origin/);
   assert.match(source,/getMashaalAssetContract\(['"]balance['"]\)/);
+  assert.match(source,/getMashaalAssetContract\(['"]fine-motor['"]\)/);
   assert.match(source,/contract\.renderMode===['"]media['"]&&media/);
   assert.match(source,/createMashaalGuidedActionVisual\(stimulus\.movement/);
   assert.match(source,/createMashaalGuidedActionVisual\(stimulus\.task/);
