@@ -3,19 +3,20 @@ const DEFAULT_CONTRACT=Object.freeze({
   fit:'contain',
   position:'50% 50%',
   semanticFocus:'whole-subject',
-  renderMode:'media'
+  renderMode:'media',
+  cropScale:1
 });
 
-const actionCrop=(semanticFocus,position='78% 50%')=>Object.freeze({
-  role:'action-scene',fit:'cover',position,semanticFocus,renderMode:'media'
+const actionCrop=(semanticFocus,position='84% 50%',cropScale=1.18)=>Object.freeze({
+  role:'action-scene',fit:'cover',position,semanticFocus,renderMode:'media',cropScale
 });
 
 const wholeScene=(semanticFocus)=>Object.freeze({
-  role:'scene',fit:'contain',position:'50% 50%',semanticFocus,renderMode:'media'
+  role:'scene',fit:'contain',position:'50% 50%',semanticFocus,renderMode:'media',cropScale:1
 });
 
 const exactObject=(semanticFocus)=>Object.freeze({
-  role:'isolated-object',fit:'contain',position:'50% 50%',semanticFocus,renderMode:'media'
+  role:'isolated-object',fit:'contain',position:'50% 50%',semanticFocus,renderMode:'media',cropScale:1
 });
 
 const CONTRACTS=Object.freeze({
@@ -23,19 +24,19 @@ const CONTRACTS=Object.freeze({
   'compare-three-apples':exactObject('three-apples'),'compare-four-apples':exactObject('four-apples'),'compare-five-apples':exactObject('five-apples'),
   'saudi-flag':exactObject('saudi-flag'),'japan-flag':exactObject('japan-flag'),'brazil-flag':exactObject('brazil-flag'),
   doctor:wholeScene('doctor-at-work'),teacher:wholeScene('teacher-at-work'),baker:wholeScene('baker-at-work'),
-  'girl-drinking-water':wholeScene('child-drinking-water'),'girl-lost-toy':wholeScene('lost-toy-emotion'),'rainy-day':wholeScene('rain-context'),
+  'girl-drinking-water':actionCrop('child-drinking-water','90% 50%',1.28),'girl-lost-toy':wholeScene('lost-toy-emotion'),'rainy-day':wholeScene('rain-context'),
   happy:wholeScene('happy-face'),sad:wholeScene('sad-face'),angry:wholeScene('angry-face'),
   umbrella:exactObject('umbrella'),sunglasses:exactObject('sunglasses'),
-  'wait-turn':actionCrop('waiting-for-turn'),'grab-ball':actionCrop('taking-ball'),'walk-away-angry':actionCrop('walking-away-angry'),
-  'ask-help':actionCrop('asking-for-help'),'throw-blocks':actionCrop('throwing-blocks'),'kick-blocks':actionCrop('kicking-blocks'),
-  'wet-hands':actionCrop('hands-under-water','76% 54%'),'soap':actionCrop('soap-on-hands','77% 54%'),'rub-hands':actionCrop('rubbing-hands','77% 54%'),'rinse-hands':actionCrop('rinsing-hands','77% 54%'),
-  'stay-away':actionCrop('safe-distance-from-hot-surface','78% 52%'),'touch-hot':actionCrop('touching-hot-surface','78% 52%'),'play-near-hot':actionCrop('playing-near-hot-surface','78% 52%'),
-  'return-book':actionCrop('returning-book','76% 52%'),'leave-book-floor':actionCrop('book-left-on-floor','76% 52%'),'damage-book':actionCrop('damaging-book','76% 52%'),
-  'help-tidy':actionCrop('helping-tidy','78% 52%'),'leave-mess':actionCrop('leaving-mess','78% 52%'),'scatter-toys':actionCrop('scattering-toys','78% 52%'),
-  wake:wholeScene('wake-up'), 'brush-teeth':actionCrop('brushing-teeth','72% 50%'), breakfast:wholeScene('eating-breakfast'),
+  'wait-turn':actionCrop('waiting-for-turn','86% 50%',1.2),'grab-ball':actionCrop('taking-ball','88% 50%',1.2),'walk-away-angry':actionCrop('walking-away-angry','88% 50%',1.2),
+  'ask-help':actionCrop('asking-for-help','88% 50%',1.2),'throw-blocks':actionCrop('throwing-blocks','88% 50%',1.2),'kick-blocks':actionCrop('kicking-blocks','88% 50%',1.2),
+  'wet-hands':actionCrop('hands-under-water','96% 54%',1.34),'soap':actionCrop('soap-on-hands','96% 54%',1.34),'rub-hands':actionCrop('rubbing-hands','96% 54%',1.34),'rinse-hands':actionCrop('rinsing-hands','96% 54%',1.34),
+  'stay-away':actionCrop('safe-distance-from-hot-surface','96% 52%',1.3),'touch-hot':actionCrop('touching-hot-surface','96% 52%',1.3),'play-near-hot':actionCrop('playing-near-hot-surface','96% 52%',1.3),
+  'return-book':actionCrop('returning-book','90% 52%',1.24),'leave-book-floor':actionCrop('book-left-on-floor','90% 52%',1.24),'damage-book':actionCrop('damaging-book','90% 52%',1.24),
+  'help-tidy':actionCrop('helping-tidy','96% 52%',1.33),'leave-mess':actionCrop('leaving-mess','96% 52%',1.33),'scatter-toys':actionCrop('scattering-toys','96% 52%',1.33),
+  wake:actionCrop('wake-up','92% 50%',1.3),'brush-teeth':actionCrop('brushing-teeth','94% 50%',1.36),breakfast:actionCrop('eating-breakfast','92% 50%',1.3),
   'ball-above-box':exactObject('ball-above-box'),'ball-inside-box':exactObject('ball-inside-box'),'ball-below-box':exactObject('ball-below-box'),
-  balance:Object.freeze({role:'guided-action',fit:'contain',position:'50% 50%',semanticFocus:'balance-one-foot',renderMode:'vector'}),
-  'fine-motor':Object.freeze({role:'guided-action',fit:'contain',position:'50% 50%',semanticFocus:'transfer-three-safe-pieces',renderMode:'vector'})
+  balance:Object.freeze({role:'guided-action',fit:'contain',position:'50% 50%',semanticFocus:'balance-one-foot',renderMode:'vector',cropScale:1}),
+  'fine-motor':Object.freeze({role:'guided-action',fit:'contain',position:'50% 50%',semanticFocus:'transfer-three-safe-pieces',renderMode:'vector',cropScale:1})
 });
 
 export function getMashaalAssetContract(key){
