@@ -117,17 +117,26 @@ async function runViewport(viewport){
       const speakingVisual=view?.querySelector('[data-layout="guided-speaking"] #mashaalActivityStimulus .mashaal-media-visual')||
         (layout==='guided-speaking'?view?.querySelector('#mashaalActivityStimulus .mashaal-media-visual'):null);
       const expectedGuidedKind=layout==='guided-movement'?'balance-one-foot':layout==='guided-fine-motor'?'transfer-three-safe-pieces':null;
-      const wrongGuidedBitmap=expectedGuidedKind?stimulusImgs.some(img=>/\/(balance|fine-motor)\.webp$/.test(srcOf(img))):false;
+      const guidedMedia=expectedGuidedKind?semanticMedia.filter(item=>item.semanticFocus===expectedGuidedKind):[];
+      const wrongGuidedBitmap=expectedGuidedKind?stimulusImgs.some(img=>{
+        const src=srcOf(img);
+        if(!/\/(balance|fine-motor)\.webp$/.test(src))return false;
+        return !guidedMedia.some(item=>item.src===src);
+      }):false;
       const actionMediaFitFailures=semanticMedia.filter(item=>item.role==='action-scene'&&item.computedFit!=='cover');
       const missingSemanticContracts=semanticMedia.filter(item=>!item.role||!item.semanticFocus||!item.fit);
       const speakingRect=speakingVisual?rect(speakingVisual):null;
-      const guidedSemanticFailure=expectedGuidedKind?guided.length!==1||guided[0]?.kind!==expectedGuidedKind||wrongGuidedBitmap:false;
+      const hasGuidedVector=guided.length===1&&guided[0]?.kind===expectedGuidedKind;
+      const hasGuidedMedia=guidedMedia.length===1;
+      const guidedRepresentationCount=(hasGuidedVector?1:0)+(hasGuidedMedia?1:0);
+      const guidedSemanticFailure=expectedGuidedKind?guidedRepresentationCount!==1||wrongGuidedBitmap:false;
       const undersizedGuidedVisuals=[];
       if(layout==='guided-emotion'){
         for(const node of mediaNodes){const r=rect(node);if(r.width<120||r.height<120)undersizedGuidedVisuals.push(r);}
       }
       if(expectedGuidedKind){
         for(const node of guidedNodes){const r=rect(node);if(r.width<250||r.height<140)undersizedGuidedVisuals.push(r);}
+        for(const node of mediaNodes.filter(node=>node.dataset.semanticFocus===expectedGuidedKind)){const r=rect(node);if(r.width<250||r.height<140)undersizedGuidedVisuals.push(r);}
       }
       if(layout==='guided-speaking'&&speakingRect&&(speakingRect.width<280||speakingRect.height<180))undersizedGuidedVisuals.push(speakingRect);
       return {
