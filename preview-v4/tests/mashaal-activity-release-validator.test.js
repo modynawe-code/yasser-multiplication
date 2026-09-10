@@ -25,9 +25,11 @@ test('activity release rejects child-facing scores and unverified content',()=>{
   assert.ok(draft.errors.includes('activity-not-verified'));
 });
 
-test('activity release rejects unknown sources and unsupported interaction types',()=>{
+test('activity release rejects unknown sources and unsupported interaction or presentation types',()=>{
   const source=validateMashaalKg3Activity(clone(MASHAAL_KG3_ACTIVITY_CATALOG[0],{sourceId:'unknown'}));
   assert.ok(source.errors.includes('unknown-source'));
   const interaction=validateMashaalKg3Activity(clone(MASHAAL_KG3_ACTIVITY_CATALOG[0],{interaction:'quiz-grid'}));
   assert.ok(interaction.errors.includes('unsupported-interaction'));
+  const presentation=validateMashaalKg3Activity(clone(MASHAAL_KG3_ACTIVITY_CATALOG[0],{activityType:'unknown-layout'}));
+  assert.ok(presentation.errors.includes('unsupported-activity-type'));
 });
