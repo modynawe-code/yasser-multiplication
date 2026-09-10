@@ -3,10 +3,14 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const BASE_URL='http://127.0.0.1:4177/';
-const EXPECTED_CACHE='yasser-multiplication-v4-shell-83';
+const EXPECTED_CACHE='yasser-multiplication-v4-shell-84';
 const REQUIRED_CACHE_PATHS=[
+  '/src/shared/activities/activity-renderer-contracts.js',
   '/src/modules/mashaal/ui/mashaal-asset-contracts.js',
-  '/src/modules/mashaal/ui/mashaal-guided-action-visuals.js'
+  '/src/modules/mashaal/ui/mashaal-guided-action-visuals.js',
+  '/src/modules/mashaal/ui/mashaal-semantic-choice-visuals.js',
+  '/assets/mashaal/choices/girl-drinking-water.webp',
+  '/assets/mashaal/choices/fine-motor.webp'
 ];
 const OUT=path.resolve('artifacts/mashaal-visual-qa');
 await mkdir(OUT,{recursive:true});
@@ -63,22 +67,29 @@ try{
   await page.waitForSelector('#mashaalDomainView.active');
   await page.locator('#mashaalSkillGrid [data-skill-id="oral-vocabulary-expression"]').click();
   await page.waitForSelector('#mashaalActivityView.active');
-  await page.waitForSelector('#mashaalActivityStimulus [data-guided-visual="child-drinking-water"]',{state:'visible'});
+  await page.waitForSelector('#mashaalActivityStimulus [data-semantic-focus="child-drinking-water"] img[src*="assets/mashaal/choices/girl-drinking-water.webp"]',{state:'visible'});
+  await page.waitForFunction(()=>{
+    const img=document.querySelector('#mashaalActivityStimulus [data-semantic-focus="child-drinking-water"] img');
+    return Boolean(img?.complete&&img.naturalWidth>0);
+  });
 
-  const runtimeState=await page.evaluate(()=>({
-    online:navigator.onLine,
-    controller:Boolean(navigator.serviceWorker.controller),
-    activeView:Boolean(document.querySelector('#mashaalActivityView.active')),
-    semanticVector:Boolean(document.querySelector('#mashaalActivityStimulus [data-guided-visual="child-drinking-water"]'))
-  }));
+  const runtimeState=await page.evaluate(()=>{
+    const img=document.querySelector('#mashaalActivityStimulus [data-semantic-focus="child-drinking-water"] img');
+    return {
+      online:navigator.onLine,
+      controller:Boolean(navigator.serviceWorker.controller),
+      activeView:Boolean(document.querySelector('#mashaalActivityView.active')),
+      illustratedMedia:Boolean(img?.complete&&img.naturalWidth>0&&img.getAttribute('src')?.includes('assets/mashaal/choices/girl-drinking-water.webp'))
+    };
+  });
 
   if(runtimeState.online)throw new Error('Browser still reports online during offline QA.');
-  if(!runtimeState.controller||!runtimeState.activeView||!runtimeState.semanticVector)throw new Error(`Offline Mashaal runtime incomplete: ${JSON.stringify(runtimeState)}`);
+  if(!runtimeState.controller||!runtimeState.activeView||!runtimeState.illustratedMedia)throw new Error(`Offline Mashaal runtime incomplete: ${JSON.stringify(runtimeState)}`);
   if(localFailures.length)throw new Error(`Local requests failed while offline: ${JSON.stringify(localFailures)}`);
 
   const report={ok:true,cache:EXPECTED_CACHE,cacheState,runtimeState,localFailures};
   await writeFile(path.join(OUT,'pwa-offline-smoke.json'),JSON.stringify(report,null,2));
-  console.log(`Mashaal PWA offline QA passed: ${cacheState.cachedCount} cached requests; semantic activity rendered offline.`);
+  console.log(`Mashaal PWA offline QA passed: ${cacheState.cachedCount} cached requests; illustrated activity rendered offline.`);
 } catch(error){
   const report={ok:false,cache:EXPECTED_CACHE,localFailures,error:String(error?.stack||error)};
   await writeFile(path.join(OUT,'pwa-offline-smoke.json'),JSON.stringify(report,null,2));

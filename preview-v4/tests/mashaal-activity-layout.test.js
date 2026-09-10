@@ -47,8 +47,9 @@ test('controller exposes layout metadata and ordered touch sequence numbers',asy
 
 test('offline shell versions and caches the activity layout modules',async()=>{
   const sw=await readFile(new URL('../service-worker.js',import.meta.url),'utf8');
-  assert.match(sw,/shell-83/);
+  assert.match(sw,/shell-84/);
   assert.match(sw,/activity-layout\.js/);
+  assert.match(sw,/activity-renderer-contracts\.js/);
   assert.match(sw,/mashaal-activity-layout\.css/);
 });
 
