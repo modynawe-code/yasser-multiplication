@@ -10,7 +10,9 @@ on:
       - 'preview-v4/assets/mashaal/**'
       - 'preview-v4/service-worker.js'
       - 'preview-v4/src/platform/pwa/register-service-worker.js'
+      - 'preview-v4/tests/mashaal-pwa-offline.test.mjs'
       - 'preview-v4/tools/mashaal-visual-qa.mjs'
+      - 'preview-v4/tools/mashaal-pwa-offline-qa.mjs'
       - '.github/workflows/mashaal-visual-qa.yml'
 
 permissions:
@@ -43,6 +45,9 @@ jobs:
       - name: Visual acceptance sweep
         working-directory: preview-v4
         run: node tools/mashaal-visual-qa.mjs
+      - name: PWA offline smoke
+        working-directory: preview-v4
+        run: node tools/mashaal-pwa-offline-qa.mjs
       - name: Upload visual QA artifact
         if: always()
         uses: actions/upload-artifact@v4
