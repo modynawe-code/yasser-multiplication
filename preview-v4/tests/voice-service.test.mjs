@@ -31,6 +31,38 @@ test('default natural TTS chain puts cloud before native and browser fallbacks',
   assert.deepEqual(voice.providers,['local-audio','cloud-tts','native-tts','browser-tts']);
 });
 
+test('natural TTS skips nonexistent deterministic human clips and goes directly to cloud TTS',async()=>{
+  const localSources=[],cloudTexts=[];
+  class AudioMock{
+    constructor(src){localSources.push(src);this.volume=1;this.currentTime=0;}
+    addEventListener(){}
+    async play(){return true;}
+    pause(){}
+  }
+  const cloud={kind:'cloud-tts',stop(){},async speak(request){cloudTexts.push(request.text);return true;}};
+  const voice=createVoiceService({AudioClass:AudioMock,neuralProvider:cloud,nativeTts:null,synth:null,Utterance:null,mode:'natural-tts'});
+  voice.say('اختاري الصورة الصحيحة.');
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.deepEqual(localSources,[]);
+  assert.deepEqual(cloudTexts,['اختاري الصورة الصحيحة.']);
+});
+
+test('natural TTS still prefers an explicitly registered local recording',async()=>{
+  const localSources=[],cloudTexts=[];
+  class AudioMock{
+    constructor(src){localSources.push(src);this.volume=1;this.currentTime=0;}
+    addEventListener(){}
+    async play(){return true;}
+    pause(){}
+  }
+  const cloud={kind:'cloud-tts',stop(){},async speak(request){cloudTexts.push(request.text);return true;}};
+  const voice=createVoiceService({manifest:{'fixed.greeting':'assets/audio/fixed.mp3'},AudioClass:AudioMock,neuralProvider:cloud,nativeTts:null,synth:null,Utterance:null,mode:'natural-tts'});
+  voice.say({id:'fixed.greeting',text:'مرحبا'});
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.deepEqual(localSources,['assets/audio/fixed.mp3']);
+  assert.deepEqual(cloudTexts,[]);
+});
+
 test('cloud TTS uses parent bearer token when available and plays returned audio',async()=>{
   let request=null;
   const storage={getItem(){return JSON.stringify({token:'test-token'});}};
