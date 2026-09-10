@@ -19,24 +19,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
-      PREVIEW_URL: https://family-learning-preview.modynawe.workers.dev
+    timeout-minutes: 7
+    outputs:
+      cloudflare_available: ${{ steps.host.outputs.cloudflare_available }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Verify Cloudflare credentials
+      - name: Detect preferred preview host
+        id: host
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::error::Missing repository secret CLOUDFLARE_API_TOKEN"
-            exit 1
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "cloudflare_available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "cloudflare_available=false" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare token unavailable; GitHub Pages fallback will be used."
           fi
 
       - name: Test learning app
@@ -54,15 +57,80 @@ jobs:
           const meta=JSON.parse(fs.readFileSync('dist-web-preview/deployment-meta.json','utf8'));
           if(!html.includes('__FAMILY_API_DISABLED__=true'))throw new Error('Preview cloud-disable bootstrap is missing');
           if(meta.mode!=='web-preview'||meta.cloudSync!==false)throw new Error('Preview deployment metadata is invalid');
-          if(fs.existsSync('dist-web-preview/tests')||fs.existsSync('dist-web-preview/tools'))throw new Error('Non-runtime files leaked into preview package');
+          if(fs.existsSync('dist-web-preview/tests')||fs.existsSync('dist-web-preview/tools')||fs.existsSync('dist-web-preview/docs'))throw new Error('Non-runtime files leaked into preview package');
           NODE
 
-      - name: Deploy static PWA preview
+      - name: Upload reusable preview package
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-preview-package
+          path: dist-web-preview
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 2
+
+  cloudflare:
+    needs: build
+    if: needs.build.outputs.cloudflare_available == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
+      PREVIEW_URL: https://family-learning-preview.modynawe.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-preview-package
+          path: dist-web-preview
+
+      - name: Deploy static PWA preview to Cloudflare
         run: npx --yes wrangler@4.129.0 deploy --config wrangler.frontend-preview.jsonc
 
-      - name: Smoke test deployed preview
+      - name: Smoke test Cloudflare preview
         run: |
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/" | grep -q 'تعلم العائلة'
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -q '"cloudSync": false'
+
+  github-pages:
+    needs: build
+    if: needs.build.outputs.cloudflare_available != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-preview-package
+          path: dist-web-preview
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist-web-preview
+
+      - name: Deploy GitHub Pages preview
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Smoke test GitHub Pages preview
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          BASE="${PAGE_URL%/}"
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/" | grep -q 'تعلم العائلة'
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/manifest.webmanifest" > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/service-worker.js" > /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
