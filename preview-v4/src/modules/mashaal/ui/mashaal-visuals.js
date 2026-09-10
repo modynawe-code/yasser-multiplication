@@ -74,6 +74,7 @@ function mediaVisual(key,media,{compact=false}={}){
   host.dataset.assetRole=contract.role;
   host.dataset.semanticFocus=contract.semanticFocus;
   host.dataset.assetFit=contract.fit;
+  host.dataset.cropScale=String(contract.cropScale||1);
   host.setAttribute('aria-hidden','true');
   const img=document.createElement('img');
   img.src=media.url;
@@ -84,6 +85,11 @@ function mediaVisual(key,media,{compact=false}={}){
   img.draggable=false;
   img.style.setProperty('object-fit',contract.fit,'important');
   img.style.setProperty('object-position',contract.position,'important');
+  const cropScale=compact?1:Number(contract.cropScale||1);
+  if(cropScale>1){
+    img.style.setProperty('transform',`scale(${cropScale})`,'important');
+    img.style.setProperty('transform-origin',contract.position,'important');
+  }
   img.addEventListener('error',()=>{host.replaceChildren(simpleVisual(key,{compact}));},{once:true});
   host.appendChild(img);
   return host;
