@@ -65,6 +65,12 @@ function simpleVisual(key,{compact=false}={}){
   return visual;
 }
 
+function contractVectorVisual(key,{compact=false}={}){
+  const contract=getMashaalAssetContract(key);
+  if(contract.renderMode!=='vector')return null;
+  return createMashaalGuidedActionVisual(contract.semanticFocus,{compact});
+}
+
 function mediaVisual(key,media,{compact=false}={}){
   ensureWebMediaStyle();
   const contract=getMashaalAssetContract(key);
@@ -111,6 +117,8 @@ export function createMashaalChoiceVisual(key,viewModel,{compact=false}={}){
     const item=viewModel.stimulus.item||'circle';
     return illustratedGroupVisual(count,item,{compact})||createCountGroupVisual(count,{compact,item});
   }
+  const vector=contractVectorVisual(String(key),{compact});
+  if(vector)return vector;
   const media=getMashaalWebMedia(key);
   if(media)return mediaVisual(String(key),media,{compact});
   if(/^\d+$/.test(String(key))){
@@ -132,6 +140,8 @@ export function createMashaalStimulusVisual(stimulus,{domainId=null,compact=fals
   const host=document.createElement('div');host.className=`mashaal-generated-stimulus ${compact?'compact':''}`;host.setAttribute('aria-hidden','true');
   if(!stimulus)return host;
   if(stimulus.kind==='picture'){
+    const vector=contractVectorVisual(stimulus.scene,{compact});
+    if(vector){host.appendChild(vector);return host;}
     const media=getMashaalWebMedia(stimulus.scene);
     if(media){host.appendChild(mediaVisual(stimulus.scene,media,{compact}));return host;}
     const img=document.createElement('img');img.className='mashaal-scene-art';img.src=SCENE_ART[stimulus.scene]||getMashaalDomainArt(domainId);img.alt='';img.decoding='async';img.draggable=false;host.appendChild(img);return host;
