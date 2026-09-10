@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { MASHAAL_KG3_ACTIVITY_CATALOG } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
 import { validateMashaalKg3Activity,listReleasableMashaalKg3Activities } from '../src/modules/mashaal/application/activity-release-validator.js';
+import { isSupportedActivityPresentationType } from '../src/shared/activities/activity-renderer-contracts.js';
 
 const READY_SKILLS=Object.freeze([
   'listen-follow-simple-directions','oral-vocabulary-expression','story-sequencing','sound-awareness','letter-sound-readiness','prewriting-fine-motor',
@@ -15,6 +16,7 @@ test('reviewed KG3 catalog is fully source-bound and releasable by contract',()=
   const ids=new Set(),skills=new Set();
   for(const activity of MASHAAL_KG3_ACTIVITY_CATALOG){
     assert.equal(ids.has(activity.id),false,activity.id);ids.add(activity.id);skills.add(activity.skillId);
+    assert.equal(isSupportedActivityPresentationType(activity.activityType),true,activity.id);
     assert.deepEqual(validateMashaalKg3Activity(activity),{valid:true,errors:[]});
   }
   assert.deepEqual([...READY_SKILLS].sort(),[...skills].sort());
