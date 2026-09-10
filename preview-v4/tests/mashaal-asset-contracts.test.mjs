@@ -7,22 +7,26 @@ const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
 const ACTION_KEYS=[
   'wait-turn','grab-ball','walk-away-angry','ask-help','throw-blocks','kick-blocks',
-  'wet-hands','soap','rub-hands','rinse-hands','stay-away','touch-hot','play-near-hot',
-  'return-book','leave-book-floor','damage-book','help-tidy','leave-mess','scatter-toys'
-];
-const HIGH_FOCUS_KEYS=[
-  'wet-hands','soap','rub-hands','rinse-hands',
-  'stay-away','touch-hot','play-near-hot',
-  'help-tidy','leave-mess','scatter-toys'
+  'return-book','leave-book-floor','damage-book'
 ];
 const SEMANTIC_VECTOR_KEYS=Object.freeze({
   'girl-drinking-water':'child-drinking-water',
   wake:'wake-up',
   'brush-teeth':'brushing-teeth',
-  breakfast:'eating-breakfast'
+  breakfast:'eating-breakfast',
+  'wet-hands':'hands-under-water',
+  soap:'soap-on-hands',
+  'rub-hands':'rubbing-hands',
+  'rinse-hands':'rinsing-hands',
+  'stay-away':'safe-distance-from-hot-surface',
+  'touch-hot':'touching-hot-surface',
+  'play-near-hot':'playing-near-hot-surface',
+  'help-tidy':'helping-tidy',
+  'leave-mess':'leaving-mess',
+  'scatter-toys':'scattering-toys'
 });
 
-test('scenario action assets carry semantic crop contracts instead of inheriting one global image fit',()=>{
+test('remaining scenario boards carry explicit semantic crop contracts',()=>{
   for(const key of ACTION_KEYS){
     const contract=getMashaalAssetContract(key);
     assert.equal(contract.role,'action-scene',key);
@@ -32,15 +36,7 @@ test('scenario action assets carry semantic crop contracts instead of inheriting
   }
 });
 
-test('weak face-dominant boards zoom toward the task cue instead of preserving the full portrait',()=>{
-  for(const key of HIGH_FOCUS_KEYS){
-    const contract=getMashaalAssetContract(key);
-    assert.ok(Number(contract.cropScale)>=1.28,key);
-    assert.match(contract.position,/^(?:9[0-9]|100)%\s/,key);
-  }
-});
-
-test('ambiguous daily-action bitmaps are replaced by explicit semantic vector scenes',()=>{
+test('ambiguous task boards are replaced by explicit semantic vector scenes',()=>{
   for(const [key,semanticFocus] of Object.entries(SEMANTIC_VECTOR_KEYS)){
     const contract=getMashaalAssetContract(key);
     assert.equal(contract.role,'semantic-scene',key);
@@ -59,7 +55,7 @@ test('gross and fine motor reject the semantically wrong bitmap as the primary r
   assert.equal(fine.semanticFocus,'transfer-three-safe-pieces');
 });
 
-test('guided action SVGs depict all semantic tasks and contain no external image dependency',async()=>{
+test('guided action SVGs depict motor and daily-life tasks without external image dependency',async()=>{
   const source=await read('src/modules/mashaal/ui/mashaal-guided-action-visuals.js');
   for(const semanticFocus of [
     'balance-one-foot','transfer-three-safe-pieces','child-drinking-water',
@@ -69,11 +65,24 @@ test('guided action SVGs depict all semantic tasks and contain no external image
   assert.doesNotMatch(source,/<image\b|href=["']https?:\/\//);
 });
 
+test('semantic choice SVGs depict hygiene safety and cleanup tasks without external images',async()=>{
+  const source=await read('src/modules/mashaal/ui/mashaal-semantic-choice-visuals.js');
+  for(const semanticFocus of [
+    'hands-under-water','soap-on-hands','rubbing-hands','rinsing-hands',
+    'safe-distance-from-hot-surface','touching-hot-surface','playing-near-hot-surface',
+    'helping-tidy','leaving-mess','scattering-toys'
+  ])assert.match(source,new RegExp(semanticFocus));
+  assert.match(source,/<svg viewBox=/);
+  assert.doesNotMatch(source,/<image\b|href=["']https?:\/\//);
+});
+
 test('visual renderer prioritizes vector contracts before legacy bitmap media',async()=>{
   const source=await read('src/modules/mashaal/ui/mashaal-visuals.js');
+  assert.match(source,/createMashaalSemanticChoiceVisual/);
   assert.match(source,/function contractVectorVisual/);
   assert.match(source,/contract\.renderMode!==['"]vector['"]/);
   assert.match(source,/createMashaalGuidedActionVisual\(contract\.semanticFocus/);
+  assert.match(source,/createMashaalSemanticChoiceVisual\(contract\.semanticFocus/);
   assert.match(source,/const vector=contractVectorVisual\(String\(key\)/);
   assert.match(source,/const vector=contractVectorVisual\(stimulus\.scene/);
   assert.match(source,/dataset\.assetRole=contract\.role/);
@@ -85,7 +94,7 @@ test('visual renderer prioritizes vector contracts before legacy bitmap media',a
   assert.match(source,/createMashaalGuidedActionVisual\(stimulus\.task/);
 });
 
-test('speaking, compact vectors and action crops retain explicit task-sized CSS contracts',async()=>{
+test('speaking and compact vectors retain explicit task-sized CSS contracts',async()=>{
   const css=await read('src/modules/mashaal/ui/mashaal-web-media.css');
   assert.match(css,/data-asset-fit="cover"/);
   assert.match(css,/data-layout="guided-speaking"/);
