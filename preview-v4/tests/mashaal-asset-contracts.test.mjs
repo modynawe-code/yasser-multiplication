@@ -8,7 +8,14 @@ const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 const ACTION_KEYS=[
   'wait-turn','grab-ball','walk-away-angry','ask-help','throw-blocks','kick-blocks',
   'wet-hands','soap','rub-hands','rinse-hands','stay-away','touch-hot','play-near-hot',
-  'return-book','leave-book-floor','damage-book','help-tidy','leave-mess','scatter-toys'
+  'return-book','leave-book-floor','damage-book','help-tidy','leave-mess','scatter-toys',
+  'wake','brush-teeth','breakfast','girl-drinking-water'
+];
+const HIGH_FOCUS_KEYS=[
+  'wet-hands','soap','rub-hands','rinse-hands',
+  'stay-away','touch-hot','play-near-hot',
+  'help-tidy','leave-mess','scatter-toys',
+  'wake','brush-teeth','breakfast','girl-drinking-water'
 ];
 
 test('scenario action assets carry semantic crop contracts instead of inheriting one global image fit',()=>{
@@ -17,6 +24,15 @@ test('scenario action assets carry semantic crop contracts instead of inheriting
     assert.equal(contract.role,'action-scene',key);
     assert.equal(contract.fit,'cover',key);
     assert.ok(contract.semanticFocus&&contract.semanticFocus!=='whole-subject',key);
+    assert.ok(Number(contract.cropScale)>=1.18,key);
+  }
+});
+
+test('weak face-dominant boards zoom toward the task cue instead of preserving the full portrait',()=>{
+  for(const key of HIGH_FOCUS_KEYS){
+    const contract=getMashaalAssetContract(key);
+    assert.ok(Number(contract.cropScale)>=1.28,key);
+    assert.match(contract.position,/^(?:9[0-9]|100)%\s/ ,key);
   }
 });
 
@@ -42,6 +58,9 @@ test('visual renderer consumes asset contracts before constructing media and mot
   assert.match(source,/getMashaalAssetContract/);
   assert.match(source,/dataset\.assetRole=contract\.role/);
   assert.match(source,/dataset\.semanticFocus=contract\.semanticFocus/);
+  assert.match(source,/dataset\.cropScale=String\(contract\.cropScale\|\|1\)/);
+  assert.match(source,/const cropScale=compact\?1:Number\(contract\.cropScale\|\|1\)/);
+  assert.match(source,/transform-origin/);
   assert.match(source,/createMashaalGuidedActionVisual\(stimulus\.movement/);
   assert.match(source,/createMashaalGuidedActionVisual\(stimulus\.task/);
 });
@@ -49,7 +68,6 @@ test('visual renderer consumes asset contracts before constructing media and mot
 test('speaking activity and action crops retain explicit task-sized CSS contracts',async()=>{
   const css=await read('src/modules/mashaal/ui/mashaal-web-media.css');
   assert.match(css,/data-asset-fit="cover"/);
-  assert.match(css,/object-position:78% 52%/);
   assert.match(css,/data-layout="guided-speaking"/);
   assert.match(css,/mashaal-guided-action-art/);
 });
