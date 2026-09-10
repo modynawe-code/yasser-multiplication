@@ -39,6 +39,11 @@
 #mashaalActivityView .mashaal-media-visual[data-asset-fit="contain"] img{object-fit:contain!important}
 #mashaalActivityView .mashaal-media-visual[data-asset-role="isolated-object"] img{padding:4px!important}
 
+/* Guided tasks need a demonstration-sized stimulus rather than an icon-sized one. */
+#mashaalActivityView[data-layout="guided-speaking"] .mashaal-generated-stimulus>.mashaal-media-visual{width:min(520px,76vw);height:clamp(220px,34dvh,290px);border-radius:26px}
+#mashaalActivityView[data-layout="guided-speaking"] .mashaal-generated-stimulus>.mashaal-media-visual img{width:100%!important;height:100%!important;object-fit:contain!important;padding:0!important}
+#mashaalActivityView[data-layout="guided-tracing"] .mashaal-trace-visual{width:min(540px,78vw);height:clamp(150px,24dvh,205px);margin-inline:auto}
+
 /* The two guided physical activities previously used semantically wrong bitmap
    crops. Static local SVG scenes now depict the actual requested action. */
 .mashaal-guided-action-art{display:block;width:min(100%,560px);aspect-ratio:16/9;margin-inline:auto;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 10px 24px rgba(70,47,78,.08)}
