@@ -14,6 +14,11 @@ const SEMANTIC_VECTOR_KEYS=Object.freeze({
   wake:'wake-up',
   'brush-teeth':'brushing-teeth',
   breakfast:'eating-breakfast',
+  'help-tidy':'helping-tidy',
+  'leave-mess':'leaving-mess',
+  'scatter-toys':'scattering-toys'
+});
+const ILLUSTRATED_MEDIA_KEYS=Object.freeze({
   'wet-hands':'hands-under-water',
   soap:'soap-on-hands',
   'rub-hands':'rubbing-hands',
@@ -21,9 +26,7 @@ const SEMANTIC_VECTOR_KEYS=Object.freeze({
   'stay-away':'safe-distance-from-hot-surface',
   'touch-hot':'touching-hot-surface',
   'play-near-hot':'playing-near-hot-surface',
-  'help-tidy':'helping-tidy',
-  'leave-mess':'leaving-mess',
-  'scatter-toys':'scattering-toys'
+  balance:'balance-one-foot'
 });
 
 test('remaining scenario boards carry explicit semantic crop contracts',()=>{
@@ -36,7 +39,7 @@ test('remaining scenario boards carry explicit semantic crop contracts',()=>{
   }
 });
 
-test('ambiguous task boards are replaced by explicit semantic vector scenes',()=>{
+test('remaining ambiguous task boards use explicit semantic vector scenes',()=>{
   for(const [key,semanticFocus] of Object.entries(SEMANTIC_VECTOR_KEYS)){
     const contract=getMashaalAssetContract(key);
     assert.equal(contract.role,'semantic-scene',key);
@@ -46,16 +49,25 @@ test('ambiguous task boards are replaced by explicit semantic vector scenes',()=
   }
 });
 
-test('gross and fine motor reject the semantically wrong bitmap as the primary renderer',()=>{
+test('approved Mashaal action scenes use illustrated media contracts',()=>{
+  for(const [key,semanticFocus] of Object.entries(ILLUSTRATED_MEDIA_KEYS)){
+    const contract=getMashaalAssetContract(key);
+    assert.equal(contract.renderMode,'media',key);
+    assert.equal(contract.semanticFocus,semanticFocus,key);
+    assert.equal(contract.cropScale,1,key);
+  }
+});
+
+test('gross motor uses illustrated media while fine motor still rejects its wrong bitmap',()=>{
   const balance=getMashaalAssetContract('balance');
   const fine=getMashaalAssetContract('fine-motor');
-  assert.equal(balance.renderMode,'vector');
+  assert.equal(balance.renderMode,'media');
   assert.equal(balance.semanticFocus,'balance-one-foot');
   assert.equal(fine.renderMode,'vector');
   assert.equal(fine.semanticFocus,'transfer-three-safe-pieces');
 });
 
-test('guided action SVGs depict motor and daily-life tasks without external image dependency',async()=>{
+test('guided action SVG fallbacks depict motor and daily-life tasks without external image dependency',async()=>{
   const source=await read('src/modules/mashaal/ui/mashaal-guided-action-visuals.js');
   for(const semanticFocus of [
     'balance-one-foot','transfer-three-safe-pieces','child-drinking-water',
@@ -65,7 +77,7 @@ test('guided action SVGs depict motor and daily-life tasks without external imag
   assert.doesNotMatch(source,/<image\b|href=["']https?:\/\//);
 });
 
-test('semantic choice SVGs depict hygiene safety and cleanup tasks without external images',async()=>{
+test('semantic choice SVG fallbacks remain local while illustrated media takes priority',async()=>{
   const source=await read('src/modules/mashaal/ui/mashaal-semantic-choice-visuals.js');
   for(const semanticFocus of [
     'hands-under-water','soap-on-hands','rubbing-hands','rinsing-hands',
@@ -76,7 +88,7 @@ test('semantic choice SVGs depict hygiene safety and cleanup tasks without exter
   assert.doesNotMatch(source,/<image\b|href=["']https?:\/\//);
 });
 
-test('visual renderer prioritizes vector contracts before legacy bitmap media',async()=>{
+test('visual renderer prioritizes contract media for gross motor and vectors for remaining fallbacks',async()=>{
   const source=await read('src/modules/mashaal/ui/mashaal-visuals.js');
   assert.match(source,/createMashaalSemanticChoiceVisual/);
   assert.match(source,/function contractVectorVisual/);
@@ -90,6 +102,8 @@ test('visual renderer prioritizes vector contracts before legacy bitmap media',a
   assert.match(source,/dataset\.cropScale=String\(contract\.cropScale\|\|1\)/);
   assert.match(source,/const cropScale=compact\?1:Number\(contract\.cropScale\|\|1\)/);
   assert.match(source,/transform-origin/);
+  assert.match(source,/getMashaalAssetContract\(['"]balance['"]\)/);
+  assert.match(source,/contract\.renderMode===['"]media['"]&&media/);
   assert.match(source,/createMashaalGuidedActionVisual\(stimulus\.movement/);
   assert.match(source,/createMashaalGuidedActionVisual\(stimulus\.task/);
 });
