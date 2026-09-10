@@ -19,6 +19,7 @@ export function createMashaalRecitationActivities(skillId){
     skillId:RECITATION_SKILL_ID,
     indicatorRefs:Object.freeze(['IE 1.0.2','IE 1.0.3']),
     interaction:'listening',
+    activityType:'quran-recitation',
     promptAr:`اسمعي سورة ${asset.surahNameAr} ثم رددي بهدوء.`,
     audioPromptAr:`اضغطي تشغيل، اسمعي سورة ${asset.surahNameAr}، ثم رددي بعد القارئ.`,
     stimulus:Object.freeze({kind:'recitation-audio',surahNameAr:asset.surahNameAr,surahNumber:asset.surahNumber}),
