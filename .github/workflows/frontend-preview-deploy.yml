@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'feature/family-games-mashaal-integration-v1'
+      - 'feature/product-ui-reference-v1'
     paths:
       - 'preview-v4/**'
       - 'tools/build-web-preview.mjs'
