@@ -1,0 +1,149 @@
+/* Khaled mathematics skill cards: visual card layer only. Keeps curriculum logic and Khaled character untouched. */
+.khaled-skill-list{
+  grid-auto-rows:242px;
+  align-items:stretch;
+}
+.khaled-skill{
+  --skill-accent:#2588ea;
+  --skill-soft:#eef7ff;
+  min-height:242px;
+  height:100%;
+  padding:12px;
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:auto minmax(0,1fr) 38px;
+  grid-template-areas:"art" "copy" "state";
+  align-items:start;
+  gap:8px;
+  overflow:hidden;
+  border-color:#dde5ef;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(32,54,86,.065);
+  transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.khaled-skill.ready:hover{
+  border-color:var(--skill-accent);
+  background:#fff;
+  box-shadow:0 12px 26px rgba(32,54,86,.11);
+  transform:translateY(-2px);
+}
+.khaled-skill.ready:active{transform:translateY(0) scale(.99)}
+.khaled-skill:focus-visible{outline:3px solid var(--skill-accent);outline-offset:3px}
+.khaled-skill-symbol{
+  grid-area:art;
+  width:100%;
+  height:auto;
+  aspect-ratio:320/170;
+  border-radius:15px;
+  display:block;
+  background-image:url('../../../../assets/khaled/ui/khaled-skill-cards-sprite.webp');
+  background-size:500% auto;
+  background-repeat:no-repeat;
+  background-color:var(--skill-soft);
+  box-shadow:inset 0 0 0 1px rgba(35,61,95,.06);
+  color:transparent;
+  font-size:0;
+  line-height:0;
+  overflow:hidden;
+}
+.khaled-skill>span:not(.khaled-skill-symbol){grid-area:copy;min-width:0;text-align:center;align-self:start}
+.khaled-skill strong{font-size:16.5px;line-height:1.3;margin-top:0;color:#14203a}
+.khaled-skill small{
+  font-size:12px;
+  line-height:1.38;
+  margin-top:3px;
+  color:#68758c;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.khaled-skill em{
+  grid-area:state;
+  align-self:end;
+  justify-self:stretch;
+  min-height:38px;
+  padding:0 11px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:var(--skill-accent);
+  color:#fff;
+  font-size:12.5px;
+  font-weight:950;
+  white-space:nowrap;
+}
+.khaled-skill em::after{content:'←';font-size:17px;line-height:1}
+.khaled-skill.locked em{background:#8d98aa}
+
+.khaled-skill[data-khaled-skill="position-pattern"]{--skill-accent:#e99a23;--skill-soft:#fff6e8}
+.khaled-skill[data-khaled-skill="numbers-0-5"],
+.khaled-skill[data-khaled-skill="numbers-6-10"],
+.khaled-skill[data-khaled-skill="numbers-11-20"],
+.khaled-skill[data-khaled-skill="number-patterns"]{--skill-accent:#2588ea;--skill-soft:#edf7ff}
+.khaled-skill[data-khaled-skill="classify-compare"]{--skill-accent:#e65288;--skill-soft:#fff0f6}
+.khaled-skill[data-khaled-skill="addition-foundations"],
+.khaled-skill[data-khaled-skill="place-value"]{--skill-accent:#25a965;--skill-soft:#eefaf3}
+.khaled-skill[data-khaled-skill="subtraction-foundations"]{--skill-accent:#2c86dc;--skill-soft:#eef7ff}
+.khaled-skill[data-khaled-skill="add-sub-strategies"]{--skill-accent:#0aa89d;--skill-soft:#edfafa}
+.khaled-skill[data-khaled-skill="geometry-fractions"],
+.khaled-skill[data-khaled-skill="measurement"]{--skill-accent:#7951d6;--skill-soft:#f5f0ff}
+.khaled-skill[data-khaled-skill="money"]{--skill-accent:#209d59;--skill-soft:#eef9f2}
+
+.khaled-skill[data-khaled-skill="position-pattern"] .khaled-skill-symbol{background-position:0 0}
+.khaled-skill[data-khaled-skill="numbers-0-5"] .khaled-skill-symbol{background-position:25% 0}
+.khaled-skill[data-khaled-skill="classify-compare"] .khaled-skill-symbol{background-position:50% 0}
+.khaled-skill[data-khaled-skill="addition-foundations"] .khaled-skill-symbol{background-position:75% 0}
+.khaled-skill[data-khaled-skill="numbers-6-10"] .khaled-skill-symbol{background-position:100% 0}
+.khaled-skill[data-khaled-skill="numbers-11-20"] .khaled-skill-symbol{background-position:0 50%}
+.khaled-skill[data-khaled-skill="place-value"] .khaled-skill-symbol{background-position:25% 50%}
+.khaled-skill[data-khaled-skill="add-sub-strategies"] .khaled-skill-symbol{background-position:50% 50%}
+.khaled-skill[data-khaled-skill="subtraction-foundations"] .khaled-skill-symbol{background-position:75% 50%}
+.khaled-skill[data-khaled-skill="geometry-fractions"] .khaled-skill-symbol{background-position:100% 50%}
+.khaled-skill[data-khaled-skill="number-patterns"] .khaled-skill-symbol{background-position:0 100%}
+.khaled-skill[data-khaled-skill="measurement"] .khaled-skill-symbol{background-position:25% 100%}
+.khaled-skill[data-khaled-skill="money"] .khaled-skill-symbol{background-position:50% 100%}
+
+@media (orientation:landscape) and (min-width:760px) and (max-height:720px){
+  .khaled-skill-list{grid-auto-rows:202px}
+  .khaled-skill{min-height:202px;padding:9px;gap:5px;grid-template-rows:auto minmax(0,1fr) 32px}
+  .khaled-skill-symbol{border-radius:13px}
+  .khaled-skill strong{font-size:14.5px}
+  .khaled-skill small{font-size:10.5px;line-height:1.3;-webkit-line-clamp:1}
+  .khaled-skill em{min-height:32px;border-radius:10px;font-size:11px}
+}
+
+@media(max-width:700px){
+  .khaled-skill-list{grid-auto-rows:142px}
+  .khaled-skill{
+    min-height:142px;
+    padding:10px;
+    grid-template-columns:132px minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr) 34px;
+    grid-template-areas:"art copy" "art copy" "art state";
+    gap:7px 11px;
+    align-items:center;
+  }
+  .khaled-skill-symbol{width:132px;align-self:center}
+  .khaled-skill>span:not(.khaled-skill-symbol){text-align:right;align-self:center}
+  .khaled-skill strong{font-size:16px}
+  .khaled-skill small{font-size:12px;-webkit-line-clamp:2}
+  .khaled-skill em{min-height:34px;justify-self:stretch;font-size:12px}
+}
+
+@media(max-width:420px){
+  .khaled-skill-list{grid-auto-rows:132px}
+  .khaled-skill{min-height:132px;grid-template-columns:112px minmax(0,1fr);padding:9px;gap:6px 9px}
+  .khaled-skill-symbol{width:112px;border-radius:12px}
+  .khaled-skill strong{font-size:15px}
+  .khaled-skill small{font-size:11px}
+  .khaled-skill em{min-height:32px;font-size:11px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .khaled-skill{transition:none}
+  .khaled-skill.ready:hover,.khaled-skill.ready:active{transform:none}
+}

@@ -1,7 +1,7 @@
 importScripts('./service-worker.js');
 
 const EXTENSION_CACHE_PREFIX='family-learning-runtime-extensions-';
-const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}6`;
+const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}7`;
 const EXTENSION_ASSETS=Object.freeze([
   './src/composition/game-reward-runtime.js',
   './src/modules/games/core/challenge-presentation-registry.js',
@@ -31,6 +31,8 @@ const EXTENSION_ASSETS=Object.freeze([
   './src/shared/rewards/reward-rule-registry.js',
   './src/shared/ui/character-state-registry.js',
   './src/shared/ui/reward-collection-view-state.js',
+  './src/modules/khaled/ui/khaled-skill-cards.css',
+  './assets/khaled/ui/khaled-skill-cards-sprite.webp',
   './assets/mashaal/rewards/premium/premium-crown.webp',
   './assets/mashaal/rewards/premium/premium-shoes.webp',
   './assets/mashaal/rewards/premium/premium-makeup.webp',
