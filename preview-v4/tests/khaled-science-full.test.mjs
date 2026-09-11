@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { KHALED_SCIENCE_ATLAS,KHALED_SCIENCE_ATLAS_WIDTH,KHALED_SCIENCE_ATLAS_HEIGHT } from '../src/modules/khaled/science/khaled-science-atlas-manifest.js';
+import { KHALED_SCIENCE_ATLAS,KHALED_SCIENCE_ATLAS_WIDTH,KHALED_SCIENCE_ATLAS_HEIGHT,KHALED_SCIENCE_ATLAS_PARTS } from '../src/modules/khaled/science/khaled-science-atlas-manifest.js';
 import { KHALED_SCIENCE_CHAPTERS,KHALED_SCIENCE_LESSONS,KHALED_SCIENCE_ACTIVITY_COUNT } from '../src/modules/khaled/science/khaled-science-curriculum.js';
 import { KHALED_SCIENCE_LESSONS as RUNTIME_LESSONS } from '../src/modules/khaled/science/khaled-science-data.js';
 
@@ -37,8 +37,10 @@ test('runtime exposes every activity through supported interactive types',()=>{
   assert.equal(ids.size,137);
 });
 
-test('science atlas is a real WebP asset, not a placeholder text file',async()=>{
-  const data=await read('assets/khaled/science/worksheet-term1-source.webp');
+test('science atlas parts reconstruct a real complete WebP worksheet atlas',async()=>{
+  assert.equal(KHALED_SCIENCE_ATLAS_PARTS.length,9);
+  const base64=(await Promise.all(KHALED_SCIENCE_ATLAS_PARTS.map(async path=>(await read(path)).toString('utf8').trim()))).join('');
+  const data=Buffer.from(base64,'base64');
   assert.ok(data.length>50000);
   assert.equal(data.subarray(0,4).toString('ascii'),'RIFF');
   assert.equal(data.subarray(8,12).toString('ascii'),'WEBP');
@@ -48,9 +50,11 @@ test('science runtime keeps independent progress, speech and worksheet imagery',
   const runtime=(await read('src/modules/khaled/science/khaled-science.js')).toString('utf8');
   assert.match(runtime,/family-learning:khaled:science:v1/);
   assert.match(runtime,/createSpeechService/);
-  assert.match(runtime,/worksheet-term1-source\.webp/);
+  assert.match(runtime,/KHALED_SCIENCE_ATLAS_PARTS/);
+  assert.match(runtime,/data:image\/webp;base64/);
   assert.match(runtime,/activity\.type==='single'/);
   assert.match(runtime,/activity\.type==='multi'/);
   assert.match(runtime,/activity\.type==='matching'/);
   assert.match(runtime,/activity\.type==='truefalse'/);
+  assert.match(runtime,/activity\.type==='sequence'/);
 });
