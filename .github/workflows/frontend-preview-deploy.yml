@@ -98,7 +98,6 @@ jobs:
 
   github-pages:
     needs: build
-    if: needs.build.outputs.cloudflare_available != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 7
     permissions:
