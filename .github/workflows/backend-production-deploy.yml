@@ -2,11 +2,6 @@ name: Backend Production Deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/family-games-mashaal-integration-v1
-    paths:
-      - 'backend/wrangler.jsonc'
 
 permissions:
   contents: read
