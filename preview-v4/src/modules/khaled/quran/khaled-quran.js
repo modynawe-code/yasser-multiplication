@@ -40,6 +40,28 @@ function ensureStyle(){
   const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/khaled/quran/khaled-quran.css';link.dataset.moduleStyle='khaled-quran';document.head.appendChild(link);
 }
 
+function ensureShell(){
+  if(document.getElementById('khaledQuranView'))return;
+  const main=document.querySelector('main');if(!main)return;
+  const view=document.createElement('section');view.id='khaledQuranView';view.className='view';
+  view.innerHTML=`<div class="khaled-quran-shell">
+    <div class="khaled-quran-header">
+      <div class="khaled-quran-heading"><div class="kicker">قرآن خالد</div><h1>سور الصف الأول الابتدائي</h1><p>التعليم العام • حفظ واستماع من مصحف المدينة</p></div>
+      <button class="icon-btn" id="khaledQuranBack" aria-label="العودة إلى صفحة خالد">رجوع</button>
+    </div>
+    <div class="khaled-quran-terms" role="group" aria-label="اختر الفصل الدراسي">
+      <button class="khaled-quran-term" data-khaled-quran-term="1" aria-pressed="true">الفصل الأول</button>
+      <button class="khaled-quran-term" data-khaled-quran-term="2" aria-pressed="false">الفصل الثاني</button>
+    </div>
+    <div class="khaled-quran-surah-grid" id="khaledQuranSurahs"></div>
+    <section class="khaled-quran-stage" id="khaledQuranPlayer" hidden aria-label="السورة المختارة">
+      <h2 id="khaledQuranSelectedTitle">اختر سورة</h2>
+    </section>
+    <p class="khaled-quran-source">التلاوة: إبراهيم الأخضر • حفص عن عاصم • مصدر الصوت: مجمع الملك فهد لطباعة المصحف الشريف</p>
+  </div>`;
+  main.appendChild(view);
+}
+
 export function createKhaledQuranController({showView,onBack}={}){
   let term=1,player=null,bound=false,selectedSurah=null;
   const byId=id=>document.getElementById(id);
@@ -61,24 +83,22 @@ export function createKhaledQuranController({showView,onBack}={}){
   function openSurah(item,button){
     destroyPlayer();selectedSurah=item.surahNumber;
     document.querySelectorAll('.khaled-quran-surah').forEach(node=>node.classList.toggle('selected',node===button));
-    const title=byId('khaledQuranSelectedTitle');if(title)title.textContent=`سورة ${item.surahNameAr}`;
-    const host=byId('khaledQuranPlayer');if(!host)return;
-    host.hidden=false;
-    player=mountQuranSurahPlayer(host,{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
+    const host=byId('khaledQuranPlayer');if(!host)return;host.hidden=false;host.innerHTML=`<h2 id="khaledQuranSelectedTitle">سورة ${item.surahNameAr}</h2><div id="khaledQuranPlayerHost"></div>`;
+    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
     host.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
   }
   function setTerm(next){
     const value=Number(next);if(!KHALED_QURAN_TERMS[value]||value===term)return;
-    term=value;selectedSurah=null;destroyPlayer();const host=byId('khaledQuranPlayer');if(host){host.hidden=true;host.innerHTML='';}
-    const title=byId('khaledQuranSelectedTitle');if(title)title.textContent='اختر سورة';renderTerms();renderSurahs();
+    term=value;selectedSurah=null;destroyPlayer();const host=byId('khaledQuranPlayer');if(host){host.hidden=true;host.innerHTML='<h2 id="khaledQuranSelectedTitle">اختر سورة</h2>';}
+    renderTerms();renderSurahs();
   }
   function bind(){
-    if(bound)return;bound=true;ensureStyle();
+    if(bound)return;bound=true;
     document.querySelectorAll('[data-khaled-quran-term]').forEach(button=>button.addEventListener('click',()=>setTerm(button.dataset.khaledQuranTerm)));
     byId('khaledQuranBack')?.addEventListener('click',()=>{destroyPlayer();onBack?.();});
   }
   return Object.freeze({
-    open(){bind();renderTerms();renderSurahs();showView?.('khaledQuranView');},
+    open(){ensureStyle();ensureShell();bind();renderTerms();renderSurahs();showView?.('khaledQuranView');},
     leave(){destroyPlayer();},
     getSelectedSurah(){return selectedSurah;}
   });
