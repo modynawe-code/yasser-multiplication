@@ -134,3 +134,56 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
+
+      - name: Smoke test online XO API from Pages origin
+        env:
+          API_BASE: https://yasser-khaled-family-api.modynawe.workers.dev
+        run: |
+          node <<'NODE'
+          const base=process.env.API_BASE;
+          const origin='https://modynawe-code.github.io';
+          async function read(response){
+            const text=await response.text();
+            let body=null;
+            try{body=JSON.parse(text);}catch{body=text;}
+            return {text,body};
+          }
+          const preflight=await fetch(base+'/v1/games/rooms',{
+            method:'OPTIONS',
+            headers:{
+              origin,
+              'access-control-request-method':'POST',
+              'access-control-request-headers':'content-type'
+            }
+          });
+          console.log('OPTIONS /v1/games/rooms',preflight.status,'acao=',preflight.headers.get('access-control-allow-origin'));
+          if(!preflight.ok)throw new Error(`XO CORS preflight failed: ${preflight.status}`);
+          if(preflight.headers.get('access-control-allow-origin')!==origin)throw new Error(`XO CORS origin rejected: ${preflight.headers.get('access-control-allow-origin')}`);
+
+          const health=await fetch(base+'/health',{headers:{origin,accept:'application/json'}});
+          const healthPayload=await read(health);
+          console.log('GET /health',health.status,healthPayload.text.slice(0,500));
+          if(!health.ok)throw new Error(`XO health failed: ${health.status}`);
+
+          const created=await fetch(base+'/v1/games/rooms',{
+            method:'POST',
+            headers:{origin,accept:'application/json','content-type':'application/json'},
+            body:JSON.stringify({gameId:'xo',learnerId:'mashaal'})
+          });
+          const createdPayload=await read(created);
+          console.log('POST /v1/games/rooms',created.status,createdPayload.text.slice(0,1000));
+          if(!created.ok)throw new Error(`Mashaal XO create room failed: ${created.status}`);
+          if(!/^\d{6}$/.test(createdPayload.body?.room?.code||'')||!createdPayload.body?.playerToken){
+            throw new Error('Mashaal XO create room response contract failed');
+          }
+
+          const joined=await fetch(base+'/v1/games/rooms/join',{
+            method:'POST',
+            headers:{origin,accept:'application/json','content-type':'application/json'},
+            body:JSON.stringify({code:createdPayload.body.room.code,learnerId:'yasser'})
+          });
+          const joinedPayload=await read(joined);
+          console.log('POST /v1/games/rooms/join',joined.status,joinedPayload.text.slice(0,1000));
+          if(!joined.ok||joinedPayload.body?.room?.status!=='playing')throw new Error(`XO second-device join failed: ${joined.status}`);
+          console.log(`Live XO smoke passed: room ${createdPayload.body.room.code}`);
+          NODE
