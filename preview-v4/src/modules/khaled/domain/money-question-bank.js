@@ -61,12 +61,35 @@ export function createUseMoneyQuestion({random=Math.random}={}){
   return{id:`use-money-${price}-${Math.round(random()*1e7)}`,skillId:'money',type:'use-money',prompt:`السعر ${price} ريال، أي نقود تساوي السعر؟`,spokenPrompt:`ثمن الشيء ${price} ريالًا. اختر النقود التي تساوي الثمن تمامًا.`,price,options,correctAnswer:correct.value};
 }
 
+export function createCompareMoneyQuestion({random=Math.random}={}){
+  const pair=pick([[3,5],[6,4],[7,10],[12,9],[15,11],[18,20]],random),swap=random()>.5;
+  const [a,b]=swap?[pair[1],pair[0]]:pair,left=moneyFor(a),right=moneyFor(b),correctAnswer=a>b?'left':'right';
+  return{id:`money-compare-${a}-${b}-${Math.round(random()*1e7)}`,skillId:'money',type:'compare-money-amounts',prompt:'أي المبلغين أكبر؟',spokenPrompt:'عد النقود في الجهتين، ثم اختر المبلغ الأكبر.',left,right,leftAmount:a,rightAmount:b,correctAnswer};
+}
+
+export function createCanBuyQuestion({random=Math.random}={}){
+  const price=pick([4,5,6,8,10,12],random),enough=random()>=.5,available=enough?pick([price,price+2,price+5],random):Math.max(1,price-pick([1,2,3],random));
+  return{id:`money-can-buy-${available}-${price}-${Math.round(random()*1e7)}`,skillId:'money',type:'money-can-buy',prompt:`معك ${available} ريال والسعر ${price} ريال. هل يكفي؟`,spokenPrompt:`معك ${available} ريالًا، والسعر ${price} ريالًا. هل المبلغ يكفي للشراء؟`,available,price,coins:moneyFor(available),options:[{value:'yes',label:'نعم، يكفي'},{value:'no',label:'لا، لا يكفي'}],correctAnswer:available>=price?'yes':'no'};
+}
+
+export function createMoneyChangeQuestion({random=Math.random}={}){
+  const paid=pick([5,10,15,20],random),price=randomNumber(1,paid-1,random),correctAnswer=paid-price;
+  return{id:`money-change-${paid}-${price}-${Math.round(random()*1e7)}`,skillId:'money',type:'money-change',prompt:`دفعت ${paid} ريال والسعر ${price} ريال. كم يتبقى؟`,spokenPrompt:`دفعت ${paid} ريالًا، والسعر ${price} ريالًا. كم ريالًا يتبقى؟`,paid,price,paidCoins:moneyFor(paid),options:uniqueNumberOptions(correctAnswer,0,Math.max(10,paid),random),correctAnswer};
+}
+
+export const MONEY_ACTIVITY_TYPES=Object.freeze([
+  'money-recognition','count-money','money-model','equal-money-amounts','use-money','compare-money-amounts','money-can-buy','money-change'
+]);
+
 export function createMoneyRoundQuestion(index,{random=Math.random}={}){
-  switch(index%5){
+  switch(index%MONEY_ACTIVITY_TYPES.length){
     case 0:return createMoneyRecognitionQuestion({random});
     case 1:return createCountMoneyQuestion({random});
     case 2:return createMoneyModelQuestion({random});
     case 3:return createEqualAmountsQuestion({random});
-    default:return createUseMoneyQuestion({random});
+    case 4:return createUseMoneyQuestion({random});
+    case 5:return createCompareMoneyQuestion({random});
+    case 6:return createCanBuyQuestion({random});
+    default:return createMoneyChangeQuestion({random});
   }
 }

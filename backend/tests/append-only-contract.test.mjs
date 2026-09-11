@@ -4,22 +4,61 @@ import { readFile } from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('D1 schema prevents attempt and baseline mutation at database level',async()=>{
-  const sql=await read('migrations/0001_family_core.sql');
-  for(const token of ['attempts_no_delete','BEFORE DELETE ON attempts','attempts_no_update','BEFORE UPDATE ON attempts','learner_baselines_no_delete','BEFORE DELETE ON learner_baselines','learner_baselines_no_update','BEFORE UPDATE ON learner_baselines'])assert.match(sql,new RegExp(token));
-  assert.match(sql,/ON DELETE RESTRICT/);
-  assert.match(sql,/table_number INTEGER/);assert.match(sql,/multiplier INTEGER/);
+test('D1 schema keeps attempt and baseline mutation blocked before and after family generalization',async()=>{
+  const initial=await read('migrations/0001_family_core.sql');
+  const openFamily=await read('migrations/0004_open_family_learners.sql');
+  for(const sql of [initial,openFamily]){
+    for(const token of ['attempts_no_delete','BEFORE DELETE ON attempts','attempts_no_update','BEFORE UPDATE ON attempts','learner_baselines_no_delete','BEFORE DELETE ON learner_baselines','learner_baselines_no_update','BEFORE UPDATE ON learner_baselines'])assert.match(sql,new RegExp(token));
+    assert.match(sql,/ON DELETE RESTRICT/);
+    assert.match(sql,/table_number INTEGER/);
+    assert.match(sql,/multiplier INTEGER/);
+  }
 });
 
-test('Worker exposes immutable baseline plus append/read sync but no attempt mutation endpoint',async()=>{
+test('open-family migration removes fixed learner names while preserving rows, indexes and strict slugs',async()=>{
+  const sql=await read('migrations/0004_open_family_learners.sql');
+  assert.doesNotMatch(sql,/slug IN \('yasser','khaled'\)/);
+  assert.match(sql,/length\(slug\) BETWEEN 1 AND 64/);
+  assert.match(sql,/slug NOT GLOB/);
+  assert.match(sql,/PRAGMA defer_foreign_keys = ON/);
+  assert.match(sql,/INSERT INTO learners_v2/);
+  assert.match(sql,/INSERT INTO attempts_v2/);
+  assert.match(sql,/INSERT INTO learning_sessions_v2/);
+  assert.match(sql,/CREATE INDEX IF NOT EXISTS idx_attempts_learner_created/);
+});
+
+test('developmental learning evidence is append-only at database level',async()=>{
+  const sql=await read('migrations/0004_open_family_learners.sql');
+  for(const token of ['CREATE TABLE IF NOT EXISTS learning_evidence','learning_evidence_no_delete','BEFORE DELETE ON learning_evidence','learning_evidence_no_update','BEFORE UPDATE ON learning_evidence','idx_learning_evidence_learner_created'])assert.match(sql,new RegExp(token));
+});
+
+test('learning sessions keep exact payload and become append-only before production rollout',async()=>{
+  const sql=await read('migrations/0005_learning_session_payload.sql');
+  for(const token of ['ALTER TABLE learning_sessions ADD COLUMN session_json TEXT','learning_sessions_no_delete','BEFORE DELETE ON learning_sessions','learning_sessions_no_update','BEFORE UPDATE ON learning_sessions'])assert.match(sql,new RegExp(token));
+});
+
+test('Worker exposes append/read sync including evidence and sessions but no history mutation endpoint',async()=>{
   const worker=await read('src/index.mjs');
-  assert.match(worker,/\/v1\/sync\/baseline/);
+  for(const route of ['/v1/sync/baseline','/v1/sync/attempts','/v1/sync/evidence','/v1/sync/session','/v1/sync/snapshot'])assert.match(worker,new RegExp(route.replaceAll('/','\\/')));
   assert.match(worker,/INSERT OR IGNORE INTO learner_baselines/);
-  assert.match(worker,/\/v1\/sync\/attempts/);
-  assert.match(worker,/\/v1\/sync\/snapshot/);
+  assert.match(worker,/INSERT OR IGNORE INTO learning_evidence/);
+  assert.match(worker,/INSERT OR IGNORE INTO learning_sessions/);
+  assert.match(worker,/session_json/);
   assert.doesNotMatch(worker,/request\.method==='DELETE'.*attempt/s);
   assert.doesNotMatch(worker,/UPDATE attempts SET/);
   assert.doesNotMatch(worker,/DELETE FROM attempts/);
+  assert.doesNotMatch(worker,/UPDATE learning_evidence SET/);
+  assert.doesNotMatch(worker,/DELETE FROM learning_evidence/);
+  assert.doesNotMatch(worker,/UPDATE learning_sessions SET/);
+  assert.doesNotMatch(worker,/DELETE FROM learning_sessions/);
+});
+
+test('Worker initializes family learners from the catalog instead of fixed insert statements',async()=>{
+  const worker=await read('src/index.mjs'),learners=await read('src/learners.mjs');
+  assert.match(worker,/DEFAULT_LEARNERS/);
+  assert.match(worker,/missing=DEFAULT_LEARNERS\.filter/);
+  assert.match(learners,/slug:'mashaal'/);
+  assert.doesNotMatch(worker,/const yasserId=.*khaledId=/s);
 });
 
 test('Worker authenticates sync routes and uses the dedicated DB binding',async()=>{

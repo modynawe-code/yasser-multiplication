@@ -4,25 +4,46 @@ import { readFile } from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('Khaled learning flow exposes explicit back and learner-home navigation',async()=>{
-  const shell=await read('src/modules/hub/learning-shell.js');
-  assert.match(shell,/id="khaledExitSession"[^>]*>رجوع للمهارات<\/button>/);
-  assert.match(shell,/id="khaledSessionToHub"[^>]*>اختيار الطفل<\/button>/);
-  assert.match(shell,/id="khaledResultToHub"[^>]*>اختيار الطفل<\/button>/);
+test('Khaled learning flow exposes only context-appropriate child navigation',async()=>{
+  const familyShell=await read('src/modules/hub/learning-shell.js');
+  const homeShell=await read('src/modules/khaled/ui/khaled-home-shell.js');
+  assert.match(familyShell,/id="khaledIntroBack"[^>]*>رجوع<\/button>/);
+  assert.match(familyShell,/id="khaledIntroStart"[^>]*>يلا نبدأ<\/button>/);
+  assert.match(homeShell,/id="khaledHomeToHub"[^>]*>اختيار الطفل<\/button>/);
+  assert.match(familyShell,/id="khaledExitSession"[^>]*>رجوع<\/button>/);
+  assert.doesNotMatch(familyShell,/id="khaledSessionToHub"/);
+  assert.doesNotMatch(homeShell,/id="khaledSessionToHub"/);
+  assert.match(familyShell,/id="khaledRetry"[^>]*>مرة ثانية<\/button>/);
+  assert.match(familyShell,/id="khaledResultHome"[^>]*>مهارات خالد<\/button>/);
+  assert.match(familyShell,/class="khaled-result-link" id="khaledResultToHub">اختيار الطفل<\/button>/);
 });
 
-test('cross-module Khaled navigation is wired only at the composition root',async()=>{
+test('cross-learner Khaled exits stay owned by the composition root',async()=>{
   const main=await read('src/main.js');
   const controller=await read('src/modules/khaled/ui/khaled-controller.js');
-  assert.match(main,/function exitKhaledToHub\(\)\{\s*khaled\.leave\(\);hub\?\.show\(\);\s*\}/);
-  assert.match(main,/khaledSessionToHub.*exitKhaledToHub/);
-  assert.match(main,/khaledResultToHub.*exitKhaledToHub/);
-  assert.match(controller,/function exitSession\(\)\{leave\(\);enter\(\);\}/);
+  const hub=await read('src/modules/hub/hub-controller.js');
+  assert.match(main,/function exitKhaledToHub\(\)\{\s*khaled\.leave\(\);\s*hub\?\.show\(\);\s*\}/);
+  assert.match(main,/\['khaledIntroBack','khaledHomeToHub','khaledResultToHub'\]/);
+  assert.doesNotMatch(main,/khaledSessionToHub/);
+  assert.doesNotMatch(controller,/khaledSessionToHub/);
+  assert.doesNotMatch(controller,/khaledResultToHub/);
+  assert.match(controller,/function exitSession\(\)\{leave\(\);enterHome\(\);\}/);
   assert.match(controller,/storeSession\(\{incomplete:true\}\)/);
+  assert.match(hub,/classList\.remove\([^)]*'khaled-mode'[^)]*\)/);
+  assert.match(hub,/onSelectLearner/);
 });
 
-test('shared navigation controls keep a child-friendly touch target',async()=>{
+test('shared navigation controls keep a child-friendly touch target and secondary result exit',async()=>{
   const css=await read('src/ui/styles/learning-navigation.css');
   assert.match(css,/min-height:48px/);
   assert.match(css,/\.learning-nav-actions/);
+  assert.match(css,/\.khaled-intro-toolbar/);
+  assert.match(css,/\.khaled-result-link/);
+});
+
+test('Khaled session back control occupies the physical RTL-leading edge',async()=>{
+  const css=await read('src/ui/styles/learning-navigation.css');
+  assert.match(css,/#khaledSessionView \.session-head\{[^}]*direction:ltr[^}]*grid-template-columns:minmax\(0,1fr\) auto/s);
+  assert.match(css,/#khaledSessionView \.session-head>div:first-child\{[^}]*direction:rtl[^}]*text-align:right/s);
+  assert.match(css,/#khaledSessionView \.session-head \.learning-nav-actions\{[^}]*direction:rtl/s);
 });

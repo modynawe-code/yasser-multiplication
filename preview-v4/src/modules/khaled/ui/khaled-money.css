@@ -1,52 +1,64 @@
-.khaled-money-stage,.khaled-money-equality{
-  display:flex;align-items:center;justify-content:center;gap:22px;min-height:170px;margin:6px auto 20px
-}
-.khaled-money-set{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
-.khaled-money-piece{
-  position:relative;display:inline-grid;place-items:center;overflow:hidden;flex:0 0 auto;
-  background:#fff;border:0;box-shadow:none
-}
-.khaled-money-piece.coin{width:92px;height:92px;border-radius:50%}
-.khaled-money-piece.note{width:158px;height:74px;border-radius:8px}
-.khaled-money-photo{
-  position:absolute;display:block;max-width:none;height:auto;user-select:none;-webkit-user-drag:none
-}
+.khaled-money-stage{display:flex;align-items:center;justify-content:center;gap:18px;min-height:160px;margin:2px auto 10px;width:100%}
+.khaled-money-equality,.khaled-money-compare{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:14px;min-height:138px;margin:4px auto 10px;width:min(820px,100%)}
+.khaled-money-set{display:flex;align-items:center;justify-content:center;gap:11px;flex-wrap:wrap}
+.khaled-money-piece{position:relative;display:inline-grid;place-items:center;overflow:hidden;flex:0 0 auto;background:#fff;border:0;box-shadow:none}
+.khaled-money-piece.coin{width:88px;height:88px;border-radius:50%}
+.khaled-money-piece.note{width:182px;height:87px;border-radius:10px}
+.khaled-money-stage .khaled-money-piece.coin{width:112px;height:112px}
+.khaled-money-stage .khaled-money-piece.note{width:238px;height:114px}
+.khaled-money-photo{position:absolute;display:block;max-width:none;height:auto;user-select:none;-webkit-user-drag:none}
 .khaled-money-piece.coin .khaled-money-photo{width:100%;left:0;bottom:0}
 .khaled-money-piece.note .khaled-money-photo{width:100%;left:0;top:0}
-.khaled-money-fallback{
-  width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border:2px solid #b8c2d8;background:#fff;color:#34415a;border-radius:inherit
-}
-.khaled-money-fallback[hidden]{display:none!important}
-.khaled-money-fallback b{font-size:26px;line-height:1}.khaled-money-fallback small{font-size:11px;font-weight:900;margin-top:4px}
+.khaled-money-fallback{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #b8c2d8;background:#fff;color:#34415a;border-radius:inherit}
+.khaled-money-fallback[hidden]{display:none!important}.khaled-money-fallback b{font-size:26px;line-height:1}.khaled-money-fallback small{font-size:11px;font-weight:900;margin-top:4px}
 .khaled-money-piece.coin .khaled-money-fallback{border-radius:50%;background:radial-gradient(circle at 32% 26%,#fff8d8,#f4d67a 45%,#d4a93e)}
 .khaled-money-piece.value-2 .khaled-money-fallback{background:radial-gradient(circle at 50% 50%,#e9c65e 0 46%,#d8dde4 47% 100%)}
-.khaled-money-piece.value-5 .khaled-money-fallback{background:#f2e6f5;border-color:#b28bb8}
-.khaled-money-piece.value-10 .khaled-money-fallback{background:#f5eadc;border-color:#c8a67f}
+.khaled-money-piece.value-5 .khaled-money-fallback{background:#f2e6f5;border-color:#b28bb8}.khaled-money-piece.value-10 .khaled-money-fallback{background:#f5eadc;border-color:#c8a67f}
 
-.khaled-money-target,.khaled-price-tag{
-  display:flex;align-items:baseline;justify-content:center;gap:7px;margin:8px auto 20px;padding:16px 26px;
-  border-radius:22px;background:#fff5e4;border:3px solid #ffbd67;width:max-content
+.khaled-money-target,.khaled-price-tag{display:flex;align-items:baseline;justify-content:center;gap:7px;margin:4px auto 10px;padding:11px 20px;border-radius:20px;background:#fff5e4;border:3px solid #ffbd67;width:max-content;max-width:100%}
+.khaled-money-target small,.khaled-price-tag small{display:block;align-self:center;font-weight:900;color:#7c6a52;margin-inline-end:5px}.khaled-money-target strong,.khaled-price-tag strong{font-size:38px;color:#ff7b00}.khaled-money-target span,.khaled-price-tag span{font-weight:900;color:#8a5a22}
+.khaled-price-tag{background:#e8f7ff;border-color:#8dc8eb}.khaled-price-tag strong{color:#2075a9}.khaled-price-tag.compact{margin:0;padding:8px 16px}.khaled-price-tag.compact strong{font-size:32px}
+.khaled-money-option{min-height:132px;padding:10px;display:grid;place-items:center}.khaled-money-option .khaled-money-set{max-width:210px;margin:auto}.khaled-money-option .khaled-money-piece{transform:scale(.82);margin:-6px -4px}
+.khaled-money-equality section,.khaled-money-side,.khaled-money-story section{min-width:0;min-height:124px;display:grid;place-items:center;background:#f8fbff;border:2px solid #dce7f4;border-radius:22px;padding:10px}
+.khaled-money-equality>b{font-size:34px;color:#ff7b00}.khaled-money-equality section .khaled-money-set{width:100%;max-width:100%;gap:7px 9px}
+.khaled-money-side{font:inherit;cursor:pointer;width:100%;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}.khaled-money-side:hover,.khaled-money-side:focus-visible{transform:translateY(-2px);border-color:#ffad47;box-shadow:0 10px 24px rgba(26,55,102,.13)}.khaled-money-versus{font-weight:950;color:#ff7b00;font-size:20px}
+.khaled-money-story{display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:18px;align-items:center;width:min(700px,100%);margin:4px auto 10px}.khaled-money-story section>small{font-weight:900;color:#51617a;margin-bottom:7px}.khaled-money-story section{min-height:132px}
+
+/* Each money activity keeps its own visual hierarchy. */
+.khaled-question-card[data-question-type="money-recognition"] .khaled-answers,
+.khaled-question-card[data-question-type="count-money"] .khaled-answers,
+.khaled-question-card[data-question-type="money-change"] .khaled-answers{width:min(560px,100%);grid-template-columns:repeat(2,minmax(150px,1fr))}
+.khaled-question-card[data-question-type="count-money"] .khaled-answers[data-option-count="3"]{width:min(680px,100%);grid-template-columns:repeat(3,minmax(140px,1fr))}
+.khaled-question-card[data-question-type="money-model"] .khaled-answers,
+.khaled-question-card[data-question-type="use-money"] .khaled-answers{width:min(780px,100%);grid-template-columns:repeat(3,minmax(160px,1fr));align-items:stretch}
+.khaled-question-card[data-question-type="equal-money-amounts"] .khaled-answers,
+.khaled-question-card[data-question-type="money-can-buy"] .khaled-answers{width:min(460px,100%);grid-template-columns:repeat(2,minmax(150px,1fr))}
+.khaled-question-card[data-question-type="compare-money-amounts"] .khaled-answers{display:none}
+.khaled-question-card[data-question-type="money-model"] .khaled-visual,
+.khaled-question-card[data-question-type="use-money"] .khaled-visual{min-height:auto}
+
+@media (orientation:landscape) and (min-width:700px) and (max-height:900px){
+  .khaled-money-stage{min-height:130px;margin-bottom:5px}.khaled-money-stage .khaled-money-piece.coin{width:96px;height:96px}.khaled-money-stage .khaled-money-piece.note{width:210px;height:100px}
+  .khaled-money-piece.coin{width:74px;height:74px}.khaled-money-piece.note{width:148px;height:71px}
+  .khaled-money-option{min-height:106px;padding:6px}.khaled-money-option .khaled-money-piece{transform:scale(.77);margin:-8px -6px}
+  .khaled-money-equality,.khaled-money-compare{min-height:108px;margin-bottom:6px;gap:10px}.khaled-money-equality section,.khaled-money-side{min-height:100px;padding:7px}
+  .khaled-money-story{gap:12px;margin-bottom:6px}.khaled-money-story section{min-height:104px;padding:7px}
+  .khaled-money-target,.khaled-price-tag{padding:8px 17px;margin-bottom:6px}.khaled-money-target strong,.khaled-price-tag strong{font-size:34px}
+  .khaled-question-card[data-question-type="money-model"] .khaled-answers,.khaled-question-card[data-question-type="use-money"] .khaled-answers{grid-template-columns:repeat(3,minmax(145px,1fr));gap:9px}
 }
-.khaled-money-target small,.khaled-price-tag small{display:block;align-self:center;font-weight:900;color:#7c6a52;margin-inline-end:5px}
-.khaled-money-target strong,.khaled-price-tag strong{font-size:42px;color:#ff7b00}
-.khaled-money-target span,.khaled-price-tag span{font-weight:900;color:#8a5a22}
-.khaled-money-option{min-height:126px;padding:12px}
-.khaled-money-option .khaled-money-piece{transform:scale(.82);margin:-4px}
-.khaled-money-equality section{
-  min-width:210px;min-height:136px;display:grid;place-items:center;background:#f8fbff;border:2px solid #dce7f4;border-radius:22px;padding:12px
+
+@media (orientation:landscape) and (min-width:850px) and (max-height:720px){
+  .khaled-money-stage{min-height:112px}.khaled-money-stage .khaled-money-piece.coin{width:88px;height:88px}.khaled-money-stage .khaled-money-piece.note{width:194px;height:93px}
+  .khaled-money-piece.coin{width:66px;height:66px}.khaled-money-piece.note{width:132px;height:63px}.khaled-money-option{min-height:94px}.khaled-money-option .khaled-money-piece{transform:scale(.72);margin:-10px -8px}
+  .khaled-money-equality section,.khaled-money-side,.khaled-money-story section{min-height:90px}.khaled-money-story{grid-template-columns:minmax(230px,1fr) auto}
 }
-.khaled-money-equality>b{font-size:38px;color:#ff7b00}
-.khaled-price-tag{background:#e8f7ff;border-color:#8dc8eb}.khaled-price-tag strong{color:#2075a9}
 
 @media(max-width:620px){
-  .khaled-money-stage,.khaled-money-equality{gap:10px;min-height:145px}
-  .khaled-money-set{gap:8px}
-  .khaled-money-piece.coin{width:72px;height:72px}
-  .khaled-money-piece.note{width:122px;height:58px}
-  .khaled-money-fallback b{font-size:22px}
-  .khaled-money-option{min-height:100px;grid-column:1/-1}
-  .khaled-money-equality section{min-width:0;flex:1;padding:8px}
-  .khaled-money-equality .khaled-money-piece{transform:scale(.8);margin:-6px}
-  .khaled-money-target strong,.khaled-price-tag strong{font-size:34px}
+  .khaled-money-stage{gap:8px;min-height:125px}.khaled-money-stage .khaled-money-piece.coin{width:82px;height:82px}.khaled-money-stage .khaled-money-piece.note{width:172px;height:82px}
+  .khaled-money-set{gap:7px}.khaled-money-piece.coin{width:64px;height:64px}.khaled-money-piece.note{width:112px;height:54px}.khaled-money-fallback b{font-size:21px}
+  .khaled-money-option{min-height:96px}.khaled-money-equality,.khaled-money-compare{gap:7px}.khaled-money-equality section,.khaled-money-side{padding:6px}.khaled-money-side .khaled-money-piece{transform:scale(.8);margin:-6px}
+  .khaled-money-story{grid-template-columns:1fr;gap:8px}.khaled-money-story section{min-height:96px}.khaled-price-tag.compact{margin:auto}
+  .khaled-question-card[data-question-type="money-recognition"] .khaled-answers,.khaled-question-card[data-question-type="count-money"] .khaled-answers,.khaled-question-card[data-question-type="money-change"] .khaled-answers{grid-template-columns:repeat(2,minmax(120px,1fr))}
+  .khaled-question-card[data-question-type="count-money"] .khaled-answers[data-option-count="3"]{width:min(100%,520px);grid-template-columns:repeat(2,minmax(120px,1fr))}.khaled-question-card[data-question-type="count-money"] .khaled-answers[data-option-count="3"]>:last-child{grid-column:1/-1;width:min(100%,240px);justify-self:center}
+  .khaled-question-card[data-question-type="money-model"] .khaled-answers,.khaled-question-card[data-question-type="use-money"] .khaled-answers{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
 }

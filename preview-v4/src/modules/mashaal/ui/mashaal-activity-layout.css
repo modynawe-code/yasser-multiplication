@@ -1,0 +1,93 @@
+/* Mashaal KG3 activity layouts: each interaction type owns its visual hierarchy.
+   Acceptance target: child sees the prompt, the meaningful visual and all primary choices
+   together on a Galaxy-class landscape tablet without shrinking the learning image to an icon. */
+#mashaalActivityView .mashaal-wrap{max-width:1180px;padding-top:8px;padding-bottom:12px}
+#mashaalActivityView .mashaal-domain-actions{max-width:1060px;width:100%;margin:0 auto 6px}
+#mashaalActivityView .mashaal-domain-actions .icon-btn{min-height:42px;padding-block:7px}
+#mashaalActivityView .mashaal-activity-card{max-width:1060px;min-height:0;padding:14px 18px 12px}
+#mashaalActivityView .mashaal-activity-topline{min-height:46px}
+#mashaalActivityView .mashaal-activity-card h2{font-size:clamp(24px,2.45vw,30px);line-height:1.3;margin:2px 0 7px}
+#mashaalActivityView .mashaal-stimulus{min-height:0;margin:0 0 8px}
+#mashaalActivityView .mashaal-generated-stimulus{min-height:0}
+#mashaalActivityView .mashaal-scene-art{height:clamp(118px,19dvh,160px);width:min(100%,320px);object-fit:contain}
+#mashaalActivityView .mashaal-activity-choices{gap:10px;align-items:stretch}
+#mashaalActivityView[data-choice-count="1"] .mashaal-activity-choices{grid-template-columns:minmax(0,200px);justify-content:center}
+#mashaalActivityView[data-choice-count="2"] .mashaal-activity-choices{grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px;margin-inline:auto}
+#mashaalActivityView[data-choice-count="3"] .mashaal-activity-choices{grid-template-columns:repeat(3,minmax(0,1fr))}
+#mashaalActivityView[data-choice-count="4"] .mashaal-activity-choices{grid-template-columns:repeat(4,minmax(0,1fr))}
+#mashaalActivityView .mashaal-choice{position:relative;min-height:0!important;padding:7px!important;gap:5px!important;border-radius:18px}
+#mashaalActivityView .mashaal-choice>.mashaal-choice-visual{min-height:0!important;height:clamp(150px,25dvh,190px)}
+#mashaalActivityView[data-choice-count="4"] .mashaal-choice>.mashaal-choice-visual{height:clamp(126px,21dvh,158px)}
+#mashaalActivityView[data-layout="comparison"] .mashaal-choice>.mashaal-choice-visual{height:clamp(150px,24dvh,185px)}
+#mashaalActivityView .mashaal-choice-label{font-size:clamp(16px,1.55vw,19px)!important;line-height:1.2;padding:3px 4px 4px}
+#mashaalActivityView .mashaal-choice[data-visual-only="true"] .mashaal-choice-label{display:none!important}
+#mashaalActivityView .mashaal-choice[data-order]::after{content:attr(data-order);position:absolute;inset:8px 8px auto auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#765276;color:#fff;border:3px solid #fff;font-size:18px;font-weight:950;box-shadow:0 4px 10px rgba(70,47,78,.18)}
+
+/* Counting: one clean quantity image, then one large number per answer. */
+#mashaalActivityView[data-layout="counting"] .mashaal-stimulus{margin-bottom:6px}
+#mashaalActivityView[data-layout="counting"] .mashaal-generated-stimulus>.mashaal-media-visual{width:min(520px,78vw);height:142px;border-radius:22px}
+#mashaalActivityView[data-layout="counting"] .mashaal-generated-stimulus>.mashaal-media-visual img{object-fit:contain!important;padding:4px}
+#mashaalActivityView[data-layout="counting"] .mashaal-activity-choices{max-width:720px;margin-inline:auto;grid-template-columns:repeat(3,1fr)}
+#mashaalActivityView[data-layout="counting"] .mashaal-choice{min-height:106px!important;display:grid!important;place-items:center}
+#mashaalActivityView[data-layout="counting"] .mashaal-choice>.mashaal-choice-visual{height:auto;min-height:88px!important;display:grid;place-items:center}
+#mashaalActivityView[data-layout="counting"] .mashaal-number-visual{min-width:86px;min-height:86px;font-size:44px}
+
+/* Guided activities are demonstrations, not tiny icons with an oversized Done button. */
+#mashaalActivityView[data-layout^="guided"] .mashaal-stimulus{margin:4px 0 10px}
+#mashaalActivityView[data-layout^="guided"] .mashaal-generated-stimulus{min-height:0}
+#mashaalActivityView[data-layout^="guided"] .mashaal-activity-choices{max-width:190px;margin-inline:auto}
+#mashaalActivityView[data-layout^="guided"] .mashaal-choice{min-height:54px!important;display:grid!important;grid-template-columns:1fr;place-items:center;padding:6px 14px!important}
+#mashaalActivityView[data-layout^="guided"] .mashaal-choice-visual{display:none}
+#mashaalActivityView[data-layout^="guided"] .mashaal-choice-label{font-size:18px!important;padding:0}
+#mashaalActivityView[data-layout="guided-movement"] .mashaal-generated-stimulus>.mashaal-media-visual,
+#mashaalActivityView[data-layout="guided-fine-motor"] .mashaal-generated-stimulus>.mashaal-media-visual{width:min(470px,70vw);height:clamp(240px,37dvh,310px);border-radius:26px}
+#mashaalActivityView[data-layout="guided-movement"] .mashaal-generated-stimulus>.mashaal-media-visual img,
+#mashaalActivityView[data-layout="guided-fine-motor"] .mashaal-generated-stimulus>.mashaal-media-visual img{object-fit:contain!important;padding:0}
+#mashaalActivityView[data-layout="guided-emotion"] .mashaal-visual-sequence{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:min(100%,760px);margin-inline:auto}
+#mashaalActivityView[data-layout="guided-emotion"] .mashaal-visual-sequence>.mashaal-media-visual{width:100%;height:clamp(150px,24dvh,190px);border-radius:22px}
+#mashaalActivityView[data-layout="guided-emotion"] .mashaal-visual-sequence>.mashaal-media-visual img{object-fit:contain!important;padding:0}
+
+#mashaalActivityView .mashaal-check{min-height:50px;margin-top:8px}
+#mashaalActivityView .mashaal-activity-feedback{min-height:26px;margin-top:6px;font-size:19px;line-height:1.3}
+
+@media(min-width:900px) and (orientation:landscape) and (max-height:700px){
+  #mashaalActivityView .mashaal-wrap{padding-top:4px;padding-bottom:6px}
+  #mashaalActivityView .mashaal-domain-actions{margin-bottom:3px}
+  #mashaalActivityView .mashaal-domain-actions .icon-btn{min-height:38px}
+  #mashaalActivityView .mashaal-activity-card{padding:9px 14px 8px}
+  #mashaalActivityView .mashaal-activity-topline{min-height:40px}
+  #mashaalActivityView .mashaal-hear{width:46px;height:46px;min-width:46px;min-height:46px}
+  #mashaalActivityView .mashaal-activity-card h2{font-size:24px;margin:0 0 4px}
+  #mashaalActivityView .mashaal-stimulus{margin:0 0 5px}
+  #mashaalActivityView .mashaal-scene-art{height:min(20dvh,132px)}
+  #mashaalActivityView .mashaal-choice>.mashaal-choice-visual{height:min(27dvh,176px)}
+  #mashaalActivityView[data-choice-count="4"] .mashaal-choice>.mashaal-choice-visual{height:min(22dvh,145px)}
+  #mashaalActivityView[data-layout="comparison"] .mashaal-choice>.mashaal-choice-visual{height:min(25dvh,164px)}
+  #mashaalActivityView[data-layout="counting"] .mashaal-generated-stimulus>.mashaal-media-visual{height:126px}
+  #mashaalActivityView[data-layout="guided-movement"] .mashaal-generated-stimulus>.mashaal-media-visual,
+  #mashaalActivityView[data-layout="guided-fine-motor"] .mashaal-generated-stimulus>.mashaal-media-visual{height:min(40dvh,260px)}
+  #mashaalActivityView[data-layout="guided-emotion"] .mashaal-visual-sequence>.mashaal-media-visual{height:min(25dvh,164px)}
+  #mashaalActivityView .mashaal-activity-feedback{font-size:17px;min-height:22px;margin-top:4px}
+}
+
+@media(max-width:760px){
+  #mashaalActivityView .mashaal-activity-card{padding:12px}
+  #mashaalActivityView[data-choice-count="3"] .mashaal-activity-choices,
+  #mashaalActivityView[data-choice-count="4"] .mashaal-activity-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-choice>.mashaal-choice-visual{height:160px}
+  #mashaalActivityView[data-layout="guided-emotion"] .mashaal-visual-sequence{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media(max-width:430px){
+  #mashaalActivityView[data-choice-count="2"] .mashaal-activity-choices,
+  #mashaalActivityView[data-choice-count="3"] .mashaal-activity-choices,
+  #mashaalActivityView[data-choice-count="4"] .mashaal-activity-choices{grid-template-columns:1fr}
+  #mashaalActivityView .mashaal-choice>.mashaal-choice-visual{height:150px}
+  #mashaalActivityView[data-layout="guided-emotion"] .mashaal-visual-sequence{grid-template-columns:1fr}
+}
+
+@media(prefers-reduced-motion:reduce){#mashaalActivityView .mashaal-choice{transition:none!important}}
+
+/* Keep every activity image fully visible. The art itself owns the focal composition. */
+#mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{width:100%;height:100%;min-height:0;border-radius:16px}
+#mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual img{width:100%;height:100%;max-width:100%;max-height:100%;margin:auto;object-fit:contain!important;object-position:center!important;padding:0!important}

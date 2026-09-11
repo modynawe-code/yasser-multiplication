@@ -6,15 +6,15 @@ const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
 test('student views expose stable visual slots without coupling assets into HTML',async()=>{
   const html=await read('index.html');
+  const yasserHome=await read('src/modules/yasser/ui/yasser-home-shell.js');
   const css=await read('src/ui/styles/character-system.css');
   assert.match(html,/src\/ui\/styles\/character-system\.css/);
-  for(const id of ['homeYasser','homeAssistant','learnYasser','learnAssistant','sessionYasser','sessionAssistant','resultYasser','resultAssistant','resultCelebration']){
-    assert.match(html,new RegExp(`id="${id}"`));
-  }
-  for(const container of ['introCharacters','homeCharacters','learnVisuals','sessionVisuals','resultCharacters']){
-    assert.match(html,new RegExp(`id="${container}"`));
-  }
+  for(const id of ['homeYasser','homeAssistant'])assert.match(yasserHome,new RegExp(`id="${id}"`));
+  for(const id of ['learnYasser','learnAssistant','sessionYasser','sessionAssistant','resultYasser','resultAssistant','resultCelebration'])assert.match(html,new RegExp(`id="${id}"`));
+  assert.match(yasserHome,/id="homeCharacters"/);
+  for(const container of ['introCharacters','learnVisuals','sessionVisuals','resultCharacters'])assert.match(html,new RegExp(`id="${container}"`));
   assert.doesNotMatch(html,/assets\/visual\/.*\.b64\.txt/);
+  assert.doesNotMatch(yasserHome,/assets\/visual\/.*\.b64\.txt/);
   assert.match(css,/prefers-reduced-motion/);
   assert.match(css,/data-scene-motion="celebrate"/);
   assert.match(css,/exam-mode/);

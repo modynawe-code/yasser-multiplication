@@ -36,49 +36,61 @@ export function ensureLearningShell(){
         </div>
         <div class="learner-grid">
           <button class="learner-card yasser-card" id="hubYasser">
-            <div class="learner-placeholder" aria-hidden="true"><span>×</span><span>÷</span></div>
-            <div><strong>ياسر</strong><span>جدول الضرب 1–10</span><small>تدريب • اختبار • إتقان</small></div>
+            <div class="learner-character-shell hub-yasser-character" aria-hidden="true">
+              <img class="learner-yasser-image" src="assets/visual/original/yasser/welcome.png" alt="" width="1049" height="1499" decoding="async" fetchpriority="high" />
+            </div>
+            <div class="learner-card-copy"><strong>ياسر</strong><span>جدول الضرب 1–10</span><small>تدريب • اختبار • إتقان</small></div>
           </button>
           <button class="learner-card khaled-card" id="hubKhaled">
             <div class="learner-character-shell hub-khaled-character" aria-hidden="true">
               <img id="hubKhaledCharacter" class="khaled-character-image" alt="" width="1086" height="1448" decoding="async" hidden />
               <div class="learner-placeholder khaled" id="hubKhaledFallback"><span>+</span><span>−</span></div>
             </div>
-            <div><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>أعداد • عمليات • قياس • أشكال • نقود</small></div>
+            <div class="learner-card-copy"><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>أعداد • عمليات • قياس • أشكال • نقود</small></div>
           </button>
         </div>
       </div>
     </section>
 
-    <section id="khaledHomeView" class="view">
-      <div class="khaled-wrap">
-        <div class="khaled-head khaled-home-hero">
-          <div class="khaled-home-copy"><div class="kicker">رياضيات خالد</div><h2>نتعلم بالأرقام والصور</h2><p>أنشطة قصيرة مناسبة للصف الأول الابتدائي.</p></div>
-          <div class="khaled-home-character" aria-hidden="true">
-            <img id="khaledHomeCharacter" class="khaled-character-image" alt="" width="1086" height="1448" decoding="async" hidden />
-            <div class="khaled-character-fallback" id="khaledHomeCharacterFallback">+ −</div>
+    <section id="khaledIntroView" class="view">
+      <div class="khaled-intro-shell">
+        <article class="card khaled-intro-card">
+          <div class="khaled-intro-toolbar">
+            <button class="icon-btn" id="khaledIntroBack" data-nav="back" aria-label="العودة لاختيار الطفل">رجوع</button>
+            <div class="khaled-intro-badge">رياضيات أول ابتدائي</div>
+            <span class="khaled-intro-toolbar-spacer" aria-hidden="true"></span>
           </div>
-          <button class="icon-btn" id="khaledHomeToHub">اختيار الطفل</button>
-        </div>
-        <div class="khaled-stats"><div><span>المحاولات</span><strong id="khaledAttempts">0</strong></div><div><span>الأخطاء المسجلة</span><strong id="khaledErrors">0</strong></div></div>
-        <div class="khaled-skill-list" id="khaledSkillList"></div>
+          <div class="khaled-intro-character" aria-hidden="true">
+            <img id="khaledIntroCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" fetchpriority="high" hidden />
+            <div class="khaled-character-fallback" id="khaledIntroCharacterFallback">+ −</div>
+          </div>
+          <div class="khaled-intro-copy">
+            <h1>جاهز يا خالد؟</h1>
+            <p>نعدّ ونقارن ونجمع ونتعلم بالصور والنقود خطوة خطوة.</p>
+          </div>
+          <button class="btn khaled-intro-start" id="khaledIntroStart">يلا نبدأ</button>
+        </article>
       </div>
     </section>
 
+    <section id="khaledHomeView" class="view"></section>
+
     <section id="khaledSessionView" class="view">
       <div class="khaled-session-wrap">
-        <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><div class="learning-nav-actions"><button class="icon-btn" id="khaledExitSession" data-nav="back">رجوع للمهارات</button><button class="icon-btn" id="khaledSessionToHub" data-nav="home">اختيار الطفل</button></div></div>
+        <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><div class="learning-nav-actions"><button class="icon-btn" id="khaledExitSession" data-nav="back" aria-label="العودة لمهارات خالد">رجوع</button></div></div>
         <div class="progress-line"><i id="khaledSessionProgress" style="width:0%"></i></div>
         <div class="card khaled-question-card">
           <div class="khaled-session-character" aria-hidden="true">
             <img id="khaledSessionCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" hidden />
             <div class="khaled-character-fallback compact" id="khaledSessionCharacterFallback">+ −</div>
           </div>
-          <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال">🔊 اسمع السؤال</button>
-          <h3 id="khaledPrompt">اختر الإجابة</h3>
-          <div class="khaled-visual" id="khaledVisual"></div>
-          <div class="khaled-answers" id="khaledAnswers"></div>
-          <div class="khaled-feedback" id="khaledFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
+          <div class="khaled-question-content">
+            <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال">🔊 اسمع السؤال</button>
+            <h3 id="khaledPrompt">اختر الإجابة</h3>
+            <div class="khaled-visual" id="khaledVisual"></div>
+            <div class="khaled-answers" id="khaledAnswers"></div>
+            <div class="khaled-feedback" id="khaledFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -91,8 +103,8 @@ export function ensureLearningShell(){
         </div>
         <h2 id="khaledResultTitle">أحسنت يا خالد</h2><p id="khaledResultSkill"></p>
         <div class="score-ring"><strong id="khaledResultPct">0%</strong></div>
-        <div class="result-metrics"><div class="result-metric"><span>صحيح</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>أخطاء</span><strong id="khaledResultWrong">0</strong></div></div>
-        <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="btn secondary" id="khaledResultToHub">اختيار الطفل</button></div>
+        <div class="result-metrics"><div class="result-metric"><span>صح من أول مرة</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>صح بعد تصحيح</span><strong id="khaledResultCorrected">0</strong></div><div class="result-metric"><span>تحتاج مراجعة</span><strong id="khaledResultWrong">0</strong></div></div>
+        <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="khaled-result-link" id="khaledResultToHub">اختيار الطفل</button></div>
       </div></div>
     </section>
 
@@ -100,8 +112,6 @@ export function ensureLearningShell(){
       <div class="family-parent-layout">
         <nav class="card family-parent-nav">
           <button class="active" data-family-parent-tab="overview">الملخص</button>
-          <button data-family-parent-tab="yasser">ياسر</button>
-          <button data-family-parent-tab="khaled">خالد</button>
           <button data-family-parent-tab="sessions">آخر الجلسات</button>
           <button id="familyParentHome">العودة لاختيار الطفل</button>
         </nav>
@@ -117,7 +127,7 @@ export function ensureLearningShell(){
     const modal=document.createElement('div');
     modal.className='modal';
     modal.id='familyPinModal';
-    modal.innerHTML=`<div class="card modal-card"><h3 style="margin-top:0">تقرير ولي الأمر</h3><p class="muted">أدخل الرقم السري لعرض تقدم ياسر وخالد.</p><input class="pin" id="familyPinInput" type="password" inputmode="numeric" maxlength="4" /><button class="btn primary" style="width:100%" id="familyPinSubmit">فتح التقرير</button><button class="btn secondary" style="width:100%;margin-top:8px" id="familyPinCancel">إلغاء</button></div>`;
+    modal.innerHTML=`<div class="card modal-card"><h3 style="margin-top:0">تقرير ولي الأمر</h3><p class="muted">أدخل الرقم السري لعرض تقدم الأطفال.</p><input class="pin" id="familyPinInput" type="password" inputmode="numeric" maxlength="4" /><button class="btn primary" style="width:100%" id="familyPinSubmit">فتح التقرير</button><button class="btn secondary" style="width:100%;margin-top:8px" id="familyPinCancel">إلغاء</button></div>`;
     document.body.appendChild(modal);
   }
 }

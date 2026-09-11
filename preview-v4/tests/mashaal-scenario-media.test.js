@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { getMashaalWebMedia } from '../src/modules/mashaal/ui/mashaal-web-media.js';
+import { getMashaalKg3Activity } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
+const KEYS=['doctor','teacher','baker','wait-turn','grab-ball','walk-away-angry','ask-help','return-book','leave-book-floor','damage-book','duck','apple','moon','compare-three-apples','compare-four-apples','compare-five-apples','healthy-apple','candy','fries','wet-hands','soap','rub-hands','rinse-hands','hot-surface','stay-away','touch-hot','play-near-hot','playtime-cleanup','help-tidy','leave-mess','scatter-toys','girl-lost-toy','happy','sad','angry','rainy-day','umbrella','sunglasses','ball','fallen-block-tower','throw-blocks','kick-blocks','ball-above-box','ball-inside-box','ball-below-box','wake','brush-teeth','breakfast','balance','fine-motor','girl-drinking-water'];
+const ACTIVITIES=['kg3-handwashing-sequence-01','kg3-personal-safety-01','kg3-family-community-01','kg3-recognize-emotion-01','kg3-observe-reason-01','kg3-seek-help-01','kg3-spatial-position-01','kg3-story-sequence-01','kg3-turn-taking-01'];
+const local=m=>Boolean(m)&&/^assets\/mashaal\/choices\/[a-z0-9-]+\.webp$/.test(m.url);
+test('Mashaal child-facing scenario media is local WebP artwork',()=>{for(const key of KEYS){const m=getMashaalWebMedia(key);assert.ok(m,key);assert.ok(local(m),`${key} local WebP`);assert.doesNotMatch(m.url,/data:image|cdn\.jsdelivr\.net/);}});
+test('completed KG3 activities cannot regress to icons or SVG fallbacks',()=>{for(const id of ACTIVITIES){const a=getMashaalKg3Activity(id);assert.ok(a,id);for(const key of a.choices||[])assert.ok(local(getMashaalWebMedia(key)),`${id}:${key}`);}});
+test('national flags stay exact source-backed assets',()=>{for(const key of ['saudi-flag','japan-flag','brazil-flag'])assert.match(getMashaalWebMedia(key).url,/flag-icons@7\.3\.2/);});

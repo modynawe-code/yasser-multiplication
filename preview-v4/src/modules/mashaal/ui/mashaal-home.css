@@ -1,0 +1,60 @@
+.mashaal-home-hero{grid-template-columns:auto minmax(0,1fr) auto;min-height:126px;padding:14px 18px;margin-bottom:14px;background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(255,244,250,.96) 54%,rgba(239,246,255,.98));border-color:#eadfed;box-shadow:0 12px 34px rgba(80,54,92,.08)}
+.mashaal-home-back{align-self:start;min-height:48px;padding-inline:14px;background:rgba(255,255,255,.92)}
+.mashaal-home-hero .mashaal-heading h2{font-size:clamp(32px,4.2vw,42px);line-height:1.15;margin:2px 0 5px;letter-spacing:-.02em}
+.mashaal-home-hero .mashaal-heading p{font-size:15px;line-height:1.5}
+.mashaal-home-hear{width:auto;min-width:116px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:21px;font-weight:950;color:#765276;background:#fff8fd}
+.mashaal-home-hear strong{font-size:16px}
+.mashaal-world-prompt{display:flex;align-items:end;justify-content:space-between;gap:12px;min-height:46px;padding:0 6px 9px;color:#765276}
+.mashaal-world-prompt strong{font-size:20px}.mashaal-world-prompt span{font-size:12px;font-weight:850;color:var(--muted)}
+#mashaalHomeView .mashaal-domain-grid{align-items:stretch;gap:16px}
+#mashaalHomeView .mashaal-domain-card{--world-accent:#b96b9e;--world-soft:#fff0f8;min-height:190px;padding:13px 14px 15px;justify-content:space-between;align-items:stretch;gap:11px;border-color:color-mix(in srgb,var(--world-accent) 22%,#eadff1);background:linear-gradient(180deg,#fff 0 62%,var(--world-soft) 150%);box-shadow:0 10px 24px rgba(68,48,78,.07)}
+#mashaalHomeView .mashaal-domain-card::before{height:6px;background:var(--world-accent)}
+#mashaalHomeView .mashaal-domain-card strong{text-align:center;font-size:19px;line-height:1.35;min-height:50px;display:grid;place-items:center}
+#mashaalHomeView .mashaal-domain-card[data-domain-id="language-communication"]{--world-accent:#b96b9e;--world-soft:#fff0f8}
+#mashaalHomeView .mashaal-domain-card[data-domain-id="cognitive-operations-general-knowledge"]{--world-accent:#6d8fc4;--world-soft:#eef5ff}
+#mashaalHomeView .mashaal-domain-card[data-domain-id="social-emotional-development"]{--world-accent:#d68b6f;--world-soft:#fff3ee}
+#mashaalHomeView .mashaal-domain-card[data-domain-id="health-physical-development"]{--world-accent:#6da780;--world-soft:#eef9f1}
+#mashaalHomeView .mashaal-domain-card[data-domain-id="quran-islamic-education"]{--world-accent:#7c9a61;--world-soft:#f2f8e9}
+#mashaalHomeView .mashaal-domain-card[data-domain-id="national-social-studies"]{--world-accent:#7186b9;--world-soft:#eef2ff}
+.mashaal-domain-card-visual{position:relative;isolation:isolate;height:104px;border-radius:23px;overflow:hidden;background:linear-gradient(145deg,var(--world-soft),#fff);border:1px solid color-mix(in srgb,var(--world-accent) 18%,transparent);display:block}
+.mashaal-domain-card-visual::before,.mashaal-domain-card-visual::after{content:"";position:absolute;border-radius:999px;background:color-mix(in srgb,var(--world-accent) 12%,transparent);z-index:-1}
+.mashaal-domain-card-visual::before{width:92px;height:92px;inset:-28px auto auto -18px}.mashaal-domain-card-visual::after{width:70px;height:70px;inset:auto -14px -26px auto}
+.mashaal-world-piece{position:absolute;display:grid;place-items:center;color:color-mix(in srgb,var(--world-accent) 82%,#27334d);background:rgba(255,255,255,.92);border:1px solid color-mix(in srgb,var(--world-accent) 22%,transparent);box-shadow:0 6px 14px rgba(67,48,76,.07);font-weight:950}
+.mashaal-world-piece.piece-1{width:66px;height:66px;border-radius:21px;left:50%;top:18px;transform:translateX(-50%);font-size:29px;z-index:2}
+.mashaal-world-piece.piece-2{width:46px;height:46px;border-radius:16px;right:18px;top:34px;font-size:20px;transform:rotate(6deg)}
+.mashaal-world-piece.piece-3{width:44px;height:44px;border-radius:15px;left:19px;top:39px;font-size:18px;transform:rotate(-7deg)}
+#mashaalHomeView .mashaal-safe-note{margin:8px 0 0}
+
+@media(min-width:900px) and (orientation:landscape) and (max-height:900px){
+  .mashaal-home-hero{min-height:100px;padding:9px 16px;margin-bottom:8px}
+  .mashaal-home-hero .mashaal-heading .kicker{margin-bottom:2px;padding-block:5px}
+  .mashaal-home-hero .mashaal-heading h2{font-size:31px;margin:0 0 2px}
+  .mashaal-home-hero .mashaal-heading p{font-size:13px}
+  .mashaal-world-prompt{min-height:34px;padding-bottom:5px}.mashaal-world-prompt strong{font-size:17px}
+  #mashaalHomeView .mashaal-domain-card{min-height:158px;padding:10px 11px 11px;gap:7px}
+  #mashaalHomeView .mashaal-domain-card strong{font-size:18px;min-height:38px}
+  .mashaal-domain-card-visual{height:88px;border-radius:20px}.mashaal-world-piece.piece-1{width:58px;height:58px;top:14px;font-size:26px}.mashaal-world-piece.piece-2{width:40px;height:40px;right:14px;top:30px;font-size:18px}.mashaal-world-piece.piece-3{width:39px;height:39px;left:15px;top:32px;font-size:17px}
+  #mashaalHomeView .mashaal-safe-note{min-height:10px;margin-top:2px}
+}
+
+@media(max-width:760px){
+  .mashaal-home-hero{grid-template-columns:1fr auto;grid-template-areas:"back hear" "heading heading";gap:10px;padding:12px 14px}
+  .mashaal-home-back{grid-area:back;justify-self:start;align-self:center}
+  .mashaal-home-hero .mashaal-heading{grid-area:heading;text-align:center}
+  .mashaal-home-hero .mashaal-heading .kicker{margin-inline:auto}
+  .mashaal-home-hear{grid-area:hear;justify-self:end;min-width:108px;height:54px;min-height:54px}
+  .mashaal-world-prompt span{display:none}
+  #mashaalHomeView .mashaal-domain-card{min-height:174px}
+}
+
+@media(max-width:430px){
+  .mashaal-home-hero{border-radius:20px}
+  .mashaal-home-back{font-size:12px;padding-inline:10px}
+  .mashaal-home-hear{min-width:96px;padding-inline:12px}.mashaal-home-hear strong{font-size:14px}
+  .mashaal-home-hero .mashaal-heading h2{font-size:30px}
+  .mashaal-world-prompt{padding-inline:2px}.mashaal-world-prompt strong{font-size:17px}
+  #mashaalHomeView .mashaal-domain-card{min-height:154px;padding:9px}
+  .mashaal-domain-card-visual{height:78px}.mashaal-world-piece.piece-1{width:52px;height:52px;top:13px}.mashaal-world-piece.piece-2,.mashaal-world-piece.piece-3{width:35px;height:35px;top:29px}
+}
+
+@media(prefers-reduced-motion:reduce){.mashaal-home-hero,.mashaal-home-hear,.mashaal-world-piece{transition:none!important}}

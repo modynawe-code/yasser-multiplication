@@ -1,0 +1,23 @@
+- [x] Wire Mashaal into Family Hub from learner registry.
+- [x] Add Mashaal home view shell driven by KG3 domain view model.
+- [x] Add Mashaal to parent report using qualitative summary.
+- [x] Replace backend fixed learner slug constraint with safe generic migration.
+- [x] Generalize backend learner initialization and sync validation.
+- [x] Preserve the complete Yasser/Khaled games, rewards and challenge platform in the family integration branch.
+- [x] Generalize games participation while keeping educational game providers stage-appropriate.
+- [x] Generalize rewards through learner capabilities without forcing academic percentages on Mashaal.
+- [x] Generalize parent reports and cloud sync through learner capabilities.
+- [x] Restore exact curriculum-specific cloud session history without duplication and keep it append-only in D1.
+- [x] Keep family backup open-ended while preserving legacy YasserKhaledLearning restore support.
+- [x] Run complete frontend/backend regression suites and PWA contract tests.
+- [x] Verify detailed KG3 curriculum content and authored activities against approved sources.
+- [x] Select an explicitly reusable human recitation source: King Fahd Glorious Quran Printing Complex, Ibrahim Al-Akhdar, Hafs from Asim.
+- [x] Limit the recitation scope to one surah only: سورة الإخلاص (112).
+- [x] Build integrity-checked recitation media manifest, human-audio runtime, and automatic offline precache path.
+- [x] Add safe ZIP and HTTP-range import paths for the approved KFGQPC source package.
+- [x] Commit the verified سورة الإخلاص human-recitation asset: 238696 bytes, SHA-256 `102112a78148e14a568679599d856b06ce830ac63e6e59fa2d6a5a423d8c9bd1`.
+- [x] Reach 25/25 KG3 skills with playable/available content while keeping Quran recitation human-only.
+- [x] Define and regression-test the Galaxy Tab visual QA contract and manual landscape/portrait matrix without treating automation as a real-device pass.
+- [ ] Run the documented manual Galaxy Tab visual QA on the actual target device in landscape and portrait and record PASS evidence.
+- [ ] Apply the reviewed D1 migrations only during the controlled production rollout.
+- [ ] Merge Draft PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves.

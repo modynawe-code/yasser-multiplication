@@ -10,6 +10,7 @@ const ASSETS=Object.freeze({
 
 const SLOT_IDS=Object.freeze({
   hub:'hubKhaledCharacter',
+  intro:'khaledIntroCharacter',
   home:'khaledHomeCharacter',
   session:'khaledSessionCharacter',
   result:'khaledResultCharacter'
@@ -17,6 +18,7 @@ const SLOT_IDS=Object.freeze({
 
 const FALLBACK_IDS=Object.freeze({
   hub:'hubKhaledFallback',
+  intro:'khaledIntroCharacterFallback',
   home:'khaledHomeCharacterFallback',
   session:'khaledSessionCharacterFallback',
   result:'khaledResultCharacterFallback'
@@ -28,6 +30,7 @@ function byId(id){return document.getElementById(id);}
 
 export function createKhaledSceneController(){
   const cache=new Map();
+  const paintEpoch=new Map();
 
   function canLoad(src){
     if(cache.has(src))return cache.get(src);
@@ -45,8 +48,12 @@ export function createKhaledSceneController(){
     const image=byId(SLOT_IDS[slot]);
     const fallback=byId(FALLBACK_IDS[slot]);
     if(!image)return false;
+    const epoch=(paintEpoch.get(slot)||0)+1;
+    paintEpoch.set(slot,epoch);
     const src=ASSETS[key];
     const ok=src?await canLoad(src):false;
+    // A slower previous image request must never overwrite a newer scene state.
+    if(paintEpoch.get(slot)!==epoch)return false;
     if(ok){
       image.src=src;
       image.hidden=false;
@@ -66,12 +73,19 @@ export function createKhaledSceneController(){
   }
 
   function hub(){return paint('hub','welcome');}
-  function home(){return paint('home','welcome');}
+  function intro(){return paint('intro','groupThinking');}
+  // Home uses the standalone thinking pose so the skill chooser has its own visual identity.
+  function home(){return paint('home','thinking');}
   function question(){return paint('session','groupThinking');}
-  function feedback(isCorrect){return paint('session',isCorrect?'encourage':'groupThinking',{motion:isCorrect?'nod':'none'});}
+  // Feedback changes the artwork inside the same 4:3 session stage. This keeps the
+  // child and calculator full-size and prevents portrait artwork from collapsing/cropping the scene.
+  function feedback(isCorrect){return paint('session',isCorrect?'groupCelebration':'groupThinking',{motion:isCorrect?'nod':'none'});}
   function result(pct){
-    if(pct>=90)return paint('result','groupCelebration',{motion:'celebrate'});
-    if(pct>=70)return paint('result','mastered',{motion:'nod'});
+    // A perfect round earns Khaled's standalone celebration pose; strong ordinary rounds
+    // keep the shared Khaled + calculator celebration. Lower bands retain their own states.
+    if(pct===100)return paint('result','celebrate',{motion:'celebrate'});
+    if(pct>=80)return paint('result','groupCelebration',{motion:'celebrate'});
+    if(pct>=60)return paint('result','mastered',{motion:'nod'});
     return paint('result','encourage');
   }
 
@@ -80,5 +94,5 @@ export function createKhaledSceneController(){
   // are then handled by the service worker's normal runtime cache.
   function warm(){WARM_ASSET_KEYS.forEach(key=>canLoad(ASSETS[key]));}
 
-  return{ASSETS,WARM_ASSET_KEYS,warm,hub,home,question,feedback,result,paint};
+  return{ASSETS,WARM_ASSET_KEYS,warm,hub,intro,home,question,feedback,result,paint};
 }

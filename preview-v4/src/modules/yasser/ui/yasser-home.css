@@ -1,0 +1,39 @@
+.yasser-home-shell{max-width:1080px;margin:auto}
+.yasser-home-panel{display:grid;gap:16px}
+.yasser-home-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,34%);align-items:center;gap:24px;min-height:300px;padding:28px 30px;border:1px solid #dbe4ff;border-radius:24px;background:linear-gradient(135deg,#f8faff 0%,#eef3ff 62%,#fff9ec 100%);overflow:hidden;box-shadow:var(--shadow)}
+.yasser-home-hero::before,.yasser-home-hero::after{content:"";position:absolute;border-radius:999px;z-index:-1;pointer-events:none}
+.yasser-home-hero::before{width:270px;height:270px;inset:auto -95px -140px auto;background:rgba(49,87,213,.08)}
+.yasser-home-hero::after{width:150px;height:150px;inset:-70px auto auto 34%;background:rgba(241,173,56,.13)}
+.yasser-home-copy{min-width:0}.yasser-home-copy .kicker{margin-bottom:10px}.yasser-home-copy h2{margin:0;font-size:clamp(32px,4.2vw,44px);line-height:1.2}.yasser-home-copy p{max-width:610px;margin:9px 0 18px;color:var(--muted);font-size:16px;line-height:1.75}
+.yasser-home-focus{display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(100%,520px);min-height:54px;padding:12px 15px;border:1px solid #dce4ff;border-radius:16px;background:rgba(255,255,255,.82);backdrop-filter:blur(4px)}
+.yasser-home-focus span{font-size:13px;color:var(--muted);font-weight:850}.yasser-home-focus strong{color:var(--primary);font-size:16px;font-weight:950}
+.yasser-home-characters{display:flex;align-items:flex-end;justify-content:center;gap:var(--character-gap-medium);min-height:calc(var(--character-yasser-home) + 4px);pointer-events:none}
+.yasser-home-characters .yasser-mascot{height:var(--character-yasser-home);width:auto}.yasser-home-characters .calc-mascot{width:var(--character-assistant-home);height:var(--character-assistant-home);margin-bottom:8px}
+
+.yasser-home-training{padding:22px 24px 24px;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
+.yasser-home-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}.yasser-home-section-head span{display:block;color:var(--primary);font-size:12px;font-weight:950;margin-bottom:3px}.yasser-home-section-head h3{margin:0;font-size:20px}.yasser-home-section-head small{color:var(--muted);font-weight:800}
+.yasser-home-training .table-picker{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.yasser-home-training .table-chip{height:60px}
+.yasser-home-actions{margin-top:18px;padding-top:0;grid-template-columns:1.25fr 1fr 1.1fr}
+.yasser-home-actions .btn{min-height:60px}
+.yasser-home-progress{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.yasser-home-progress-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}.yasser-home-progress-head strong{font-size:14px}.yasser-home-progress-head span{color:var(--muted);font-size:11px}
+.yasser-home-progress-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}.yasser-home-progress-metrics>div{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}.yasser-home-progress-metrics span{font-size:11px;color:var(--muted);font-weight:800}.yasser-home-progress-metrics strong{font-size:17px}
+.yasser-home-progress-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;overflow:visible}.yasser-home-progress-grid .progress-item{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:4px;min-height:54px;padding:6px;text-align:center}.yasser-home-progress-grid .progress-item b{font-size:12px}.yasser-home-progress-grid .progress-item .bar{width:100%;height:5px}.yasser-home-progress-grid .progress-item .pct{text-align:center;font-size:9px}
+
+@media (orientation:landscape) and (min-width:850px){
+  .yasser-home-shell{max-width:1120px}.yasser-home-panel{grid-template-columns:minmax(0,1.08fr) minmax(430px,.92fr);align-items:stretch;gap:14px}.yasser-home-hero{grid-template-columns:minmax(0,1fr) minmax(220px,37%);min-height:calc(100dvh - 112px);padding:24px;gap:18px}.yasser-home-training{min-height:calc(100dvh - 112px);display:flex;flex-direction:column;justify-content:center;padding:22px}.yasser-home-training .table-picker{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.yasser-home-training .table-chip{height:54px}.yasser-home-actions{grid-template-columns:1fr;margin-top:14px}.yasser-home-actions .btn{min-height:54px}.yasser-home-copy p{font-size:15px}.yasser-home-focus{min-height:50px}.yasser-home-progress{margin-top:12px;padding-top:11px}.yasser-home-progress-head span{display:none}.yasser-home-progress-grid .progress-item{min-height:48px}
+}
+
+@media (orientation:landscape) and (min-width:850px) and (max-height:720px){
+  .yasser-home-hero,.yasser-home-training{min-height:0}.yasser-home-hero{padding:18px 20px}.yasser-home-copy h2{font-size:34px}.yasser-home-copy p{margin:6px 0 12px;font-size:14px;line-height:1.55}.yasser-home-section-head{margin-bottom:10px}.yasser-home-training{padding:17px 18px;justify-content:flex-start}.yasser-home-training .table-picker{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.yasser-home-training .table-chip{height:48px}.yasser-home-actions{grid-template-columns:1.15fr .95fr 1fr;gap:7px;margin-top:11px}.yasser-home-actions .btn{min-height:50px;font-size:14px}.yasser-home-progress{margin-top:9px;padding-top:8px}.yasser-home-progress-head{margin-bottom:6px}.yasser-home-progress-metrics{margin-bottom:6px}.yasser-home-progress-metrics>div{min-height:34px;padding:6px 8px}.yasser-home-progress-grid .progress-item{min-height:42px;padding:5px}
+}
+
+@media(max-width:700px){
+  .yasser-home-shell{padding-bottom:max(8px,env(safe-area-inset-bottom))}.yasser-home-hero{grid-template-columns:minmax(0,1fr) minmax(150px,42%);min-height:230px;padding:18px;gap:10px;border-radius:20px}.yasser-home-copy h2{font-size:30px}.yasser-home-copy p{font-size:13.5px;line-height:1.6;margin:6px 0 12px}.yasser-home-focus{min-height:48px;padding:10px 12px}.yasser-home-focus span{font-size:11px}.yasser-home-focus strong{font-size:13px}.yasser-home-training{padding:18px 16px;border-radius:20px}.yasser-home-section-head{align-items:flex-start}.yasser-home-section-head h3{font-size:18px}.yasser-home-section-head small{display:none}.yasser-home-training .table-picker{gap:7px}.yasser-home-training .table-chip{height:52px}.yasser-home-actions{grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.yasser-home-actions .btn.primary{grid-column:1/-1}.yasser-home-progress-head span{display:none}
+}
+
+@media(max-width:430px){
+  .yasser-home-hero{grid-template-columns:1fr;min-height:0;text-align:center}.yasser-home-copy .kicker{margin-inline:auto}.yasser-home-copy p{margin-inline:auto}.yasser-home-focus{margin-inline:auto}.yasser-home-characters{min-height:170px}.yasser-home-characters .yasser-mascot{max-height:170px}.yasser-home-characters .calc-mascot{max-width:78px;max-height:78px}.yasser-home-training .table-picker{grid-template-columns:repeat(5,minmax(0,1fr))}.yasser-home-training .table-chip{height:48px;font-size:18px}.yasser-home-progress-metrics{grid-template-columns:1fr}.yasser-home-progress-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+
+@media(prefers-reduced-motion:reduce){.yasser-home-hero::before,.yasser-home-hero::after{transition:none}}

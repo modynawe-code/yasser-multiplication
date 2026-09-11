@@ -1,0 +1,83 @@
+.mashaal-media-visual{display:grid;place-items:center;width:112px;height:100px;border-radius:22px;background:#fff;border:1px solid #eadff1;overflow:hidden;box-shadow:0 6px 14px rgba(70,47,78,.06)}
+.mashaal-media-visual.compact{width:74px;height:66px;border-radius:16px;box-shadow:none}
+.mashaal-media-visual img{display:block;width:100%;height:100%;object-fit:contain;padding:6px;box-sizing:border-box}
+.mashaal-media-visual[data-media-kind="flag"]{width:min(150px,100%);height:104px;border-radius:18px;background:#f8f8f8}
+.mashaal-media-visual[data-media-kind="flag"] img{padding:0;object-fit:contain}
+
+/* KG3 choice cards are visual-first: the picture carries the meaning and the
+   label only supports it. Full scenario art must not be reduced to an icon. */
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{width:100%;height:clamp(190px,25vw,280px);border-radius:22px;background:#fff}
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual img{padding:0;object-fit:contain;object-position:center}
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual[data-media-kind="flag"]{width:100%;height:clamp(180px,22vw,250px);background:#fff}
+.mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual[data-media-kind="flag"] img{object-fit:contain;padding:10px}
+.mashaal-choice-visual{width:100%!important;min-height:0!important}
+.mashaal-choice{justify-content:flex-start!important;min-height:270px!important;padding:10px!important;overflow:hidden}
+.mashaal-choice-label{font-size:18px!important;line-height:1.35;text-align:center;padding:2px 6px 6px}
+
+.mashaal-skill-preview{position:relative;isolation:isolate}
+.mashaal-skill-domain-art{position:absolute;inset:0;z-index:0;width:100%!important;height:100%!important;object-fit:contain;opacity:.2;filter:saturate(.85)}
+.mashaal-skill-concept{position:relative;z-index:1;width:100%;height:100%;display:grid;place-items:center}
+.mashaal-skill-concept .mashaal-generated-stimulus{background:transparent}
+.mashaal-choice--completion{min-height:74px!important;width:min(260px,100%);justify-self:center;align-self:center;background:#fff7fd;border-color:#d9bdd3}
+.mashaal-choice--completion .mashaal-choice-visual{display:none}
+.mashaal-choice--completion .mashaal-choice-label{font-size:22px!important;padding:0}
+
+@media(max-width:760px){
+  .mashaal-media-visual{width:96px;height:88px}
+  .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{height:170px}
+  .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual[data-media-kind="flag"]{height:160px}
+  .mashaal-choice{min-height:230px!important}
+}
+
+/* unified activity media slot */
+#mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{width:100%;height:100%;min-height:0}
+#mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual img{width:auto;height:100%;max-width:100%;max-height:100%;margin:auto;object-fit:contain!important}
+
+/* Asset contracts own semantic crop instead of one global fit rule. Action tiles
+   generated from the source boards keep the action/object side in frame. */
+#mashaalActivityView .mashaal-media-visual[data-asset-fit="cover"] img{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:78% 52%!important;padding:0!important}
+#mashaalActivityView .mashaal-media-visual[data-asset-fit="contain"] img{object-fit:contain!important}
+#mashaalActivityView .mashaal-media-visual[data-asset-role="isolated-object"] img{padding:4px!important}
+
+/* Guided and semantic tasks need demonstration-sized visuals rather than icons. */
+#mashaalActivityView[data-layout="guided-speaking"] .mashaal-generated-stimulus>.mashaal-media-visual{width:min(520px,76vw);height:clamp(220px,34dvh,290px);border-radius:26px}
+#mashaalActivityView[data-layout="guided-speaking"] .mashaal-generated-stimulus>.mashaal-media-visual img{width:100%!important;height:100%!important;object-fit:contain!important;padding:0!important}
+#mashaalActivityView[data-layout="guided-tracing"] .mashaal-trace-visual{width:min(540px,78vw);height:clamp(150px,24dvh,205px);margin-inline:auto}
+
+.mashaal-guided-action-art{display:block;width:min(100%,560px);aspect-ratio:16/9;margin-inline:auto;border-radius:26px;overflow:hidden;background:#fff;box-shadow:0 10px 24px rgba(70,47,78,.08)}
+.mashaal-guided-action-art svg{display:block;width:100%;height:100%}
+.mashaal-guided-action-art.compact{width:100%;max-width:180px;height:auto;border-radius:18px;box-shadow:none}
+#mashaalActivityView[data-layout="guided-speaking"] .mashaal-generated-stimulus>.mashaal-guided-action-art{width:min(520px,76vw)}
+#mashaalActivityView[data-layout="guided-movement"] .mashaal-guided-action-art,
+#mashaalActivityView[data-layout="guided-fine-motor"] .mashaal-guided-action-art{width:min(100%,560px)}
+
+/* Domain screens are navigation, not worksheets. Keep the six skill choices visible
+   in landscape and switch to one readable column on an 800px portrait tablet. */
+#mashaalDomainView .mashaal-skill-copy{white-space:normal;overflow-wrap:anywhere}
+#mashaalDomainView .mashaal-skill-copy span{white-space:normal}
+@media(min-width:900px) and (orientation:landscape) and (max-height:900px){
+  #mashaalDomainView .mashaal-domain-focus{padding:14px 20px!important}
+  #mashaalDomainView .mashaal-domain-symbol{width:84px;height:84px;border-radius:25px}
+  #mashaalDomainView .mashaal-domain-focus h2{font-size:28px;margin:7px 0}
+  #mashaalDomainView .mashaal-domain-focus p{margin:0;font-size:16px}
+  #mashaalDomainView .mashaal-skill-grid{margin-top:8px;gap:10px}
+  #mashaalDomainView .mashaal-skill-card{grid-template-columns:88px minmax(0,1fr) auto!important;min-height:94px!important;padding:7px 10px!important;gap:10px}
+  #mashaalDomainView .mashaal-skill-preview{width:82px;height:70px;border-radius:15px}
+  #mashaalDomainView .mashaal-skill-copy{gap:2px}
+  #mashaalDomainView .mashaal-skill-copy strong{font-size:16px;line-height:1.25}
+  #mashaalDomainView .mashaal-skill-copy span{font-size:12px;line-height:1.2}
+  #mashaalDomainView .mashaal-skill-start{min-width:62px;min-height:38px;font-size:14px}
+}
+@media(orientation:portrait) and (min-width:761px) and (max-width:900px){
+  #mashaalDomainView .mashaal-domain-focus{padding:18px!important}
+  #mashaalDomainView .mashaal-domain-symbol{width:92px;height:92px;border-radius:26px}
+  #mashaalDomainView .mashaal-domain-focus h2{font-size:29px;margin:8px 0}
+  #mashaalDomainView .mashaal-domain-focus p{margin:0;font-size:16px}
+  #mashaalDomainView .mashaal-skill-grid{grid-template-columns:1fr!important;margin-top:10px;gap:9px}
+  #mashaalDomainView .mashaal-skill-card{grid-template-columns:92px minmax(0,1fr) auto!important;min-height:92px!important;padding:7px 12px!important;gap:12px}
+  #mashaalDomainView .mashaal-skill-preview{width:84px;height:72px;border-radius:15px}
+  #mashaalDomainView .mashaal-skill-copy{gap:2px}
+  #mashaalDomainView .mashaal-skill-copy strong{font-size:17px;line-height:1.25}
+  #mashaalDomainView .mashaal-skill-copy span{font-size:12px;line-height:1.2}
+  #mashaalDomainView .mashaal-skill-start{min-width:66px;min-height:40px;font-size:14px}
+}
