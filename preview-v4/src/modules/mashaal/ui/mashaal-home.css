@@ -31,9 +31,9 @@
   .mashaal-home-hero .mashaal-heading h2{font-size:31px;margin:0 0 2px}
   .mashaal-home-hero .mashaal-heading p{font-size:13px}
   .mashaal-world-prompt{min-height:34px;padding-bottom:5px}.mashaal-world-prompt strong{font-size:17px}
-  #mashaalHomeView .mashaal-domain-card{min-height:158px;padding:10px 11px 11px;gap:7px}
+  #mashaalHomeView .mashaal-domain-card{min-height:224px;padding:10px 11px 13px;gap:8px}
   #mashaalHomeView .mashaal-domain-card strong{font-size:18px;min-height:38px}
-  .mashaal-domain-card-visual{height:88px;border-radius:20px}.mashaal-world-piece.piece-1{width:58px;height:58px;top:14px;font-size:26px}.mashaal-world-piece.piece-2{width:40px;height:40px;right:14px;top:30px;font-size:18px}.mashaal-world-piece.piece-3{width:39px;height:39px;left:15px;top:32px;font-size:17px}
+  .mashaal-domain-card-visual{height:154px;border-radius:22px}.mashaal-domain-card-visual .mashaal-illustration{max-width:230px;max-height:150px}.mashaal-world-piece.piece-1{width:58px;height:58px;top:14px;font-size:26px}.mashaal-world-piece.piece-2{width:40px;height:40px;right:14px;top:30px;font-size:18px}.mashaal-world-piece.piece-3{width:39px;height:39px;left:15px;top:32px;font-size:17px}
   #mashaalHomeView .mashaal-safe-note{min-height:10px;margin-top:2px}
 }
 
