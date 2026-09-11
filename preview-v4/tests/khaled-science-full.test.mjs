@@ -39,8 +39,8 @@ test('runtime exposes every activity through supported interactive types',()=>{
 
 test('science atlas parts reconstruct a real complete WebP worksheet atlas',async()=>{
   assert.equal(KHALED_SCIENCE_ATLAS_PARTS.length,9);
-  const chunks=await Promise.all(KHALED_SCIENCE_ATLAS_PARTS.map(async path=>Buffer.from((await read(path)).toString('utf8').trim(),'base64')));
-  const data=Buffer.concat(chunks);
+  const encoded=(await Promise.all(KHALED_SCIENCE_ATLAS_PARTS.map(async path=>(await read(path)).toString('utf8').trim()))).join('');
+  const data=Buffer.from(encoded,'base64');
   assert.ok(data.length>50000);
   assert.equal(data.subarray(0,4).toString('ascii'),'RIFF');
   assert.equal(data.subarray(8,12).toString('ascii'),'WEBP');
@@ -53,7 +53,8 @@ test('science runtime keeps independent progress, speech and worksheet imagery',
   assert.match(runtime,/createSpeechService/);
   assert.match(runtime,/KHALED_SCIENCE_ATLAS_PARTS/);
   assert.match(runtime,/decodeAtlasPart/);
-  assert.match(runtime,/new Blob\(parts,\{type:'image\/webp'\}\)/);
+  assert.match(runtime,/sources\.join\(''\)/);
+  assert.match(runtime,/new Blob\(\[atlasBytes\],\{type:'image\/webp'\}\)/);
   assert.match(runtime,/URL\.createObjectURL/);
   assert.match(runtime,/activity\.type==='single'/);
   assert.match(runtime,/activity\.type==='multi'/);
