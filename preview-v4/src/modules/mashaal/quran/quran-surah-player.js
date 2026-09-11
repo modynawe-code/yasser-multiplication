@@ -105,8 +105,12 @@ export function mountQuranSurahPlayer(host,{
 
   const progressWrap=document.createElement('div');
   progressWrap.className='quran-progress-wrap';
-  const progress=document.createElement('progress');
-  progress.className='quran-progress';progress.max=1;progress.value=0;
+  const progress=document.createElement('input');
+  progress.type='range';
+  progress.className='quran-progress';
+  progress.min='0';progress.max='1';progress.step='0.1';progress.value='0';progress.disabled=true;
+  progress.setAttribute('aria-label','موضع التلاوة');
+  progress.setAttribute('aria-valuetext','0:00');
   const time=document.createElement('span');
   time.className='quran-time';time.textContent='0:00 / 0:00';
   progressWrap.append(progress,time);
@@ -119,12 +123,47 @@ export function mountQuranSurahPlayer(host,{
   root.append(figure,transport,progressWrap,status);
   host.appendChild(root);
 
-  let completed=false,destroyed=false,sourceIndex=0;
+  let completed=false,destroyed=false,sourceIndex=0,seeking=false,resumeAfterSeek=false;
+  const finiteDuration=()=>Number.isFinite(audio.duration)&&audio.duration>0?audio.duration:0;
+  const seekValue=()=>{
+    const duration=finiteDuration();
+    if(!duration)return 0;
+    return Math.max(0,Math.min(duration,Number(progress.value)||0));
+  };
   const updateProgress=()=>{
-    if(destroyed)return;
-    const duration=audio.duration;
-    progress.value=Number.isFinite(duration)&&duration>0?Math.min(1,audio.currentTime/duration):0;
-    time.textContent=`${formatTime(audio.currentTime)} / ${formatTime(duration)}`;
+    if(destroyed||seeking)return;
+    const duration=finiteDuration();
+    if(duration){
+      progress.disabled=false;
+      progress.max=String(duration);
+      progress.value=String(Math.min(duration,audio.currentTime||0));
+      progress.setAttribute('aria-valuetext',formatTime(audio.currentTime));
+    }
+    time.textContent=`${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+  };
+  const beginSeek=()=>{
+    if(seeking||!finiteDuration())return;
+    seeking=true;
+    resumeAfterSeek=!audio.paused&&!audio.ended;
+    if(resumeAfterSeek)audio.pause();
+    status.textContent='اسحب لاختيار موضع التلاوة';
+  };
+  const previewSeek=()=>{
+    if(!finiteDuration())return;
+    if(!seeking)beginSeek();
+    const target=seekValue();
+    try{audio.currentTime=target;}catch{}
+    progress.setAttribute('aria-valuetext',formatTime(target));
+    time.textContent=`${formatTime(target)} / ${formatTime(audio.duration)}`;
+  };
+  const commitSeek=()=>{
+    if(!finiteDuration())return;
+    const shouldResume=resumeAfterSeek;
+    const target=seekValue();
+    try{audio.currentTime=target;}catch{}
+    seeking=false;resumeAfterSeek=false;completed=false;updateProgress();
+    if(shouldResume){void playAudio();}
+    else status.textContent='جاهزة من الموضع الجديد';
   };
   const markCompleted=()=>{
     completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();
@@ -134,15 +173,25 @@ export function mountQuranSurahPlayer(host,{
     catch{status.textContent=retryPlayText;return false;}
   };
   const pauseAudio=()=>{audio.pause();status.textContent='متوقفة مؤقتًا';};
-  const restartAudio=async()=>{audio.pause();audio.currentTime=0;completed=false;updateProgress();return playAudio();};
-  const stopAudio=()=>{audio.pause();try{audio.currentTime=0;}catch{}completed=false;updateProgress();status.textContent='متوقفة';};
+  const restartAudio=async()=>{audio.pause();audio.currentTime=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
+  const stopAudio=()=>{audio.pause();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();status.textContent='متوقفة';};
 
   play.addEventListener('click',()=>{void playAudio();});
   pause.addEventListener('click',pauseAudio);
   stop.addEventListener('click',stopAudio);
   restart.addEventListener('click',()=>{void restartAudio();});
+  progress.addEventListener('pointerdown',beginSeek);
+  progress.addEventListener('input',previewSeek);
+  progress.addEventListener('change',commitSeek);
+  progress.addEventListener('pointerup',commitSeek);
+  progress.addEventListener('pointercancel',commitSeek);
   audio.addEventListener('timeupdate',updateProgress);
-  audio.addEventListener('loadedmetadata',updateProgress);
+  audio.addEventListener('loadedmetadata',()=>{
+    const duration=finiteDuration();
+    if(duration){progress.disabled=false;progress.max=String(duration);}
+    updateProgress();
+  });
+  audio.addEventListener('durationchange',updateProgress);
   audio.addEventListener('ended',markCompleted);
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
   image.addEventListener('load',()=>{figure.removeAttribute('data-image-error');caption.textContent=normalCaption;});
