@@ -16,15 +16,27 @@ function ensureStyle(){
   document.head.appendChild(link);
 }
 
+function decodeAtlasPart(source){
+  const normalized=source.trim().replace(/\s+/g,'');
+  const remainder=normalized.length%4;
+  if(remainder===1)throw new Error('Invalid science atlas base64 chunk');
+  const padded=remainder?normalized.padEnd(normalized.length+(4-remainder),'='):normalized;
+  const binary=atob(padded);
+  const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i+=1)bytes[i]=binary.charCodeAt(i);
+  return bytes;
+}
+
 async function loadAtlas(){
   if(atlasDataUrl)return atlasDataUrl;
   if(!atlasPromise){
     atlasPromise=Promise.all(KHALED_SCIENCE_ATLAS_PARTS.map(async path=>{
       const response=await fetch(path,{cache:'force-cache'});
       if(!response.ok)throw new Error(`Science atlas part failed: ${path} ${response.status}`);
-      return (await response.text()).trim();
+      return decodeAtlasPart(await response.text());
     })).then(parts=>{
-      atlasDataUrl=`data:image/webp;base64,${parts.join('')}`;
+      const blob=new Blob(parts,{type:'image/webp'});
+      atlasDataUrl=URL.createObjectURL(blob);
       return atlasDataUrl;
     });
   }
