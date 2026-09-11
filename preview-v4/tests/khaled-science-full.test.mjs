@@ -38,7 +38,7 @@ test('runtime exposes every activity through supported interactive types',()=>{
 });
 
 test('science atlas parts reconstruct a real complete WebP worksheet atlas',async()=>{
-  assert.equal(KHALED_SCIENCE_ATLAS_PARTS.length,9);
+  assert.equal(KHALED_SCIENCE_ATLAS_PARTS.length,19);
   const encoded=(await Promise.all(KHALED_SCIENCE_ATLAS_PARTS.map(async path=>(await read(path)).toString('utf8').trim()))).join('');
   const data=Buffer.from(encoded,'base64');
   assert.ok(data.length>50000);
