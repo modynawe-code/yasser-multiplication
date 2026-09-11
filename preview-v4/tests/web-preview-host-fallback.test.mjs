@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const workflowUrl=new URL('../../.github/workflows/frontend-preview-deploy.yml',import.meta.url);
 
-test('frontend preview workflow falls back to GitHub Pages without weakening preview isolation',async()=>{
+test('frontend preview workflow always publishes GitHub Pages while keeping optional Cloudflare deployment isolated',async()=>{
   const workflow=await readFile(workflowUrl,'utf8');
   assert.match(workflow,/cloudflare_available/);
   assert.match(workflow,/actions\/deploy-pages@v4/);
@@ -15,5 +15,5 @@ test('frontend preview workflow falls back to GitHub Pages without weakening pre
   assert.match(workflow,/"cloudSync": false/);
   assert.match(workflow,/wrangler@4\.129\.0 deploy/);
   assert.match(workflow,/if: needs\.build\.outputs\.cloudflare_available == 'true'/);
-  assert.match(workflow,/if: needs\.build\.outputs\.cloudflare_available != 'true'/);
+  assert.doesNotMatch(workflow,/github-pages:\s*[\s\S]*?if: needs\.build\.outputs\.cloudflare_available != 'true'/);
 });
