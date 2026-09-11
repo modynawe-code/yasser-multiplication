@@ -50,6 +50,7 @@ export function ensureYasserHomeShell(){
             <button class="btn primary" id="startPractice">ابدأ التدريب</button>
             <button class="btn secondary" id="startLearn">مراجعة سريعة</button>
             <button class="btn exam" id="startExam">اختبار • 30 سؤالًا</button>
+            <button class="btn secondary" id="openYasserQuran">القرآن الكريم • تلاوة وحفظ</button>
           </div>
 
           <section class="yasser-home-progress" aria-label="تقدم ياسر">
@@ -64,5 +65,10 @@ export function ensureYasserHomeShell(){
         </section>
       </article>
     </div>`;
+
+  document.getElementById('openYasserQuran')?.addEventListener('click',async()=>{
+    const {openYasserQuran}=await import('../quran/yasser-quran.js');
+    openYasserQuran();
+  });
   return true;
 }
