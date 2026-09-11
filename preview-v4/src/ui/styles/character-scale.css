@@ -31,8 +31,8 @@
     --character-assistant-home:clamp(102px,15dvh,132px);
     --character-yasser-learn:clamp(180px,27dvh,230px);
     --character-assistant-learn:clamp(86px,13dvh,108px);
-    --character-yasser-session:clamp(175px,25dvh,225px);
-    --character-assistant-session:clamp(92px,13dvh,116px);
+    --character-yasser-session:clamp(210px,34dvh,280px);
+    --character-assistant-session:clamp(108px,16dvh,138px);
     --character-yasser-result:clamp(270px,40dvh,340px);
     --character-assistant-result:clamp(140px,21dvh,176px);
     --character-khaled-hub:clamp(205px,31dvh,260px);
@@ -52,8 +52,8 @@
     --character-assistant-home:96px;
     --character-yasser-learn:185px;
     --character-assistant-learn:90px;
-    --character-yasser-session:165px;
-    --character-assistant-session:86px;
+    --character-yasser-session:205px;
+    --character-assistant-session:102px;
     --character-yasser-result:245px;
     --character-assistant-result:126px;
     --character-khaled-hub:230px;

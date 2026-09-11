@@ -52,6 +52,13 @@ export function createAppController({repository}){
   const persist=()=>repository.save(state);
   const refreshHome=()=>renderHome({state,$,all});
 
+  function setQuestionInteraction(enabled){
+    $('questionCard').setAttribute('aria-busy',String(!enabled));
+    all('#answers .answer').forEach(button=>{button.disabled=!enabled;});
+    $('answerInput').disabled=!enabled;
+    $('submitAnswer').disabled=!enabled;
+  }
+
   function goHome(){
     speech.stop();
     document.body.classList.remove('intro-mode','hub-mode','khaled-mode');
@@ -97,13 +104,19 @@ export function createAppController({repository}){
     const spokenPrompt=`كم ناتج ${question.table} ضرب ${question.multiplier}؟`;
 
     $('sessionMeta').textContent=`${selectedText(state.selected)} • ${session.index+1} من ${session.questions.length}`;
-    $('sessionProgress').style.width=`${(session.index/session.questions.length)*100}%`;
-    $('streakBadge').textContent=`🔥 ${session.streak} متتالية`;
+    const progress=Math.round(((session.index+1)/session.questions.length)*100);
+    $('sessionStep').textContent=`السؤال ${session.index+1} من ${session.questions.length}`;
+    $('sessionFocus').textContent=selectedText(state.selected);
+    $('sessionProgress').style.width=`${progress}%`;
+    $('sessionProgressTrack').setAttribute('aria-valuenow',String(progress));
+    $('streakCount').textContent=session.streak;
     $('questionText').textContent=`${question.table} × ${question.multiplier} = ؟`;
     $('feedback').textContent='';
     $('feedback').className='feedback';
+    delete $('questionCard').dataset.feedback;
     $('answers').innerHTML='';
     $('freeAnswer').style.display='none';
+    setQuestionInteraction(true);
 
     setTimeout(()=>{
       const active=session?.questions?.[session.index];
@@ -133,6 +146,7 @@ export function createAppController({repository}){
     if(!result.accepted)return;
 
     persist();
+    setQuestionInteraction(false);
 
     if(session.mode==='exam'){
       setTimeout(renderQuestion,150);
@@ -143,20 +157,22 @@ export function createAppController({repository}){
     let visualHold=0;
 
     if(attempt.isCorrect){
-      $('feedback').textContent='ممتاز ✓';
+      $('feedback').textContent='إجابة صحيحة، ممتاز يا ياسر';
       $('feedback').className='feedback good';
+      $('questionCard').dataset.feedback='correct';
       button?.classList.add('good');
       audio.correct();
       visualHold=visuals.render('correct');
     }else{
       $('feedback').textContent=`الصحيح ${attempt.table} × ${attempt.multiplier} = ${attempt.correctAnswer} — برجع لك عليها`;
       $('feedback').className='feedback bad';
+      $('questionCard').dataset.feedback='wrong';
       button?.classList.add('bad');
       audio.wrong();
       visualHold=visuals.render('wrong');
     }
 
-    $('streakBadge').textContent=`🔥 ${session.streak} متتالية`;
+    $('streakCount').textContent=session.streak;
 
     const fallbackHold=attempt.isCorrect?1700:2400;
     setTimeout(renderQuestion,(visualHold||fallbackHold)+100);
@@ -174,17 +190,19 @@ export function createAppController({repository}){
     const pct=completed?Math.round((session.correct/completed)*100):0;
 
     $('resultPct').textContent=`${pct}%`;
+    $('resultScore').setAttribute('aria-valuenow',String(pct));
     $('resultCorrect').textContent=session.correct;
     $('resultWrong').textContent=session.wrong;
     $('resultStreak').textContent=session.bestStreak;
-    $('resultTitle').textContent=pct>=90?'ممتاز يا ياسر 🏆':pct>=75?'تقدم ممتاز يا ياسر':'نكمل تدريب ونرفع المستوى';
+    $('resultTitle').textContent=pct>=90?'أبدعت يا ياسر':pct>=75?'تقدم ممتاز يا ياسر':'نكمل تدريب ونرفع المستوى';
+    $('resultSummary').textContent=pct>=90?'أتقنت الجولة بدقة عالية.':pct>=75?'نتيجتك قوية، ومراجعة بسيطة ترفع الإتقان.':'كل محاولة تقربك من الإتقان.';
 
     const weak=getWeakQuestions(session);
     session.lastWeak=weak;
     session.completed=true;
     $('weakTags').innerHTML=weak.length
       ?weak.map(item=>`<span class="tag">${item.table}×${item.multiplier} • ${item.count} خطأ</span>`).join('')
-      :'<span class="tag">بدون أخطاء ✓</span>';
+      :'<span class="tag">أنهيت الجولة بدون أخطاء</span>';
 
     refreshHome();
     show('resultView');

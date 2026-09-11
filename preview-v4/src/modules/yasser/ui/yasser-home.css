@@ -1,16 +1,15 @@
 .yasser-home-shell{max-width:1080px;margin:auto}
 .yasser-home-panel{display:grid;gap:16px}
-.yasser-home-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,34%);align-items:center;gap:24px;min-height:300px;padding:28px 30px;border:1px solid #dbe4ff;border-radius:24px;background:linear-gradient(135deg,#f8faff 0%,#eef3ff 62%,#fff9ec 100%);overflow:hidden;box-shadow:var(--shadow)}
+.yasser-home-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,34%);align-items:center;gap:24px;min-height:300px;padding:28px 30px;border:1px solid #d7e0f5;border-radius:24px;background:#f4f7ff;overflow:hidden;box-shadow:var(--shadow)}
 .yasser-home-hero::before,.yasser-home-hero::after{content:"";position:absolute;border-radius:999px;z-index:-1;pointer-events:none}
-.yasser-home-hero::before{width:270px;height:270px;inset:auto -95px -140px auto;background:rgba(49,87,213,.08)}
-.yasser-home-hero::after{width:150px;height:150px;inset:-70px auto auto 34%;background:rgba(241,173,56,.13)}
+.yasser-home-hero::before,.yasser-home-hero::after{display:none}
 .yasser-home-copy{min-width:0}.yasser-home-copy .kicker{margin-bottom:10px}.yasser-home-copy h2{margin:0;font-size:clamp(32px,4.2vw,44px);line-height:1.2}.yasser-home-copy p{max-width:610px;margin:9px 0 18px;color:var(--muted);font-size:16px;line-height:1.75}
 .yasser-home-focus{display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(100%,520px);min-height:54px;padding:12px 15px;border:1px solid #dce4ff;border-radius:16px;background:rgba(255,255,255,.82);backdrop-filter:blur(4px)}
 .yasser-home-focus span{font-size:13px;color:var(--muted);font-weight:850}.yasser-home-focus strong{color:var(--primary);font-size:16px;font-weight:950}
 .yasser-home-characters{display:flex;align-items:flex-end;justify-content:center;gap:var(--character-gap-medium);min-height:calc(var(--character-yasser-home) + 4px);pointer-events:none}
 .yasser-home-characters .yasser-mascot{height:var(--character-yasser-home);width:auto}.yasser-home-characters .calc-mascot{width:var(--character-assistant-home);height:var(--character-assistant-home);margin-bottom:8px}
 
-.yasser-home-training{padding:22px 24px 24px;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
+.yasser-home-training{padding:22px 24px 24px;border:1px solid #dfe4ef;border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
 .yasser-home-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}.yasser-home-section-head span{display:block;color:var(--primary);font-size:12px;font-weight:950;margin-bottom:3px}.yasser-home-section-head h3{margin:0;font-size:20px}.yasser-home-section-head small{color:var(--muted);font-weight:800}
 .yasser-home-training .table-picker{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.yasser-home-training .table-chip{height:60px}
 .yasser-home-actions{margin-top:18px;padding-top:0;grid-template-columns:1.25fr 1fr 1.1fr}
@@ -30,6 +29,10 @@
 
 @media(max-width:700px){
   .yasser-home-shell{padding-bottom:max(8px,env(safe-area-inset-bottom))}.yasser-home-hero{grid-template-columns:minmax(0,1fr) minmax(150px,42%);min-height:230px;padding:18px;gap:10px;border-radius:20px}.yasser-home-copy h2{font-size:30px}.yasser-home-copy p{font-size:13.5px;line-height:1.6;margin:6px 0 12px}.yasser-home-focus{min-height:48px;padding:10px 12px}.yasser-home-focus span{font-size:11px}.yasser-home-focus strong{font-size:13px}.yasser-home-training{padding:18px 16px;border-radius:20px}.yasser-home-section-head{align-items:flex-start}.yasser-home-section-head h3{font-size:18px}.yasser-home-section-head small{display:none}.yasser-home-training .table-picker{gap:7px}.yasser-home-training .table-chip{height:52px}.yasser-home-actions{grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.yasser-home-actions .btn.primary{grid-column:1/-1}.yasser-home-progress-head span{display:none}
+}
+
+@media (orientation:portrait) and (min-width:600px) and (max-width:900px){
+  .yasser-home-shell{max-width:760px}.yasser-home-hero{min-height:310px;padding:26px}.yasser-home-training{padding:24px}.yasser-home-actions .btn{min-height:62px}.yasser-home-progress-grid .progress-item{min-height:58px}
 }
 
 @media(max-width:430px){

@@ -11,7 +11,7 @@ function tableButtons(){
   return Array.from({length:10},(_,index)=>{
     const table=index+1;
     const selected=table===2||table===3?' selected':'';
-    return `<button class="table-chip${selected}" data-table="${table}">${table}</button>`;
+    return `<button class="table-chip${selected}" data-table="${table}" aria-label="جدول ${table}" aria-pressed="${Boolean(selected)}">${table}</button>`;
   }).join('');
 }
 
@@ -27,7 +27,7 @@ export function ensureYasserHomeShell(){
         <section class="yasser-home-hero" aria-labelledby="yasserHomeTitle">
           <div class="yasser-home-copy">
             <div class="kicker">مهمة اليوم</div>
-            <h2 id="yasserHomeTitle">هلا ياسر 👋</h2>
+            <h2 id="yasserHomeTitle">هلا يا ياسر</h2>
             <p>اختر الجداول اللي تبي تركز عليها، وبعدها ندخل تدريب قصير وواضح.</p>
             <div class="yasser-home-focus" aria-label="جداول اليوم">
               <span>جداول اليوم</span>
