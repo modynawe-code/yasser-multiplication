@@ -33,9 +33,10 @@ async function loadAtlas(){
     atlasPromise=Promise.all(KHALED_SCIENCE_ATLAS_PARTS.map(async path=>{
       const response=await fetch(path,{cache:'force-cache'});
       if(!response.ok)throw new Error(`Science atlas part failed: ${path} ${response.status}`);
-      return decodeAtlasPart(await response.text());
-    })).then(parts=>{
-      const blob=new Blob(parts,{type:'image/webp'});
+      return (await response.text()).trim();
+    })).then(sources=>{
+      const atlasBytes=decodeAtlasPart(sources.join(''));
+      const blob=new Blob([atlasBytes],{type:'image/webp'});
       atlasDataUrl=URL.createObjectURL(blob);
       return atlasDataUrl;
     });
