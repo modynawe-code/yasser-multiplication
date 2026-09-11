@@ -44,3 +44,12 @@ test('resume store keeps each device room capability resumable without mixing le
   store.clear(record);
   assert.equal(store.load(),null);
 });
+
+test('resume store supports Mashaal online XO sessions',()=>{
+  const session=memoryStorage(),local=memoryStorage(),store=createGameRoomResumeStore({sessionStorage:session,localStorage:local});
+  const record={gameId:'xo',code:'654321',token:'abcdefghijklmnop-mashaal',selfPlayerId:'p3',selfLearnerId:'mashaal',expiresAt:new Date(Date.now()+60000).toISOString()};
+  assert.equal(store.save(record),true);
+  assert.equal(store.load()?.selfLearnerId,'mashaal');
+  store.clear(record);
+  assert.equal(store.load(),null);
+});
