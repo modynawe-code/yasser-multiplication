@@ -111,6 +111,7 @@ export function mountQuranSurahPlayer(host,{
   progress.min='0';progress.max='1';progress.step='0.1';progress.value='0';progress.disabled=true;
   progress.setAttribute('aria-label','موضع التلاوة');
   progress.setAttribute('aria-valuetext','0:00');
+  progress.style.setProperty('--seek-percent','0%');
   const time=document.createElement('span');
   time.className='quran-time';time.textContent='0:00 / 0:00';
   progressWrap.append(progress,time);
@@ -130,16 +131,24 @@ export function mountQuranSurahPlayer(host,{
     if(!duration)return 0;
     return Math.max(0,Math.min(duration,Number(progress.value)||0));
   };
+  const paintSeek=(value,duration)=>{
+    const safeDuration=Number.isFinite(duration)&&duration>0?duration:0;
+    const safeValue=safeDuration?Math.max(0,Math.min(safeDuration,Number(value)||0)):0;
+    const percent=safeDuration?(safeValue/safeDuration)*100:0;
+    progress.style.setProperty('--seek-percent',`${percent}%`);
+    progress.setAttribute('aria-valuetext',formatTime(safeValue));
+  };
   const updateProgress=()=>{
     if(destroyed||seeking)return;
     const duration=finiteDuration();
+    const current=Number(audio.currentTime)||0;
     if(duration){
       progress.disabled=false;
       progress.max=String(duration);
-      progress.value=String(Math.min(duration,audio.currentTime||0));
-      progress.setAttribute('aria-valuetext',formatTime(audio.currentTime));
+      progress.value=String(Math.min(duration,current));
     }
-    time.textContent=`${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    paintSeek(current,duration);
+    time.textContent=`${formatTime(current)} / ${formatTime(audio.duration)}`;
   };
   const beginSeek=()=>{
     if(seeking||!finiteDuration())return;
@@ -149,19 +158,21 @@ export function mountQuranSurahPlayer(host,{
     status.textContent='اسحب لاختيار موضع التلاوة';
   };
   const previewSeek=()=>{
-    if(!finiteDuration())return;
+    const duration=finiteDuration();
+    if(!duration)return;
     if(!seeking)beginSeek();
     const target=seekValue();
     try{audio.currentTime=target;}catch{}
-    progress.setAttribute('aria-valuetext',formatTime(target));
+    paintSeek(target,duration);
     time.textContent=`${formatTime(target)} / ${formatTime(audio.duration)}`;
   };
   const commitSeek=()=>{
-    if(!finiteDuration())return;
+    const duration=finiteDuration();
+    if(!duration)return;
     const shouldResume=resumeAfterSeek;
     const target=seekValue();
     try{audio.currentTime=target;}catch{}
-    seeking=false;resumeAfterSeek=false;completed=false;updateProgress();
+    seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();
     if(shouldResume){void playAudio();}
     else status.textContent='جاهزة من الموضع الجديد';
   };
