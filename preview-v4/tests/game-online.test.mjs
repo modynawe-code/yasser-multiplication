@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createGameRoomClient } from '../src/modules/games/online/game-room-client.js';
 import { createGameRoomResumeStore } from '../src/modules/games/online/game-room-resume-store.js';
 import { normalizeOnlineXoRoom } from '../src/modules/games/xo/xo-online-session.js';
+import { FAMILY_API_PRODUCTION_BASE } from '../src/shared/config/family-api-config.js';
 
 function memoryStorage(){
   const map=new Map();
@@ -18,6 +19,26 @@ test('game room client uses temporary game token and optimistic version contract
   assert.equal(calls[0].url,'https://example.test/v1/games/rooms/123456/actions');
   assert.equal(calls[0].options.headers['x-game-token'],'secret');
   assert.deepEqual(JSON.parse(calls[0].options.body),{expectedVersion:2,type:'move',cell:4});
+});
+
+test('game room client stays online when web preview disables family cloud sync',async()=>{
+  const hadDisabled=Object.prototype.hasOwnProperty.call(globalThis,'__FAMILY_API_DISABLED__');
+  const previousDisabled=globalThis.__FAMILY_API_DISABLED__;
+  const hadBase=Object.prototype.hasOwnProperty.call(globalThis,'__FAMILY_API_BASE_URL__');
+  const previousBase=globalThis.__FAMILY_API_BASE_URL__;
+  const calls=[];
+  try{
+    globalThis.__FAMILY_API_DISABLED__=true;
+    delete globalThis.__FAMILY_API_BASE_URL__;
+    const fetchImpl=async(url,options)=>{calls.push({url,options});return new Response(JSON.stringify({room:{code:'123456'}}),{status:200,headers:{'content-type':'application/json'}});};
+    const client=createGameRoomClient({fetchImpl});
+    await client.createRoom({learnerId:'mashaal'});
+    assert.equal(calls[0].url,`${FAMILY_API_PRODUCTION_BASE}/v1/games/rooms`);
+    assert.deepEqual(JSON.parse(calls[0].options.body),{gameId:'xo',learnerId:'mashaal'});
+  }finally{
+    if(hadDisabled)globalThis.__FAMILY_API_DISABLED__=previousDisabled;else delete globalThis.__FAMILY_API_DISABLED__;
+    if(hadBase)globalThis.__FAMILY_API_BASE_URL__=previousBase;else delete globalThis.__FAMILY_API_BASE_URL__;
+  }
 });
 
 test('online XO mapping exposes learner identities and mutual rematch readiness',()=>{
