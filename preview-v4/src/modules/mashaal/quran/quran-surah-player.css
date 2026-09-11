@@ -20,7 +20,7 @@
 .quran-control:focus-visible{outline:4px solid #5a4e9a;outline-offset:3px}
 .quran-progress-wrap{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding-inline:6px;direction:ltr}
 .quran-progress{-webkit-appearance:none;appearance:none;width:100%;height:34px;margin:0;background:transparent;accent-color:#8d6384;cursor:pointer;touch-action:pan-y}
-.quran-progress::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:#dedde1}
+.quran-progress::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:linear-gradient(to right,#8d6384 0 var(--seek-percent,0%),#dedde1 var(--seek-percent,0%) 100%)}
 .quran-progress::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;margin-top:-9px;border:3px solid #fff;border-radius:50%;background:#8d6384;box-shadow:0 2px 8px rgba(85,55,79,.28)}
 .quran-progress::-moz-range-track{height:10px;border-radius:999px;background:#dedde1}
 .quran-progress::-moz-range-progress{height:10px;border-radius:999px;background:#8d6384}
