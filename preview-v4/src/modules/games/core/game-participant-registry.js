@@ -3,7 +3,8 @@ import { createPlayerContext } from './player-context.js';
 
 const ARTWORK=Object.freeze({
   yasser:Object.freeze({avatar:'assets/visual/original/yasser/welcome.png',celebration:'assets/visual/original/yasser/celebrate.png'}),
-  khaled:Object.freeze({avatar:'assets/visual/original/khaled/khaled-point-thumbsup.png',celebration:'assets/visual/original/khaled/khaled-celebration.png'})
+  khaled:Object.freeze({avatar:'assets/visual/original/khaled/khaled-point-thumbsup.png',celebration:'assets/visual/original/khaled/khaled-celebration.png'}),
+  mashaal:Object.freeze({avatar:'assets/mashaal/choices/happy.webp',celebration:'assets/mashaal/choices/happy.webp'})
 });
 
 function toParticipant(profile){
