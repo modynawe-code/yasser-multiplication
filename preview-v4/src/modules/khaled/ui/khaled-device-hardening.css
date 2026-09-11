@@ -2,7 +2,8 @@
 body.khaled-mode{overscroll-behavior-y:contain}
 body.khaled-mode button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 body.khaled-mode button:disabled{cursor:default}
-.khaled-answer:disabled,.khaled-group-choice:disabled{opacity:.56}
+.khaled-answer:disabled,.khaled-group-choice:disabled{opacity:.64}
+.khaled-answer[data-outcome]:disabled,.khaled-group-choice[data-outcome]:disabled{opacity:1}
 .khaled-zero-visual{min-width:210px;min-height:170px;padding:18px 22px;border:2px dashed #cbd5ef;border-radius:24px;background:#f8faff;display:grid;grid-template-columns:auto auto;grid-template-areas:'number icon' 'label label';place-content:center;align-items:center;gap:4px 12px}
 .khaled-zero-visual strong{grid-area:number;font-size:64px;line-height:1;color:var(--primary)}
 .khaled-zero-visual>span{grid-area:icon;font-size:46px;line-height:1;color:var(--muted)}
@@ -10,6 +11,23 @@ body.khaled-mode button:disabled{cursor:default}
 .khaled-feedback[aria-live]{max-width:620px}
 .khaled-answer,.khaled-group-choice,.hear-question,.khaled-skill,.learner-card{min-inline-size:48px}
 .khaled-answer,.khaled-group-choice,.hear-question{touch-action:manipulation}
+.hear-question{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:52px}
+.learning-speaker-mark{position:relative;width:24px;height:24px;display:inline-block;flex:none}
+.learning-speaker-mark::before{content:"";position:absolute;inset:7px 12px 7px 2px;border-radius:3px;background:currentColor}
+.learning-speaker-mark i{position:absolute;inset:4px 4px 4px 8px;border:3px solid currentColor;border-block-color:transparent;border-inline-start-color:transparent;border-radius:50%}
+.khaled-answer,.khaled-group-choice{position:relative}.khaled-answer{transition:transform var(--motion-press) ease,border-color var(--motion-ui) ease,background-color var(--motion-ui) ease,box-shadow var(--motion-ui) ease}
+.khaled-answer:active:not(:disabled),.khaled-group-choice:active:not(:disabled){transform:scale(.975)}
+.khaled-answer.selected{border-color:var(--primary);box-shadow:0 0 0 3px rgba(49,87,213,.12)}
+.khaled-answer[data-outcome]::after,.khaled-group-choice[data-outcome]::after{position:absolute;inset-inline-end:9px;top:9px;padding:3px 7px;border-radius:8px;font-size:11px;font-weight:950}
+.khaled-answer[data-outcome="correct"]::after,.khaled-group-choice[data-outcome="correct"]::after{content:"صحيح";background:#d7f1e5;color:#0d6848}
+.khaled-answer[data-outcome="wrong"]::after,.khaled-group-choice[data-outcome="wrong"]::after{content:"حاول مرة ثانية";background:#f8dede;color:#8f2929}
+.khaled-feedback{display:flex;align-items:center;justify-content:center;padding:8px 12px;border:1px solid transparent;border-radius:14px;line-height:1.45}
+.khaled-feedback.good{border-color:#9bd8c0;background:var(--green-soft);color:var(--green)}
+.khaled-feedback.bad{border-color:#edb5b5;background:var(--red-soft);color:var(--red)}
+.khaled-question-card{transition:border-color var(--motion-ui) ease,box-shadow var(--motion-ui) ease}
+.khaled-question-card[data-feedback="correct"]{border-color:#78c7a7;box-shadow:0 16px 38px rgba(20,130,91,.13)}
+.khaled-question-card[data-feedback="wrong"]{border-color:#e5a1a1;box-shadow:0 16px 38px rgba(182,61,61,.11)}
+@media(prefers-reduced-motion:no-preference){.khaled-question-card.question-enter .khaled-visual,.khaled-question-card.question-enter .khaled-answers{animation:khaledQuestionEnter var(--motion-state) ease both}@keyframes khaledQuestionEnter{from{opacity:.25;transform:translateY(8px)}to{opacity:1;transform:none}}}
 
 /* Hidden fallback nodes must never compete with successfully loaded character artwork. */
 .khaled-character-fallback[hidden],.learner-placeholder[hidden],.khaled-result-symbol[hidden]{display:none!important}

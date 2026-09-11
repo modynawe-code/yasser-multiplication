@@ -28,6 +28,14 @@ export function createKhaledController({repository}={}){
   function persist(){repository.save(state);}
   function clearFeedbackTimer(){if(feedbackTimer){clearTimeout(feedbackTimer);feedbackTimer=null;}feedbackPending=false;}
   function activateKhaledMode(){document.body.classList.remove('hub-mode','intro-mode','family-parent-mode');document.body.classList.add('khaled-mode');}
+  function updateProgress(completed=session?.index||0){
+    const total=Math.max(session?.questions?.length||0,1),progress=Math.round(Math.min(completed,total)/total*100);
+    byId('khaledSessionProgress').style.width=`${progress}%`;
+    byId('khaledSessionProgressTrack')?.setAttribute('aria-valuenow',String(progress));
+  }
+  function setAnswerInteraction(enabled){
+    document.querySelectorAll('#khaledSessionView button[data-answer-value],#khaledSessionView button[data-answer],#khaledSessionView button[data-place-answer]').forEach(button=>{button.disabled=!enabled;});
+  }
 
   function renderHome(){
     const list=byId('khaledSkillList');if(!list)return;
@@ -59,11 +67,11 @@ export function createKhaledController({repository}={}){
     if(!session||session.index>=session.questions.length)return finish();
     const question=session.questions[session.index];cycleId(question);
     byId('khaledSessionMeta').textContent=`${session.index+1} من ${session.questions.length}`;
-    byId('khaledSessionProgress').style.width=`${session.index/session.questions.length*100}%`;
+    updateProgress();
     byId('khaledPrompt').textContent=question.prompt;
-    byId('khaledFeedback').textContent='';
+    byId('khaledFeedback').textContent='';byId('khaledFeedback').className='khaled-feedback';
     const visual=byId('khaledVisual'),answers=byId('khaledAnswers'),card=visual?.closest('.khaled-question-card');
-    if(card)card.dataset.questionType=question.type||'default';
+    if(card){card.dataset.questionType=question.type||'default';delete card.dataset.feedback;card.classList.remove('question-enter');}
     answers.innerHTML='';delete answers.dataset.optionCount;
     answers.classList.remove('khaled-visual-answers','khaled-equation-answers','khaled-order-answers');
     visuals.question();
@@ -94,14 +102,14 @@ export function createKhaledController({repository}={}){
     else if(isPlaceValueQuestion(question))renderPlaceValueQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
     else if(isAdvancedQuestion(question))renderAdvancedQuestion({question,visual,answers,createAnswerButton:answerButton,submitAnswer:submit});
     else visual.innerHTML='';
-    finalizeAnswerLayout(answers);speakQuestion(question);
+    finalizeAnswerLayout(answers);setAnswerInteraction(true);requestAnimationFrame(()=>card?.classList.add('question-enter'));speakQuestion(question);
   }
 
   function answerButton(value,label){const button=document.createElement('button');button.className='khaled-answer';button.textContent=label;button.dataset.answerValue=String(value);button.onclick=()=>submit(value,button);return button;}
   function visualAnswerButton(value,item){const button=document.createElement('button');button.className='khaled-answer khaled-token-answer';button.dataset.answer=value;button.dataset.answerValue=String(value);button.innerHTML=classifyToken(item);button.setAttribute('aria-label','خيار تصنيف');button.onclick=()=>submit(value,button);return button;}
   function revealCorrect(question){
     const target=String(question.correctAnswer),candidates=[...document.querySelectorAll('#khaledSessionView [data-answer-value],#khaledSessionView [data-answer],#khaledSessionView [data-place-answer]')];
-    const correct=candidates.find(button=>String(button.dataset.answerValue??button.dataset.answer??button.dataset.placeAnswer)===target);if(correct){correct.classList.add('good');correct.setAttribute('aria-label',`${correct.getAttribute('aria-label')||'الإجابة'} الصحيحة`);}
+    const correct=candidates.find(button=>String(button.dataset.answerValue??button.dataset.answer??button.dataset.placeAnswer)===target);if(correct){correct.classList.add('good');correct.dataset.outcome='correct';correct.setAttribute('aria-label',`${correct.getAttribute('aria-label')||'الإجابة'} الصحيحة`);}
   }
   function advanceAfter(delay){
     feedbackPending=true;const activeSession=session,activeId=session?.questions?.[session.index]?.id;
@@ -112,17 +120,19 @@ export function createKhaledController({repository}={}){
     if(!session||feedbackPending)return;
     const question=session.questions[session.index],isCorrect=String(answer)===String(question.correctAnswer),attemptNumber=session.retryCount+1;
     const attempt=recordKhaledAttempt(state,{skillId:session.skillId,isCorrect,question,answer,learningCycleId:cycleId(question),attemptNumber,questionCompleted:isCorrect||attemptNumber>=2});
-    session.answers.push(attempt);speech.stop();persist();
+    session.answers.push(attempt);speech.stop();persist();button?.classList.add('selected');
     if(isCorrect){
       if(attemptNumber===1){session.firstTryCorrect+=1;session.masteryPoints+=1;}else{session.correctedAfterError+=1;session.masteryPoints+=.5;}
-      button?.classList.add('good');byId('khaledFeedback').textContent=attemptNumber>1?'أحسنت، صححتها ✓':'ممتاز يا خالد ✓';audio.correct();visuals.feedback(true);advanceAfter(1050);return;
+      button?.classList.add('good');if(button)button.dataset.outcome='correct';setAnswerInteraction(false);updateProgress(session.index+1);
+      byId('khaledFeedback').textContent=attemptNumber>1?'أحسنت، صححتها':'إجابة صحيحة يا خالد';byId('khaledFeedback').className='khaled-feedback good';
+      byId('khaledVisual')?.closest('.khaled-question-card')?.setAttribute('data-feedback','correct');audio.correct();visuals.feedback(true);advanceAfter(1050);return;
     }
-    session.retryCount+=1;button?.classList.add('bad');button&&(button.disabled=true);audio.wrong();visuals.feedback(false);
+    session.retryCount+=1;button?.classList.add('bad');if(button){button.dataset.outcome='wrong';button.disabled=true;}byId('khaledFeedback').className='khaled-feedback bad';byId('khaledVisual')?.closest('.khaled-question-card')?.setAttribute('data-feedback','wrong');audio.wrong();visuals.feedback(false);
     if(session.retryCount<2){
       byId('khaledFeedback').textContent='جرّب مرة ثانية — الخطأ محفوظ ونتعلم منه';feedbackPending=true;const activeSession=session,activeId=question.id;
       feedbackTimer=setTimeout(()=>{feedbackTimer=null;if(session!==activeSession||session?.questions?.[session.index]?.id!==activeId)return;feedbackPending=false;byId('khaledFeedback').textContent='اختر مرة ثانية';visuals.question();},900);return;
     }
-    session.unresolved+=1;revealCorrect(question);byId('khaledFeedback').textContent='هذه الإجابة الصحيحة — ونكمل';advanceAfter(1600);
+    session.unresolved+=1;setAnswerInteraction(false);revealCorrect(question);updateProgress(session.index+1);byId('khaledFeedback').textContent='هذه الإجابة الصحيحة — ونكمل';advanceAfter(1600);
   }
 
   function sessionSummary(){
@@ -138,8 +148,9 @@ export function createKhaledController({repository}={}){
   }
   function finish(){
     if(!session)return;clearFeedbackTimer();const summary=sessionSummary(),skill=getKhaledSkill(session.skillId);storeSession();session.completed=true;
-    byId('khaledResultTitle').textContent=summary.masteryScore>=80?'أبدعت يا خالد ⭐':summary.masteryScore>=60?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';
+    byId('khaledResultTitle').textContent=summary.masteryScore>=80?'أبدعت يا خالد':summary.masteryScore>=60?'شغل ممتاز يا خالد':'نكمل تدريب ونصير أقوى';
     byId('khaledResultPct').textContent=`${summary.masteryScore}%`;byId('khaledResultSkill').textContent=skill?.title||'';
+    byId('khaledResultScore')?.style.setProperty('--score',`${summary.masteryScore}%`);byId('khaledResultScore')?.setAttribute('aria-valuenow',String(summary.masteryScore));
     byId('khaledResultCorrect').textContent=session.firstTryCorrect;byId('khaledResultCorrected')&&(byId('khaledResultCorrected').textContent=session.correctedAfterError);byId('khaledResultWrong').textContent=session.unresolved;
     show('khaledResultView');visuals.result(summary.masteryScore);audio.achievement();
   }

@@ -78,14 +78,14 @@ export function ensureLearningShell(){
     <section id="khaledSessionView" class="view">
       <div class="khaled-session-wrap">
         <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><div class="learning-nav-actions"><button class="icon-btn" id="khaledExitSession" data-nav="back" aria-label="العودة لمهارات خالد">رجوع</button></div></div>
-        <div class="progress-line"><i id="khaledSessionProgress" style="width:0%"></i></div>
+        <div class="progress-line" id="khaledSessionProgressTrack" role="progressbar" aria-label="تقدم جولة خالد" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="khaledSessionProgress" style="width:0%"></i></div>
         <div class="card khaled-question-card">
           <div class="khaled-session-character" aria-hidden="true">
             <img id="khaledSessionCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" hidden />
             <div class="khaled-character-fallback compact" id="khaledSessionCharacterFallback">+ −</div>
           </div>
           <div class="khaled-question-content">
-            <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال">🔊 اسمع السؤال</button>
+            <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال"><span class="learning-speaker-mark" aria-hidden="true"><i></i></span><span>اسمع السؤال</span></button>
             <h3 id="khaledPrompt">اختر الإجابة</h3>
             <div class="khaled-visual" id="khaledVisual"></div>
             <div class="khaled-answers" id="khaledAnswers"></div>
@@ -102,7 +102,7 @@ export function ensureLearningShell(){
           <div class="khaled-result-symbol" id="khaledResultCharacterFallback">+ −</div>
         </div>
         <h2 id="khaledResultTitle">أحسنت يا خالد</h2><p id="khaledResultSkill"></p>
-        <div class="score-ring"><strong id="khaledResultPct">0%</strong></div>
+        <div class="score-ring" id="khaledResultScore" role="progressbar" aria-label="إتقان جولة خالد" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><strong id="khaledResultPct">0%</strong></div>
         <div class="result-metrics"><div class="result-metric"><span>صح من أول مرة</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>صح بعد تصحيح</span><strong id="khaledResultCorrected">0</strong></div><div class="result-metric"><span>تحتاج مراجعة</span><strong id="khaledResultWrong">0</strong></div></div>
         <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="khaled-result-link" id="khaledResultToHub">اختيار الطفل</button></div>
       </div></div>
