@@ -24,7 +24,7 @@ test('Mashaal treasures expose durable states, tiers and visible earning require
 test('Mashaal treasure presentation dependencies and premium assets are available to first-install offline mode',async()=>{
   const sw=await readFile(swUrl,'utf8');
   assert.match(sw,/EXTENSION_CACHE_PREFIX='family-learning-runtime-extensions-'/);
-  assert.match(sw,/EXTENSION_CACHE_VERSION=`\$\{EXTENSION_CACHE_PREFIX\}7`/);
+  assert.match(sw,/EXTENSION_CACHE_VERSION=`\$\{EXTENSION_CACHE_PREFIX\}8`/);
   assert.match(sw,/game-reward-progress-tracker\.js/);
   assert.match(sw,/reward-requirement-progress\.js/);
   assert.match(sw,/mashaal-reward-tiers\.css/);
