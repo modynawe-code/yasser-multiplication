@@ -4,10 +4,11 @@ import { readFile } from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('Khaled home keeps the guide rail and activity area connected on landscape',async()=>{
+test('Khaled home keeps Quran, guide rail and activity area connected on landscape',async()=>{
   const css=await read('src/modules/khaled/ui/khaled-home.css');
   assert.match(css,/\.khaled-wrap\{[^}]*grid-template-columns:minmax\(300px,\.78fr\) minmax\(0,1\.22fr\)[^}]*grid-template-areas:"hero stats" "hero skills"/s);
-  assert.match(css,/\.khaled-home-hero\{[^}]*grid-area:hero[^}]*grid-template-areas:"action" "copy" "character"/s);
+  assert.match(css,/\.khaled-home-hero\{[^}]*grid-area:hero[^}]*grid-template-areas:"action" "copy" "quran" "character"/s);
+  assert.match(css,/\.khaled-quran-entry-home\{[^}]*grid-area:quran/s);
   assert.match(css,/\.khaled-home-copy\{[^}]*justify-self:stretch[^}]*width:100%/s);
   assert.match(css,/\.khaled-home-hero \.khaled-home-character\{[^}]*width:min\(100%,330px\)[^}]*justify-self:center/s);
 });
