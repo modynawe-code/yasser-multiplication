@@ -44,7 +44,7 @@ body.intro-mode main{padding-top:max(18px,env(safe-area-inset-top))}
 .result-celebration{width:var(--character-composite-result);height:auto;max-height:min(42dvh,370px);margin:0 auto}
 
 img[hidden]{display:none!important}
-img[data-visual-state]{transition:opacity .22s ease,transform .22s ease}
+img[data-visual-state]{transition:opacity var(--motion-ui) ease,transform var(--motion-ui) ease}
 .session-yasser[data-visual-state="encourage"],.result-yasser[data-visual-state="celebrate"]{transform:translateY(-3px)}
 .session-yasser[data-visual-state="celebrate"]{transform:translateY(-5px) scale(1.02)}
 .session-assistant[data-visual-state="celebrate"],.result-assistant[data-visual-state="celebrate"]{transform:translateY(-4px) scale(1.035)}
@@ -99,7 +99,7 @@ img[data-visual-state]{transition:opacity .22s ease,transform .22s ease}
   .result-card>.kicker{grid-area:kicker;margin:0 auto 0}
   .result-card>h2{grid-area:title;margin:0}
   .result-card>.result-summary{grid-area:summary;margin:0 auto}
-  .result-card>.score-ring{grid-area:score;margin:8px auto;width:132px;height:132px;border-width:11px}
+  .result-card>.score-ring{grid-area:score;margin:8px auto;width:132px;height:132px}
   .result-card>.score-ring strong{font-size:34px}
   .result-card>.result-metrics{grid-area:metrics;width:100%;margin:6px 0}
   .result-card>.weak-box{grid-area:weak;margin-top:10px}
@@ -148,11 +148,11 @@ img[data-visual-state]{transition:opacity .22s ease,transform .22s ease}
 
 @media (prefers-reduced-motion:no-preference){
   .calc-mascot[data-visual-state="idle"],.intro-assistant[data-visual-state="idle"]{animation:calcHello 4s ease-in-out infinite}
-  .result-characters[data-scene-motion="round-complete"] .result-yasser:not([hidden]){animation:roundCompleteYasser .72s ease-out both}
-  .result-characters[data-scene-motion="round-complete"] .result-assistant:not([hidden]){animation:roundCompleteAssistant .78s .05s ease-out both}
-  .result-characters[data-scene-motion="celebrate"] .result-celebration:not([hidden]){animation:celebrateComposite .92s cubic-bezier(.2,.8,.25,1) both}
-  .result-characters[data-scene-motion="celebrate"] .result-yasser:not([hidden]){animation:celebrateYasser .88s cubic-bezier(.2,.8,.25,1) both}
-  .result-characters[data-scene-motion="celebrate"] .result-assistant:not([hidden]){animation:celebrateAssistant .88s .04s cubic-bezier(.2,.8,.25,1) both}
+  .result-characters[data-scene-motion="round-complete"] .result-yasser:not([hidden]){animation:roundCompleteYasser var(--motion-celebrate) ease-out both}
+  .result-characters[data-scene-motion="round-complete"] .result-assistant:not([hidden]){animation:roundCompleteAssistant var(--motion-celebrate) 40ms ease-out both}
+  .result-characters[data-scene-motion="celebrate"] .result-celebration:not([hidden]){animation:celebrateComposite var(--motion-celebrate) cubic-bezier(.2,.8,.25,1) both}
+  .result-characters[data-scene-motion="celebrate"] .result-yasser:not([hidden]){animation:celebrateYasser var(--motion-celebrate) cubic-bezier(.2,.8,.25,1) both}
+  .result-characters[data-scene-motion="celebrate"] .result-assistant:not([hidden]){animation:celebrateAssistant var(--motion-celebrate) 40ms cubic-bezier(.2,.8,.25,1) both}
   @keyframes calcHello{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}
   @keyframes roundCompleteYasser{0%{transform:translateY(10px) scale(.97)}55%{transform:translateY(-7px) scale(1.02)}100%{transform:translateY(0) scale(1)}}
   @keyframes roundCompleteAssistant{0%{transform:translateY(8px) rotate(-3deg) scale(.96)}55%{transform:translateY(-6px) rotate(4deg) scale(1.03)}100%{transform:translateY(0) rotate(0) scale(1)}}

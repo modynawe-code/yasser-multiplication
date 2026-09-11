@@ -59,6 +59,14 @@ export function createAppController({repository}){
     $('submitAnswer').disabled=!enabled;
   }
 
+  function updateSessionProgress(){
+    const total=Math.max(session?.questions.length||0,1);
+    const completed=Math.min(session?.answers.length||0,total);
+    const progress=Math.round((completed/total)*100);
+    $('sessionProgress').style.width=`${progress}%`;
+    $('sessionProgressTrack').setAttribute('aria-valuenow',String(progress));
+  }
+
   function goHome(){
     speech.stop();
     document.body.classList.remove('intro-mode','hub-mode','khaled-mode');
@@ -104,18 +112,18 @@ export function createAppController({repository}){
     const spokenPrompt=`كم ناتج ${question.table} ضرب ${question.multiplier}؟`;
 
     $('sessionMeta').textContent=`${selectedText(state.selected)} • ${session.index+1} من ${session.questions.length}`;
-    const progress=Math.round(((session.index+1)/session.questions.length)*100);
     $('sessionStep').textContent=`السؤال ${session.index+1} من ${session.questions.length}`;
     $('sessionFocus').textContent=selectedText(state.selected);
-    $('sessionProgress').style.width=`${progress}%`;
-    $('sessionProgressTrack').setAttribute('aria-valuenow',String(progress));
+    updateSessionProgress();
     $('streakCount').textContent=session.streak;
     $('questionText').textContent=`${question.table} × ${question.multiplier} = ؟`;
     $('feedback').textContent='';
     $('feedback').className='feedback';
     delete $('questionCard').dataset.feedback;
+    $('questionCard').classList.remove('question-enter');
     $('answers').innerHTML='';
     $('freeAnswer').style.display='none';
+    delete $('answerInput').dataset.outcome;
     setQuestionInteraction(true);
 
     setTimeout(()=>{
@@ -127,6 +135,7 @@ export function createAppController({repository}){
     if(useFree){
       $('freeAnswer').style.display='flex';
       $('answerInput').value='';
+      requestAnimationFrame(()=>$('questionCard').classList.add('question-enter'));
       setTimeout(()=>$('answerInput').focus(),30);
       return;
     }
@@ -138,6 +147,7 @@ export function createAppController({repository}){
       button.onclick=()=>submit(value,button);
       $('answers').appendChild(button);
     });
+    requestAnimationFrame(()=>$('questionCard').classList.add('question-enter'));
   }
 
   function submit(value,button=null){
@@ -147,6 +157,11 @@ export function createAppController({repository}){
 
     persist();
     setQuestionInteraction(false);
+    updateSessionProgress();
+
+    if(button){
+      button.classList.add('selected');
+    }
 
     if(session.mode==='exam'){
       setTimeout(renderQuestion,150);
@@ -161,6 +176,8 @@ export function createAppController({repository}){
       $('feedback').className='feedback good';
       $('questionCard').dataset.feedback='correct';
       button?.classList.add('good');
+      if(button)button.dataset.outcome='correct';
+      else $('answerInput').dataset.outcome='correct';
       audio.correct();
       visualHold=visuals.render('correct');
     }else{
@@ -168,6 +185,14 @@ export function createAppController({repository}){
       $('feedback').className='feedback bad';
       $('questionCard').dataset.feedback='wrong';
       button?.classList.add('bad');
+      if(button){
+        button.dataset.outcome='wrong';
+        const correctButton=all('#answers .answer').find(item=>Number(item.textContent)===attempt.correctAnswer);
+        if(correctButton){
+          correctButton.classList.add('good');
+          correctButton.dataset.outcome='correct';
+        }
+      }else $('answerInput').dataset.outcome='wrong';
       audio.wrong();
       visualHold=visuals.render('wrong');
     }
@@ -190,6 +215,7 @@ export function createAppController({repository}){
     const pct=completed?Math.round((session.correct/completed)*100):0;
 
     $('resultPct').textContent=`${pct}%`;
+    $('resultScore').style.setProperty('--score',`${pct}%`);
     $('resultScore').setAttribute('aria-valuenow',String(pct));
     $('resultCorrect').textContent=session.correct;
     $('resultWrong').textContent=session.wrong;
@@ -203,6 +229,7 @@ export function createAppController({repository}){
     $('weakTags').innerHTML=weak.length
       ?weak.map(item=>`<span class="tag">${item.table}×${item.multiplier} • ${item.count} خطأ</span>`).join('')
       :'<span class="tag">أنهيت الجولة بدون أخطاء</span>';
+    $('retryWeak').textContent=weak.length?'تدرب على المسائل الصعبة':'ابدأ جولة جديدة';
 
     refreshHome();
     show('resultView');
@@ -285,7 +312,7 @@ export function createAppController({repository}){
     $('backHome').onclick=goHome;
     $('retryWeak').onclick=()=>{
       const weak=session?.lastWeak||[];
-      if(!weak.length)return goHome();
+      if(!weak.length)return start('practice');
       start('practice',createWeakPracticeQuestions(weak));
     };
 
