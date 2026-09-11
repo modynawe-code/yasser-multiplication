@@ -1,4 +1,4 @@
-import { getFamilyApiBase } from '../../../shared/config/family-api-config.js';
+import { FAMILY_API_PRODUCTION_BASE,getFamilyApiBase } from '../../../shared/config/family-api-config.js';
 
 async function parseResponse(response){
   let body=null;try{body=await response.json();}catch{}
@@ -6,7 +6,11 @@ async function parseResponse(response){
   const error=new Error(body?.error||`game_room_http_${response.status}`);error.status=response.status;error.body=body;throw error;
 }
 
-export function createGameRoomClient({baseUrl=getFamilyApiBase(),fetchImpl=globalThis.fetch}={}){
+export function getGameRoomApiBase(){
+  return getFamilyApiBase()||FAMILY_API_PRODUCTION_BASE;
+}
+
+export function createGameRoomClient({baseUrl=getGameRoomApiBase(),fetchImpl=globalThis.fetch}={}){
   if(typeof fetchImpl!=='function')throw new TypeError('fetch implementation required');
   const base=String(baseUrl||'').replace(/\/$/,'');
   async function request(path,{method='GET',body,token}={}){
