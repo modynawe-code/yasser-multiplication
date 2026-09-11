@@ -57,7 +57,7 @@ jobs:
           const html=fs.readFileSync('dist-web-preview/index.html','utf8');
           const meta=JSON.parse(fs.readFileSync('dist-web-preview/deployment-meta.json','utf8'));
           if(!html.includes('__FAMILY_API_DISABLED__=true'))throw new Error('Preview cloud-disable bootstrap is missing');
-          if(meta.mode!=='web-preview'||meta.cloudSync!==false)throw new Error('Preview deployment metadata is invalid');
+          if(meta.mode!='web-preview'||meta.cloudSync!==false)throw new Error('Preview deployment metadata is invalid');
           if(fs.existsSync('dist-web-preview/tests')||fs.existsSync('dist-web-preview/tools')||fs.existsSync('dist-web-preview/docs'))throw new Error('Non-runtime files leaked into preview package');
           NODE
 
@@ -135,3 +135,5 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
+
+# manual deploy trigger: science integration 2026-09-11
