@@ -21,6 +21,16 @@ function ensureYasserSubjectGateway(){
   intro.dataset.subjectGateway='true';
   const card=intro.querySelector('.intro-card');
   card?.classList.add('has-subject-gateway');
+  if(card&&!document.getElementById('yasserSubjectsToHub')){
+    const back=document.createElement('button');
+    back.type='button';
+    back.id='yasserSubjectsToHub';
+    back.className='icon-btn subject-gateway-back';
+    back.setAttribute('aria-label','العودة لاختيار الطفل');
+    back.textContent='اختيار الطفل';
+    back.addEventListener('click',()=>document.getElementById('switchLearnerBtn')?.click());
+    card.prepend(back);
+  }
   const badge=intro.querySelector('.intro-badge');
   if(badge)badge.textContent='تعلم ياسر';
   const title=intro.querySelector('.intro-copy h1');
@@ -69,6 +79,7 @@ export function ensureYasserHomeShell(){
     <div class="yasser-home-shell">
       <article class="yasser-home-panel">
         <section class="yasser-home-hero" aria-labelledby="yasserHomeTitle">
+          <button class="icon-btn yasser-home-back" id="yasserMathToSubjects" type="button" aria-label="العودة لاختيار المادة">رجوع للمواد</button>
           <div class="yasser-home-copy">
             <div class="kicker">مهمة اليوم</div>
             <h2 id="yasserHomeTitle">هلا يا ياسر</h2>
@@ -110,6 +121,7 @@ export function ensureYasserHomeShell(){
       </article>
     </div>`;
 
+  document.getElementById('yasserMathToSubjects')?.addEventListener('click',showYasserIntro);
   document.getElementById('openYasserQuran')?.addEventListener('click',async()=>{
     const {openYasserQuran}=await import('../quran/yasser-quran.js');
     openYasserQuran();
