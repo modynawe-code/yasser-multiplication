@@ -1,7 +1,7 @@
 importScripts('./service-worker.js');
 
 const EXTENSION_CACHE_PREFIX='family-learning-runtime-extensions-';
-const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}7`;
+const EXTENSION_CACHE_VERSION=`${EXTENSION_CACHE_PREFIX}8`;
 const EXTENSION_ASSETS=Object.freeze([
   './src/composition/game-reward-runtime.js',
   './src/modules/games/core/challenge-presentation-registry.js',
@@ -61,4 +61,9 @@ self.addEventListener('activate',event=>{event.waitUntil((async()=>{
   const keys=await caches.keys();
   const stale=keys.filter(key=>key.startsWith(EXTENSION_CACHE_PREFIX)&&key!==EXTENSION_CACHE_VERSION);
   await Promise.all(stale.map(key=>caches.delete(key)));
+  if(stale.length){
+    await self.clients.claim();
+    const windows=await self.clients.matchAll({type:'window'});
+    await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null)));
+  }
 })());});
