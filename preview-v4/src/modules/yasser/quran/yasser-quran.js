@@ -7,15 +7,22 @@ const RAW_SVG_BASE=`https://raw.githubusercontent.com/quranpedia/quran-svg/${QUR
 const STORAGE_KEY='family-learning:yasser:quran:v1';
 const LEVELS=['جديد','أتدرب','شبه محفوظ','محفوظ'];
 
+function pageRange(start,end){return Array.from({length:end-start+1},(_,index)=>start+index);}
+
 const TERM_1=Object.freeze({
   recitation:Object.freeze([
-    [38,'ص',453],[37,'الصافات',446],[36,'يس',440],[35,'فاطر',434]
+    [38,'ص',453,pageRange(453,458)],
+    [37,'الصافات',446,pageRange(446,452)],
+    [36,'يس',440,pageRange(440,445)],
+    [35,'فاطر',434,pageRange(434,440)]
   ]),
   memorization:Object.freeze([[68,'القلم',564,[564,565,566]]])
 });
 const TERM_2=Object.freeze({
   recitation:Object.freeze([
-    [34,'سبأ',428],[33,'الأحزاب',418],[32,'السجدة',415]
+    [34,'سبأ',428,pageRange(428,434)],
+    [33,'الأحزاب',418,pageRange(418,427)],
+    [32,'السجدة',415,pageRange(415,417)]
   ]),
   memorization:Object.freeze([[67,'الملك',562,[562,563,564]]])
 });
