@@ -15,11 +15,48 @@ function tableButtons(){
   }).join('');
 }
 
+function ensureYasserSubjectGateway(){
+  const intro=document.getElementById('introView');
+  if(!intro||intro.dataset.subjectGateway==='true')return;
+  intro.dataset.subjectGateway='true';
+  const card=intro.querySelector('.intro-card');
+  card?.classList.add('has-subject-gateway');
+  const badge=intro.querySelector('.intro-badge');
+  if(badge)badge.textContent='تعلم ياسر';
+  const title=intro.querySelector('.intro-copy h1');
+  if(title)title.textContent='وش نبدأ اليوم يا ياسر؟';
+  const copy=intro.querySelector('.intro-copy p');
+  if(copy)copy.textContent='اختر المادة، وكل مسار يحفظ تقدمك بشكل مستقل.';
+  const oldStart=document.getElementById('introStart');
+  if(oldStart){
+    const gateway=document.createElement('div');
+    gateway.className='subject-choice-grid yasser-subjects';
+    gateway.setAttribute('aria-label','اختر مادة ياسر');
+    gateway.innerHTML=`
+      <button class="subject-choice subject-choice-math" id="introStart" type="button">
+        <span class="subject-choice-mark" aria-hidden="true">×</span>
+        <span class="subject-choice-copy"><strong>الرياضيات</strong><small>جداول الضرب 1–10 • تدريب واختبار</small></span>
+        <span class="subject-choice-action">ابدأ</span>
+      </button>
+      <button class="subject-choice subject-choice-quran" id="introQuran" type="button">
+        <span class="subject-choice-mark" aria-hidden="true">ق</span>
+        <span class="subject-choice-copy"><strong>القرآن الكريم</strong><small>تلاوة وحفظ • سادس ابتدائي</small></span>
+        <span class="subject-choice-action">ابدأ</span>
+      </button>`;
+    oldStart.replaceWith(gateway);
+  }
+  const brandTitle=document.querySelector('.brand h1');
+  const brandSubtitle=document.querySelector('.brand p');
+  if(brandTitle)brandTitle.textContent='تعلم ياسر';
+  if(brandSubtitle)brandSubtitle.textContent='الرياضيات • القرآن';
+}
+
 export function ensureYasserHomeShell(){
   const home=document.getElementById('homeView');
   if(!home||home.dataset.presentation==='yasser-home-v2')return false;
 
   ensureStyle('src/modules/yasser/ui/yasser-home.css','yasser-home');
+  ensureYasserSubjectGateway();
   home.dataset.presentation='yasser-home-v2';
   home.innerHTML=`
     <div class="yasser-home-shell">
@@ -69,6 +106,10 @@ export function ensureYasserHomeShell(){
   document.getElementById('openYasserQuran')?.addEventListener('click',async()=>{
     const {openYasserQuran}=await import('../quran/yasser-quran.js');
     openYasserQuran();
+  });
+  document.getElementById('introQuran')?.addEventListener('click',async()=>{
+    const {openYasserQuran}=await import('../quran/yasser-quran.js');
+    openYasserQuran({backViewId:'introView'});
   });
   return true;
 }
