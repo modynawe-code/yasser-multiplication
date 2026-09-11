@@ -24,11 +24,10 @@ function mayUseStoredDevelopmentOverride(location=globalThis.location){
   return localHost&&(protocol==='http:'||protocol==='https:');
 }
 
-export function getFamilyApiBase(storage=globalThis.localStorage,location=globalThis.location){
-  // Preview deployments can explicitly disable cloud access before main.js loads.
-  // This keeps tablet/UI testing isolated from production D1 without changing
-  // the normal browser or Capacitor production behavior.
-  if(globalThis.__FAMILY_API_DISABLED__===true)return '';
+function resolveApiBase(storage=globalThis.localStorage,location=globalThis.location,{allowWhenCloudDisabled=false}={}){
+  // Preview deployments can disable family cloud sync while still allowing
+  // the isolated game-room API used by XO online play.
+  if(globalThis.__FAMILY_API_DISABLED__===true&&!allowWhenCloudDisabled)return '';
   const injected=String(globalThis.__FAMILY_API_BASE_URL__||'').trim();
   if(injected)return injected.replace(/\/$/,'');
   if(mayUseStoredDevelopmentOverride(location)){
@@ -38,6 +37,14 @@ export function getFamilyApiBase(storage=globalThis.localStorage,location=global
     }catch{}
   }
   return FAMILY_API_PRODUCTION_BASE;
+}
+
+export function getFamilyApiBase(storage=globalThis.localStorage,location=globalThis.location){
+  return resolveApiBase(storage,location);
+}
+
+export function getGameApiBase(storage=globalThis.localStorage,location=globalThis.location){
+  return resolveApiBase(storage,location,{allowWhenCloudDisabled:true});
 }
 
 export function setFamilyApiBaseForDevelopment(value,storage=globalThis.localStorage){
