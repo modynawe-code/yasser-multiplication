@@ -1,3 +1,4 @@
+// one-time deployment trigger for preview-origin CORS update
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "yasser-khaled-family-api",
