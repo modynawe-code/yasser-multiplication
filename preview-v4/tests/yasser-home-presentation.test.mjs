@@ -46,7 +46,7 @@ test('Yasser keeps child-facing progress compact without moving the parent repor
 test('Yasser home owns explicit Galaxy Tab landscape and narrow-screen layout rules',async()=>{
   const css=await read('src/modules/yasser/ui/yasser-home.css');
   assert.match(css,/@media \(orientation:landscape\) and \(min-width:850px\)/);
-  assert.match(css,/\.yasser-home-panel\{grid-template-columns:minmax\(0,1\.03fr\) minmax\(480px,\.97fr\)/);
+  assert.match(css,/\.yasser-home-panel\{grid-template-columns:minmax\(0,\.92fr\) minmax\(500px,1\.08fr\)/);
   assert.match(css,/\.yasser-home-training \.table-picker\{grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
   assert.match(css,/@media \(orientation:landscape\) and \(min-width:850px\) and \(max-height:720px\)/);
   assert.match(css,/@media\(max-width:700px\)/);
