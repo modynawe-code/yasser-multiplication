@@ -1,6 +1,6 @@
 const SESSION_KEY='games_online_active_v1';
 const LOCAL_PREFIX='games_online_resume_v1:';
-const LEARNERS=Object.freeze(['yasser','khaled']);
+const LEARNERS=Object.freeze(['yasser','khaled','mashaal']);
 
 function safeParse(value){try{return JSON.parse(value);}catch{return null;}}
 function normalize(record){
