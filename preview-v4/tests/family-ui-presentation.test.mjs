@@ -28,9 +28,9 @@ test('generic learner hub presentation supports future avatar assets without Mas
 test('family chooser uses a tablet-first three-card composition with safe-area protection',async()=>{
   const css=await read('src/modules/hub/open-family-learner-grid.css');
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
-  assert.match(css,/max-width:1120px/);
+  assert.match(css,/max-width:1180px/);
   assert.match(css,/safe-area-inset-bottom/);
-  assert.match(css,/\.learner-card small\{display:none\}/);
-  assert.match(css,/@media\(max-width:620px\)[\s\S]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(css,/@media\(max-width:430px\)[\s\S]*grid-template-columns:1fr/);
+  assert.match(css,/\.learner-card small\{display:block/);
+  assert.match(css,/@media \(orientation:portrait\) and \(max-width:900px\)[\s\S]*grid-template-columns:1fr/);
+  assert.match(css,/@media\(max-width:520px\)[\s\S]*grid-template-columns:45% 1fr/);
 });

@@ -38,8 +38,8 @@ test('learner chooser stays registry-driven while using the approved adaptive ta
   assert.match(registry,/profile\.presentation\?\.homeVariant/);
   assert.doesNotMatch(registry,/profile\.id==='mashaal'/);
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
-  assert.match(css,/@media\(max-width:620px\)[\s\S]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(css,/@media\(max-width:430px\)[\s\S]*grid-template-columns:1fr/);
+  assert.match(css,/@media \(orientation:portrait\) and \(max-width:900px\)[\s\S]*grid-template-columns:1fr/);
+  assert.match(css,/@media\(max-width:520px\)[\s\S]*grid-template-columns:45% 1fr/);
   assert.doesNotMatch(css,/grid-template-columns:1fr 1fr/);
 });
 
