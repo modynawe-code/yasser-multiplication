@@ -35,6 +35,7 @@ export function mountQuranSurahPlayer(host,{
   surahNumber=null,
   audioPath='',
   mushafPage=null,
+  retryPlayText='اضغطي تشغيل مرة ثانية',
   onCompleted=()=>{}
 }={}){
   if(!host)throw new Error('Quran player host is required');
@@ -130,7 +131,7 @@ export function mountQuranSurahPlayer(host,{
   };
   const playAudio=async()=>{
     try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';return true;}
-    catch{status.textContent='اضغطي تشغيل مرة ثانية';return false;}
+    catch{status.textContent=retryPlayText;return false;}
   };
   const pauseAudio=()=>{audio.pause();status.textContent='متوقفة مؤقتًا';};
   const restartAudio=async()=>{audio.pause();audio.currentTime=0;completed=false;updateProgress();return playAudio();};
