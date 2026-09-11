@@ -59,6 +59,7 @@ export function ensureMashaalShell(){
             <span id="mashaalActivitySkill">لعبة مشاعل</span>
             <button class="mashaal-hear" id="mashaalHearActivity" type="button" aria-label="اسمعي السؤال">${speakerMark}</button>
           </div>
+          <div class="mashaal-activity-guide" id="mashaalActivityGuide" aria-hidden="true"></div>
           <h2 id="mashaalActivityPrompt">اسمعي ثم اختاري.</h2>
           <div class="mashaal-stimulus" id="mashaalActivityStimulus" aria-hidden="true"></div>
           <div class="mashaal-activity-choices" id="mashaalActivityChoices"></div>

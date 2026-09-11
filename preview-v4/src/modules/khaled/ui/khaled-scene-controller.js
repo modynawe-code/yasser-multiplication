@@ -74,8 +74,9 @@ export function createKhaledSceneController(){
 
   function hub(){return paint('hub','welcome');}
   function intro(){return paint('intro','groupThinking');}
-  // Home uses the standalone thinking pose so the skill chooser has its own visual identity.
-  function home(){return paint('home','thinking');}
+  // Reuse the proven 4:3 group scene on home; the standalone portrait is not
+  // consistently available in the deployed cache and must never collapse to symbols.
+  function home(){return paint('home','groupThinking');}
   function question(){return paint('session','groupThinking');}
   // Feedback changes the artwork inside the same 4:3 session stage. This keeps the
   // child and calculator full-size and prevents portrait artwork from collapsing/cropping the scene.

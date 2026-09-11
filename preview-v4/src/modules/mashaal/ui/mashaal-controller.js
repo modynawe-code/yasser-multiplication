@@ -133,6 +133,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     const layout=getMashaalActivityLayout(currentViewModel);
     const activityView=byId('mashaalActivityView');if(activityView){activityView.dataset.domainId=plan.domainId;activityView.dataset.activityKind=currentViewModel.requiresHumanRecitation?'quran-recitation':'standard';activityView.dataset.layout=layout.mode;activityView.dataset.choiceCount=String(layout.choiceCount);}
     byId('mashaalActivitySkill').textContent=currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;
+    const guide=byId('mashaalActivityGuide');if(guide)guide.replaceChildren(createMashaalDomainArt(plan.domainId,{className:'mashaal-activity-guide-image'}));
     const feedback=byId('mashaalActivityFeedback');if(feedback){feedback.textContent='';feedback.className='mashaal-activity-feedback';}
     const completion=byId('mashaalActivityCompletion');if(completion)completion.hidden=true;
     if(activityView)delete activityView.dataset.state;

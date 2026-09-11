@@ -39,6 +39,7 @@ export const LEARNER_REGISTRY = Object.freeze({
     presentation:Object.freeze({
       subtitle:'روضة ثالثة',
       summary:'لغة • تفكير • مشاعر • صحة • وطني',
+      avatar:'assets/mashaal/domains/language.webp',
       symbol:'✿',
       fallbackVisual:'preschool-learning',
       stageLabel:'روضة ثالثة',
