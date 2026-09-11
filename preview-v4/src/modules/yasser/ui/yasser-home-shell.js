@@ -51,6 +51,13 @@ function ensureYasserSubjectGateway(){
   if(brandSubtitle)brandSubtitle.textContent='الرياضيات • القرآن';
 }
 
+function showYasserIntro(){
+  document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='introView'));
+  document.body.classList.remove('yasser-quran-mode','hub-mode','khaled-mode','mashaal-mode');
+  document.body.classList.add('intro-mode');
+  window.scrollTo(0,0);
+}
+
 export function ensureYasserHomeShell(){
   const home=document.getElementById('homeView');
   if(!home||home.dataset.presentation==='yasser-home-v2')return false;
@@ -108,8 +115,11 @@ export function ensureYasserHomeShell(){
     openYasserQuran();
   });
   document.getElementById('introQuran')?.addEventListener('click',async()=>{
-    const {openYasserQuran}=await import('../quran/yasser-quran.js');
-    openYasserQuran({backViewId:'introView'});
+    const {openYasserQuran,closeYasserQuran}=await import('../quran/yasser-quran.js');
+    openYasserQuran();
+    document.getElementById('yasserQuranBack')?.addEventListener('click',event=>{
+      event.preventDefault();event.stopImmediatePropagation();closeYasserQuran();showYasserIntro();
+    },{capture:true,once:true});
   });
   return true;
 }
