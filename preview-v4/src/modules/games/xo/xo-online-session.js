@@ -27,7 +27,12 @@ export function createXoOnlineSession({roomClient,onRoom,onError,pollIntervalMs=
     if(!code||!token||!selfPlayerId||!selfLearnerId)return false;
     return resumeStore.save({gameId:'xo',code,token,selfPlayerId,selfLearnerId,expiresAt:room?.expiresAt||''});
   }
-  function emit(next){room=next;persist();onRoom?.(next);return next;}
+  function emit(next){
+    const previous=room;room=next;persist();
+    const unchanged=Boolean(previous&&next&&previous.code===next.code&&previous.version===next.version&&previous.status===next.status);
+    if(!unchanged)onRoom?.(next);
+    return next;
+  }
   function handlePollError(error){
     if(error?.status===401||error?.status===404){resumeStore.clear({selfLearnerId});stopPoller();}
     onError?.(error);
