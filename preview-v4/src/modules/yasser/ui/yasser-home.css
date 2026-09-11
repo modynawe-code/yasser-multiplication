@@ -17,6 +17,16 @@
 .yasser-home-progress-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}.yasser-home-progress-metrics>div{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;padding:7px 0;border-bottom:1px solid var(--border)}.yasser-home-progress-metrics span{font-size:12px;color:var(--muted);font-weight:800}.yasser-home-progress-metrics strong{font-size:19px}
 .yasser-home-progress-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;overflow:visible}.yasser-home-progress-grid .progress-item{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:4px;min-height:50px;padding:4px;text-align:center;border:0;background:transparent}.yasser-home-progress-grid .progress-item b{font-size:12px}.yasser-home-progress-grid .progress-item .bar{width:100%;height:5px}.yasser-home-progress-grid .progress-item .pct{text-align:center;font-size:10px}
 
+/* Shared subject gateway used by Yasser and Khaled intro screens. */
+.subject-choice-grid{width:min(100%,680px);margin:18px auto 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.subject-choice{min-height:112px;border:2px solid #dfe5ef;border-radius:24px;background:#fff;padding:15px 16px;display:grid;grid-template-columns:58px minmax(0,1fr) auto;align-items:center;gap:13px;text-align:right;color:var(--text,#14213d);font:inherit;box-shadow:0 10px 22px rgba(31,48,88,.06);touch-action:manipulation;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.subject-choice:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(31,48,88,.09)}.subject-choice:active{transform:scale(.99)}.subject-choice:focus-visible{outline:4px solid #3157d5;outline-offset:3px}
+.subject-choice-mark{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;font-weight:950;line-height:1}
+.subject-choice-copy{display:grid;gap:4px}.subject-choice-copy strong{font-size:20px;line-height:1.3}.subject-choice-copy small{color:var(--muted,#667085);font-size:13px;font-weight:800;line-height:1.45}.subject-choice-action{font-size:13px;font-weight:950}
+.subject-choice-math{border-color:#cbd8ff;background:#f8faff}.subject-choice-math .subject-choice-mark{background:#e8efff;color:#3157d5}.subject-choice-math .subject-choice-action{color:#3157d5}
+.subject-choice-quran{border-color:#cfe3d5;background:#f8fcf9}.subject-choice-quran .subject-choice-mark{background:#e8f5ec;color:#2d6d48}.subject-choice-quran .subject-choice-action{color:#2d6d48}
+.intro-card.has-subject-gateway,.khaled-intro-card.has-subject-gateway{padding-bottom:24px}.intro-card.has-subject-gateway .intro-copy p,.khaled-intro-card.has-subject-gateway .khaled-intro-copy p{margin-bottom:0}
+
 @media (orientation:landscape) and (min-width:850px){
   .yasser-home-shell{max-width:1180px}.yasser-home-panel{grid-template-columns:minmax(0,.92fr) minmax(500px,1.08fr);min-height:clamp(530px,76dvh,650px)}.yasser-home-hero{grid-template-columns:1fr;grid-template-rows:auto auto;align-content:center;min-height:100%;padding:34px 30px;gap:18px;border-inline-end:1px solid #dbe3f2}.yasser-home-copy{text-align:center}.yasser-home-copy .kicker,.yasser-home-copy p,.yasser-home-focus{margin-inline:auto}.yasser-home-characters{align-self:end}.yasser-home-training{min-height:100%;display:flex;flex-direction:column;justify-content:center;padding:28px}.yasser-home-training .table-picker{grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.yasser-home-training .table-chip{height:56px}.yasser-home-actions{grid-template-columns:1.15fr .95fr 1fr;margin-top:16px}.yasser-home-actions .btn{min-height:56px;font-size:14px;padding-inline:8px}.yasser-home-copy p{font-size:15px}.yasser-home-focus{min-height:50px}.yasser-home-progress{margin-top:14px;padding-top:12px}.yasser-home-progress-head span{display:none}.yasser-home-progress-grid .progress-item{min-height:48px}
 }
@@ -27,6 +37,7 @@
 
 @media(max-width:700px){
   .yasser-home-shell{padding-bottom:max(8px,env(safe-area-inset-bottom))}.yasser-home-panel{border-radius:24px}.yasser-home-hero{grid-template-columns:minmax(0,1fr) minmax(150px,42%);min-height:230px;padding:18px;gap:10px}.yasser-home-copy h2{font-size:30px}.yasser-home-copy p{font-size:13.5px;line-height:1.6;margin:6px 0 12px}.yasser-home-focus{min-height:48px;padding:10px 12px}.yasser-home-focus span{font-size:11px}.yasser-home-focus strong{font-size:13px}.yasser-home-training{padding:18px 16px;border-top:1px solid #dbe3f2}.yasser-home-section-head{align-items:flex-start}.yasser-home-section-head h3{font-size:18px}.yasser-home-section-head small{display:none}.yasser-home-training .table-picker{gap:7px}.yasser-home-training .table-chip{height:52px}.yasser-home-actions{grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.yasser-home-actions .btn.primary{grid-column:1/-1}.yasser-home-progress-head span{display:none}
+  .subject-choice-grid{grid-template-columns:1fr;gap:10px;margin-top:14px}.subject-choice{min-height:92px;border-radius:20px;padding:12px 14px;grid-template-columns:52px minmax(0,1fr) auto}.subject-choice-mark{width:52px;height:52px;border-radius:16px;font-size:25px}.subject-choice-copy strong{font-size:18px}
 }
 
 @media (orientation:portrait) and (min-width:600px) and (max-width:900px){
@@ -35,6 +46,7 @@
 
 @media(max-width:430px){
   .yasser-home-panel{border-radius:20px}.yasser-home-hero{grid-template-columns:1fr;min-height:0;text-align:center}.yasser-home-copy .kicker{margin-inline:auto}.yasser-home-copy p{margin-inline:auto}.yasser-home-focus{margin-inline:auto}.yasser-home-characters{min-height:170px}.yasser-home-characters .yasser-mascot{max-height:170px}.yasser-home-characters .calc-mascot{max-width:78px;max-height:78px}.yasser-home-training .table-picker{grid-template-columns:repeat(5,minmax(0,1fr))}.yasser-home-training .table-chip{height:48px;font-size:18px}.yasser-home-progress-metrics{grid-template-columns:1fr}.yasser-home-progress-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .subject-choice{grid-template-columns:48px minmax(0,1fr);grid-template-areas:"mark copy" "mark action"}.subject-choice-mark{grid-area:mark;width:48px;height:48px}.subject-choice-copy{grid-area:copy}.subject-choice-action{grid-area:action;justify-self:start}
 }
 
-@media(prefers-reduced-motion:reduce){.yasser-home-hero::before,.yasser-home-hero::after{transition:none}}
+@media(prefers-reduced-motion:reduce){.yasser-home-hero::before,.yasser-home-hero::after{transition:none}.subject-choice{transition:none}.subject-choice:hover,.subject-choice:active{transform:none}}
