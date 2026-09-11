@@ -15,9 +15,31 @@ const TERM_2=Object.freeze([
   [96,'العلق',597],[95,'التين',597],[94,'الشرح',596],[93,'الضحى',596]
 ]);
 
+// Page SVGs are authoritative Madinah Mushaf pages. These normalized vertical
+// regions only change the viewport so the selected surah is shown by itself;
+// the Qur'an artwork itself is never edited, regenerated, or rewritten.
+const FOCUS_BY_SURAH=Object.freeze({
+  93:Object.freeze([0,.52]),94:Object.freeze([.52,.48]),
+  95:Object.freeze([0,.45]),96:Object.freeze([.45,.55]),
+  97:Object.freeze([0,.32]),98:Object.freeze([.32,.68]),
+  99:Object.freeze([0,.42]),100:Object.freeze([.42,.58]),
+  101:Object.freeze([0,.53]),102:Object.freeze([.53,.47]),
+  103:Object.freeze([0,.27]),104:Object.freeze([.27,.41]),105:Object.freeze([.68,.32]),
+  106:Object.freeze([0,.30]),107:Object.freeze([.30,.43]),108:Object.freeze([.73,.27]),
+  109:Object.freeze([0,.35]),110:Object.freeze([.35,.29]),111:Object.freeze([.64,.36]),
+  112:Object.freeze([0,.29]),113:Object.freeze([.29,.34]),114:Object.freeze([.63,.37])
+});
+
+function focusRegionFor(surahNumber,surahNameAr){
+  const region=FOCUS_BY_SURAH[surahNumber];
+  if(!region)return null;
+  return Object.freeze({surahNumber,top:region[0],height:region[1],labelAr:`سورة ${surahNameAr}`});
+}
+
 function mediaFor([surahNumber,surahNameAr,pageNumber]){
   const code=String(surahNumber).padStart(3,'0');
   const local604=pageNumber===604?'./assets/recitation/kfqc-hafs-page-604.svg':'';
+  const focusRegion=focusRegionFor(surahNumber,surahNameAr);
   return Object.freeze({
     surahNumber,surahNameAr,pageNumber,
     audioPath:`${AUDIO_BASE}/10-${code}D00-A02.mp3`,
@@ -25,7 +47,8 @@ function mediaFor([surahNumber,surahNameAr,pageNumber]){
       sourceId:'kfgqpc-hafs-madinah-svg',publisherAr:'مجمع الملك فهد لطباعة المصحف الشريف',
       riwayahAr:'حفص عن عاصم',pageNumber,imagePath:local604,
       imageUrl:`${SVG_BASE}/${pageNumber}.svg`,fallbackImageUrls:Object.freeze([`${RAW_SVG_BASE}/${pageNumber}.svg`]),
-      distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:Boolean(local604)
+      distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:Boolean(local604),
+      ...(focusRegion?{focusRegion}:{})
     })
   });
 }
