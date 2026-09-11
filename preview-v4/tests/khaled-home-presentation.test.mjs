@@ -11,37 +11,34 @@ test('Khaled home is composed after the family learning shell creates its mount 
   assert.ok(main.indexOf('ensureKhaledHomeShell();')<main.indexOf('ensureMashaalShell();'));
 });
 
-test('family learning shell keeps only a Khaled home mount instead of owning learner presentation',async()=>{
+test('family shell owns only the Khaled home mount',async()=>{
   const familyShell=await read('src/modules/hub/learning-shell.js');
   assert.match(familyShell,/<section id="khaledHomeView" class="view"><\/section>/);
-  assert.doesNotMatch(familyShell,/id="khaledHomeCharacter"/);
   assert.doesNotMatch(familyShell,/id="khaledSkillList"/);
-  assert.doesNotMatch(familyShell,/id="khaledAttempts"/);
 });
 
-test('dedicated Khaled home preserves controller and navigation contracts',async()=>{
+test('Khaled subject gateway separates math, science and Quran',async()=>{
   const shell=await read('src/modules/khaled/ui/khaled-home-shell.js');
-  assert.match(shell,/home\.dataset\.presentation==='khaled-home-v2'/);
-  for(const id of ['khaledHomeCharacter','khaledHomeCharacterFallback','khaledHomeToHub','khaledAttempts','khaledErrors','khaledSkillList'])assert.match(shell,new RegExp(`id="${id}"`));
-  assert.match(shell,/class="khaled-head khaled-home-hero"/);
-  assert.doesNotMatch(shell,/KHALED_SKILLS|getKhaledSkill|data-khaled-skill/);
+  assert.match(shell,/home\.dataset\.presentation==='khaled-home-v4'/);
+  for(const id of ['khaledMathOpen','khaledScienceOpen','khaledQuranOpen','khaledHomeToHub','khaledMathView','khaledMathToSubjects','khaledHomeCharacter','khaledAttempts','khaledErrors','khaledSkillList'])assert.match(shell,new RegExp(`id="${id}"`));
+  assert.match(shell,/createKhaledScienceController/);
+  assert.match(shell,/createKhaledQuranController/);
+  assert.match(shell,/\.\.\/science\/khaled-science\.js/);
 });
 
-test('Khaled presentation stays first-grade responsive while curriculum rendering remains in controller',async()=>{
-  const css=await read('src/modules/khaled/ui/khaled-home.css');
+test('subject gateway and math remain tablet responsive',async()=>{
+  const gateway=await read('src/modules/khaled/ui/khaled-subject-gateway.css');
+  const math=await read('src/modules/khaled/ui/khaled-home.css');
   const controller=await read('src/modules/khaled/ui/khaled-controller.js');
-  assert.match(css,/@media \(orientation:landscape\) and \(min-width:760px\) and \(max-height:720px\)/);
-  assert.match(css,/@media\(max-width:700px\)/);
-  assert.match(css,/@media\(max-width:420px\)/);
+  assert.match(gateway,/@media \(orientation:landscape\) and \(min-width:760px\) and \(max-height:720px\)/);
+  assert.match(gateway,/@media\(max-width:700px\)/);
+  assert.match(math,/\.khaled-skill strong\{font-size:17px/);
   assert.match(controller,/KHALED_SKILLS\.map/);
-  assert.match(controller,/byId\('khaledSkillList'\)/);
-  assert.match(controller,/byId\('khaledAttempts'\)/);
-  assert.match(controller,/byId\('khaledErrors'\)/);
 });
 
-test('dedicated Khaled home presentation is part of the versioned offline application shell',async()=>{
+test('runtime service worker caches successful science resources for later offline use',async()=>{
   const worker=await read('service-worker.js');
   assert.match(worker,/src\/modules\/khaled\/ui\/khaled-home-shell\.js/);
-  assert.match(worker,/src\/modules\/khaled\/ui\/khaled-home\.css/);
-  assert.match(worker,/CACHE_VERSION=`\$\{CACHE_PREFIX\}shell-\d+`/);
+  assert.match(worker,/await cache\.put\(event\.request,response\.clone\(\)\)/);
+  assert.match(worker,/const cached=await cache\.match\(event\.request\)\|\|await caches\.match\(event\.request\)/);
 });

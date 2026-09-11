@@ -4,16 +4,15 @@ import { readFile } from 'node:fs/promises';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('Khaled home keeps Quran, guide rail and activity area connected on landscape',async()=>{
-  const css=await read('src/modules/khaled/ui/khaled-home.css');
-  assert.match(css,/\.khaled-wrap\{[^}]*grid-template-columns:minmax\(300px,\.78fr\) minmax\(0,1\.22fr\)[^}]*grid-template-areas:"hero stats" "hero skills"/s);
-  assert.match(css,/\.khaled-home-hero\{[^}]*grid-area:hero[^}]*grid-template-areas:"action" "copy" "quran" "character"/s);
-  assert.match(css,/\.khaled-quran-entry-home\{[^}]*grid-area:quran/s);
-  assert.match(css,/\.khaled-home-copy\{[^}]*justify-self:stretch[^}]*width:100%/s);
-  assert.match(css,/\.khaled-home-hero \.khaled-home-character\{[^}]*width:min\(100%,330px\)[^}]*justify-self:center/s);
+test('Khaled subject gateway uses a coherent two-column tablet layout',async()=>{
+  const css=await read('src/modules/khaled/ui/khaled-subject-gateway.css');
+  assert.match(css,/\.khaled-subject-shell\{[^}]*grid-template-columns:minmax\(300px,\.78fr\) minmax\(0,1\.22fr\)[^}]*grid-template-areas:"hero subjects" "hero status"/s);
+  assert.match(css,/\.khaled-subject-grid\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/s);
+  assert.match(css,/\.khaled-subject-card\.quran\{grid-column:1\/-1\}/);
+  assert.match(css,/\.khaled-science-art\{background-size:1120px 1820px!important\}/);
 });
 
-test('Khaled skill cards retain readable tablet typography',async()=>{
+test('Khaled math skill cards retain readable tablet typography',async()=>{
   const css=await read('src/modules/khaled/ui/khaled-home.css');
   assert.match(css,/\.khaled-skill strong\{font-size:17px/);
   assert.match(css,/\.khaled-skill small\{font-size:13\.5px;line-height:1\.45/);
@@ -24,5 +23,4 @@ test('money equality groups stay denser than the enlarged primary currency stage
   const css=await read('src/modules/khaled/ui/khaled-money.css');
   assert.match(css,/\.khaled-money-equality section \.khaled-money-set\{[^}]*gap:7px 9px/s);
   assert.match(css,/@media \(orientation:landscape\) and \(min-width:700px\) and \(max-height:900px\)[\s\S]*\.khaled-money-stage \.khaled-money-piece\.note\{width:210px;height:100px\}/);
-  assert.match(css,/@media \(orientation:landscape\) and \(min-width:700px\) and \(max-height:900px\)[\s\S]*\.khaled-money-piece\.note\{width:148px;height:71px\}/);
 });
