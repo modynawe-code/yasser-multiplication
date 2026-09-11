@@ -43,6 +43,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     byId('mashaalActivityChoices')?.querySelectorAll('.mashaal-choice').forEach(button=>{
       button.classList.remove('selected');
       delete button.dataset.order;
+      delete button.dataset.outcome;
       if(button.hasAttribute('aria-pressed'))button.setAttribute('aria-pressed','false');
     });
   }
@@ -102,7 +103,7 @@ export function createMashaalController({repository,onExitToHub}={}){
 
   function renderActivityChoices(){
     const host=byId('mashaalActivityChoices');if(!host||!currentViewModel)return;host.innerHTML='';host.style.gridTemplateColumns='';clearSelections();
-    const check=byId('mashaalActivityCheck');if(check){check.hidden=!currentViewModel.multiSelect;check.disabled=false;}
+    const check=byId('mashaalActivityCheck');if(check){check.hidden=!currentViewModel.multiSelect;check.disabled=false;check.textContent='تحقق';}
     for(const choice of currentViewModel.choices){
       const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.setAttribute('aria-label',choice.label);
       const visual=document.createElement('span');visual.className='mashaal-choice-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,currentViewModel));
@@ -121,17 +122,20 @@ export function createMashaalController({repository,onExitToHub}={}){
           if(selected){selectedChoices.delete(choice.value);button.classList.remove('selected');button.setAttribute('aria-pressed','false');}
           else{selectedChoices.add(choice.value);button.classList.add('selected');button.setAttribute('aria-pressed','true');}return;
         }
-        submitAnswer(choice.value);
+        submitAnswer(choice.value,button);
       });host.appendChild(button);
     }
   }
-  function lockActivityControls(){byId('mashaalActivityChoices')?.querySelectorAll('button').forEach(button=>{button.disabled=true;});const check=byId('mashaalActivityCheck');if(check){check.disabled=true;check.hidden=true;}}
+  function lockActivityControls(){byId('mashaalActivityChoices')?.querySelectorAll('button').forEach(button=>{button.disabled=true;});}
   function openSkill(skillId){
     const plan=createMashaalActivityPlan(skillId);if(!plan?.contentReady)return;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===skillId)||null;
     destroyRecitation();currentActivity=plan.activities[0]||null;currentViewModel=createMashaalActivityViewModel(currentActivity);if(!currentViewModel)return;activityComplete=false;recitationPlayed=false;
     const layout=getMashaalActivityLayout(currentViewModel);
     const activityView=byId('mashaalActivityView');if(activityView){activityView.dataset.domainId=plan.domainId;activityView.dataset.activityKind=currentViewModel.requiresHumanRecitation?'quran-recitation':'standard';activityView.dataset.layout=layout.mode;activityView.dataset.choiceCount=String(layout.choiceCount);}
-    byId('mashaalActivitySkill').textContent=currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;byId('mashaalActivityFeedback').textContent='';
+    byId('mashaalActivitySkill').textContent=currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;
+    const feedback=byId('mashaalActivityFeedback');if(feedback){feedback.textContent='';feedback.className='mashaal-activity-feedback';}
+    const completion=byId('mashaalActivityCompletion');if(completion)completion.hidden=true;
+    if(activityView)delete activityView.dataset.state;
     recitationPlayer=renderStimulus(currentViewModel,layout);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');speech.speak(currentViewModel.audioPromptAr);
   }
   function hearCurrentActivity(){if(!currentViewModel)return;speech.speak(currentViewModel.audioPromptAr,{interrupt:true});}
@@ -139,6 +143,10 @@ export function createMashaalController({repository,onExitToHub}={}){
   function finishActivity(praise){
     activityComplete=true;recitationPlayer?.pause?.();lockActivityControls();const transfer=getMashaalTransferPrompt(currentViewModel?.skillId);const feedback=byId('mashaalActivityFeedback');
     if(feedback)feedback.textContent=transfer?`${praise}\nالحين جربي بعيد عن الشاشة: ${transfer}`:praise;
+    if(feedback)feedback.className='mashaal-activity-feedback good';
+    const activityView=byId('mashaalActivityView');if(activityView)activityView.dataset.state='complete';
+    const completion=byId('mashaalActivityCompletion');if(completion){completion.hidden=false;completion.querySelector('span').textContent=praise;}
+    const check=byId('mashaalActivityCheck');if(check){check.hidden=false;check.disabled=false;check.textContent='اختاري نشاطًا آخر';}
     speech.speak(transfer?`${praise} الحين جربي بعيد عن الشاشة. ${transfer}`:praise);
   }
   function completeCurrentActivity(){
@@ -147,12 +155,17 @@ export function createMashaalController({repository,onExitToHub}={}){
     const evidence=createMashaalActivityCompletion({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,activityType:currentViewModel.interaction,createdAt:new Date().toISOString()});
     saveEvidence(evidence,currentViewModel.skillId);finishActivity('رائع يا مشاعل');
   }
-  function submitAnswer(answer){
+  function submitAnswer(answer,sourceButton=null){
     if(activityComplete||!currentViewModel||!currentActivity)return;const isCorrect=isMashaalActivityAnswerCorrect(currentViewModel,answer);
     const evidence=createMashaalDigitalAttempt({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,isCorrect,responseMs:Date.now()-startedAt});
     saveEvidence(evidence,currentViewModel.skillId);
-    if(isCorrect)finishActivity('أحسنت يا مشاعل');
-    else{if(currentViewModel.orderedSequence)clearSelections();const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='جربي مرة ثانية.';speech.speak('جربي مرة ثانية');startedAt=Date.now();}
+    if(isCorrect){
+      const selected=sourceButton?[sourceButton]:[...byId('mashaalActivityChoices').querySelectorAll('.selected')];selected.forEach(button=>button.dataset.outcome='correct');finishActivity('أحسنتِ يا مشاعل');
+    }else{
+      const attempted=sourceButton?[sourceButton]:[...byId('mashaalActivityChoices').querySelectorAll('.selected')];attempted.forEach(button=>button.dataset.outcome='wrong');if(currentViewModel.orderedSequence)clearSelections();
+      const activityView=byId('mashaalActivityView');if(activityView)activityView.dataset.state='retry';
+      const feedback=byId('mashaalActivityFeedback');if(feedback){feedback.textContent='محاولة جميلة، جرّبي مرة ثانية.';feedback.className='mashaal-activity-feedback bad';}speech.speak('محاولة جميلة، جربي مرة ثانية');startedAt=Date.now();
+    }
   }
   function bind(){
     if(bound)return;bound=true;
@@ -160,7 +173,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     byId('mashaalSkillGrid')?.addEventListener('click',event=>{const card=event.target.closest('[data-skill-id]');if(card&&!card.disabled)openSkill(card.dataset.skillId);});
     byId('mashaalHearHome')?.addEventListener('click',()=>speech.speak('يا مشاعل، اختاري العالم اللي تبين نلعب فيه.'));
     byId('mashaalHearDomain')?.addEventListener('click',()=>currentDomain&&speech.speak(currentDomain.title));byId('mashaalHearActivity')?.addEventListener('click',hearCurrentActivity);
-    byId('mashaalActivityCheck')?.addEventListener('click',()=>selectedChoices.size&&submitAnswer([...selectedChoices]));byId('mashaalDomainBack')?.addEventListener('click',backHome);byId('mashaalActivityBack')?.addEventListener('click',backDomain);
+    byId('mashaalActivityCheck')?.addEventListener('click',()=>{if(activityComplete){backDomain();return;}if(selectedChoices.size)submitAnswer([...selectedChoices]);});byId('mashaalDomainBack')?.addEventListener('click',backHome);byId('mashaalActivityBack')?.addEventListener('click',backDomain);
     byId('mashaalToHub')?.addEventListener('click',exit);
   }
   return Object.freeze({start(){bind();},enter,leave,getState(){return state;}});

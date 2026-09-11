@@ -18,7 +18,7 @@ const REQUIRED_ILLUSTRATED_MEDIA=[
 test('Mashaal renderer dependencies and illustrated media are precached for deterministic offline startup',async()=>{
   const worker=await read('service-worker.js');
   for(const path of [...REQUIRED_MASHAAL_RENDERER_MODULES,...REQUIRED_ILLUSTRATED_MEDIA])assert.ok(worker.includes(`'${path}'`),path);
-  assert.match(worker,/CACHE_VERSION=`\$\{CACHE_PREFIX\}shell-86`/);
+  assert.match(worker,/CACHE_VERSION=`\$\{CACHE_PREFIX\}shell-87`/);
 });
 
 test('the precached renderer modules match imports used by Mashaal activity layout and visuals',async()=>{

@@ -49,6 +49,22 @@
 
 #mashaalActivityView .mashaal-check{min-height:50px;margin-top:8px}
 #mashaalActivityView .mashaal-activity-feedback{min-height:26px;margin-top:6px;font-size:19px;line-height:1.3}
+#mashaalActivityView .mashaal-choice{transition:transform var(--motion-press) ease,border-color var(--motion-ui) ease,background-color var(--motion-ui) ease,box-shadow var(--motion-ui) ease}
+#mashaalActivityView .mashaal-choice:active:not(:disabled){transform:scale(.975)}
+#mashaalActivityView .mashaal-choice[data-outcome="correct"]{border-color:#5eae88;background:#effaf5;box-shadow:0 0 0 4px rgba(20,130,91,.12)}
+#mashaalActivityView .mashaal-choice[data-outcome="wrong"]{border-color:#d98181;background:#fff2f2;box-shadow:0 0 0 4px rgba(182,61,61,.1)}
+#mashaalActivityView .mashaal-choice[data-outcome]:disabled{opacity:1}
+#mashaalActivityView .mashaal-choice[data-outcome]::before{position:absolute;z-index:3;inset:8px auto auto 8px;min-width:64px;padding:5px 8px;border-radius:10px;border:2px solid #fff;font-size:13px;font-weight:950}
+#mashaalActivityView .mashaal-choice[data-outcome="correct"]::before{content:"صحيح";background:#14825b;color:#fff}
+#mashaalActivityView .mashaal-choice[data-outcome="wrong"]::before{content:"جرّبي ثانية";background:#b63d3d;color:#fff}
+#mashaalActivityView .mashaal-activity-feedback{display:flex;align-items:center;justify-content:center;width:min(100%,760px);padding:7px 12px;border:1px solid transparent;border-radius:14px;font-weight:950}
+#mashaalActivityView .mashaal-activity-feedback.good{border-color:#9bd8c0;background:#ebf8f2;color:#126b4d}
+#mashaalActivityView .mashaal-activity-feedback.bad{border-color:#edb5b5;background:#fff1f1;color:#9a3030}
+#mashaalActivityView .mashaal-completion{width:min(100%,560px);margin:10px auto 2px;padding:13px 16px;border:2px solid #d9bdd3;border-radius:18px;background:#fff7fd;display:grid;gap:3px;color:#684665;animation:mashaalComplete var(--motion-celebrate) ease both}
+#mashaalActivityView .mashaal-completion[hidden]{display:none}
+#mashaalActivityView .mashaal-completion strong{font-size:23px}#mashaalActivityView .mashaal-completion span{font-size:15px;font-weight:850}
+#mashaalActivityView[data-state="complete"] .mashaal-activity-card{border-color:#d9bdd3;background:linear-gradient(180deg,#fff 0%,#fff8fd 100%)}
+@keyframes mashaalComplete{from{opacity:.2;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 
 @media(min-width:900px) and (orientation:landscape) and (max-height:700px){
   #mashaalActivityView .mashaal-wrap{padding-top:4px;padding-bottom:6px}
@@ -86,7 +102,7 @@
   #mashaalActivityView[data-layout="guided-emotion"] .mashaal-visual-sequence{grid-template-columns:1fr}
 }
 
-@media(prefers-reduced-motion:reduce){#mashaalActivityView .mashaal-choice{transition:none!important}}
+@media(prefers-reduced-motion:reduce){#mashaalActivityView .mashaal-choice,#mashaalActivityView .mashaal-completion{transition:none!important;animation:none!important}}
 
 /* Keep every activity image fully visible. The art itself owns the focal composition. */
 #mashaalActivityView .mashaal-choice>.mashaal-choice-visual>.mashaal-media-visual{width:100%;height:100%;min-height:0;border-radius:16px}

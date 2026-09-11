@@ -63,6 +63,7 @@ export function ensureMashaalShell(){
           <div class="mashaal-stimulus" id="mashaalActivityStimulus" aria-hidden="true"></div>
           <div class="mashaal-activity-choices" id="mashaalActivityChoices"></div>
           <button class="btn primary mashaal-check" id="mashaalActivityCheck" type="button" hidden>تحقق</button>
+          <div class="mashaal-completion" id="mashaalActivityCompletion" hidden><strong>أنهيتِ النشاط</strong><span>أحسنتِ يا مشاعل</span></div>
           <p class="mashaal-activity-feedback" id="mashaalActivityFeedback" aria-live="polite"></p>
         </article>
       </div>

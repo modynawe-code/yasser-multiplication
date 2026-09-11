@@ -36,3 +36,17 @@ test('Mashaal shell exposes the three visual QA surfaces and accessible live fee
   assert.match(shell,/aria-label="اسمعي التعليمات"/);
   assert.match(shell,/aria-label="اسمعي السؤال"/);
 });
+
+test('Mashaal activity exposes supportive outcomes and a distinct completion action',async()=>{
+  const shell=await readPreview('src/modules/mashaal/ui/mashaal-shell.js');
+  const controller=await readPreview('src/modules/mashaal/ui/mashaal-controller.js');
+  const css=await readPreview('src/modules/mashaal/ui/mashaal-activity-layout.css');
+  assert.match(shell,/id="mashaalActivityCompletion" hidden/);
+  assert.match(controller,/dataset\.outcome='correct'/);
+  assert.match(controller,/dataset\.outcome='wrong'/);
+  assert.match(controller,/check\.textContent='اختاري نشاطًا آخر'/);
+  assert.match(controller,/activityView\.dataset\.state='complete'/);
+  assert.match(css,/data-outcome="correct"/);
+  assert.match(css,/data-state="complete"/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+});
