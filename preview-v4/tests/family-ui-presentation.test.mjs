@@ -25,10 +25,11 @@ test('generic learner hub presentation supports future avatar assets without Mas
   assert.doesNotMatch(source,/profile\.id==='mashaal'/);
 });
 
-test('family chooser uses a tablet-first three-card composition with safe-area protection',async()=>{
+test('family chooser uses a tablet-first three-world composition with safe-area protection',async()=>{
   const css=await read('src/modules/hub/open-family-learner-grid.css');
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
-  assert.match(css,/max-width:1180px/);
+  assert.match(css,/max-width:1220px/);
+  assert.match(css,/\.learner-grid\{[^}]*background:transparent[^}]*box-shadow:none/s);
   assert.match(css,/safe-area-inset-bottom/);
   assert.match(css,/\.learner-card small\{display:block/);
   assert.match(css,/@media \(orientation:portrait\) and \(max-width:900px\)[\s\S]*grid-template-columns:1fr/);
