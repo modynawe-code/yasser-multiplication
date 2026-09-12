@@ -2,6 +2,12 @@ name: Backend Production Deploy
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'feature/product-ui-reference-v1'
+    paths:
+      - 'backend/src/game-room-rules.mjs'
+      - '.github/workflows/backend-production-deploy.yml'
 
 permissions:
   contents: read
@@ -51,7 +57,6 @@ jobs:
           const health=await request('/health');
           if(health?.ok!==true)throw new Error('Production health payload is not ok');
 
-          // Existing XO two-device contract must remain intact after the generic-room migration.
           const xoHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'xo',learnerId:'yasser'}});
           if(!/^\d{6}$/.test(xoHost?.room?.code||''))throw new Error('XO room code contract failed');
           if(xoHost?.room?.status!=='waiting'||!xoHost?.playerToken)throw new Error('XO host room contract failed');
@@ -60,7 +65,6 @@ jobs:
           const xoRefreshed=await request(`/v1/games/rooms/${xoHost.room.code}`,{token:xoHost.playerToken});
           if(xoRefreshed?.room?.status!=='playing'||xoRefreshed?.room?.players?.length!==2)throw new Error('XO authenticated room read contract failed');
 
-          // RPS proves the shared room platform supports simultaneous play and private state.
           const rpsHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'rock-paper-scissors',learnerId:'yasser'}});
           if(!/^\d{6}$/.test(rpsHost?.room?.code||''))throw new Error('RPS room code contract failed');
           const rpsGuest=await request('/v1/games/rooms/join',{method:'POST',body:{code:rpsHost.room.code,learnerId:'khaled'}});
@@ -77,5 +81,21 @@ jobs:
           if(reveal?.room?.state?.choices?.[hostPlayerId]!=='rock'||reveal?.room?.state?.choices?.[guestPlayerId]!=='scissors')throw new Error('RPS reveal contract failed');
           if(reveal?.room?.state?.roundWinner!==hostPlayerId)throw new Error('RPS winner resolution failed');
 
-          console.log(`Production games smoke passed: XO ${xoHost.room.code}, RPS ${rpsHost.room.code}, private-state contract intact.`);
+          const dominoHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'domino',learnerId:'yasser'}});
+          if(!/^\d{6}$/.test(dominoHost?.room?.code||''))throw new Error('Domino room code contract failed');
+          const dominoGuest=await request('/v1/games/rooms/join',{method:'POST',body:{code:dominoHost.room.code,learnerId:'khaled'}});
+          if(dominoGuest?.room?.status!=='playing'||dominoGuest?.room?.state?.hand?.length!==7)throw new Error('Domino join/deal contract failed');
+          if(dominoGuest?.room?.state?.hands||dominoGuest?.room?.state?.boneyard)throw new Error('Domino private tiles leaked');
+          if(dominoGuest?.room?.state?.boneyardCount!==14)throw new Error('Domino boneyard count contract failed');
+          const dominoHostView=await request(`/v1/games/rooms/${dominoHost.room.code}`,{token:dominoHost.playerToken});
+          if(dominoHostView?.room?.state?.hand?.length!==7||dominoHostView?.room?.state?.hands)throw new Error('Domino host private-hand projection failed');
+          const currentPlayerId=dominoHostView.room.state.currentPlayerId;
+          const currentIsHost=currentPlayerId===dominoHostView.room.selfPlayerId;
+          const currentView=currentIsHost?dominoHostView:dominoGuest;
+          const currentToken=currentIsHost?dominoHost.playerToken:dominoGuest.playerToken;
+          const openingTile=currentView.room.state.hand[0];
+          const dominoPlayed=await request(`/v1/games/rooms/${dominoHost.room.code}/actions`,{method:'POST',token:currentToken,body:{expectedVersion:currentView.room.version,type:'play',tileId:openingTile,side:'right'}});
+          if(dominoPlayed?.room?.state?.board?.length!==1)throw new Error('Domino opening move failed');
+
+          console.log(`Production games smoke passed: XO ${xoHost.room.code}, RPS ${rpsHost.room.code}, Domino ${dominoHost.room.code}.`);
           NODE
