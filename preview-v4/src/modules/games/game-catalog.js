@@ -11,7 +11,7 @@ export const gameRegistry=createGameRegistry([
     minPlayers:1,
     maxPlayers:2,
     version:1,
-    metadata:{accent:'duo',description:'لعبة أدوار يمكن ربط الحركة فيها بسؤال مناسب لمستوى كل طفل.'}
+    metadata:{accent:'duo',icon:'⭕',availabilityLabel:'محلي + أونلاين',description:'لعبة أدوار يمكن ربط الحركة فيها بسؤال مناسب لمستوى كل طفل.'}
   },
   {
     id:'rock-paper-scissors',
@@ -24,7 +24,7 @@ export const gameRegistry=createGameRegistry([
     maxPlayers:2,
     version:1,
     load:()=>import('./rps/rps-controller.js'),
-    metadata:{accent:'duo',description:'لعبة مرح سريعة. الاختيار سري، وأول واحد يوصل 3 يفوز.'}
+    metadata:{accent:'duo',icon:'✊',availabilityLabel:'محلي الآن',description:'لعبة مرح سريعة. الاختيار سري، وأول واحد يوصل 3 يفوز.'}
   },
   {
     id:'number-race',
@@ -36,6 +36,6 @@ export const gameRegistry=createGameRegistry([
     minPlayers:1,
     maxPlayers:2,
     version:1,
-    metadata:{accent:'duo',description:'كل إجابة صحيحة تدفع شخصية اللاعب خطوة في السباق.'}
+    metadata:{accent:'duo',icon:'🏁',availabilityLabel:'قريبًا',description:'كل إجابة صحيحة تدفع شخصية اللاعب خطوة في السباق.'}
   }
 ]);

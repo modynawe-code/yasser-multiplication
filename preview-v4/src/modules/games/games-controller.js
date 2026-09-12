@@ -5,7 +5,9 @@ import { createXoEventBridge } from './xo/xo-events.js';
 import { createGameRoomClient } from './online/game-room-client.js';
 import { ensureGamesShell } from './ui/games-shell.js';
 import { renderXoChallengePresentation } from './ui/xo-challenge-presentation.js';
-import { getGameParticipant,listGameParticipants,gameParticipantMarkup } from './core/game-participant-registry.js';
+import { getGameParticipant,gameParticipantMarkup } from './core/game-participant-registry.js';
+import { createGamePlayerService } from './core/game-player-service.js';
+import { createGameLauncher } from './core/game-launcher.js';
 import { createSpeechService } from '../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../ui/audio/feedback-audio.js';
 
@@ -14,7 +16,6 @@ function show(id){allViews().forEach(view=>view.classList.toggle('active',view.i
 function byId(id){return document.getElementById(id);}
 function categoryLabel(category){return category==='educational'?'تعليمية':category==='fun'?'مرح':'تعليم + مرح';}
 function learningLabel(mode){return mode==='required'?'تعلم أساسي':mode==='optional'?'تعلم اختياري':mode==='adaptive'?'تعلم متكيف':'مرح فقط';}
-function gameIcon(id){return id==='xo'?'⭕':id==='rock-paper-scissors'?'✊':id==='number-race'?'🏁':'🎮';}
 function now(){return globalThis.performance?.now?.()??Date.now();}
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
@@ -23,11 +24,13 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
+  const gamePlayers=createGamePlayerService({learningAdapter});
+  const gameLauncher=createGameLauncher({registry:gameRegistry,playerService:gamePlayers});
+  gameLauncher.register('xo',()=>openXoLobby());
+  gameLauncher.register('rock-paper-scissors',({game})=>openRps(game));
 
   function participant(id){return getGameParticipant(id)||fallbackParticipant(String(id||''));}
-  function educationalParticipants(){
-    return listGameParticipants({supportsLearning:id=>typeof learningAdapter?.supports==='function'?learningAdapter.supports(id):true});
-  }
+  function educationalParticipants(){return gamePlayers.listEligible(gameRegistry.get('xo'));}
   function ensureLocalPair(){
     const eligible=educationalParticipants(),ids=new Set(eligible.map(item=>item.learnerId));
     localXoPlayers=localXoPlayers.filter(id=>ids.has(id));
@@ -84,23 +87,24 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   function renderCatalog(){
     const host=byId('gamesCatalog');if(!host)return;
     host.innerHTML=gameRegistry.list().map(game=>{
-      const ready=game.id==='xo'||game.id==='rock-paper-scissors';
-      const availability=game.id==='xo'?'محلي + أونلاين':game.id==='rock-paper-scissors'?'محلي الآن':'قريبًا';
+      const ready=gameLauncher.canLaunch(game.id),availability=String(game.metadata.availabilityLabel||(ready?'جاهزة':'قريبًا')),icon=String(game.metadata.icon||'🎮');
       return `<button class="game-card ${ready?'ready':'locked'}" data-game-id="${game.id}" ${ready?'':'disabled'}>
         <span class="game-card-status">${ready?'جاهزة للتجربة':'قريبًا'}</span>
-        <span class="game-card-icon" aria-hidden="true">${gameIcon(game.id)}</span>
+        <span class="game-card-icon" aria-hidden="true">${icon}</span>
         <strong>${game.title}</strong>
         <p>${game.metadata.description||''}</p>
         <span class="game-card-meta"><span class="game-chip">${categoryLabel(game.category)}</span><span class="game-chip">${learningLabel(game.learningMode)}</span><span class="game-chip">${availability}</span></span>
       </button>`;
     }).join('');
-    host.querySelector('[data-game-id="xo"]')?.addEventListener('click',openXoLobby);
-    host.querySelector('[data-game-id="rock-paper-scissors"]')?.addEventListener('click',openRps);
+    host.querySelectorAll('[data-game-id]').forEach(button=>button.addEventListener('click',async()=>{
+      const result=await gameLauncher.launch(button.dataset.gameId,{source:'catalog'});
+      if(!result.ok){renderCatalog();show('gamesHomeView');}
+    }));
   }
 
-  async function openRps(){
+  async function openRps(game=gameRegistry.get('rock-paper-scissors')){
     clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);enterGamesChrome();
-    const game=gameRegistry.get('rock-paper-scissors');if(!game?.load)return;
+    if(!game?.load)return;
     try{
       if(!rpsController){const module=await game.load();rpsController=module.createRpsController({showView:show,onBack:()=>{document.body.classList.remove('rps-game-mode');renderCatalog();show('gamesHomeView');}});}
       rpsController.start();
