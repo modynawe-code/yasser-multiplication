@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createGameRoomClient,getGameRoomApiBase } from '../src/modules/games/online/game-room-client.js';
 import { createGameRoomResumeStore } from '../src/modules/games/online/game-room-resume-store.js';
 import { createOnlineGameSession } from '../src/modules/games/online/game-online-session.js';
+import { createRpsOnlineSession,normalizeOnlineRpsRoom } from '../src/modules/games/rps/rps-online-session.js';
 import { normalizeOnlineXoRoom } from '../src/modules/games/xo/xo-online-session.js';
 
 function memoryStorage(){
@@ -57,6 +58,38 @@ test('online XO mapping exposes learner identities and mutual rematch readiness'
   assert.equal(state.winner,'yasser');
   assert.deepEqual(state.rematchReady,['khaled']);
   assert.equal('token' in state,false);
+});
+
+test('online RPS mapping keeps projected private choice state and learner identities',()=>{
+  const room={
+    status:'playing',version:4,selfPlayerId:'p1',
+    players:[{playerId:'p1',learnerId:'yasser'},{playerId:'p2',learnerId:'mashaal'}],
+    state:{players:['p1','p2'],targetScore:3,round:2,status:'playing',phase:'choosing',choices:{p1:'paper'},chosenPlayers:['p1','p2'],scores:{p1:1,p2:0},roundWinner:null,matchWinner:null,rematchReady:[]}
+  };
+  const state=normalizeOnlineRpsRoom(room);
+  assert.deepEqual(state.players,['yasser','mashaal']);
+  assert.deepEqual(state.choices,{yasser:'paper'});
+  assert.deepEqual(state.chosenPlayers,['yasser','mashaal']);
+  assert.deepEqual(state.scores,{yasser:1,mashaal:0});
+});
+
+test('RPS online adapter reuses generic room transport for simultaneous choice actions',async()=>{
+  let room={code:'555555',gameId:'rock-paper-scissors',status:'playing',version:1,selfPlayerId:'p1',players:[{playerId:'p1',learnerId:'yasser',seat:0,participationRole:'player',authorityRole:'host'},{playerId:'p2',learnerId:'khaled',seat:1,participationRole:'player',authorityRole:'guest'}],state:{players:['p1','p2'],targetScore:3,round:1,status:'playing',phase:'choosing',choices:{},chosenPlayers:[],scores:{p1:0,p2:0},roundWinner:null,matchWinner:null,rematchReady:[]}};
+  const actions=[];
+  const roomClient={
+    async createRoom(){return{playerToken:'abcdefghijklmnop-secret',room};},
+    async joinRoom(){throw new Error('not used');},
+    async getRoom(){return{room};},
+    async submitAction(input){actions.push(input);room={...room,version:2,state:{...room.state,choices:{p1:input.payload.choice},chosenPlayers:['p1']}};return{room};}
+  };
+  const store=createGameRoomResumeStore({sessionStorage:memoryStorage(),localStorage:memoryStorage(),gameId:'rock-paper-scissors'});
+  const session=createRpsOnlineSession({roomClient,resumeStore:store,autoPoll:false});
+  await session.create('yasser');
+  await session.choose('rock');
+  assert.equal(actions[0].type,'choose');
+  assert.deepEqual(actions[0].payload,{choice:'rock'});
+  assert.equal(session.hasChosen(),true);
+  assert.equal(session.snapshot.rpsState.choices.yasser,'rock');
 });
 
 test('resume store supports any valid learner and game without mixing sessions',()=>{

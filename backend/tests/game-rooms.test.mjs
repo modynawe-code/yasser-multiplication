@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { addXoRoomGuest, applyXoRoomAction, createInitialXoRoomState } from '../src/game-rooms.mjs';
-import { getGameRoomRules, listGameRoomRuleIds } from '../src/game-room-rules.mjs';
+import { addRpsRoomGuest, applyRpsRoomAction, createInitialRpsRoomState, getGameRoomRules, listGameRoomRuleIds, projectRpsRoomState } from '../src/game-room-rules.mjs';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -51,7 +51,7 @@ test('server requires both players before starting an online rematch',()=>{
 });
 
 test('room transport dispatches game-specific state changes through a rule registry',()=>{
-  assert.deepEqual(listGameRoomRuleIds(),['xo']);
+  assert.deepEqual(listGameRoomRuleIds(),['xo','rock-paper-scissors']);
   assert.equal(getGameRoomRules('unknown'),null);
   const rules=getGameRoomRules('xo');
   let state=rules.addPlayer(rules.createInitialState('host'),'guest').state;
@@ -60,6 +60,42 @@ test('room transport dispatches game-specific state changes through a rule regis
   assert.equal(moved.state.board[4],'host');
   assert.equal(rules.maxPlayers,2);
   assert.equal(rules.maxSpectators,8);
+});
+
+test('RPS online rules support simultaneous private choices and reveal only after both choose',()=>{
+  let state=addRpsRoomGuest(createInitialRpsRoomState('a'),'b').state;
+  assert.equal(state.status,'playing');
+  assert.equal(state.phase,'choosing');
+  const first=applyRpsRoomAction(state,{playerId:'a',type:'choose',payload:{choice:'rock'}});
+  assert.equal(first.ok,true);state=first.state;
+  assert.deepEqual(projectRpsRoomState(state,{viewerPlayerId:'a'}).choices,{a:'rock'});
+  assert.deepEqual(projectRpsRoomState(state,{viewerPlayerId:'b'}).choices,{});
+  assert.deepEqual(projectRpsRoomState(state,{viewerPlayerId:'b'}).chosenPlayers,['a']);
+  const second=applyRpsRoomAction(state,{playerId:'b',type:'choose',payload:{choice:'scissors'}});
+  assert.equal(second.ok,true);state=second.state;
+  assert.equal(state.phase,'revealed');
+  assert.equal(state.roundWinner,'a');
+  assert.equal(state.scores.a,1);
+  assert.deepEqual(projectRpsRoomState(state,{viewerPlayerId:'b'}).choices,{a:'rock',b:'scissors'});
+});
+
+test('RPS online match reaches target score and requires mutual rematch readiness',()=>{
+  let state=addRpsRoomGuest(createInitialRpsRoomState('a'),'b').state;
+  for(let round=0;round<3;round++){
+    state=applyRpsRoomAction(state,{playerId:'a',type:'choose',payload:{choice:'rock'}}).state;
+    state=applyRpsRoomAction(state,{playerId:'b',type:'choose',payload:{choice:'scissors'}}).state;
+    if(round<2)state=applyRpsRoomAction(state,{playerId:'a',type:'next'}).state;
+  }
+  assert.equal(state.status,'finished');
+  assert.equal(state.matchWinner,'a');
+  assert.equal(state.scores.a,3);
+  const firstReady=applyRpsRoomAction(state,{playerId:'a',type:'reset'});
+  assert.deepEqual(firstReady.state.rematchReady,['a']);
+  const rematch=applyRpsRoomAction(firstReady.state,{playerId:'b',type:'reset'});
+  assert.equal(rematch.state.status,'playing');
+  assert.equal(rematch.state.phase,'choosing');
+  assert.equal(rematch.state.round,1);
+  assert.deepEqual(rematch.state.scores,{a:0,b:0});
 });
 
 test('general room migration preserves XO data while opening games and participant roles',async()=>{
@@ -73,13 +109,15 @@ test('general room migration preserves XO data while opening games and participa
   assert.doesNotMatch(migration,/game_id IN \('xo'\)/);
 });
 
-test('room backend exposes spectator roles and prevents spectator actions',async()=>{
+test('room backend exposes spectator roles, state projection and prevents spectator actions',async()=>{
   const source=await read('src/game-rooms.mjs');
   assert.match(source,/participationRole/);
   assert.match(source,/authorityRole/);
   assert.match(source,/spectator_cannot_act/);
   assert.match(source,/maxSpectators/);
   assert.match(source,/seat===null\?null/);
+  assert.match(source,/projectState/);
+  assert.match(source,/viewerPlayerId/);
 });
 
 test('online room storage keeps temporary player tokens hashed and uses six-digit codes',async()=>{

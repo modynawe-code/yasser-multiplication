@@ -36,7 +36,8 @@ async function playersForRoom(env,roomId){
 }
 async function roomPayload(env,row,selfPlayerId=null){
   let state;try{state=JSON.parse(row.state_json);}catch{state=null;}
-  return{code:row.code,gameId:row.game_id,status:row.status,version:Number(row.version||0),expiresAt:row.expires_at,state,players:(await playersForRoom(env,row.id)).map(item=>({playerId:item.player_id,learnerId:item.learner_id,name:item.display_name,seat:item.seat===null?null:Number(item.seat),participationRole:item.participation_role||'player',authorityRole:item.authority_role||'guest'})),selfPlayerId};
+  const rules=getGameRoomRules(row.game_id),projectedState=rules?.projectState?rules.projectState(state,{viewerPlayerId:selfPlayerId}):state;
+  return{code:row.code,gameId:row.game_id,status:row.status,version:Number(row.version||0),expiresAt:row.expires_at,state:projectedState,players:(await playersForRoom(env,row.id)).map(item=>({playerId:item.player_id,learnerId:item.learner_id,name:item.display_name,seat:item.seat===null?null:Number(item.seat),participationRole:item.participation_role||'player',authorityRole:item.authority_role||'guest'})),selfPlayerId};
 }
 async function playerForToken(env,roomId,token){
   if(!token)return null;const hash=await sha256Base64Url(token);
