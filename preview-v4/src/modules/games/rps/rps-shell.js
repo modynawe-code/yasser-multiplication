@@ -11,6 +11,7 @@ export function ensureRpsShell(){
   const main=document.querySelector('main');if(!main)return;
   ensureStyle('src/modules/games/rps/rps.css','rps-game');
   ensureStyle('src/modules/games/rps/rps-open-family.css','rps-open-family');
+  ensureStyle('src/modules/games/rps/rps-mobile-finish.css','rps-mobile-finish');
   const host=document.createElement('div');
   host.innerHTML=`
     <section id="rpsGameView" class="view">
