@@ -1,5 +1,123 @@
-/* Phone-only finish-state containment for Rock Paper Scissors. */
+/* Responsive RPS visual polish.
+   Keeps family child artwork from the shared participant registry and only styles the supplied move artwork. */
+
+.rps-choice-image{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,.18));
+}
+.rps-reveal-move .rps-choice-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.rps-player-pick strong{
+  display:block;
+  width:100%;
+  min-height:1.2em;
+  line-height:1.2;
+  text-align:center;
+  white-space:normal;
+  overflow:visible;
+}
+.rps-hud,.rps-scoreboard,.rps-score-card,.rps-score-copy{min-width:0}
+.rps-scoreboard{width:100%}
+.rps-score-card strong{white-space:nowrap;overflow:visible;text-overflow:clip}
+
+/* Make a created room code a first-class piece of information. */
+.rps-room-code{
+  box-sizing:border-box;
+  justify-content:center;
+  width:min(430px,100%);
+  min-height:58px;
+  padding:9px 16px;
+  border-color:rgba(141,176,255,.50);
+  background:linear-gradient(180deg,rgba(71,116,220,.24),rgba(255,255,255,.10));
+  box-shadow:0 10px 24px rgba(0,0,0,.12);
+}
+.rps-room-code span{font-size:14px;font-weight:800;color:#dce7fb}
+.rps-room-code strong{font-size:clamp(27px,4vw,32px);line-height:1;letter-spacing:.15em;color:#fff}
+
+/* Tablet portrait and compact screens: room code appears before the action stack. */
+@media(max-width:1100px){
+  .rps-online-panel{grid-template-rows:auto auto auto auto auto;align-content:start}
+  .rps-online-panel .rps-room-code{grid-row:3}
+  .rps-online-panel .rps-online-actions{grid-row:4}
+  .rps-online-panel .rps-online-status{grid-row:5}
+  .rps-online-panel .rps-player-pick strong{font-size:clamp(17px,2.4vw,20px)}
+  .rps-score-card{padding-inline:10px;gap:9px}
+  .rps-score-copy{column-gap:7px}
+}
+
+/* Galaxy Tab landscape: compact the lobby enough to keep the room code in view. */
+@media(min-width:1101px) and (orientation:landscape) and (max-height:900px){
+  .rps-online-panel{grid-template-rows:auto auto auto auto auto;align-content:center;gap:7px}
+  .rps-online-panel .rps-room-code{grid-row:3}
+  .rps-online-panel .rps-online-actions{grid-row:4}
+  .rps-online-panel .rps-online-status{grid-row:5}
+  .rps-online-panel .rps-player-pick{gap:8px}
+  .rps-online-panel .rps-player-pick{min-height:96px}
+  .rps-online-actions .rps-action-btn,.rps-online-join input{height:42px}
+  .rps-room-code{min-height:50px;padding-block:6px}
+}
+
+@media(min-width:521px) and (max-width:1100px){
+  .rps-stage[data-state="setup"]{overflow-y:auto;overscroll-behavior:contain}
+  .rps-online-panel{gap:8px}
+  .rps-online-panel .rps-player-picker{gap:9px}
+  .rps-online-panel .rps-player-pick{min-height:104px;padding:7px}
+  .rps-online-panel .rps-player-pick img,
+  .rps-online-panel .rps-player-pick .rps-participant-fallback{width:60px;height:66px}
+  .rps-online-actions{gap:8px}
+  .rps-online-actions .rps-action-btn{height:44px}
+  .rps-online-join input{height:44px}
+}
+
+/* Phone finish-state containment plus readable names/room code. */
 @media(max-width:520px){
+  .rps-stage[data-state="setup"]{
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:none;
+  }
+  .rps-stage[data-state="setup"]::-webkit-scrollbar{display:none}
+  .rps-online-panel{gap:7px;padding-bottom:12px}
+  .rps-online-panel .rps-player-picker{gap:6px}
+  .rps-online-panel .rps-player-pick{min-width:0;min-height:100px;padding:6px;border-radius:18px;gap:4px}
+  .rps-online-panel .rps-player-pick img,
+  .rps-online-panel .rps-player-pick .rps-participant-fallback{width:56px;height:62px}
+  .rps-online-panel .rps-player-pick strong{font-size:17px;line-height:1.15}
+  .rps-room-code{width:100%;min-height:56px;padding:8px 10px;gap:8px;border-radius:16px}
+  .rps-room-code span{font-size:13px}
+  .rps-room-code strong{font-size:28px;letter-spacing:.13em}
+
+  .rps-scoreboard{grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:6px}
+  .rps-score-card{min-width:0;height:60px;padding:3px 6px;gap:5px;overflow:visible}
+  .rps-score-avatar{width:40px;height:44px;flex:0 0 40px}
+  .rps-score-avatar img{width:40px!important;height:44px!important;object-fit:contain}
+  .rps-score-copy{grid-template-columns:minmax(0,auto) auto;column-gap:4px}
+  .rps-score-card strong{font-size:clamp(16px,4.5vw,19px);line-height:1.05}
+  .rps-score-number{font-size:25px}
+  .rps-score-pips{gap:3px;margin-top:3px}
+  .rps-score-pips i{width:16px;height:5px}
+  .rps-round-chip{height:60px;border-radius:17px}
+  .rps-round-chip strong{font-size:24px}
+
+  .rps-battle-side strong{
+    max-width:100%;
+    font-size:clamp(18px,5.2vw,22px);
+    line-height:1.15;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+  }
+  .rps-reveal-move .rps-choice-image{width:82px;height:82px}
+
   .rps-finish{
     grid-template-columns:1fr;
     grid-template-rows:auto auto;
@@ -8,42 +126,11 @@
     padding:14px 10px 16px;
     overflow:hidden;
   }
-  .rps-finish-copy{
-    gap:8px;
-    justify-items:center;
-    text-align:center;
-  }
-  .rps-finish h2{
-    font-size:clamp(32px,9vw,42px);
-    line-height:1.08;
-  }
-  .rps-final-score{
-    font-size:22px;
-    padding:8px 14px;
-  }
-  .rps-finish .rps-action-btn{
-    width:min(330px,92%);
-    min-width:0;
-    height:54px;
-    font-size:18px;
-  }
-  .rps-finish-art{
-    width:100%;
-    height:230px;
-    min-height:0;
-    overflow:hidden;
-    align-self:end;
-  }
-  .rps-finish-art img{
-    width:min(250px,72vw);
-    height:230px;
-    max-height:230px;
-    object-fit:contain;
-    object-position:center bottom;
-  }
-  .rps-finish-art .rps-participant-fallback{
-    width:min(210px,62vw);
-    height:210px;
-    max-height:210px;
-  }
+  .rps-finish-copy{gap:8px;justify-items:center;text-align:center}
+  .rps-finish h2{font-size:clamp(32px,9vw,42px);line-height:1.08}
+  .rps-final-score{font-size:22px;padding:8px 14px}
+  .rps-finish .rps-action-btn{width:min(330px,92%);min-width:0;height:54px;font-size:18px}
+  .rps-finish-art{width:100%;height:230px;min-height:0;overflow:hidden;align-self:end}
+  .rps-finish-art img{width:min(250px,72vw);height:230px;max-height:230px;object-fit:contain;object-position:center bottom}
+  .rps-finish-art .rps-participant-fallback{width:min(210px,62vw);height:210px;max-height:210px}
 }
