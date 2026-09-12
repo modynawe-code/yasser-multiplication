@@ -1,52 +1,32 @@
-import { createGameEvent } from '../core/game-event-contract.js';
-import { gameEventBus } from '../core/game-event-bus.js';
+import { createGameSessionEvents } from '../core/game-session-events.js';
 
 function defaultSessionId(sequence){return `xo-${Date.now()}-${sequence}`;}
 
-export function createXoEventBridge({onEvent=gameEventBus.publish,sessionIdFactory=defaultSessionId}={}){
-  let sessionId=null,sequence=0,finished=false;
+export function createXoEventBridge({onEvent,sessionIdFactory=defaultSessionId}={}){
+  const session=createGameSessionEvents({gameId:'xo',onEvent,sessionIdFactory});
 
-  function emit(type,learnerId,payload={}){
-    if(!sessionId||!learnerId)return null;
-    const event=createGameEvent({type,gameId:'xo',learnerId,sessionId,payload});
-    if(typeof onEvent==='function'){try{onEvent(event);}catch{}}
-    return event;
-  }
-
-  function begin(players=[],{sessionId:providedSessionId=null,learnerIds=null}={}){
-    sequence+=1;
-    sessionId=String(providedSessionId||sessionIdFactory(sequence)||`xo-session-${sequence}`);
-    finished=false;
-    const recipients=Array.isArray(learnerIds)?learnerIds:players;
-    return Object.freeze((recipients||[]).map(learnerId=>emit('game.started',learnerId,{players:Object.freeze([...players])})).filter(Boolean));
-  }
+  function begin(players=[],options={}){return session.begin(players,options);}
 
   function attempt(learnerId,{isCorrect=false,attemptNumber=1,challengeKind=null}={}){
     const payload={isCorrect:Boolean(isCorrect),attemptNumber:Number(attemptNumber)||1,challengeKind:challengeKind||null};
-    const events=[emit('game.attempted',learnerId,payload)];
-    if(payload.attemptNumber>1)events.push(emit('game.retry',learnerId,payload));
+    const events=[session.emit('game.attempted',learnerId,payload)];
+    if(payload.attemptNumber>1)events.push(session.emit('game.retry',learnerId,payload));
     return Object.freeze(events.filter(Boolean));
   }
 
   function turn(learnerId,{cell=null,online=false}={}){
-    return emit('game.turn.completed',learnerId,{cell,online:Boolean(online)});
+    return session.emit('game.turn.completed',learnerId,{cell,online:Boolean(online)});
   }
 
   function complete({players=[],winner=null,status=null,learnerIds=null}={}){
-    if(finished||!sessionId)return Object.freeze([]);
-    finished=true;
-    const recipients=Array.isArray(learnerIds)?learnerIds:players;
-    const events=[];
-    for(const learnerId of recipients||[]){
-      if(winner){
-        events.push(emit(learnerId===winner?'game.won':'game.lost',learnerId,{winner,status}));
-        if(learnerId===winner)events.push(emit('game.goal.reached',learnerId,{goal:'win',winner,status}));
-      }
-      events.push(emit('game.completed',learnerId,{winner,status}));
-    }
-    return Object.freeze(events.filter(Boolean));
+    return session.complete({
+      players,
+      winner,
+      learnerIds,
+      payload:{status},
+      winnerGoal:winner?{goal:'win'}:null
+    });
   }
 
-  function reset(){sessionId=null;finished=false;}
-  return Object.freeze({begin,attempt,turn,complete,reset,getSessionId:()=>sessionId});
+  return Object.freeze({begin,attempt,turn,complete,reset:session.reset,getSessionId:session.getSessionId});
 }
