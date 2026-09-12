@@ -51,7 +51,7 @@ test('server requires both players before starting an online rematch',()=>{
 });
 
 test('room transport dispatches game-specific state changes through a rule registry',()=>{
-  assert.deepEqual(listGameRoomRuleIds(),['xo','rock-paper-scissors']);
+  assert.deepEqual(listGameRoomRuleIds(),['xo','rock-paper-scissors','domino']);
   assert.equal(getGameRoomRules('unknown'),null);
   const rules=getGameRoomRules('xo');
   let state=rules.addPlayer(rules.createInitialState('host'),'guest').state;
