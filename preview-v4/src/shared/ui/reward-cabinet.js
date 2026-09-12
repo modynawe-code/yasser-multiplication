@@ -44,10 +44,13 @@ function ensureView(registry){
 }
 function motivationSlotId(learnerId){return `learningMotivation-${String(learnerId||'')}`;}
 function ensureOpenButton(capability,onOpen){
-  const learnerId=capability?.learnerId,slot=document.getElementById(motivationSlotId(learnerId));if(!learnerId||!slot)return null;
+  const learnerId=capability?.learnerId;if(!learnerId)return null;
   const buttonId=`rewardCabinetOpen-${learnerId}`;
   let button=document.getElementById(buttonId);
-  if(!button){button=document.createElement('button');button.id=buttonId;button.className='reward-cabinet-open';button.type='button';button.textContent='خزانة الجوائز';slot.insertAdjacentElement('afterend',button);}
+  if(!button){
+    const slot=document.getElementById(motivationSlotId(learnerId));if(!slot)return null;
+    button=document.createElement('button');button.id=buttonId;button.className='reward-cabinet-open';button.type='button';button.textContent='خزانة الجوائز';slot.insertAdjacentElement('afterend',button);
+  }
   button.onclick=()=>onOpen(learnerId);return button;
 }
 

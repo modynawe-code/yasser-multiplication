@@ -88,6 +88,7 @@ export function ensureYasserHomeShell(){
               <span>جداول اليوم</span>
               <strong id="focusSummary">جدول 2 + جدول 3</strong>
             </div>
+            <button class="reward-cabinet-open" id="rewardCabinetOpen-yasser" data-reward-entry="yasser" type="button" aria-label="فتح خزانة جوائز ياسر">جوائزي</button>
           </div>
           <div class="yasser-home-characters" id="homeCharacters" aria-hidden="true">
             <img id="homeYasser" class="yasser-mascot" alt="" width="220" height="275" decoding="async" fetchpriority="high" />
