@@ -1,4 +1,5 @@
 import { REWARD_CATALOG } from '../rewards/reward-catalog.js';
+import { UPLOADED_REWARD_COLLECTION,UPLOADED_REWARD_VISUALS } from './uploaded-rewards.js';
 
 const freezeItem=item=>Object.freeze({...item,rewardIds:Object.freeze([...(item.rewardIds||[item.rewardId])])});
 const personal=(id,rewardIds,label,graphicKey,kind,hint,tier='rare')=>freezeItem({id,rewardIds,label,graphicKey,kind,hint,tier,category:'personal',unlockCount:1});
@@ -17,6 +18,7 @@ const KHALED=Object.freeze([
   personal('khaled-neon-wheels',['streak-flame'],'كأس الفوز','khaled-neon-wheels','trophy','استمر عدة أيام متتالية لتفتح كأس الفوز.','epic'),
   personal('khaled-power-cube',['progress-badge'],'صندوق المفاجآت','khaled-power-cube','chest','تقدّم في مستواك أو أكمل 3 جولات ألعاب لفتح صندوق المفاجآت.','common'),
   personal('khaled-hero-cup',['weekly-cup','distinction-crown'],'مُعزِّز الطاقة','khaled-hero-cup','boost','أنجز تحديًا أسبوعيًا قويًا أو وصل لمستوى متقدم لتفتح مُعزِّز الطاقة.','legendary'),
+  ...UPLOADED_REWARD_COLLECTION,
   ...SHARED_CHESTS
 ]);
 
@@ -27,6 +29,7 @@ const YASSER=Object.freeze([
   personal('yasser-inferno-boost',['streak-flame'],'الصندوق الأسطوري','yasser-inferno-boost','chest','حافظ على سلسلة تعلم مستمرة لتفتح الصندوق الأسطوري.','epic'),
   personal('yasser-challenger-badge',['progress-badge'],'ميدالية البطولة','yasser-challenger-badge','wheel','حسّن مستواك أو أكمل 3 جولات ألعاب لتفتح ميدالية البطولة.','common'),
   personal('yasser-legend-cup',['weekly-cup','distinction-crown'],'كأس الفائز الكبير','yasser-legend-cup','trophy','أنجز تحديًا أسبوعيًا قويًا أو وصل لمستوى خبير لتفتح كأس الفائز الكبير.','legendary'),
+  ...UPLOADED_REWARD_COLLECTION,
   ...SHARED_CHESTS
 ]);
 
@@ -71,7 +74,8 @@ const VISUALS=Object.freeze({
   'yasser-legend-cup':{kind:'trophy',a:'#ffd64a',b:'#b61718',accent:'#fff7bd'},
   'shared-common-chest':{kind:'chest',a:'#d78a31',b:'#633414',accent:'#ffd266'},
   'shared-silver-chest':{kind:'chest',a:'#d9f1ff',b:'#52758f',accent:'#6be8ff'},
-  'shared-gold-chest':{kind:'chest',a:'#ffe05b',b:'#b76a00',accent:'#fff5a8'}
+  'shared-gold-chest':{kind:'chest',a:'#ffe05b',b:'#b76a00',accent:'#fff5a8'},
+  ...UPLOADED_REWARD_VISUALS
 });
 
 function iconMarkup(kind){
