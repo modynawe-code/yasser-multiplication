@@ -13,6 +13,7 @@ const DIRECT_REWARD_ASSET_KEYS=Object.freeze([
 
 const REWARD_ASSET_SET=new Set(REWARD_ASSET_KEYS);
 const DIRECT_REWARD_ASSET_SET=new Set(DIRECT_REWARD_ASSET_KEYS);
+const OVERRIDE_WEBP_BASE64=Object.freeze({'yasser-pro-shield':'assets/rewards/yasser-pro-shield-fixed.b64'});
 const assetCache=new Map();
 
 export { REWARD_ASSET_KEYS, DIRECT_REWARD_ASSET_KEYS };
@@ -31,20 +32,34 @@ function validPngBase64(text){
   const value=String(text||'').trim();
   return value.startsWith('iVBORw0KGgo')&&value.length>100&&/^[A-Za-z0-9+/=]+$/.test(value);
 }
-
-export async function getRewardImageUrl(graphicKey,{fetchImpl=globalThis.fetch}={}){
-  const direct=directRewardAssetSource(graphicKey);if(direct)return direct;
-  const illustration=rewardIllustrationSource(graphicKey);if(illustration)return illustration;
-  const source=rewardAssetSource(graphicKey);if(!source||typeof fetchImpl!=='function')return null;
+function validWebpBase64(text){
+  const value=String(text||'').trim();
+  return value.startsWith('UklGR')&&value.length>100&&/^[A-Za-z0-9+/=]+$/.test(value);
+}
+async function loadTextAsset(source,{fetchImpl,mime,validate}){
+  if(!source||typeof fetchImpl!=='function')return null;
   if(assetCache.has(source))return assetCache.get(source);
   const request=(async()=>{
     try{
       const response=await fetchImpl(source,{cache:'force-cache'});if(!response?.ok)return null;
-      const encoded=(await response.text()).trim();if(!validPngBase64(encoded))return null;
-      return `data:image/png;base64,${encoded}`;
+      const encoded=(await response.text()).trim();if(!validate(encoded))return null;
+      return `data:${mime};base64,${encoded}`;
     }catch{return null;}
   })();
   assetCache.set(source,request);return request;
+}
+
+export async function getRewardImageUrl(graphicKey,{fetchImpl=globalThis.fetch}={}){
+  const key=String(graphicKey||'');
+  const override=OVERRIDE_WEBP_BASE64[key];
+  if(override){
+    const url=await loadTextAsset(override,{fetchImpl,mime:'image/webp',validate:validWebpBase64});
+    if(url)return url;
+  }
+  const direct=directRewardAssetSource(key);if(direct)return direct;
+  const illustration=rewardIllustrationSource(key);if(illustration)return illustration;
+  const source=rewardAssetSource(key);
+  return loadTextAsset(source,{fetchImpl,mime:'image/png',validate:validPngBase64});
 }
 
 function revealLoadedImage(image,art){
