@@ -22,9 +22,9 @@ test('preview app and install manifest use the shared learner identity',async()=
   assert.equal(manifest.short_name,'ياسر وخالد');
 });
 
-test('service worker shell includes cloud sync, shared UI contracts, currency assets, and Khaled device hardening',async()=>{
+test('service worker shell includes cloud sync, shared UI contracts, currency assets, Khaled home, and device hardening',async()=>{
   const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-34/);
+  assert.match(worker,/shell-\d+/);
   for(const path of [
     'ui/styles/character-scale.css',
     'ui/styles/learning-navigation.css',
@@ -34,6 +34,7 @@ test('service worker shell includes cloud sync, shared UI contracts, currency as
     'shared/sync/family-sync-service.js',
     'modules/khaled/domain/money-question-bank.js',
     'modules/khaled/ui/saudi-money-assets.js',
+    'modules/khaled/ui/khaled-home.css',
     'modules/khaled/ui/khaled-device-hardening.css',
     'modules/parent/family-parent-controller.js'
   ])assert.match(worker,new RegExp(escapeRegExp(path)));

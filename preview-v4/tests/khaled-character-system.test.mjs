@@ -19,25 +19,29 @@ test('Khaled source asset manifest preserves all seven uploaded masters',async()
   }
 });
 
-test('Khaled scene controller maps learning states without requiring image binaries to boot',async()=>{
+test('Khaled scene controller maps intro and learning states without requiring image binaries to boot',async()=>{
   const controller=await read('src/modules/khaled/ui/khaled-scene-controller.js');
+  assert.match(controller,/intro:'khaledIntroCharacter'/);
+  assert.match(controller,/function intro\(\)\{return paint\('intro','groupThinking'\);\}/);
   assert.match(controller,/groupThinking/);
   assert.match(controller,/groupCelebration/);
-  assert.match(controller,/pct>=90/);
-  assert.match(controller,/pct>=70/);
+  assert.match(controller,/pct>=80/);
+  assert.match(controller,/pct>=60/);
   assert.match(controller,/image\.onerror=\(\)=>resolve\(false\)/);
   assert.match(controller,/fallback\.hidden=false/);
 });
 
 test('learning shell has stable Khaled image slots with non-image fallbacks',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
-  for(const id of ['hubKhaledCharacter','khaledHomeCharacter','khaledSessionCharacter','khaledResultCharacter'])assert.match(shell,new RegExp(`id="${id}"`));
-  for(const id of ['hubKhaledFallback','khaledHomeCharacterFallback','khaledSessionCharacterFallback','khaledResultCharacterFallback'])assert.match(shell,new RegExp(`id="${id}"`));
+  for(const id of ['hubKhaledCharacter','khaledIntroCharacter','khaledHomeCharacter','khaledSessionCharacter','khaledResultCharacter'])assert.match(shell,new RegExp(`id="${id}"`));
+  for(const id of ['hubKhaledFallback','khaledIntroCharacterFallback','khaledHomeCharacterFallback','khaledSessionCharacterFallback','khaledResultCharacterFallback'])assert.match(shell,new RegExp(`id="${id}"`));
 });
 
-test('Khaled character CSS preserves aspect ratio and reduced motion preference',async()=>{
+test('Khaled character CSS preserves aspect ratio, containment, and reduced motion preference',async()=>{
   const css=await read('src/modules/khaled/ui/khaled-character-system.css');
   assert.match(css,/object-fit:contain/);
+  assert.match(css,/\.khaled-intro-character/);
+  assert.match(css,/khaled-session-character\{[^}]*overflow:hidden/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/khaledCelebrate/);
 });
