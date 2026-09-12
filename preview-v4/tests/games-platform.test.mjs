@@ -19,10 +19,11 @@ test('registry filters games without hardcoding the games home screen',()=>{
   assert.deepEqual(registry.list({category:'fun'}).map(game=>game.id),['one']);
 });
 
-test('initial catalog covers turn-based simultaneous and realtime architecture paths',()=>{
+test('initial catalog covers the active online architecture paths',()=>{
   assert.equal(gameRegistry.get('xo').networkMode,'turn-based');
   assert.equal(gameRegistry.get('rock-paper-scissors').networkMode,'simultaneous');
-  assert.equal(gameRegistry.get('number-race').networkMode,'realtime');
+  assert.equal(gameRegistry.get('domino').networkMode,'turn-based');
+  assert.equal(gameRegistry.get('number-race'),null);
 });
 
 test('player context carries learner identity but no academic progress state',()=>{

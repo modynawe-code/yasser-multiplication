@@ -2,12 +2,6 @@ name: Backend Production Deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'feature/product-ui-reference-v1'
-    paths:
-      - 'backend/src/game-room-rules.mjs'
-      - '.github/workflows/backend-production-deploy.yml'
 
 permissions:
   contents: read
