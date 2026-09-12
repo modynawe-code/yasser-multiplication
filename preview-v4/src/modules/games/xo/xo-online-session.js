@@ -1,5 +1,4 @@
-import { createRoomPoller } from '../online/game-room-client.js';
-import { createGameRoomResumeStore } from '../online/game-room-resume-store.js';
+import { createOnlineGameSession } from '../online/game-online-session.js';
 
 function learnerMap(room){return Object.fromEntries((room?.players||[]).map(player=>[player.playerId,player.learnerId]));}
 
@@ -18,64 +17,21 @@ export function normalizeOnlineXoRoom(room){
   });
 }
 
-export function createXoOnlineSession({roomClient,onRoom,onError,pollIntervalMs=1100,resumeStore=createGameRoomResumeStore()}={}){
-  if(!roomClient)throw new TypeError('room client required');
-  let code='',token='',selfPlayerId='',selfLearnerId='',room=null,poller=null;
-
-  function stopPoller(){poller?.stop();poller=null;}
-  function persist(){
-    if(!code||!token||!selfPlayerId||!selfLearnerId)return false;
-    return resumeStore.save({gameId:'xo',code,token,selfPlayerId,selfLearnerId,expiresAt:room?.expiresAt||''});
-  }
-  function emit(next){
-    const previous=room;room=next;persist();
-    const unchanged=Boolean(previous&&next&&previous.code===next.code&&previous.version===next.version&&previous.status===next.status);
-    if(!unchanged)onRoom?.(next);
-    return next;
-  }
-  function handlePollError(error){
-    if(error?.status===401||error?.status===404){resumeStore.clear({selfLearnerId});stopPoller();}
-    onError?.(error);
-  }
-  function startPolling(){
-    stopPoller();if(!code||!token)return;
-    poller=createRoomPoller({intervalMs:pollIntervalMs,load:()=>roomClient.getRoom({code,token}),onRoom:emit,onError:handlePollError});
-    poller.start();
-  }
-  function accept(result,learnerId){
-    code=result.room.code;token=result.playerToken;selfPlayerId=result.room.selfPlayerId;selfLearnerId=learnerId;emit(result.room);startPolling();return result.room;
-  }
-  async function submit(type,cell){
-    if(!room)throw new Error('online room unavailable');
-    try{return emit((await roomClient.submitAction({code,token,expectedVersion:room.version,type,cell})).room);}
-    catch(error){if(error?.body?.room)emit(error.body.room);throw error;}
-  }
-  async function resume(){
-    const saved=resumeStore.load();if(!saved)return null;
-    stopPoller();code=saved.code;token=saved.token;selfPlayerId=saved.selfPlayerId;selfLearnerId=saved.selfLearnerId;
-    try{
-      const result=await roomClient.getRoom({code,token});emit(result.room);startPolling();return result.room;
-    }catch(error){
-      if(error?.status===401||error?.status===404){resumeStore.clear(saved);code='';token='';selfPlayerId='';selfLearnerId='';room=null;}
-      throw error;
-    }
-  }
-  function stop({forget=false}={}){
-    stopPoller();if(forget)resumeStore.clear({selfLearnerId});room=null;code='';token='';selfPlayerId='';selfLearnerId='';
-  }
-
+export function createXoOnlineSession({roomClient,onRoom,onError,pollIntervalMs=1100,resumeStore,autoPoll=true}={}){
+  const session=createOnlineGameSession({gameId:'xo',roomClient,onRoom,onError,pollIntervalMs,resumeStore,autoPoll});
   return Object.freeze({
-    async create(learnerId){stop({forget:true});return accept(await roomClient.createRoom({gameId:'xo',learnerId}),learnerId);},
-    async join(codeValue,learnerId){stop({forget:true});return accept(await roomClient.joinRoom({code:codeValue,learnerId}),learnerId);},
-    move(cell){return submit('move',cell);},
-    pass(){return submit('pass');},
-    reset(){return submit('reset');},
-    refresh(){return roomClient.getRoom({code,token}).then(result=>emit(result.room));},
-    resume,
-    hasResume(){return resumeStore.has();},
-    stop,
-    forget(){stop({forget:true});},
-    get snapshot(){return Object.freeze({code,token,selfPlayerId,selfLearnerId,room,xoState:room?normalizeOnlineXoRoom(room):null});},
-    isSelfTurn(){return Boolean(room?.state?.currentPlayerId&&room.state.currentPlayerId===selfPlayerId);}
+    create(learnerId,options){return session.create(learnerId,options);},
+    join(codeValue,learnerId,options){return session.join(codeValue,learnerId,options);},
+    move(cell){return session.submit('move',{cell});},
+    pass(){return session.submit('pass');},
+    reset(){return session.submit('reset');},
+    refresh(){return session.refresh();},
+    resume(options){return session.resume(options);},
+    reconnect(options){return session.reconnect(options);},
+    hasResume(learnerId=null){return session.hasResume(learnerId);},
+    stop(options){return session.stop(options);},
+    forget(){return session.forget();},
+    get snapshot(){const snapshot=session.snapshot;return Object.freeze({...snapshot,xoState:snapshot.room?normalizeOnlineXoRoom(snapshot.room):null});},
+    isSelfTurn(){const snapshot=session.snapshot;return Boolean(snapshot.room?.state?.currentPlayerId&&snapshot.room.state.currentPlayerId===snapshot.selfPlayerId);}
   });
 }
