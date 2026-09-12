@@ -56,7 +56,8 @@ test('XO lobby presents one play mode at a time and uses Mashaal registered artw
   assert.match(games,/bindXoLobbyModeSwitch\(\)/);
   assert.match(participants,/profile\.presentation\?\.avatar/);
   assert.match(css,/\.xo-lobby-player\.mashaal/);
-  assert.match(css,/\.xo-board\.locked\{opacity:\.86;filter:none\}/);
+  assert.match(css,/\.xo-board\.locked\{opacity:1;filter:none\}/);
+  assert.match(css,/\.xo-board\.locked \.xo-cell\{background:#fff\}/);
 });
 
 test('offline shell contains both the restored games platform and Mashaal KG3',async()=>{
