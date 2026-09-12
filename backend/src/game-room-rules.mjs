@@ -50,6 +50,7 @@ const RULES=Object.freeze({
   xo:Object.freeze({
     gameId:'xo',
     maxPlayers:2,
+    maxSpectators:8,
     createInitialState:createInitialXoRoomState,
     addPlayer:addXoRoomGuest,
     applyAction(state,{playerId,type,payload={}}={}){return applyXoRoomAction(state,{playerId,type,payload});}

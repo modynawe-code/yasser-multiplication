@@ -20,7 +20,7 @@ export function createGameRoomClient({baseUrl=getGameRoomApiBase(),fetchImpl=glo
   }
   return Object.freeze({
     createRoom({gameId='xo',learnerId,displayName}={}){return request('/v1/games/rooms',{method:'POST',body:{gameId,learnerId,displayName}});},
-    joinRoom({code,learnerId,displayName}={}){return request('/v1/games/rooms/join',{method:'POST',body:{code,learnerId,displayName}});},
+    joinRoom({code,learnerId,displayName,participationRole='player'}={}){return request('/v1/games/rooms/join',{method:'POST',body:{code,learnerId,displayName,participationRole}});},
     getRoom({code,token}={}){return request(`/v1/games/rooms/${encodeURIComponent(code)}`,{token});},
     submitAction({code,token,expectedVersion,type,payload={},cell}={}){
       const extra=payload&&typeof payload==='object'&&!Array.isArray(payload)?payload:{};

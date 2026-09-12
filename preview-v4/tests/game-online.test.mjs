@@ -28,6 +28,9 @@ test('game room client uses temporary game token and optimistic version contract
 
   await client.submitAction({code:'123456',token:'secret',expectedVersion:3,type:'drop',payload:{column:5}});
   assert.deepEqual(JSON.parse(calls[1].options.body),{column:5,expectedVersion:3,type:'drop'});
+
+  await client.joinRoom({code:'123456',learnerId:'mashaal',participationRole:'spectator'});
+  assert.deepEqual(JSON.parse(calls[2].options.body),{code:'123456',learnerId:'mashaal',participationRole:'spectator'});
 });
 
 test('game rooms keep the production room API when family cloud sync is disabled in preview',()=>{
@@ -73,7 +76,7 @@ test('resume store supports any valid learner and game without mixing sessions',
 test('shared online session owns host guest resume and generic action transport',async()=>{
   const sessionStorage=memoryStorage(),localStorage=memoryStorage();
   const resumeStore=createGameRoomResumeStore({sessionStorage,localStorage,gameId:'demo-game'});
-  let room={code:'123456',gameId:'demo-game',status:'waiting',version:0,selfPlayerId:'p1',players:[{playerId:'p1',learnerId:'mashaal',seat:0}],state:{}};
+  let room={code:'123456',gameId:'demo-game',status:'waiting',version:0,selfPlayerId:'p1',players:[{playerId:'p1',learnerId:'mashaal',seat:0,participationRole:'player',authorityRole:'host'}],state:{}};
   const actions=[];
   const roomClient={
     async createRoom({gameId,learnerId}){assert.equal(gameId,'demo-game');assert.equal(learnerId,'mashaal');return{playerToken:'abcdefghijklmnop-secret',room};},
@@ -97,4 +100,19 @@ test('shared online session owns host guest resume and generic action transport'
   assert.equal(second.snapshot.authorityRole,'host');
   second.forget();
   assert.equal(resumeStore.has({gameId:'demo-game'}),false);
+});
+
+test('shared online session preserves spectator participation from room payload',async()=>{
+  const room={code:'777777',gameId:'demo-game',status:'playing',version:4,selfPlayerId:'sp1',players:[{playerId:'p1',learnerId:'yasser',seat:0,participationRole:'player',authorityRole:'host'},{playerId:'sp1',learnerId:'mashaal',seat:null,participationRole:'spectator',authorityRole:'guest'}],state:{}};
+  const roomClient={
+    async createRoom(){throw new Error('not used');},
+    async joinRoom({participationRole}){assert.equal(participationRole,'spectator');return{playerToken:'abcdefghijklmnop-secret',room};},
+    async getRoom(){return{room};},
+    async submitAction(){throw new Error('not used');}
+  };
+  const store=createGameRoomResumeStore({sessionStorage:memoryStorage(),localStorage:memoryStorage(),gameId:'demo-game'});
+  const session=createOnlineGameSession({gameId:'demo-game',roomClient,resumeStore:store,autoPoll:false});
+  await session.join('777777','mashaal',{participationRole:'spectator'});
+  assert.equal(session.snapshot.participationRole,'spectator');
+  assert.equal(session.snapshot.authorityRole,'guest');
 });

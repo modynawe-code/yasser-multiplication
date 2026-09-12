@@ -66,7 +66,7 @@ export function createOnlineGameSession({gameId,roomClient,onRoom,onError,pollIn
 
   return Object.freeze({
     async create(learnerId,{displayName}={}){stop({forget:true});return accept(await roomClient.createRoom({gameId:id,learnerId,displayName}),learnerId);},
-    async join(codeValue,learnerId,{displayName}={}){stop({forget:true});return accept(await roomClient.joinRoom({code:codeValue,learnerId,displayName}),learnerId);},
+    async join(codeValue,learnerId,{displayName,participationRole='player'}={}){stop({forget:true});return accept(await roomClient.joinRoom({code:codeValue,learnerId,displayName,participationRole}),learnerId);},
     submit,
     refresh(){if(!code||!token)return Promise.reject(new Error('online room unavailable'));return roomClient.getRoom({code,token}).then(result=>emit(result.room));},
     resume,

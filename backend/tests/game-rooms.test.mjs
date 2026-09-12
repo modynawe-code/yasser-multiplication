@@ -59,6 +59,27 @@ test('room transport dispatches game-specific state changes through a rule regis
   assert.equal(moved.ok,true);
   assert.equal(moved.state.board[4],'host');
   assert.equal(rules.maxPlayers,2);
+  assert.equal(rules.maxSpectators,8);
+});
+
+test('general room migration preserves XO data while opening games and participant roles',async()=>{
+  const migration=await read('migrations/0006_general_game_room_participants.sql');
+  assert.match(migration,/game_rooms_v2/);
+  assert.match(migration,/game_room_players_v3/);
+  assert.match(migration,/participation_role TEXT NOT NULL DEFAULT 'player'/);
+  assert.match(migration,/authority_role TEXT NOT NULL DEFAULT 'guest'/);
+  assert.match(migration,/seat IS NULL/);
+  assert.match(migration,/CASE WHEN seat=0 THEN 'host' ELSE 'guest' END/);
+  assert.doesNotMatch(migration,/game_id IN \('xo'\)/);
+});
+
+test('room backend exposes spectator roles and prevents spectator actions',async()=>{
+  const source=await read('src/game-rooms.mjs');
+  assert.match(source,/participationRole/);
+  assert.match(source,/authorityRole/);
+  assert.match(source,/spectator_cannot_act/);
+  assert.match(source,/maxSpectators/);
+  assert.match(source,/seat===null\?null/);
 });
 
 test('online room storage keeps temporary player tokens hashed and uses six-digit codes',async()=>{

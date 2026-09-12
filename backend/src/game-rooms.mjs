@@ -9,6 +9,7 @@ const MAX_JOIN_ATTEMPTS=20;
 const JOIN_WINDOW_MINUTES=10;
 const JOIN_BLOCK_MINUTES=15;
 const DEFAULT_DISPLAY_NAMES=Object.freeze({yasser:'ياسر',khaled:'خالد',mashaal:'مشاعل'});
+const PARTICIPATION_ROLES=new Set(['player','spectator']);
 
 const nowIso=()=>new Date().toISOString();
 const futureIso=minutes=>new Date(Date.now()+minutes*60000).toISOString();
@@ -18,6 +19,7 @@ function normalizeDisplayName(value,learnerId){
   const text=String(value||fallback).replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,40);
   return text||fallback;
 }
+function normalizeParticipationRole(value){const role=String(value||'player').trim().toLowerCase();return PARTICIPATION_ROLES.has(role)?role:null;}
 function normalizeCode(value){return String(value||'').replace(/\D/g,'').slice(0,6);}
 function clientIp(request){return request.headers.get('CF-Connecting-IP')||'unknown';}
 
@@ -30,15 +32,15 @@ async function roomByCode(env,code){
   return env.DB.prepare('SELECT id,code,game_id,status,state_json,version,expires_at,created_at,updated_at FROM game_rooms WHERE code=?').bind(code).first();
 }
 async function playersForRoom(env,roomId){
-  const rows=await env.DB.prepare('SELECT player_id,learner_id,display_name,seat FROM game_room_players WHERE room_id=? ORDER BY seat').bind(roomId).all();return rows.results||[];
+  const rows=await env.DB.prepare('SELECT player_id,learner_id,display_name,seat,participation_role,authority_role FROM game_room_players WHERE room_id=? ORDER BY CASE WHEN seat IS NULL THEN 1 ELSE 0 END,seat,joined_at').bind(roomId).all();return rows.results||[];
 }
 async function roomPayload(env,row,selfPlayerId=null){
   let state;try{state=JSON.parse(row.state_json);}catch{state=null;}
-  return{code:row.code,gameId:row.game_id,status:row.status,version:Number(row.version||0),expiresAt:row.expires_at,state,players:(await playersForRoom(env,row.id)).map(item=>({playerId:item.player_id,learnerId:item.learner_id,name:item.display_name,seat:item.seat})),selfPlayerId};
+  return{code:row.code,gameId:row.game_id,status:row.status,version:Number(row.version||0),expiresAt:row.expires_at,state,players:(await playersForRoom(env,row.id)).map(item=>({playerId:item.player_id,learnerId:item.learner_id,name:item.display_name,seat:item.seat===null?null:Number(item.seat),participationRole:item.participation_role||'player',authorityRole:item.authority_role||'guest'})),selfPlayerId};
 }
 async function playerForToken(env,roomId,token){
   if(!token)return null;const hash=await sha256Base64Url(token);
-  return env.DB.prepare('SELECT player_id,learner_id,display_name,seat FROM game_room_players WHERE room_id=? AND token_hash=?').bind(roomId,hash).first();
+  return env.DB.prepare('SELECT player_id,learner_id,display_name,seat,participation_role,authority_role FROM game_room_players WHERE room_id=? AND token_hash=?').bind(roomId,hash).first();
 }
 async function creatorKey(request){return sha256Base64Url(`game-room|${clientIp(request)}`);}
 async function allowCreate(request,env){
@@ -71,7 +73,7 @@ async function createRoom(request,env,respond,readJson){
     try{
       await env.DB.batch([
         env.DB.prepare('INSERT INTO game_rooms(id,code,game_id,status,state_json,version,creator_key,expires_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(roomId,candidate,gameId,state.status,JSON.stringify(state),0,throttle.key,expiresAt,createdAt,createdAt),
-        env.DB.prepare('INSERT INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(roomId,playerId,learnerId,displayName,tokenHash,0,createdAt,createdAt)
+        env.DB.prepare('INSERT INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,participation_role,authority_role,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(roomId,playerId,learnerId,displayName,tokenHash,0,'player','host',createdAt,createdAt)
       ]);
       code=candidate;break;
     }catch(error){if(!String(error?.message||error).toLowerCase().includes('unique'))throw error;}
@@ -81,21 +83,30 @@ async function createRoom(request,env,respond,readJson){
 }
 
 async function joinRoom(request,env,respond,readJson){
-  const body=await readJson(request),code=normalizeCode(body?.code),learnerId=normalizeLearnerSlug(body?.learnerId),displayName=normalizeDisplayName(body?.displayName,learnerId);
-  if(code.length!==6||!validLearner(learnerId))return respond(400,{error:'invalid_join_request'});
+  const body=await readJson(request),code=normalizeCode(body?.code),learnerId=normalizeLearnerSlug(body?.learnerId),displayName=normalizeDisplayName(body?.displayName,learnerId),participationRole=normalizeParticipationRole(body?.participationRole);
+  if(code.length!==6||!validLearner(learnerId)||!participationRole)return respond(400,{error:'invalid_join_request'});
   const throttleKey=await joinThrottleKey(request),throttle=await joinThrottleStatus(env,throttleKey);if(throttle.blocked)return respond(429,{error:'too_many_join_attempts'});
   const fail=async(status,error,extra={})=>{await recordJoinFailure(env,throttleKey);return respond(status,{error,...extra});};
   const row=await roomByCode(env,code);if(!row||Date.parse(row.expires_at)<=Date.now())return fail(404,'room_not_found');
   const rules=getGameRoomRules(row.game_id);if(!rules)return fail(409,'unsupported_game_room');
-  if(row.status!=='waiting')return fail(409,'room_not_waiting',{room:await roomPayload(env,row)});
+  if(participationRole==='player'&&row.status!=='waiting')return fail(409,'room_not_waiting',{room:await roomPayload(env,row)});
+  if(participationRole==='spectator'&&row.status==='closed')return fail(409,'room_closed',{room:await roomPayload(env,row)});
   const existing=await playersForRoom(env,row.id);if(existing.some(item=>item.learner_id===learnerId))return fail(409,'learner_already_in_room');
-  if(existing.length>=rules.maxPlayers)return fail(409,'room_full');
+  const activePlayers=existing.filter(item=>(item.participation_role||'player')==='player'),spectators=existing.filter(item=>item.participation_role==='spectator');
+  if(participationRole==='player'&&activePlayers.length>=rules.maxPlayers)return fail(409,'room_full');
+  if(participationRole==='spectator'&&spectators.length>=Number(rules.maxSpectators||0))return fail(409,'spectator_limit');
   let state;try{state=JSON.parse(row.state_json);}catch{return respond(500,{error:'invalid_room_state'});}
-  const usedSeats=new Set(existing.map(item=>Number(item.seat))),seat=Array.from({length:rules.maxPlayers},(_,index)=>index).find(index=>!usedSeats.has(index));
-  if(seat===undefined)return fail(409,'room_full');
-  const playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso(),next=rules.addPlayer(state,playerId);if(!next.ok)return fail(409,next.reason);
-  const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,displayName,tokenHash,seat,joinedAt,joinedAt).run();
-  if(Number(insert?.meta?.changes||0)!==1)return fail(409,'room_full');
+  let seat=null;
+  if(participationRole==='player'){
+    const usedSeats=new Set(activePlayers.map(item=>Number(item.seat))),availableSeat=Array.from({length:rules.maxPlayers},(_,index)=>index).find(index=>!usedSeats.has(index));
+    if(availableSeat===undefined)return fail(409,'room_full');
+    seat=availableSeat;
+  }
+  const playerId=randomId('gpl'),next=participationRole==='player'?rules.addPlayer(state,playerId):{ok:true,state};
+  if(!next.ok)return fail(409,next.reason);
+  const playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso();
+  const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,participation_role,authority_role,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,displayName,tokenHash,seat,participationRole,'guest',joinedAt,joinedAt).run();
+  if(Number(insert?.meta?.changes||0)!==1)return fail(409,participationRole==='spectator'?'spectator_join_conflict':'room_full');
   const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(next.state.status,JSON.stringify(next.state),joinedAt,futureIso(ROOM_TTL_MINUTES),row.id,row.version).run();
   if(Number(update?.meta?.changes||0)!==1){
     await env.DB.prepare('DELETE FROM game_room_players WHERE room_id=? AND player_id=?').bind(row.id,playerId).run().catch(()=>null);
@@ -115,6 +126,7 @@ async function getRoom(request,env,respond,code){
 async function submitAction(request,env,respond,readJson,code){
   const row=await roomByCode(env,code);if(!row||Date.parse(row.expires_at)<=Date.now())return respond(404,{error:'room_not_found'});
   const player=await playerForToken(env,row.id,request.headers.get('x-game-token')||'');if(!player)return respond(401,{error:'invalid_game_token'});
+  if((player.participation_role||'player')!=='player')return respond(403,{error:'spectator_cannot_act'});
   const rules=getGameRoomRules(row.game_id);if(!rules)return respond(409,{error:'unsupported_game_room'});
   const body=await readJson(request),expectedVersion=Number(body?.expectedVersion),type=String(body?.type||''),payload={...(body||{})};delete payload.expectedVersion;delete payload.type;
   if(!Number.isInteger(expectedVersion)||expectedVersion!==Number(row.version))return respond(409,{error:'version_conflict',room:await roomPayload(env,row,player.player_id)});
