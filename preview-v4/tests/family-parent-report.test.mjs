@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { familyMashaalReport } from '../src/modules/parent/family-parent-renderers.js';
+import { createInitialMashaalState } from '../src/modules/mashaal/domain/state-model.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -9,25 +11,51 @@ test('family report is wired from main with live learner state getters',async()=
   assert.match(main,/createFamilyParentController/);
   assert.match(main,/getYasserState:\(\)=>yasser\.getState\(\)/);
   assert.match(main,/getKhaledState:\(\)=>khaled\.getState\(\)/);
+  assert.match(main,/getMashaalState:\(\)=>mashaal\.getState\(\)/);
   assert.match(main,/familyParent\.start\(\)/);
 });
 
-test('family shell exposes overview, learner and session report tabs',async()=>{
+test('family shell keeps legacy tabs and hydrates registered learners without fixed child count',async()=>{
   const shell=await read('src/modules/hub/learning-shell.js');
+  const registry=await read('src/modules/parent/family-parent-shell-registry.js');
   assert.match(shell,/id="familyParentBtn"/);
   assert.match(shell,/id="familyParentView"/);
   for(const tab of ['overview','yasser','khaled','sessions'])assert.match(shell,new RegExp(`data-family-parent-tab="${tab}"`));
+  assert.match(registry,/listLearnerProfiles/);
+  assert.match(registry,/profile\.id/);
+  assert.match(registry,/عرض تقدم الأطفال/);
   assert.match(shell,/modal\.id='familyPinModal'/);
-  assert.match(shell,/id="familyPinInput"/);
 });
 
-test('family renderers combine Yasser and Khaled without erasing historical errors',async()=>{
+test('family renderers preserve stage-specific assessment instead of forcing one scoring model',async()=>{
   const renderers=await read('src/modules/parent/family-parent-renderers.js');
   assert.match(renderers,/getOverallProgress/);
   assert.match(renderers,/KHALED_SKILLS/);
-  assert.match(renderers,/الأخطاء التاريخية/);
+  assert.match(renderers,/buildMashaalParentSummary/);
+  assert.match(renderers,/التقييم نمائي/);
+  assert.match(renderers,/المهارات الموثقة/);
+  assert.doesNotMatch(renderers,/التقييم لمشاعل نمائي وليس نسبة مئوية/);
+  assert.match(renderers,/familyGenericLearnerReport/);
+  assert.match(renderers,/لا يتم إسقاط تقييم مرحلة أخرى عليه/);
   assert.match(renderers,/متقن مبدئيًا/);
   assert.match(renderers,/sort\(\(a,b\)=>new Date\(b\.at\)-new Date\(a\.at\)\)/);
+});
+
+test('Mashaal parent report derives 25 verified skills with 24 ready and no percentage score',()=>{
+  const html=familyMashaalReport(createInitialMashaalState());
+  assert.match(html,/المهارات الموثقة<\/span><strong>25<\/strong>/);
+  assert.match(html,/أنشطة جاهزة<\/span><strong>24<\/strong>/);
+  assert.match(html,/بانتظار صوت معتمد<\/span><strong>1<\/strong>/);
+  assert.match(html,/الاستماع والترديد/);
+  assert.match(html,/بانتظار صوت تلاوة معتمد/);
+  assert.doesNotMatch(html,/%/);
+});
+
+test('parent controller routes future registered learners to safe generic fallback',async()=>{
+  const controller=await read('src/modules/parent/family-parent-controller.js');
+  assert.match(controller,/getLearnerProfile/);
+  assert.match(controller,/if\(tab==='sessions'\)return familySessions/);
+  assert.match(controller,/return familyGenericLearnerReport\(getLearnerProfile\(tab\)\)/);
 });
 
 test('parent access is shared, hashed and rate limited in application code',async()=>{
@@ -41,10 +69,11 @@ test('parent access is shared, hashed and rate limited in application code',asyn
   assert.match(yasser,/createParentAccessGate/);
 });
 
-test('family report supports a single combined backup export',async()=>{
+test('family report exports one combined backup including Mashaal',async()=>{
   const controller=await read('src/modules/parent/family-parent-controller.js');
   assert.match(controller,/family-learning-backup/);
   assert.match(controller,/yasser:getYasserState\(\)/);
   assert.match(controller,/khaled:getKhaledState\(\)/);
-  assert.match(controller,/yasser-khaled-results/);
+  assert.match(controller,/mashaal:getMashaalState\(\)/);
+  assert.match(controller,/family-learning-results/);
 });

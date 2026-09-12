@@ -6,35 +6,12 @@ const readPreview=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 const readRoot=()=>readFile(new URL('../../index.html',import.meta.url),'utf8');
 const escapeRegExp=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 
-test('repository root routes directly into the modular learning app',async()=>{
-  const root=await readRoot();
-  assert.match(root,/\.\/preview-v4\//);
-  assert.match(root,/location\.replace/);
-  assert.match(root,/تعلم ياسر وخالد/);
-  assert.doesNotMatch(root,/تحدي ياسر — جدول الضرب V3/);
-});
-
-test('preview app and install manifest use the shared learner identity',async()=>{
-  const html=await readPreview('index.html');
-  const manifest=JSON.parse(await readPreview('manifest.webmanifest'));
-  assert.match(html,/<title>تعلم ياسر وخالد<\/title>/);
-  assert.equal(manifest.name,'تعلم ياسر وخالد');
-  assert.equal(manifest.short_name,'ياسر وخالد');
-});
-
-test('service worker shell includes cloud sync, shared UI contracts, currency assets, and Khaled device hardening',async()=>{
-  const worker=await readPreview('service-worker.js');
-  assert.match(worker,/shell-34/);
-  for(const path of [
-    'ui/styles/character-scale.css',
-    'ui/styles/learning-navigation.css',
-    'shared/data/attempt-ledger.js',
-    'shared/config/family-api-config.js',
-    'shared/sync/family-auth-client.js',
-    'shared/sync/family-sync-service.js',
-    'modules/khaled/domain/money-question-bank.js',
-    'modules/khaled/ui/saudi-money-assets.js',
-    'modules/khaled/ui/khaled-device-hardening.css',
-    'modules/parent/family-parent-controller.js'
-  ])assert.match(worker,new RegExp(escapeRegExp(path)));
+test('repository root routes directly into learner-neutral family app',async()=>{const root=await readRoot();assert.match(root,/\.\/preview-v4\//);assert.match(root,/location\.replace/);assert.match(root,/تعلم العائلة/);assert.doesNotMatch(root,/تعلم ياسر وخالد/);});
+test('installed app identity is learner-neutral while runtime owns active browser title',async()=>{const manifest=JSON.parse(await readPreview('manifest.webmanifest'));const main=await readPreview('src/main.js');assert.equal(manifest.name,'تعلم العائلة');assert.equal(manifest.short_name,'تعلم العائلة');assert.match(main,/document\.title='تعلم العائلة'/);});
+test('service worker shell includes open-family runtime and current KG3 activity, parent-report and recitation runtime',async()=>{
+  const worker=await readPreview('service-worker.js');assert.match(worker,/shell-45/);
+  for(const path of ['ui/styles/character-scale.css','ui/styles/learning-navigation.css','shared/data/attempt-ledger.js','shared/config/family-api-config.js','shared/sync/family-auth-client.js','shared/sync/family-sync-service.js','shared/learners/learner-registry.js','shared/progress/evidence.js','shared/activities/activity-types.js','modules/hub/learner-runtime-registry.js','modules/hub/learner-hub-registry.js','modules/mashaal/curriculum/kg3-activity-catalog.js','modules/mashaal/curriculum/recitation-media-data.js','modules/mashaal/curriculum/recitation-media-manifest.js','modules/mashaal/curriculum/recitation-source-registry.js','modules/mashaal/application/recitation-activity-factory.js','modules/mashaal/application/recitation-release-validator.js','modules/mashaal/application/activity-release-validator.js','modules/mashaal/application/activity-completion.js','modules/mashaal/application/transfer-prompts.js','modules/mashaal/application/parent-labels.js','modules/mashaal/application/parent-summary.js','modules/mashaal/ui/activity-view-model.js','modules/mashaal/ui/mashaal-controller.js','modules/mashaal/ui/mashaal.css','modules/khaled/ui/khaled-device-hardening.css','modules/parent/family-parent-controller.js','modules/parent/family-parent-renderers.js','modules/parent/family-parent-shell-registry.js'])assert.match(worker,new RegExp(escapeRegExp(path)));
+  assert.match(worker,/importScripts\('\.\/src\/modules\/mashaal\/curriculum\/recitation-media-data\.js'\)/);
+  assert.match(worker,/RECITATION_ASSETS/);
+  assert.match(worker,/\.\.\.RECITATION_ASSETS/);
 });

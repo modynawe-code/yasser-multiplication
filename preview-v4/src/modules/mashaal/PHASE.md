@@ -1,0 +1,1 @@
+Phase 1 foundation complete. Phase 2 technical integration complete on the feature branch with green frontend/backend regression coverage. Phase 3 is curriculum-content verification and controlled production rollout; no production D1 migration or detailed KG3 content release before those gates pass.
