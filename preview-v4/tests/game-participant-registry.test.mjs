@@ -8,7 +8,7 @@ test('fun participant registry exposes every registered family learner without a
   const mashaal=getGameParticipant('mashaal');
   const profile=getLearnerProfile('mashaal');
   assert.equal(mashaal.displayName,'مشاعل');
-  assert.equal(mashaal.avatar,null);
+  assert.equal(mashaal.avatar,profile.presentation.avatar);
   assert.equal(mashaal.symbol,profile.presentation.symbol);
 });
 

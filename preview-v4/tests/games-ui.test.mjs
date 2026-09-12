@@ -21,9 +21,11 @@ test('games shell exposes a clear registry-hydrated local vs online XO lobby wit
   assert.doesNotMatch(shell,/النظام قابلًا للتوسع/);
   assert.match(shell,/id="xoLobbyView"/);
   assert.match(shell,/على نفس الجهاز/);
-  assert.match(shell,/اختر لاعبين ثم ابدأ الجولة/);
-  assert.match(shell,/بين جهازين أونلاين/);
-  assert.match(shell,/اختر صاحب هذا الجهاز أولًا/);
+  assert.match(shell,/اختاروا لاعبين/);
+  assert.match(shell,/data-xo-lobby-mode-button="local"/);
+  assert.match(shell,/data-xo-lobby-mode-button="online"/);
+  assert.match(shell,/data-xo-lobby-panel="online"[^>]*hidden/);
+  assert.match(shell,/مين يلعب من هذا الجهاز/);
   assert.match(shell,/id="xoLocalPlayers"/);
   assert.match(shell,/id="xoOnlinePlayers"/);
   assert.match(shell,/id="xoLocalStart"/);
@@ -50,11 +52,12 @@ test('game participant registry owns optional approved artwork while the XO shel
   assert.match(registry,/getLearnerProfile/);
   assert.match(registry,/createPlayerContext/);
   assert.match(registry,/presentation\?\.symbol/);
+  assert.match(registry,/presentation\?\.avatar/);
   assert.match(registry,/assets\/visual\/original\/yasser\/welcome\.png/);
   assert.match(registry,/assets\/visual\/original\/khaled\/khaled-point-thumbsup\.png/);
   assert.match(registry,/yasser\/celebrate\.png/);
   assert.match(registry,/khaled\/khaled-celebration\.png/);
-  assert.match(registry,/avatar:artwork\.avatar\|\|null/);
+  assert.match(registry,/avatar=artwork\.avatar\|\|profileAvatar\|\|null/);
 });
 
 test('XO controller uses registry participants, online room and learning boundaries without learner-controller coupling',async()=>{
@@ -137,7 +140,8 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
   assert.match(css,/\.xo-lobby-shell\{height:100dvh/);
   assert.match(css,/\.xo-local-choice/);
   assert.match(openFamilyCss,/xo-local-players/);
-  assert.match(openFamilyCss,/repeat\(auto-fit,minmax\(130px,1fr\)\)/);
+  assert.match(openFamilyCss,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(openFamilyCss,/@media\(orientation:landscape\) and \(min-width:850px\) and \(max-height:820px\)/);
 });
 
 test('PWA shell includes resumable games, registry participants and the shared natural voice architecture',async()=>{
