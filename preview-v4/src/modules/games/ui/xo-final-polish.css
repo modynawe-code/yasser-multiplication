@@ -1,9 +1,11 @@
 /* Final XO polish: compact turn status, integrated rematch action, tighter finish state. */
 .xo-header{grid-template-columns:auto minmax(0,1fr);align-items:start}
-.xo-match-heading{min-width:0;text-align:right}
-.xo-match-meta-row{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap}
-.xo-match-meta-row p{margin:0}
-.xo-reset{min-height:36px;padding:0 12px;border-radius:11px;font-size:13px;box-shadow:none}
+.xo-match-heading{min-width:0;text-align:right;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kicker kicker" "title reset" "mode mode";column-gap:10px;align-items:center}
+.xo-match-heading>.kicker{grid-area:kicker}
+.xo-match-heading>h1{grid-area:title}
+.xo-match-meta-row{display:contents}
+.xo-match-meta-row p{grid-area:mode;margin:1px 0 0}
+.xo-reset{grid-area:reset;align-self:center;min-height:36px;padding:0 12px;border-radius:11px;font-size:13px;box-shadow:none;white-space:nowrap}
 
 .xo-player-strip{gap:6px}
 .xo-turn-panel{min-height:34px;padding:4px 10px;border:1px solid #d9e1ec;border-radius:11px;background:#edf2f8;color:#17243c;box-shadow:none}
@@ -24,8 +26,8 @@
 }
 
 @media(max-width:520px){
-  .xo-match-meta-row{gap:6px}
-  .xo-header .xo-reset{grid-column:auto;width:auto;min-height:34px;padding-inline:10px}
+  .xo-match-heading{column-gap:6px}
+  .xo-reset{min-height:34px;padding-inline:10px}
   .xo-turn-panel{min-width:100%;grid-template-columns:auto auto 1fr;grid-template-areas:none}
   .xo-turn-panel small,.xo-turn-panel strong,.xo-turn-panel span{grid-area:auto}
   .xo-turn-panel span{text-align:start}
