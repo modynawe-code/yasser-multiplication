@@ -1,19 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { rpsChoiceGraphic } from '../src/modules/games/rps/rps-graphics.js';
+import { rpsChoiceGraphic, RPS_CHOICE_META } from '../src/modules/games/rps/rps-graphics.js';
 import { RPS_AUDIO_CLIPS } from '../src/modules/games/rps/rps-audio.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('RPS uses custom cohesive SVG graphics for all three moves',()=>{
+test('RPS uses the approved image assets for all three moves',()=>{
+  const expected={
+    rock:'assets/games/rps/rock.webp',
+    paper:'assets/games/rps/paper.webp',
+    scissors:'assets/games/rps/scissors.webp'
+  };
   for(const choice of ['rock','paper','scissors']){
+    assert.equal(RPS_CHOICE_META[choice]?.asset,expected[choice]);
     const markup=rpsChoiceGraphic(choice);
-    assert.match(markup,/<svg class="rps-choice-svg"/);
+    assert.match(markup,/<img class="rps-choice-image"/);
+    assert.match(markup,new RegExp(`src="${expected[choice].replaceAll('/','\\/')}"`));
+    assert.doesNotMatch(markup,/<svg\b/);
   }
-  assert.match(rpsChoiceGraphic('rock'),/rps-rock-body/);
-  assert.match(rpsChoiceGraphic('paper'),/rps-paper-body/);
-  assert.match(rpsChoiceGraphic('scissors'),/rps-scissors-ring/);
 });
 
 test('RPS shell renders custom move artwork and registry-hydrated player slots instead of child-specific markup',async()=>{
