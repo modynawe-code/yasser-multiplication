@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { addXoRoomGuest, applyXoRoomAction, createInitialXoRoomState } from '../src/game-rooms.mjs';
+import { getGameRoomRules, listGameRoomRuleIds } from '../src/game-room-rules.mjs';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -49,11 +50,23 @@ test('server requires both players before starting an online rematch',()=>{
   assert.deepEqual(rematch.state.board,Array(9).fill(null));
 });
 
+test('room transport dispatches game-specific state changes through a rule registry',()=>{
+  assert.deepEqual(listGameRoomRuleIds(),['xo']);
+  assert.equal(getGameRoomRules('unknown'),null);
+  const rules=getGameRoomRules('xo');
+  let state=rules.addPlayer(rules.createInitialState('host'),'guest').state;
+  const moved=rules.applyAction(state,{playerId:'host',type:'move',payload:{cell:4}});
+  assert.equal(moved.ok,true);
+  assert.equal(moved.state.board[4],'host');
+  assert.equal(rules.maxPlayers,2);
+});
+
 test('online room storage keeps temporary player tokens hashed and uses six-digit codes',async()=>{
   const source=await read('src/game-rooms.mjs'),migration=await read('migrations/0002_game_rooms.sql'),index=await read('src/index.mjs');
   assert.match(source,/sha256Base64Url\(playerToken\)/);
   assert.match(source,/padStart\(6,'0'\)/);
   assert.match(source,/expectedVersion/);
+  assert.match(source,/getGameRoomRules/);
   assert.match(migration,/token_hash TEXT NOT NULL/);
   assert.doesNotMatch(migration,/player_token TEXT/);
   assert.match(index,/x-game-token/);
