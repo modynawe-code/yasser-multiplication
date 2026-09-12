@@ -60,12 +60,13 @@ test('game participant registry owns optional approved artwork while the XO shel
   assert.match(registry,/avatar=artwork\.avatar\|\|profileAvatar\|\|null/);
 });
 
-test('XO controller uses registry participants, online room and learning boundaries without learner-controller coupling',async()=>{
+test('XO controller uses shared player eligibility, online room and learning boundaries without learner-controller coupling',async()=>{
   const controller=await read('src/modules/games/games-controller.js');
   assert.match(controller,/getGameParticipant/);
-  assert.match(controller,/listGameParticipants/);
+  assert.match(controller,/createGamePlayerService/);
+  assert.match(controller,/gamePlayers\.listEligible/);
   assert.match(controller,/gameParticipantMarkup/);
-  assert.match(controller,/learningAdapter\?\.supports/);
+  assert.match(controller,/createGamePlayerService\(\{learningAdapter\}\)/);
   assert.match(controller,/data-xo-local-learner/);
   assert.match(controller,/data-xo-online-learner/);
   assert.match(controller,/createXoState/);
