@@ -1,0 +1,49 @@
+/* Phone-only finish-state containment for Rock Paper Scissors. */
+@media(max-width:520px){
+  .rps-finish{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto;
+    align-content:start;
+    gap:10px;
+    padding:14px 10px 16px;
+    overflow:hidden;
+  }
+  .rps-finish-copy{
+    gap:8px;
+    justify-items:center;
+    text-align:center;
+  }
+  .rps-finish h2{
+    font-size:clamp(32px,9vw,42px);
+    line-height:1.08;
+  }
+  .rps-final-score{
+    font-size:22px;
+    padding:8px 14px;
+  }
+  .rps-finish .rps-action-btn{
+    width:min(330px,92%);
+    min-width:0;
+    height:54px;
+    font-size:18px;
+  }
+  .rps-finish-art{
+    width:100%;
+    height:230px;
+    min-height:0;
+    overflow:hidden;
+    align-self:end;
+  }
+  .rps-finish-art img{
+    width:min(250px,72vw);
+    height:230px;
+    max-height:230px;
+    object-fit:contain;
+    object-position:center bottom;
+  }
+  .rps-finish-art .rps-participant-fallback{
+    width:min(210px,62vw);
+    height:210px;
+    max-height:210px;
+  }
+}
