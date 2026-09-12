@@ -24,7 +24,7 @@ export const gameRegistry=createGameRegistry([
     maxPlayers:2,
     version:1,
     load:()=>import('./rps/rps-controller.js'),
-    metadata:{accent:'duo',icon:'✊',availabilityLabel:'محلي الآن',description:'لعبة مرح سريعة. الاختيار سري، وأول واحد يوصل 3 يفوز.'}
+    metadata:{accent:'duo',icon:'✊',availabilityLabel:'محلي + أونلاين',description:'لعبة مرح سريعة. الاختيار سري، وأول واحد يوصل 3 يفوز.'}
   },
   {
     id:'number-race',
