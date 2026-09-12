@@ -40,9 +40,32 @@ export function ensureRpsShell(){
           <div class="rps-arena-glow" aria-hidden="true"></div>
 
           <div class="rps-setup" id="rpsSetup">
-            <div class="rps-setup-copy"><span>حجر • ورق • مقص</span><h2>مين بيلعب؟</h2><p>اختر لاعبين من العائلة، ثم ابدأ المباراة.</p></div>
-            <div class="rps-player-picker" id="rpsPlayerPicker" role="group" aria-label="اختيار لاعبين"></div>
-            <button class="rps-action-btn" id="rpsStartMatch">ابدأ المباراة</button>
+            <div class="rps-setup-copy"><span>حجر • ورق • مقص</span><h2>مين بيلعب؟</h2><p>اختر طريقة اللعب ثم ابدأ المباراة.</p></div>
+
+            <div class="rps-mode-switch" role="group" aria-label="طريقة اللعب">
+              <button type="button" data-rps-mode="local" aria-pressed="true">على نفس الجهاز</button>
+              <button type="button" data-rps-mode="online" aria-pressed="false">أونلاين</button>
+            </div>
+
+            <div class="rps-setup-panel" id="rpsLocalSetupPanel">
+              <div class="rps-player-picker" id="rpsPlayerPicker" role="group" aria-label="اختيار لاعبين"></div>
+              <button class="rps-action-btn" id="rpsStartMatch">ابدأ المباراة</button>
+            </div>
+
+            <div class="rps-setup-panel rps-online-panel" id="rpsOnlineSetupPanel" hidden>
+              <div class="rps-online-heading"><strong>اختر طفل هذا الجهاز</strong><span>الاختيار يبقى سريًا حتى يختار الطرف الثاني.</span></div>
+              <div class="rps-player-picker" id="rpsOnlinePlayerPicker" role="group" aria-label="اختيار طفل هذا الجهاز"></div>
+              <div class="rps-online-actions">
+                <button class="rps-action-btn" id="rpsCreateRoom">إنشاء غرفة</button>
+                <div class="rps-online-join">
+                  <input id="rpsRoomCodeInput" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="رمز من 6 أرقام" aria-label="رمز الغرفة">
+                  <button class="rps-action-btn secondary" id="rpsJoinRoom">دخول الغرفة</button>
+                </div>
+                <button class="rps-link-btn" id="rpsResumeRoom" hidden>استعادة الغرفة السابقة</button>
+              </div>
+              <div class="rps-room-code" id="rpsRoomCodeBox" hidden><span>رمز الغرفة</span><strong id="rpsRoomCode">------</strong></div>
+              <p class="rps-online-status" id="rpsOnlineStatus" aria-live="polite"></p>
+            </div>
           </div>
 
           <div class="rps-intro" id="rpsIntro" hidden>
@@ -78,6 +101,11 @@ export function ensureRpsShell(){
               <p>الاختيار الأول مخفي — لا تطالع.</p>
               <button class="rps-ready-btn" id="rpsHandoffContinue">أنا جاهز</button>
             </div>
+          </div>
+
+          <div class="rps-online-wait" id="rpsOnlineWait" hidden>
+            <span class="rps-online-wait-avatar" id="rpsOnlineWaitAvatar" aria-hidden="true"></span>
+            <div class="rps-online-wait-copy"><span>اختيارك محفوظ بسرية</span><h2 id="rpsOnlineWaitTitle">تم اختيارك ✓</h2><p id="rpsOnlineWaitCopy">بانتظار اللاعب الثاني…</p></div>
           </div>
 
           <div class="rps-reveal" id="rpsReveal" hidden>
