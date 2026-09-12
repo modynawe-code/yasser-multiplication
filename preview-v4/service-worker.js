@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-90`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-91`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -27,7 +27,7 @@ const APP_SHELL=[
   './src/shared/curricula/curriculum-id.js','./src/shared/curricula/curriculum-profile.js','./src/shared/curricula/curriculum-registry.js','./src/shared/curricula/runtime-registry.js',
   './src/shared/family/family-config.js','./src/shared/family/expansion-invariant.js','./src/shared/family/version.js',
   './src/shared/challenges/challenge-engine.js','./src/shared/rewards/reward-catalog.js','./src/shared/rewards/reward-engine.js','./src/shared/rewards/reward-repository.js','./src/shared/rewards/learning-reward-service.js','./src/shared/rewards/reward-capability-registry.js',
-  './src/shared/ui/learning-motivation.js','./src/shared/ui/learning-motivation.css','./src/shared/ui/reward-assets.js','./src/shared/ui/reward-cabinet.js','./src/shared/ui/reward-cabinet.css','./src/shared/ui/system-insets.js',
+  './src/shared/ui/learning-motivation.js','./src/shared/ui/learning-motivation.css','./src/shared/ui/reward-assets.js','./src/shared/ui/reward-cabinet.js','./src/shared/ui/reward-cabinet.css','./src/shared/ui/game-inspired-rewards.js','./src/shared/ui/game-inspired-rewards.css','./src/shared/ui/system-insets.js',
   './src/shared/config/family-api-config.js','./src/shared/sync/family-auth-client.js','./src/shared/sync/family-sync-capability-registry.js','./src/shared/sync/family-sync-service.js','./src/shared/sync/session-sync.js',
 
   './src/modules/hub/hub-controller.js','./src/modules/hub/learner-runtime-registry.js','./src/modules/hub/learner-hub-registry.js','./src/modules/hub/learning-shell.js','./src/modules/hub/learning-hub.css','./src/modules/hub/open-family-learner-grid.css',

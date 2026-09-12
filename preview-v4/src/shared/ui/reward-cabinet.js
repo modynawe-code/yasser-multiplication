@@ -1,20 +1,12 @@
-import { REWARD_CATALOG,REWARD_BY_ID } from '../rewards/reward-catalog.js';
+import { REWARD_CATALOG } from '../rewards/reward-catalog.js';
+import { rewardPresentationCatalog,rewardPresentationCount,rewardPresentationUnlocked,rewardPresentationUnlock,latestRewardPresentation } from './game-inspired-rewards.js';
 import { hydrateRewardImages } from './reward-assets.js';
 
 function safeNumber(value){const number=Number(value);return Number.isFinite(number)?Math.max(0,number):0;}
 function rewardCount(summary,rewardId){return safeNumber(summary?.counts?.[rewardId]);}
-function latestUnlock(summary,rewardId){
-  const unlocks=Array.isArray(summary?.unlocks)?summary.unlocks:[];
-  return [...unlocks].reverse().find(item=>item?.rewardId===rewardId)||null;
-}
 function formatUnlockDate(value){
   if(!value)return'';
   try{return new Date(value).toLocaleDateString('ar-SA',{month:'short',day:'numeric'});}catch{return'';}
-}
-function latestReward(summary){
-  const unlocks=Array.isArray(summary?.unlocks)?summary.unlocks:[];
-  const latest=[...unlocks].sort((a,b)=>new Date(b?.at||0)-new Date(a?.at||0))[0];
-  return REWARD_BY_ID[latest?.rewardId]||REWARD_BY_ID['mastery-cup'];
 }
 function ratioMarkup(current,total){return `<bdi class="reward-ratio" dir="ltr">${safeNumber(current)} / ${safeNumber(total)}</bdi>`;}
 function imageMarkup(graphicKey,cssClass=''){
@@ -59,20 +51,20 @@ function ensureOpenButton(capability,onOpen){
   button.onclick=()=>onOpen(learnerId);return button;
 }
 
-export function buildRewardCabinetMarkup({status={},excludeRewardId=null}={}){
-  const summary=status?.summary||{};
-  return REWARD_CATALOG.filter(item=>item.id!==excludeRewardId).map(item=>{
-    const count=rewardCount(summary,item.id),unlocked=count>0,latest=latestUnlock(summary,item.id),date=formatUnlockDate(latest?.at);
-    return `<article class="reward-cabinet-card ${unlocked?'unlocked':'locked'}" data-reward-id="${item.id}" data-unlocked="${unlocked}">
+export function buildRewardCabinetMarkup({status={},learnerId=null,excludeRewardId=null}={}){
+  const summary=status?.summary||{},catalog=rewardPresentationCatalog(learnerId);
+  return catalog.filter(item=>item.id!==excludeRewardId).map(item=>{
+    const count=rewardPresentationCount(item,summary),unlocked=rewardPresentationUnlocked(item,summary),latest=rewardPresentationUnlock(item,summary),date=formatUnlockDate(latest?.at);
+    return `<article class="reward-cabinet-card ${unlocked?'unlocked':'locked'}" data-reward-id="${item.id}" data-unlocked="${unlocked}" data-reward-kind="${item.category||'personal'}" data-reward-tier="${item.tier||'rare'}">
       <div class="reward-cabinet-art">${imageMarkup(item.graphicKey)}</div>
-      <div class="reward-cabinet-copy"><strong>${item.label}</strong><span class="reward-state">${unlocked?'مفتوح':'مقفل'}</span>${count>1?`<small>مرات الفتح: ${count}</small>`:''}${date?`<small>آخر فتح: ${date}</small>`:''}</div>
+      <div class="reward-cabinet-copy"><strong>${item.label}</strong><span class="reward-state">${unlocked?'مفتوح':'مقفل'}</span>${count>1?`<small>مرات الفتح: ${count}</small>`:''}${date?`<small>فتح: ${date}</small>`:!unlocked&&item.hint?`<small class="reward-hint">${item.hint}</small>`:''}</div>
     </article>`;
   }).join('');
 }
 
-function featureMarkup(status){
-  const summary=status?.summary||{},item=latestReward(summary),count=rewardCount(summary,item.id),unlocked=count>0,latest=latestUnlock(summary,item.id),date=formatUnlockDate(latest?.at);
-  return `<div class="reward-feature-label">الجائزة المميزة</div><div class="reward-feature-art">${imageMarkup(item.graphicKey,'reward-feature-image')}</div><h2>${item.label}</h2><p>${unlocked?'إنجاز محفوظ في خزانتك':'واصل التدريب لفتح هذه الجائزة'}</p>${date?`<small>آخر فتح: ${date}</small>`:''}<div class="reward-feature-state" data-unlocked="${unlocked}">${unlocked?'مفتوح':'قريبًا'}</div>`;
+function featureMarkup(status,learnerId){
+  const summary=status?.summary||{},item=latestRewardPresentation(learnerId,summary),count=rewardPresentationCount(item,summary),unlocked=rewardPresentationUnlocked(item,summary),latest=rewardPresentationUnlock(item,summary),date=formatUnlockDate(latest?.at);
+  return `<div class="reward-feature-label">الجائزة المميزة</div><div class="reward-feature-art">${imageMarkup(item.graphicKey,'reward-feature-image')}</div><h2>${item.label}</h2><p>${unlocked?'إنجاز محفوظ في خزانتك':item.hint||'واصل التدريب لفتح هذه الجائزة'}</p>${date?`<small>فتح: ${date}</small>`:''}<div class="reward-feature-state" data-unlocked="${unlocked}">${unlocked?'مفتوح':'قريبًا'}</div>`;
 }
 function challengeMarkup(status){
   const daily=Array.isArray(status?.challenges?.daily)?status.challenges.daily:[],weekly=Array.isArray(status?.challenges?.weekly)?status.challenges.weekly:[],items=[...daily,...weekly];
@@ -91,11 +83,12 @@ export function createRewardCabinetController({capabilityRegistry,getStatus,onEx
   }
   function render(learnerId,status){
     const learner=capability(learnerId),view=document.getElementById('rewardCabinetView');if(!learner||!view)return false;view.dataset.learner=learnerId;
-    const summary=status?.summary||{},openedKinds=REWARD_CATALOG.filter(item=>rewardCount(summary,item.id)>0).length,total=safeNumber(summary.total),streak=safeNumber(status?.trends?.streakDays),weekly=status?.challenges?.weekly||[],cups=rewardCount(summary,'mastery-cup')+rewardCount(summary,'weekly-cup'),feature=latestReward(summary);
+    const summary=status?.summary||{},catalog=rewardPresentationCatalog(learnerId),openedKinds=catalog.filter(item=>rewardPresentationUnlocked(item,summary)).length,total=safeNumber(summary.total),streak=safeNumber(status?.trends?.streakDays),cups=rewardCount(summary,'mastery-cup')+rewardCount(summary,'weekly-cup'),feature=latestRewardPresentation(learnerId,summary);
     view.querySelectorAll('[data-reward-learner]').forEach(button=>{const active=button.dataset.rewardLearner===learnerId;button.classList.toggle('active',active);button.setAttribute('aria-current',active?'true':'false');});
-    document.getElementById('rewardCabinetSummary').innerHTML=`<div><span>أنواع مفتوحة</span><strong>${ratioMarkup(openedKinds,REWARD_CATALOG.length)}</strong></div><div><span>إجمالي الجوائز</span><strong>${total}</strong></div><div><span>أفضل سلسلة</span><strong>${streak} يوم</strong></div><div><span>الكؤوس</span><strong>${cups}</strong></div>`;
-    document.getElementById('rewardCabinetFeature').innerHTML=featureMarkup(status);
-    document.getElementById('rewardCabinetGrid').innerHTML=buildRewardCabinetMarkup({status,excludeRewardId:feature.id});
+    const openedRatio=learnerId?ratioMarkup(openedKinds,catalog.length):ratioMarkup(openedKinds,REWARD_CATALOG.length);
+    document.getElementById('rewardCabinetSummary').innerHTML=`<div><span>أنواع مفتوحة</span><strong>${openedRatio}</strong></div><div><span>إجمالي الجوائز</span><strong>${total}</strong></div><div><span>أفضل سلسلة</span><strong>${streak} يوم</strong></div><div><span>الكؤوس</span><strong>${cups}</strong></div>`;
+    document.getElementById('rewardCabinetFeature').innerHTML=featureMarkup(status,learnerId);
+    document.getElementById('rewardCabinetGrid').innerHTML=buildRewardCabinetMarkup({status,learnerId,excludeRewardId:feature.id});
     document.getElementById('rewardCabinetChallenge').innerHTML=challengeMarkup(status);
     bindDynamic(view);hydrateRewardImages(view);return true;
   }

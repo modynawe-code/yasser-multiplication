@@ -1,3 +1,5 @@
+import { rewardIllustrationSource } from './game-inspired-rewards.js';
+
 const REWARD_ASSET_KEYS=Object.freeze([
   'mastery-cup','weekly-cup','accuracy-medal','mastery-shield',
   'distinction-crown','streak-flame','surprise-box','progress-badge'
@@ -19,6 +21,7 @@ function validPngBase64(text){
 }
 
 export async function getRewardImageUrl(graphicKey,{fetchImpl=globalThis.fetch}={}){
+  const illustration=rewardIllustrationSource(graphicKey);if(illustration)return illustration;
   const source=rewardAssetSource(graphicKey);if(!source||typeof fetchImpl!=='function')return null;
   if(assetCache.has(source))return assetCache.get(source);
   const request=(async()=>{
@@ -61,7 +64,7 @@ function applyImageUrl(image,url,art){
 export async function hydrateRewardImages(root=globalThis.document){
   const images=[...(root?.querySelectorAll?.('img[data-reward-graphic]')||[])];
   await Promise.all(images.map(async image=>{
-    const art=image.closest?.('.reward-cabinet-art,.reward-feature-art');
+    const art=image.closest?.('.reward-cabinet-art,.reward-feature-art,.learning-reward-toast-art');
     const url=await getRewardImageUrl(image.dataset.rewardGraphic);
     await applyImageUrl(image,url,art);
   }));
