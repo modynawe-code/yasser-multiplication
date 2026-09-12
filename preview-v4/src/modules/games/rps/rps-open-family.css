@@ -20,3 +20,32 @@
 /* System-bar protection is applied through the reusable runtime inset adapter.
    Browser previews use the real visual viewport; native Android also keeps a large-screen taskbar floor. */
 .rps-shell{box-sizing:border-box;padding-bottom:max(12px,env(safe-area-inset-bottom,0px),var(--app-system-safe-bottom,0px))}
+
+/* Portrait phone containment: keep character art and reveal cards inside the viewport. */
+@media(max-width:520px){
+  .rps-shell{padding-inline:6px}
+  .rps-stage{width:100%;max-width:100%;min-width:0;border-radius:24px}
+  .rps-turn,.rps-reveal,.rps-finish,.rps-handoff{min-width:0;padding:12px 8px}
+  .rps-turn{grid-template-columns:1fr;align-content:start;gap:8px}
+  .rps-turn-player{height:156px;min-height:0;align-content:center;overflow:visible}
+  .rps-turn-player::before{width:148px;max-width:46vw}
+  .rps-current-avatar{width:132px!important;max-width:42vw;height:146px!important;max-height:146px;justify-self:center}
+  .rps-current-avatar img{width:100%!important;height:100%!important;max-width:132px;max-height:146px;object-fit:contain}
+  .rps-player-now{font-size:14px;padding:5px 12px}
+  .rps-turn-action{min-width:0;gap:7px}
+  .rps-stage h2{font-size:clamp(28px,9vw,38px);line-height:1.12}
+  .rps-chant{font-size:17px;gap:7px;margin-bottom:2px}
+  .rps-choice-grid{grid-template-columns:1fr;gap:9px;width:100%;max-width:100%;min-width:0}
+  .rps-choice{width:100%;min-width:0;min-height:104px;border-radius:22px;padding-inline:12px}
+  .rps-choice-art{width:66px;height:66px}.rps-choice strong{font-size:23px}
+  .rps-reveal{align-content:start;gap:9px;overflow:hidden}
+  .rps-battle{grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);gap:6px;width:100%;max-width:100%;min-width:0}
+  .rps-battle-side{min-width:0;min-height:208px;padding:10px 6px 12px;grid-template-columns:1fr;grid-template-areas:"avatar" "name" "move";justify-items:center;overflow:hidden;border-radius:22px}
+  .rps-battle-side strong{min-width:0;max-width:100%;font-size:22px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rps-battle-avatar,.rps-battle-avatar img,.rps-battle-avatar .rps-participant-fallback{width:58px;height:58px}
+  .rps-reveal-move{width:88px;height:88px}.rps-reveal-move .rps-choice-svg{width:82px;height:82px}
+  .rps-impact{width:54px;height:54px}.rps-impact span{width:36px;height:36px;font-size:13px}
+  .rps-round-result{min-width:0;gap:7px;flex-wrap:wrap}.rps-round-result h2{font-size:clamp(27px,8vw,36px);line-height:1.1}
+  .rps-point-pop{min-width:50px;height:42px;font-size:21px}
+  .rps-reveal .rps-action-btn{width:min(300px,88%);min-width:0;height:54px}
+}
