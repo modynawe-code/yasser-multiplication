@@ -31,4 +31,28 @@ body.hub-mode{background:#f4f7fb}
   .learner-hub{padding-inline:10px}.hub-heading h1{font-size:31px}.hub-heading p{font-size:14px}.hub-heading-actions{gap:7px;margin-bottom:13px}.hub-heading .hub-action{min-height:52px;padding:7px 10px;border-radius:15px}.hub-action-copy strong{font-size:13px}.hub-action-copy small{font-size:9.5px}.learner-grid{gap:10px}.learner-grid>.learner-card{min-height:190px;grid-template-columns:44% 1fr;padding:10px 14px;gap:10px;border-radius:22px}.learner-card-copy{padding-inline-start:11px}.learner-card strong{font-size:27px}.learner-card-copy>span{font-size:14px!important}.learner-card small{font-size:11.5px}.hub-yasser-character,.hub-khaled-character,.learner-generic-character{height:162px}.learner-card .learner-yasser-image{height:162px;max-height:162px}.hub-khaled-character .khaled-character-image,.learner-profile-image{max-height:168px}
 }
 
+/* Mobile refinement: lead with the learning decision, then secondary family actions. */
+@media (orientation:portrait) and (max-width:900px){
+  .learner-hub{padding-inline:max(12px,env(safe-area-inset-left));padding-bottom:max(18px,env(safe-area-inset-bottom))}
+  .hub-heading{display:flex;flex-direction:column;align-items:center;margin-bottom:16px}
+  .hub-heading h1{order:1;margin:0 0 6px;font-size:clamp(31px,7vw,40px)}
+  .hub-heading p{order:2;max-width:520px;font-size:14px;line-height:1.4}
+  .hub-heading-actions{order:3;position:static;width:min(100%,420px);margin:13px auto 0;min-height:0;gap:7px}
+  .hub-heading .hub-action{min-height:48px;padding:6px 10px;border-radius:14px}
+  .hub-action-copy strong{font-size:13px}.hub-action-copy small{margin-top:3px;font-size:9px}
+  .learner-grid{gap:11px}
+  .learner-grid>.learner-card{min-height:214px;padding:11px 20px;gap:14px;border-radius:24px;box-shadow:0 10px 24px rgba(38,55,91,.07)}
+  .learner-grid>.learner-card::before{inset-block:20px}
+  .learner-card-copy{padding-inline-start:14px;border-inline-start-color:color-mix(in srgb,var(--learner-accent) 11%,#dfe5ef)}
+  .learner-card strong{font-size:29px}.learner-card-copy>span{font-size:14.5px!important}.learner-card small{margin-top:5px;font-size:12px;line-height:1.35}
+  .hub-yasser-character,.hub-khaled-character,.learner-generic-character{height:190px}.learner-card .learner-yasser-image{height:190px;max-height:190px}.hub-khaled-character .khaled-character-image,.learner-profile-image{max-height:196px}
+}
+
+@media(max-width:520px){
+  .learner-hub{padding-top:max(15px,env(safe-area-inset-top));padding-inline:8px}
+  .hub-heading{margin-bottom:12px}.hub-heading h1{font-size:29px;margin-bottom:4px}.hub-heading p{font-size:12.5px}
+  .hub-heading-actions{margin-top:10px;width:100%;gap:6px}.hub-heading .hub-action{min-height:45px;padding:5px 8px;border-radius:13px}.hub-action-copy strong{font-size:12.5px}.hub-action-copy small{font-size:8.5px}
+  .learner-grid{gap:8px}.learner-grid>.learner-card{min-height:166px;grid-template-columns:44% 1fr;padding:8px 11px;gap:8px;border-radius:20px}.learner-grid>.learner-card::before{inset-block:17px;width:4px}.learner-card-copy{padding-inline-start:9px}.learner-card strong{font-size:24px}.learner-card-copy>span{font-size:12.5px!important;margin-top:5px!important}.learner-card small{font-size:10.5px;line-height:1.3;margin-top:4px}.hub-yasser-character,.hub-khaled-character,.learner-generic-character{height:142px}.learner-card .learner-yasser-image{height:142px;max-height:142px}.hub-khaled-character .khaled-character-image,.learner-profile-image{max-height:148px}
+}
+
 @media(prefers-reduced-motion:reduce){.hub-heading .hub-action,.learner-grid>.learner-card{transition:none}.hub-heading .hub-action:hover,.hub-heading .hub-action:active,.learner-grid>.learner-card:hover,.learner-grid>.learner-card:active{transform:none}}

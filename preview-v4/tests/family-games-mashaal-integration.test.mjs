@@ -46,6 +46,19 @@ test('learner chooser stays registry-driven while using the approved adaptive ta
   assert.doesNotMatch(css,/\.learner-grid\{[^}]*grid-template-columns:1fr 1fr/);
 });
 
+test('XO lobby presents one play mode at a time and uses Mashaal registered artwork',async()=>{
+  const games=await read('src/modules/games/ui/games-shell.js');
+  const participants=await read('src/modules/games/core/game-participant-registry.js');
+  const css=await read('src/modules/games/ui/games-open-family.css');
+  assert.match(games,/data-xo-lobby-mode-button="local"/);
+  assert.match(games,/data-xo-lobby-mode-button="online"/);
+  assert.match(games,/data-xo-lobby-panel="online"[^>]*hidden/);
+  assert.match(games,/bindXoLobbyModeSwitch\(\)/);
+  assert.match(participants,/profile\.presentation\?\.avatar/);
+  assert.match(css,/\.xo-lobby-player\.mashaal/);
+  assert.match(css,/\.xo-board\.locked\{opacity:\.86;filter:none\}/);
+});
+
 test('offline shell contains both the restored games platform and Mashaal KG3',async()=>{
   const worker=await read('service-worker.js');
   for(const path of ['modules/games/games-controller.js','modules/games/xo/xo-engine.js','modules/games/rps/rps-controller.js','shared/rewards/reward-engine.js','shared/rewards/reward-capability-registry.js','modules/mashaal/ui/mashaal-controller.js','modules/mashaal/curriculum/kg3-curriculum.js','modules/hub/open-family-learner-grid.css'])assert.match(worker,new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));

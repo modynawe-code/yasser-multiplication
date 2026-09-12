@@ -15,12 +15,14 @@ function toParticipant(profile){
     theme:profile.themeId||profile.id
   });
   const artwork=ARTWORK[profile.id]||{};
+  const profileAvatar=String(profile.presentation?.avatar||'').trim()||null;
+  const avatar=artwork.avatar||profileAvatar||null;
   return Object.freeze({
     ...player,
     symbol:String(profile.presentation?.symbol||'🎮'),
     accent:String(profile.presentation?.accent||'violet'),
-    avatar:artwork.avatar||null,
-    celebrationAvatar:artwork.celebration||artwork.avatar||null
+    avatar,
+    celebrationAvatar:artwork.celebration||avatar
   });
 }
 
