@@ -26,7 +26,10 @@ test('family hub cannot boot without restoring the visible games entry',async()=
   assert.match(hub,/class="hub-heading-actions"/);
   assert.match(games,/querySelector\('#hubView \.hub-heading-actions'\)/);
   assert.match(games,/button\.id='gamesOpenBtn'/);
-  assert.match(games,/button\.textContent='🎮 الألعاب'/);
+  assert.match(games,/hub-action-games/);
+  assert.match(games,/<strong>الألعاب<\/strong>/);
+  assert.match(games,/فتح منطقة الألعاب العائلية/);
+  assert.doesNotMatch(games,/🎮/);
   assert.match(games,/id="gamesHomeView"/);
 });
 
@@ -39,7 +42,7 @@ test('learner chooser stays registry-driven while using the approved adaptive ta
   assert.doesNotMatch(registry,/profile\.id==='mashaal'/);
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css,/@media \(orientation:portrait\) and \(max-width:900px\)[\s\S]*grid-template-columns:1fr/);
-  assert.match(css,/@media\(max-width:520px\)[\s\S]*grid-template-columns:45% 1fr/);
+  assert.match(css,/@media\(max-width:520px\)[\s\S]*grid-template-columns:44% 1fr/);
   assert.doesNotMatch(css,/grid-template-columns:1fr 1fr/);
 });
 
