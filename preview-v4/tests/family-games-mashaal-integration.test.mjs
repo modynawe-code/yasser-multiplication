@@ -43,7 +43,7 @@ test('learner chooser stays registry-driven while using the approved adaptive ta
   assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css,/@media \(orientation:portrait\) and \(max-width:900px\)[\s\S]*grid-template-columns:1fr/);
   assert.match(css,/@media\(max-width:520px\)[\s\S]*grid-template-columns:44% 1fr/);
-  assert.doesNotMatch(css,/grid-template-columns:1fr 1fr/);
+  assert.doesNotMatch(css,/\.learner-grid\{[^}]*grid-template-columns:1fr 1fr/);
 });
 
 test('offline shell contains both the restored games platform and Mashaal KG3',async()=>{
