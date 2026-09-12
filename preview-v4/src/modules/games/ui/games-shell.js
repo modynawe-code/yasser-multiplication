@@ -39,6 +39,7 @@ export function ensureGamesShell(){
 
   ensureStyle('src/modules/games/ui/games.css','games-platform');
   ensureStyle('src/modules/games/ui/games-open-family.css','games-open-family');
+  ensureStyle('src/modules/games/ui/xo-final-polish.css','xo-final-polish');
 
   const hubActions=document.querySelector('#hubView .hub-heading-actions');
   if(hubActions&&!document.getElementById('gamesOpenBtn')){
@@ -104,8 +105,7 @@ export function ensureGamesShell(){
       <div class="games-shell xo-shell">
         <header class="games-header xo-header">
           <button class="icon-btn" id="xoBackToGames" data-nav="back">الألعاب</button>
-          <div><div class="kicker">إكس أو التعليمية</div><h1 id="xoMatchTitle">إكس أو</h1><p id="xoModeLabel">نسخة محلية — جهاز واحد</p></div>
-          <button class="btn secondary xo-reset" id="xoReset">جولة جديدة</button>
+          <div class="xo-match-heading"><div class="kicker">إكس أو التعليمية</div><h1 id="xoMatchTitle">إكس أو</h1><div class="xo-match-meta-row"><p id="xoModeLabel">نسخة محلية — جهاز واحد</p><button class="btn secondary xo-reset" id="xoReset">جولة جديدة</button></div></div>
         </header>
 
         <div class="xo-layout">
