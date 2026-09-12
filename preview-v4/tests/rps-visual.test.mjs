@@ -5,6 +5,7 @@ import { rpsChoiceGraphic, RPS_CHOICE_META } from '../src/modules/games/rps/rps-
 import { RPS_AUDIO_CLIPS } from '../src/modules/games/rps/rps-audio.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
+const readBinary=path=>readFile(new URL(`../${path}`,import.meta.url));
 
 test('RPS uses the approved image assets for all three moves',()=>{
   const expected={
@@ -18,6 +19,15 @@ test('RPS uses the approved image assets for all three moves',()=>{
     assert.match(markup,/<img class="rps-choice-image"/);
     assert.match(markup,new RegExp(`src="${expected[choice].replaceAll('/','\\/')}"`));
     assert.doesNotMatch(markup,/<svg\b/);
+  }
+});
+
+test('RPS approved WebP assets are valid binary images',async()=>{
+  for(const asset of Object.values(RPS_CHOICE_META).map(meta=>meta.asset)){
+    const bytes=await readBinary(asset);
+    assert.ok(bytes.length>1000,`${asset} is unexpectedly small`);
+    assert.equal(bytes.subarray(0,4).toString('ascii'),'RIFF',`${asset} is not a RIFF WebP`);
+    assert.equal(bytes.subarray(8,12).toString('ascii'),'WEBP',`${asset} is not a valid WebP container`);
   }
 });
 
