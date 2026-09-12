@@ -35,7 +35,7 @@ jobs:
         run: npx --yes wrangler@4.129.0 deploy --config wrangler.jsonc
         working-directory: backend
 
-      - name: Production health and two-device XO smoke test
+      - name: Production health and games smoke tests
         run: |
           node <<'NODE'
           const base=process.env.API_BASE;
@@ -50,12 +50,32 @@ jobs:
           }
           const health=await request('/health');
           if(health?.ok!==true)throw new Error('Production health payload is not ok');
-          const host=await request('/v1/games/rooms',{method:'POST',body:{gameId:'xo',learnerId:'yasser'}});
-          if(!/^\d{6}$/.test(host?.room?.code||''))throw new Error('Room code contract failed');
-          if(host?.room?.status!=='waiting'||!host?.playerToken)throw new Error('Host room contract failed');
-          const guest=await request('/v1/games/rooms/join',{method:'POST',body:{code:host.room.code,learnerId:'khaled'}});
-          if(guest?.room?.status!=='playing'||guest?.room?.players?.length!==2||!guest?.playerToken)throw new Error('Second-device join contract failed');
-          const refreshed=await request(`/v1/games/rooms/${host.room.code}`,{token:host.playerToken});
-          if(refreshed?.room?.status!=='playing'||refreshed?.room?.players?.length!==2)throw new Error('Authenticated room read contract failed');
-          console.log(`Production smoke passed: room ${host.room.code}, two players connected.`);
+
+          // Existing XO two-device contract must remain intact after the generic-room migration.
+          const xoHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'xo',learnerId:'yasser'}});
+          if(!/^\d{6}$/.test(xoHost?.room?.code||''))throw new Error('XO room code contract failed');
+          if(xoHost?.room?.status!=='waiting'||!xoHost?.playerToken)throw new Error('XO host room contract failed');
+          const xoGuest=await request('/v1/games/rooms/join',{method:'POST',body:{code:xoHost.room.code,learnerId:'khaled'}});
+          if(xoGuest?.room?.status!=='playing'||xoGuest?.room?.players?.length!==2||!xoGuest?.playerToken)throw new Error('XO second-device join contract failed');
+          const xoRefreshed=await request(`/v1/games/rooms/${xoHost.room.code}`,{token:xoHost.playerToken});
+          if(xoRefreshed?.room?.status!=='playing'||xoRefreshed?.room?.players?.length!==2)throw new Error('XO authenticated room read contract failed');
+
+          // RPS proves the shared room platform supports simultaneous play and private state.
+          const rpsHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'rock-paper-scissors',learnerId:'yasser'}});
+          if(!/^\d{6}$/.test(rpsHost?.room?.code||''))throw new Error('RPS room code contract failed');
+          const rpsGuest=await request('/v1/games/rooms/join',{method:'POST',body:{code:rpsHost.room.code,learnerId:'khaled'}});
+          if(rpsGuest?.room?.status!=='playing'||rpsGuest?.room?.state?.phase!=='choosing')throw new Error('RPS join contract failed');
+          const hostPlayerId=rpsHost.room.selfPlayerId;
+          const guestPlayerId=rpsGuest.room.selfPlayerId;
+          const hostChoice=await request(`/v1/games/rooms/${rpsHost.room.code}/actions`,{method:'POST',token:rpsHost.playerToken,body:{expectedVersion:rpsGuest.room.version,type:'choose',choice:'rock'}});
+          if(hostChoice?.room?.state?.choices?.[hostPlayerId]!=='rock')throw new Error('RPS host must see its own private choice');
+          const guestView=await request(`/v1/games/rooms/${rpsHost.room.code}`,{token:rpsGuest.playerToken});
+          if(guestView?.room?.state?.choices?.[hostPlayerId])throw new Error('RPS private choice leaked to opponent');
+          if(!(guestView?.room?.state?.chosenPlayers||[]).includes(hostPlayerId))throw new Error('RPS choice readiness was not exposed safely');
+          const reveal=await request(`/v1/games/rooms/${rpsHost.room.code}/actions`,{method:'POST',token:rpsGuest.playerToken,body:{expectedVersion:guestView.room.version,type:'choose',choice:'scissors'}});
+          if(reveal?.room?.state?.phase!=='revealed')throw new Error('RPS did not reveal after both choices');
+          if(reveal?.room?.state?.choices?.[hostPlayerId]!=='rock'||reveal?.room?.state?.choices?.[guestPlayerId]!=='scissors')throw new Error('RPS reveal contract failed');
+          if(reveal?.room?.state?.roundWinner!==hostPlayerId)throw new Error('RPS winner resolution failed');
+
+          console.log(`Production games smoke passed: XO ${xoHost.room.code}, RPS ${rpsHost.room.code}, private-state contract intact.`);
           NODE
