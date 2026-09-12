@@ -190,3 +190,38 @@
   .xo-mode-tab{transition:none}
   .xo-mode-tab:active{transform:none}
 }
+
+/* XO visual QA refinements: keep disabled cells visually neutral and tighten the match composition. */
+.xo-cell:disabled{opacity:1}
+.xo-header .kicker{margin-bottom:5px}
+.xo-layout{margin-top:6px;align-items:start}
+.xo-player-card{min-height:88px}
+.xo-player-avatar{width:76px;height:80px}
+.xo-challenge.finished{min-height:250px;padding:14px 18px}
+.xo-challenge.finished .xo-challenge-head{display:none}
+.xo-challenge.finished h2{margin:0 0 4px;font-size:clamp(25px,2.6vw,32px)}
+.xo-challenge.finished .xo-finish-art{height:146px;margin:0 auto}
+.xo-challenge.finished .xo-finish-art img{max-width:210px}
+.xo-challenge.finished .xo-challenge-options{grid-template-columns:1fr;max-width:330px;margin:7px auto 0}
+.xo-challenge.finished .xo-play-again{width:100%;min-height:54px;margin:0}
+.xo-challenge.finished .xo-challenge-feedback{margin-top:4px;min-height:18px}
+
+@media(orientation:landscape) and (min-width:850px) and (max-height:820px){
+  .xo-layout{margin-top:4px;align-items:start}
+  .xo-player-card{min-height:80px}
+  .xo-player-avatar{width:70px;height:74px}
+  .xo-challenge.finished{max-height:none;min-height:240px;padding:10px 14px}
+  .xo-challenge.finished .xo-finish-art{height:130px}
+}
+
+@media(max-width:820px){
+  .xo-player-avatar{width:62px;height:66px}
+  .xo-player-card{min-height:76px}
+}
+
+@media(max-width:520px){
+  .xo-player-avatar{width:52px;height:56px}
+  .xo-player-card{min-height:68px}
+  .xo-challenge.finished{min-height:230px;padding:10px}
+  .xo-challenge.finished .xo-finish-art{height:120px}
+}
