@@ -96,8 +96,9 @@ function createGenericCard(profile){
 function compactParentAccessLabel(){
   const button=document.querySelector('.family-parent-open');
   if(!button)return;
-  button.textContent='ولي الأمر';
-  button.setAttribute('aria-label','فتح تقرير ولي الأمر');
+  button.classList.add('hub-action','hub-action-parent');
+  button.innerHTML='<span class="hub-action-copy"><strong>ولي الأمر</strong><small>التقدم والإعدادات</small></span>';
+  button.setAttribute('aria-label','فتح متابعة ولي الأمر والتقدم والإعدادات');
 }
 
 export function hydrateLearnerHub(){

@@ -15,10 +15,10 @@ export function ensureGamesShell(){
   const hubActions=document.querySelector('#hubView .hub-heading-actions');
   if(hubActions&&!document.getElementById('gamesOpenBtn')){
     const button=document.createElement('button');
-    button.className='icon-btn games-open-btn';
+    button.className='icon-btn games-open-btn hub-action hub-action-games';
     button.id='gamesOpenBtn';
-    button.textContent='🎮 الألعاب';
-    button.setAttribute('aria-label','فتح منطقة الألعاب');
+    button.innerHTML='<span class="hub-action-copy"><strong>الألعاب</strong><small>نلعب سوا</small></span>';
+    button.setAttribute('aria-label','فتح منطقة الألعاب العائلية');
     hubActions.appendChild(button);
   }
 
