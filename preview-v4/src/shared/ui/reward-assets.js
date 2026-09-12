@@ -7,7 +7,8 @@ const REWARD_ASSET_KEYS=Object.freeze([
 
 const DIRECT_REWARD_ASSET_KEYS=Object.freeze([
   'khaled-rocket-car','khaled-energy-ball','khaled-crystal-sword','khaled-neon-wheels','khaled-power-cube','khaled-hero-cup',
-  'yasser-elite-racer','yasser-champion-ball','yasser-pro-shield','yasser-inferno-boost','yasser-challenger-badge','yasser-legend-cup'
+  'yasser-elite-racer','yasser-champion-ball','yasser-pro-shield','yasser-inferno-boost','yasser-challenger-badge','yasser-legend-cup',
+  'shared-common-chest','shared-silver-chest','shared-gold-chest'
 ]);
 
 const REWARD_ASSET_SET=new Set(REWARD_ASSET_KEYS);

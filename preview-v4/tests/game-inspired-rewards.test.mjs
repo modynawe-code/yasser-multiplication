@@ -21,28 +21,23 @@ test('shared chests unlock progressively from the existing surprise-box mileston
   assert.equal(rewardPresentationUnlocked(chests[2],summary),false);
 });
 
-test('personal themed rewards use dedicated local artwork while shared chests retain inline SVG fallbacks',async()=>{
+test('all themed reward slots use dedicated local artwork with SVG fallback available',async()=>{
   assert.equal(REWARD_ASSET_KEYS.length,8);
-  assert.equal(DIRECT_REWARD_ASSET_KEYS.length,12);
+  assert.equal(DIRECT_REWARD_ASSET_KEYS.length,15);
   assert.equal(rewardAssetSource('khaled-rocket-car'),null);
 
-  const personalKeys=[];
+  const themedKeys=[];
   for(const catalog of Object.values(GAME_REWARD_PRESENTATIONS)){
     for(const item of catalog){
       const fallback=rewardIllustrationSource(item.graphicKey);
       assert.match(fallback,/^data:image\/svg\+xml/);
-      if(item.category==='personal'){
-        personalKeys.push(item.graphicKey);
-        const direct=directRewardAssetSource(item.graphicKey);
-        assert.equal(direct,`assets/rewards/${item.graphicKey}.webp`);
-        assert.equal(await getRewardImageUrl(item.graphicKey),direct);
-      }else{
-        assert.equal(directRewardAssetSource(item.graphicKey),null);
-        assert.equal(await getRewardImageUrl(item.graphicKey),fallback);
-      }
+      themedKeys.push(item.graphicKey);
+      const direct=directRewardAssetSource(item.graphicKey);
+      assert.equal(direct,`assets/rewards/${item.graphicKey}.webp`);
+      assert.equal(await getRewardImageUrl(item.graphicKey),direct);
     }
   }
-  assert.deepEqual(new Set(personalKeys),new Set(DIRECT_REWARD_ASSET_KEYS));
+  assert.deepEqual(new Set(themedKeys),new Set(DIRECT_REWARD_ASSET_KEYS));
 });
 
 test('presentation copy does not ship third-party game or platform branding',()=>{
