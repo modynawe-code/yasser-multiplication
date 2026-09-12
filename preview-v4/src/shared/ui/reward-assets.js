@@ -5,14 +5,25 @@ const REWARD_ASSET_KEYS=Object.freeze([
   'distinction-crown','streak-flame','surprise-box','progress-badge'
 ]);
 
+const DIRECT_REWARD_ASSET_KEYS=Object.freeze([
+  'khaled-rocket-car','khaled-energy-ball','khaled-crystal-sword','khaled-neon-wheels','khaled-power-cube','khaled-hero-cup',
+  'yasser-elite-racer','yasser-champion-ball','yasser-pro-shield','yasser-inferno-boost','yasser-challenger-badge','yasser-legend-cup'
+]);
+
 const REWARD_ASSET_SET=new Set(REWARD_ASSET_KEYS);
+const DIRECT_REWARD_ASSET_SET=new Set(DIRECT_REWARD_ASSET_KEYS);
 const assetCache=new Map();
 
-export { REWARD_ASSET_KEYS };
+export { REWARD_ASSET_KEYS, DIRECT_REWARD_ASSET_KEYS };
 
 export function rewardAssetSource(graphicKey){
   const key=String(graphicKey||'');
   return REWARD_ASSET_SET.has(key)?`assets/rewards/${key}.b64.txt`:null;
+}
+
+export function directRewardAssetSource(graphicKey){
+  const key=String(graphicKey||'');
+  return DIRECT_REWARD_ASSET_SET.has(key)?`assets/rewards/${key}.webp`:null;
 }
 
 function validPngBase64(text){
@@ -21,6 +32,7 @@ function validPngBase64(text){
 }
 
 export async function getRewardImageUrl(graphicKey,{fetchImpl=globalThis.fetch}={}){
+  const direct=directRewardAssetSource(graphicKey);if(direct)return direct;
   const illustration=rewardIllustrationSource(graphicKey);if(illustration)return illustration;
   const source=rewardAssetSource(graphicKey);if(!source||typeof fetchImpl!=='function')return null;
   if(assetCache.has(source))return assetCache.get(source);

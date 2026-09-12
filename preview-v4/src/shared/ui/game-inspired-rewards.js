@@ -11,22 +11,22 @@ const SHARED_CHESTS=Object.freeze([
 ]);
 
 const KHALED=Object.freeze([
-  personal('khaled-rocket-car',['mastery-cup'],'سيارة الصاروخ','khaled-rocket-car','car','أتقن عدة مهارات لتفتح سيارة الصاروخ.','epic'),
-  personal('khaled-energy-ball',['accuracy-medal'],'كرة الطاقة','khaled-energy-ball','ball','حافظ على دقة عالية خلال الأسبوع.','rare'),
-  personal('khaled-crystal-sword',['mastery-shield'],'سيف الكريستال','khaled-crystal-sword','sword','أتقن مهارة جديدة لتفتح السيف.','rare'),
-  personal('khaled-neon-wheels',['streak-flame'],'عجلات النيون','khaled-neon-wheels','wheel','استمر عدة أيام متتالية.','epic'),
-  personal('khaled-power-cube',['progress-badge'],'مكعب القوة','khaled-power-cube','cube','تقدّم في مستواك أو أكمل 3 جولات ألعاب.','common'),
-  personal('khaled-hero-cup',['weekly-cup','distinction-crown'],'كأس البطل','khaled-hero-cup','trophy','أنجز تحديًا أسبوعيًا قويًا أو وصل لمستوى متقدم.','legendary'),
+  personal('khaled-rocket-car',['mastery-cup'],'سيارة صاروخية','khaled-rocket-car','car','أتقن عدة مهارات لتفتح السيارة الصاروخية.','epic'),
+  personal('khaled-energy-ball',['accuracy-medal'],'صندوق الجواهر','khaled-energy-ball','chest','حافظ على دقة عالية خلال الأسبوع لتفتح صندوق الجواهر.','rare'),
+  personal('khaled-crystal-sword',['mastery-shield'],'ميدالية السرعة','khaled-crystal-sword','wheel','أتقن مهارة جديدة لتفتح ميدالية السرعة.','rare'),
+  personal('khaled-neon-wheels',['streak-flame'],'كأس الفوز','khaled-neon-wheels','trophy','استمر عدة أيام متتالية لتفتح كأس الفوز.','epic'),
+  personal('khaled-power-cube',['progress-badge'],'صندوق المفاجآت','khaled-power-cube','chest','تقدّم في مستواك أو أكمل 3 جولات ألعاب لفتح صندوق المفاجآت.','common'),
+  personal('khaled-hero-cup',['weekly-cup','distinction-crown'],'مُعزِّز الطاقة','khaled-hero-cup','boost','أنجز تحديًا أسبوعيًا قويًا أو وصل لمستوى متقدم لتفتح مُعزِّز الطاقة.','legendary'),
   ...SHARED_CHESTS
 ]);
 
 const YASSER=Object.freeze([
-  personal('yasser-elite-racer',['mastery-cup'],'سيارة النخبة','yasser-elite-racer','car','أتقن عدة مهارات لتفتح سيارة النخبة.','epic'),
-  personal('yasser-champion-ball',['accuracy-medal'],'كرة البطولة','yasser-champion-ball','ball','حافظ على دقة عالية خلال الأسبوع.','rare'),
-  personal('yasser-pro-shield',['mastery-shield'],'درع المحترف','yasser-pro-shield','shield','أتقن مهارة جديدة لتفتح الدرع.','rare'),
-  personal('yasser-inferno-boost',['streak-flame'],'تعزيز النار','yasser-inferno-boost','boost','حافظ على سلسلة تعلم مستمرة.','epic'),
-  personal('yasser-challenger-badge',['progress-badge'],'شارة المتحدي','yasser-challenger-badge','badge','حسّن مستواك أو أكمل 3 جولات ألعاب.','common'),
-  personal('yasser-legend-cup',['weekly-cup','distinction-crown'],'كأس الأسطورة','yasser-legend-cup','trophy','أنجز تحديًا أسبوعيًا قويًا أو وصل لمستوى خبير.','legendary'),
+  personal('yasser-elite-racer',['mastery-cup'],'بطل السباقات','yasser-elite-racer','car','أتقن عدة مهارات لتفتح جائزة بطل السباقات.','epic'),
+  personal('yasser-champion-ball',['accuracy-medal'],'سيف الكريستال','yasser-champion-ball','sword','حافظ على دقة عالية خلال الأسبوع لتفتح سيف الكريستال.','rare'),
+  personal('yasser-pro-shield',['mastery-shield'],'شارة الإتقان','yasser-pro-shield','shield','أتقن مهارة جديدة لتفتح شارة الإتقان.','rare'),
+  personal('yasser-inferno-boost',['streak-flame'],'الصندوق الأسطوري','yasser-inferno-boost','chest','حافظ على سلسلة تعلم مستمرة لتفتح الصندوق الأسطوري.','epic'),
+  personal('yasser-challenger-badge',['progress-badge'],'ميدالية البطولة','yasser-challenger-badge','wheel','حسّن مستواك أو أكمل 3 جولات ألعاب لتفتح ميدالية البطولة.','common'),
+  personal('yasser-legend-cup',['weekly-cup','distinction-crown'],'كأس الفائز الكبير','yasser-legend-cup','trophy','أنجز تحديًا أسبوعيًا قويًا أو وصل لمستوى خبير لتفتح كأس الفائز الكبير.','legendary'),
   ...SHARED_CHESTS
 ]);
 
@@ -58,16 +58,16 @@ export function latestRewardPresentation(learnerId,summary){
 
 const VISUALS=Object.freeze({
   'khaled-rocket-car':{kind:'car',a:'#19c9ff',b:'#0757c9',accent:'#e9fbff'},
-  'khaled-energy-ball':{kind:'ball',a:'#20d7ff',b:'#0557cb',accent:'#a6f4ff'},
-  'khaled-crystal-sword':{kind:'sword',a:'#50efff',b:'#0877de',accent:'#ecffff'},
-  'khaled-neon-wheels':{kind:'wheel',a:'#28dcff',b:'#183fd2',accent:'#a6fbff'},
-  'khaled-power-cube':{kind:'cube',a:'#25e1ff',b:'#096bd0',accent:'#dffcff'},
-  'khaled-hero-cup':{kind:'trophy',a:'#ffd64a',b:'#f28300',accent:'#fff5ab'},
+  'khaled-energy-ball':{kind:'chest',a:'#20d7ff',b:'#0557cb',accent:'#a6f4ff'},
+  'khaled-crystal-sword':{kind:'wheel',a:'#50efff',b:'#0877de',accent:'#ecffff'},
+  'khaled-neon-wheels':{kind:'trophy',a:'#28dcff',b:'#183fd2',accent:'#a6fbff'},
+  'khaled-power-cube':{kind:'chest',a:'#25e1ff',b:'#096bd0',accent:'#dffcff'},
+  'khaled-hero-cup':{kind:'boost',a:'#ffd64a',b:'#f28300',accent:'#fff5ab'},
   'yasser-elite-racer':{kind:'car',a:'#ff4c36',b:'#7c0717',accent:'#ffd86a'},
-  'yasser-champion-ball':{kind:'ball',a:'#ffb62c',b:'#b31319',accent:'#fff0a0'},
+  'yasser-champion-ball':{kind:'sword',a:'#ffb62c',b:'#b31319',accent:'#fff0a0'},
   'yasser-pro-shield':{kind:'shield',a:'#ffcb45',b:'#7a0a1b',accent:'#fff4b2'},
-  'yasser-inferno-boost':{kind:'boost',a:'#ffb21f',b:'#d51618',accent:'#ffe381'},
-  'yasser-challenger-badge':{kind:'badge',a:'#ffcf42',b:'#8a1020',accent:'#fff0a7'},
+  'yasser-inferno-boost':{kind:'chest',a:'#ffb21f',b:'#d51618',accent:'#ffe381'},
+  'yasser-challenger-badge':{kind:'wheel',a:'#ffcf42',b:'#8a1020',accent:'#fff0a7'},
   'yasser-legend-cup':{kind:'trophy',a:'#ffd64a',b:'#b61718',accent:'#fff7bd'},
   'shared-common-chest':{kind:'chest',a:'#d78a31',b:'#633414',accent:'#ffd266'},
   'shared-silver-chest':{kind:'chest',a:'#d9f1ff',b:'#52758f',accent:'#6be8ff'},
