@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SOURCE_ID='kfgqpc-ibrahim-al-akhdar-hafs';
@@ -22,6 +22,7 @@ const TARGETS=Object.freeze([
   Object.freeze({surahNumber:111,surahNameAr:'المسد',slug:'al-masad',pageNumber:603,focusRegion:Object.freeze({top:.64,height:.36})})
 ]);
 
+function pageFile(pageNumber){return `${String(pageNumber).padStart(3,'0')}.svg`;}
 function sha256Hex(buffer){return createHash('sha256').update(buffer).digest('hex');}
 function looksLikeMp3(buffer){
   if(!Buffer.isBuffer(buffer)||buffer.length<1024)return false;
@@ -55,27 +56,17 @@ function targetEntry(metadata,surahNumber){
   return {entry,archiveEntry};
 }
 function mushafPageFor(target){
+  const sourceFile=pageFile(target.pageNumber);
   const focusRegion=target.focusRegion?{
-    surahNumber:target.surahNumber,
-    top:target.focusRegion.top,
-    height:target.focusRegion.height,
-    labelAr:`سورة ${target.surahNameAr}`
+    surahNumber:target.surahNumber,top:target.focusRegion.top,height:target.focusRegion.height,labelAr:`سورة ${target.surahNameAr}`
   }:null;
   return {
-    sourceId:'kfgqpc-hafs-madinah-svg',
-    publisher:'King Fahd Glorious Quran Printing Complex',
-    publisherAr:'مجمع الملك فهد لطباعة المصحف الشريف',
-    riwayah:'Hafs from Asim',
-    riwayahAr:'حفص عن عاصم',
-    pageNumber:target.pageNumber,
+    sourceId:'kfgqpc-hafs-madinah-svg',publisher:'King Fahd Glorious Quran Printing Complex',publisherAr:'مجمع الملك فهد لطباعة المصحف الشريف',
+    riwayah:'Hafs from Asim',riwayahAr:'حفص عن عاصم',pageNumber:target.pageNumber,
     imagePath:`./assets/recitation/kfqc-hafs-page-${target.pageNumber}.svg`,
-    imageUrl:`${SVG_BASE}/${target.pageNumber}.svg`,
-    fallbackImageUrls:[`${RAW_SVG_BASE}/${target.pageNumber}.svg`],
-    distributionRepository:'https://github.com/quranpedia/quran-svg',
-    distributionCommit:QURAN_SVG_COMMIT,
-    sourceNotice:'https://github.com/quranpedia/quran-svg/blob/main/NOTICE.md',
-    offlineBundled:true,
-    imageAspectRatio:.6272727273,
+    imageUrl:`${SVG_BASE}/${sourceFile}`,fallbackImageUrls:[`${RAW_SVG_BASE}/${sourceFile}`],
+    distributionRepository:'https://github.com/quranpedia/quran-svg',distributionCommit:QURAN_SVG_COMMIT,
+    sourceNotice:'https://github.com/quranpedia/quran-svg/blob/main/NOTICE.md',offlineBundled:true,imageAspectRatio:.6272727273,
     ...(focusRegion?{focusRegion}:{})
   };
 }
@@ -85,45 +76,24 @@ function renderData(records){
 }
 
 export async function fetchMashaalRecitationSet(){
-  const metadata=await fetchJson(MIRROR_METADATA_URL);validateMetadata(metadata);
-  await mkdir(ASSET_DIR,{recursive:true});
-  const pageNumbers=[...new Set(TARGETS.map(target=>target.pageNumber))];
-  for(const pageNumber of pageNumbers){
-    const svg=await fetchBuffer(`${RAW_SVG_BASE}/${pageNumber}.svg`);
-    const text=svg.toString('utf8');
+  const metadata=await fetchJson(MIRROR_METADATA_URL);validateMetadata(metadata);await mkdir(ASSET_DIR,{recursive:true});
+  for(const pageNumber of [...new Set(TARGETS.map(target=>target.pageNumber))]){
+    const svg=await fetchBuffer(`${RAW_SVG_BASE}/${pageFile(pageNumber)}`);const text=svg.toString('utf8');
     if(!/<svg[\s>]/i.test(text)||text.length<1000)throw new Error(`Mushaf page ${pageNumber} is not a valid SVG candidate.`);
     await writeFile(resolve(ASSET_DIR,`kfqc-hafs-page-${pageNumber}.svg`),svg);
   }
   const records=[];
   for(const target of TARGETS){
-    const {entry,archiveEntry}=targetEntry(metadata,target.surahNumber);
-    const audio=await fetchBuffer(entry.url);
+    const {entry,archiveEntry}=targetEntry(metadata,target.surahNumber);const audio=await fetchBuffer(entry.url);
     if(audio.length!==entry.size_bytes)throw new Error(`Byte length mismatch for Surah ${target.surahNumber}: expected ${entry.size_bytes}, received ${audio.length}.`);
     if(!looksLikeMp3(audio))throw new Error(`Surah ${target.surahNumber} payload is not a valid MP3 candidate.`);
-    const fileName=`ibrahim-al-akhdar-hafs-${target.surahNumber}-${target.slug}.mp3`;
-    await writeFile(resolve(ASSET_DIR,fileName),audio);
+    const fileName=`ibrahim-al-akhdar-hafs-${target.surahNumber}-${target.slug}.mp3`;await writeFile(resolve(ASSET_DIR,fileName),audio);
     records.push({
-      id:`kfgqpc-ibrahim-al-akhdar-hafs-${target.surahNumber}`,
-      sourceId:SOURCE_ID,
-      sourcePackage:SOURCE_PACKAGE,
-      localPath:`./assets/recitation/${fileName}`,
-      sha256:sha256Hex(audio),
-      byteLength:audio.length,
-      mimeType:'audio/mpeg',
-      surahNumber:target.surahNumber,
-      surahNameAr:target.surahNameAr,
-      humanVoice:true,
-      mushafPage:mushafPageFor(target),
-      retrieval:{
-        sourceAuthority:'King Fahd Glorious Quran Printing Complex',
-        sourcePackage:SOURCE_PACKAGE,
-        sourceArchiveSha256:SOURCE_ARCHIVE_SHA256,
-        transport:'quran-ws-kfgqpc-extracted-mirror',
-        transportMetadata:MIRROR_METADATA_URL,
-        transportUrl:entry.url,
-        archiveEntry,
-        mirrorMetadataCommit:MIRROR_METADATA_COMMIT
-      }
+      id:`kfgqpc-ibrahim-al-akhdar-hafs-${target.surahNumber}`,sourceId:SOURCE_ID,sourcePackage:SOURCE_PACKAGE,
+      localPath:`./assets/recitation/${fileName}`,sha256:sha256Hex(audio),byteLength:audio.length,mimeType:'audio/mpeg',
+      surahNumber:target.surahNumber,surahNameAr:target.surahNameAr,humanVoice:true,mushafPage:mushafPageFor(target),
+      retrieval:{sourceAuthority:'King Fahd Glorious Quran Printing Complex',sourcePackage:SOURCE_PACKAGE,sourceArchiveSha256:SOURCE_ARCHIVE_SHA256,
+        transport:'quran-ws-kfgqpc-extracted-mirror',transportMetadata:MIRROR_METADATA_URL,transportUrl:entry.url,archiveEntry,mirrorMetadataCommit:MIRROR_METADATA_COMMIT}
     });
   }
   await writeFile(DATA_PATH,renderData(records),'utf8');
@@ -132,9 +102,6 @@ export async function fetchMashaalRecitationSet(){
 
 const invokedPath=process.argv[1]?resolve(process.argv[1]):'';
 if(invokedPath===fileURLToPath(import.meta.url)){
-  try{
-    const records=await fetchMashaalRecitationSet();
-    console.log(`Imported ${records.length} verified Mashaal recitations.`);
-    for(const record of records)console.log(`${record.surahNumber}: ${record.sha256} (${record.byteLength} bytes)`);
-  }catch(error){console.error(`Five-surah import failed: ${error.message}`);process.exitCode=1;}
+  try{const records=await fetchMashaalRecitationSet();console.log(`Imported ${records.length} verified Mashaal recitations.`);for(const record of records)console.log(`${record.surahNumber}: ${record.sha256} (${record.byteLength} bytes)`);}
+  catch(error){console.error(`Five-surah import failed: ${error.message}`);process.exitCode=1;}
 }
