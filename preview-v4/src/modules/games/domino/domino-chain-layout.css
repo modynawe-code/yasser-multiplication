@@ -23,9 +23,11 @@
   .domino-table{height:clamp(270px,72vw,330px)}
   .domino-board{inset:14px 10px 58px!important}
   .domino-board .domino-tile{--tile-w:84px;--tile-h:44px;--pip:7px}
-  .domino-hand{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px 4px!important;padding:6px 0 4px!important}
+  .domino-hand{display:flex!important;flex-wrap:wrap;justify-content:center!important;align-content:flex-start;gap:7px 4px!important;padding:6px 0 4px!important}
+  .domino-hand-item{flex:0 0 calc((100% - 8px)/3)!important;display:grid;place-items:center}
   .domino-hand .domino-tile{--tile-w:84px;--tile-h:45px;--pip:7px}
-  .domino-hand:has(.domino-hand-item:nth-child(10)){grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px 2px!important}
+  .domino-hand:has(.domino-hand-item:nth-child(10)){gap:6px 2px!important}
+  .domino-hand:has(.domino-hand-item:nth-child(10)) .domino-hand-item{flex-basis:calc((100% - 6px)/4)!important}
   .domino-hand:has(.domino-hand-item:nth-child(10)) .domino-tile{--tile-w:72px;--tile-h:39px;--pip:6px}
   .domino-hand:has(.domino-hand-item:nth-child(13)){max-height:min(31svh,236px);overflow-y:auto!important;overscroll-behavior:contain;padding-inline:3px!important}
   .domino-hand-panel{padding:12px!important}
@@ -35,7 +37,8 @@
   .domino-table{height:270px}
   .domino-board{inset:12px 8px 56px!important}
   .domino-board .domino-tile{--tile-w:78px;--tile-h:41px;--pip:6.5px}
-  .domino-hand:has(.domino-hand-item:nth-child(10)){grid-template-columns:repeat(3,minmax(0,1fr))!important;max-height:min(34svh,230px);overflow-y:auto!important}
+  .domino-hand:has(.domino-hand-item:nth-child(10)){max-height:min(34svh,230px);overflow-y:auto!important}
+  .domino-hand:has(.domino-hand-item:nth-child(10)) .domino-hand-item{flex-basis:calc((100% - 4px)/3)!important}
   .domino-hand:has(.domino-hand-item:nth-child(10)) .domino-tile{--tile-w:68px;--tile-h:37px;--pip:5.5px}
   .domino-stock{transform:scale(.88)!important;transform-origin:left bottom}
 }
@@ -43,7 +46,8 @@
   .domino-table{height:calc(100dvh - 126px);min-height:0!important;max-height:270px;padding:0!important}
   .domino-board{inset:8px 8px 46px!important}
   .domino-board .domino-tile{--tile-w:78px;--tile-h:41px;--pip:6.5px}
-  .domino-hand{grid-template-columns:repeat(4,minmax(0,1fr))!important;max-height:100%;overflow-y:auto!important;gap:4px 2px!important}
+  .domino-hand{display:flex!important;flex-wrap:wrap;justify-content:center!important;align-content:flex-start;max-height:100%;overflow-y:auto!important;gap:4px 2px!important}
+  .domino-hand-item{flex:0 0 calc((100% - 6px)/4)!important;display:grid;place-items:center}
   .domino-hand .domino-tile{--tile-w:64px;--tile-h:35px;--pip:5.5px}
   .domino-stock{bottom:5px!important;transform:scale(.82)!important;transform-origin:left bottom}
 }
