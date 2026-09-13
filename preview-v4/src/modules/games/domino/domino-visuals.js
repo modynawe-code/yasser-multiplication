@@ -52,8 +52,7 @@ function decorateBoard(root){
   const tiles=[...board.querySelectorAll(':scope > .domino-tile')];
   tiles.forEach((tile,index)=>{
     tile.classList.add('domino-board-tile');
-    tile.classList.remove('chain-turn');
-    tile.classList.toggle('vertical',tile.classList.contains('is-double'));
+    tile.classList.remove('chain-turn','vertical');
     tile.style.setProperty('--chain-order',String(index));
   });
 }
