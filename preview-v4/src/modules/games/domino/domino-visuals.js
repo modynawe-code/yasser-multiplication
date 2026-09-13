@@ -104,7 +104,13 @@ export function decorateBoard(root){
     tile.classList.remove('chain-turn','vertical');
     tile.style.setProperty('--chain-order',String(index));
   });
-  if(!tiles.length)return;
+  if(!tiles.length){
+    delete board.dataset.layoutScale;
+    delete board.dataset.layoutAnchorKey;
+    delete board.dataset.layoutMode;
+    board.classList.remove('is-laid-out');
+    return;
+  }
 
   const width=board.clientWidth||board.getBoundingClientRect?.().width||0;
   const height=board.clientHeight||board.getBoundingClientRect?.().height||0;
@@ -115,9 +121,12 @@ export function decorateBoard(root){
   const anchorKey=board.dataset.anchorKey||'';
   const found=tiles.findIndex(tile=>tile.dataset.dominoKey===anchorKey);
   const anchorIndex=found>=0?found:0;
+  const previousScale=Number(board.dataset.layoutScale);
+  const sameAnchor=Boolean(anchorKey&&board.dataset.layoutAnchorKey===anchorKey);
+  const maxScale=sameAnchor&&Number.isFinite(previousScale)?previousScale:1;
   const plan=planDominoChain({
     tiles:tiles.map(tile=>({left:Number(tile.dataset.left),right:Number(tile.dataset.right)})),
-    anchorIndex,width,height,tileWidth,tileHeight,padding:6
+    anchorIndex,width,height,tileWidth,tileHeight,padding:6,maxScale
   });
   if(plan.placements.length!==tiles.length)return;
 
@@ -133,6 +142,9 @@ export function decorateBoard(root){
   });
   board.classList.add('is-laid-out');
   board.style.setProperty('--domino-layout-scale',String(plan.scale));
+  board.dataset.layoutScale=String(plan.scale);
+  board.dataset.layoutAnchorKey=anchorKey;
+  board.dataset.layoutMode=plan.mode;
 }
 
 export function enhanceDominoTiles(root=document){
