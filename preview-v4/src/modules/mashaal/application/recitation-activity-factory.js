@@ -3,11 +3,37 @@ import { MASHAAL_DEFAULT_RECITATION_SOURCE_ID,MASHAAL_RECITATION_TARGET } from '
 
 const SELS='saudi-early-learning-standards-3-6-2015';
 const RECITATION_SKILL_ID='listen-repeat';
+const SURAH_ORDER=Object.freeze([1,114,113,112,111]);
+const SURAH_SET=new Set(SURAH_ORDER);
+
+export function isMashaalRecitationSkillId(skillId){
+  if(skillId===RECITATION_SKILL_ID)return true;
+  const match=/^listen-repeat-surah-(\d+)$/.exec(String(skillId||''));
+  return Boolean(match&&SURAH_SET.has(Number(match[1])));
+}
+
+export function getMashaalRecitationSurahNumber(skillId){
+  if(skillId===RECITATION_SKILL_ID)return MASHAAL_RECITATION_TARGET.surahNumber;
+  const match=/^listen-repeat-surah-(\d+)$/.exec(String(skillId||''));
+  const surahNumber=match?Number(match[1]):0;
+  return SURAH_SET.has(surahNumber)?surahNumber:null;
+}
+
+export function listMashaalRecitationChoices(){
+  const byNumber=new Map(listVerifiedMashaalRecitationAssets(MASHAAL_DEFAULT_RECITATION_SOURCE_ID).map(asset=>[asset.surahNumber,asset]));
+  return Object.freeze(SURAH_ORDER.map(surahNumber=>byNumber.get(surahNumber)).filter(Boolean).map(asset=>Object.freeze({
+    id:`listen-repeat-surah-${asset.surahNumber}`,
+    surahNumber:asset.surahNumber,
+    surahNameAr:asset.surahNameAr,
+    title:`سورة ${asset.surahNameAr}`
+  })));
+}
 
 export function createMashaalRecitationActivities(skillId){
-  if(skillId!==RECITATION_SKILL_ID)return Object.freeze([]);
+  const targetSurah=getMashaalRecitationSurahNumber(skillId);
+  if(!targetSurah)return Object.freeze([]);
   const assets=listVerifiedMashaalRecitationAssets(MASHAAL_DEFAULT_RECITATION_SOURCE_ID)
-    .filter(asset=>asset.surahNumber===MASHAAL_RECITATION_TARGET.surahNumber)
+    .filter(asset=>asset.surahNumber===targetSurah)
     .slice(0,1);
   return Object.freeze(assets.map(asset=>Object.freeze({
     id:`kg3-recitation-${asset.id}`,
