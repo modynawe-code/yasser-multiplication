@@ -121,12 +121,9 @@ export function decorateBoard(root){
   const anchorKey=board.dataset.anchorKey||'';
   const found=tiles.findIndex(tile=>tile.dataset.dominoKey===anchorKey);
   const anchorIndex=found>=0?found:0;
-  const previousScale=Number(board.dataset.layoutScale);
-  const sameAnchor=Boolean(anchorKey&&board.dataset.layoutAnchorKey===anchorKey);
-  const maxScale=sameAnchor&&Number.isFinite(previousScale)?previousScale:1;
   const plan=planDominoChain({
     tiles:tiles.map(tile=>({left:Number(tile.dataset.left),right:Number(tile.dataset.right)})),
-    anchorIndex,width,height,tileWidth,tileHeight,padding:6,maxScale
+    anchorIndex,width,height,tileWidth,tileHeight,padding:6
   });
   if(plan.placements.length!==tiles.length)return;
 
@@ -143,7 +140,6 @@ export function decorateBoard(root){
   board.classList.add('is-laid-out');
   board.style.setProperty('--domino-layout-scale',String(plan.scale));
   board.dataset.layoutScale=String(plan.scale);
-  board.dataset.layoutAnchorKey=anchorKey;
   board.dataset.layoutMode=plan.mode;
 }
 
