@@ -48,9 +48,31 @@ function buildSerpentine({tiles,anchorIndex,width,height,padding,tileWidth,tileH
       placements.push(straight);previous=straight;continue;
     }
     const cornerIndex=index-1,before=placements.at(-2);
-    if(!before||cornerIndex===anchorIndex)return null;
+    if(!before)return null;
+    if(cornerIndex===anchorIndex){
+      const lead=placements.at(-3);
+      if(!lead)return null;
+      placements.pop();
+      placements.pop();
+      const earlierCorner=attached(lead,direction,90,context);
+      if(width<=480)earlierCorner.y+=(tileWidth-tileHeight)*scale*.2;
+      if(!insideX(earlierCorner,context))return null;
+      Object.assign(earlierCorner,{pathRotation:90,row,isDouble:isDouble(tiles[index-2]),anchor:false});
+      placements.push(earlierCorner);
+      direction=direction==='right'?'left':'right';row+=1;
+      const anchorRotation=rotationFor(tiles[anchorIndex],direction,anchorIndex,anchorIndex);
+      const anchorExit=attached(earlierCorner,'down',anchorRotation,context);
+      if(!insideX(anchorExit,context))return null;
+      Object.assign(anchorExit,{pathRotation:ANGLES[direction],row,isDouble:isDouble(tiles[anchorIndex]),anchor:true});
+      placements.push(anchorExit);
+      const currentRotation=rotationFor(tile,direction,index,anchorIndex),current=attached(anchorExit,direction,currentRotation,context);
+      if(!insideX(current,context))return null;
+      Object.assign(current,{pathRotation:ANGLES[direction],row,isDouble:isDouble(tile),anchor:false});
+      placements.push(current);previous=current;continue;
+    }
     placements.pop();
     const corner=attached(before,direction,90,context);
+    if(width<=480)corner.y+=(tileWidth-tileHeight)*scale*.2;
     if(!insideX(corner,context))return null;
     Object.assign(corner,{pathRotation:90,row,isDouble:isDouble(tiles[cornerIndex]),anchor:false});
     placements.push(corner);
