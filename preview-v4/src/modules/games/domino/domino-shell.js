@@ -1,4 +1,5 @@
 import { applySystemInsets } from '../../../shared/ui/system-insets.js';
+import { installDominoVisuals } from './domino-visuals.js';
 
 function ensureStyle(href,key){
   if(document.querySelector(`link[data-module-style="${key}"]`))return;
@@ -76,5 +77,5 @@ export function ensureDominoShell(){
         </section>
       </div>
     </section>`;
-  const view=host.firstElementChild;main.appendChild(view);applySystemInsets(view.querySelector('.domino-shell'));
+  const view=host.firstElementChild;main.appendChild(view);applySystemInsets(view.querySelector('.domino-shell'));installDominoVisuals(view);
 }
