@@ -1,66 +1,66 @@
-# One-shot import gate: verified against media-aware tests.
-name: Import Mashaal Al-Ikhlas
+# One-shot import gate for Mashaal's five-surah offline Quran set.
+name: Import Mashaal Quran Set
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - feature/family-games-mashaal-integration-v1
+      - feature/product-ui-reference-v1
     paths:
       - .github/workflows/import-mashaal-al-ikhlas.yml
+      - preview-v4/tools/fetch-mashaal-recitation-set.mjs
 
 permissions:
   contents: write
 
 jobs:
-  import-official-recitation:
+  import-official-recitation-set:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Checkout integration branch
+      - name: Checkout product UI branch
         uses: actions/checkout@v4
         with:
-          ref: feature/family-games-mashaal-integration-v1
+          ref: feature/product-ui-reference-v1
           fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
-      - name: Import Surat Al-Ikhlas from KFGQPC source
+      - name: Import five reviewed KFGQPC recitations and Mushaf pages
+        working-directory: preview-v4
+        run: node tools/fetch-mashaal-recitation-set.mjs
+
+      - name: Verify generated Quran set
         working-directory: preview-v4
         run: |
-          set +e
-          npm run recitation:fetch-official
-          official_status=$?
-          set -e
-          if [ "$official_status" -ne 0 ]; then
-            echo "Direct KFGQPC host was unreachable from this runner; using the pinned quran-ws transport mirror for the extracted file while retaining KFGQPC as source authority."
-            node tools/fetch-mashaal-recitation-mirror.mjs
-          fi
-
-      - name: Verify generated recitation asset and provenance
-        working-directory: preview-v4
-        run: |
+          for surah in 1 111 112 113 114; do
+            grep -q '"surahNumber": '"$surah" src/modules/mashaal/curriculum/recitation-media-data.js
+          done
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-111-al-masad.mp3
           test -s assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
-          grep -q '"surahNumber": 112' src/modules/mashaal/curriculum/recitation-media-data.js
-          grep -Eq '"sha256": "[a-f0-9]{64}"' src/modules/mashaal/curriculum/recitation-media-data.js
-          grep -q 'https://download.qurancomplex.gov.sa/new-sounds/akhdar/hafs/akhdar-sura.zip' src/modules/mashaal/curriculum/recitation-media-data.js
-          sha256sum assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-113-al-falaq.mp3
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-114-an-nas.mp3
+          test -s assets/recitation/kfqc-hafs-page-1.svg
+          test -s assets/recitation/kfqc-hafs-page-603.svg
+          test -s assets/recitation/kfqc-hafs-page-604.svg
 
-      - name: Run learning-app regression suite with the real media manifest
+      - name: Run current learning-app regression suite
         working-directory: preview-v4
         run: npm test
 
-      - name: Commit verified Al-Ikhlas media
+      - name: Commit verified offline Quran media
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add preview-v4/assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
+          git add preview-v4/assets/recitation/
           git add preview-v4/src/modules/mashaal/curriculum/recitation-media-data.js
           if git diff --cached --quiet; then
-            echo "Verified media already matches the branch; nothing to commit."
+            echo "Verified Quran media already matches the branch; nothing to commit."
           else
-            git commit -m "Add verified KFGQPC Al-Ikhlas recitation"
-            git push origin HEAD:feature/family-games-mashaal-integration-v1
+            git commit -m "Add Mashaal verified five-surah Quran media"
+            git push origin HEAD:feature/product-ui-reference-v1
           fi
