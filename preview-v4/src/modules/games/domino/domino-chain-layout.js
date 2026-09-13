@@ -17,6 +17,22 @@ function rotationFor(tile,direction,side){
 function rowFor(side,lane){return side==='left'?-(lane+1):lane+1;}
 function scaledExtents(rotation,tileWidth,tileHeight,scale){return halfExtents(rotation,tileWidth*scale,tileHeight*scale);}
 
+function centerChainInBoard(placements,{width,height,padding,tileWidth,tileHeight,scale}){
+  let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
+  for(const placement of placements){
+    const half=scaledExtents(placement.rotation,tileWidth,tileHeight,scale);
+    left=Math.min(left,placement.x-half.x);
+    right=Math.max(right,placement.x+half.x);
+    top=Math.min(top,placement.y-half.y);
+    bottom=Math.max(bottom,placement.y+half.y);
+  }
+  const desiredX=width/2-(left+right)/2;
+  const desiredY=height/2-(top+bottom)/2;
+  const shiftX=clamp(desiredX,padding-left,width-padding-right);
+  const shiftY=clamp(desiredY,padding-top,height-padding-bottom);
+  return placements.map(item=>({...item,x:item.x+shiftX,y:item.y+shiftY}));
+}
+
 function withinBoard(candidate,{width,height,padding,tileWidth,tileHeight,scale}){
   const half=scaledExtents(candidate.rotation,tileWidth,tileHeight,scale);
   return candidate.x-half.x>=padding-.01&&candidate.x+half.x<=width-padding+.01&&candidate.y-half.y>=padding-.01&&candidate.y+half.y<=height-padding+.01;
@@ -138,7 +154,8 @@ function attemptLayout({tiles,anchorIndex,width,height,padding,tileWidth,tileHei
   const rightOk=placeArmDynamic({...common,indices:rightIndices,side:'right',startHorizontal:'right',verticalDirection:'up'});
   if(!rightOk)return null;
   if(placements.some(item=>!item))return null;
-  return Object.freeze(placements.map(item=>Object.freeze({...item,scale})));
+  const centered=centerChainInBoard(placements,{width,height,padding,tileWidth,tileHeight,scale});
+  return Object.freeze(centered.map(item=>Object.freeze({...item,scale})));
 }
 
 export function planDominoChain(options={}){
