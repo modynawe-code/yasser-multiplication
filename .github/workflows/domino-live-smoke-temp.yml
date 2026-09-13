@@ -1,0 +1,45 @@
+name: Domino Live Smoke Temp
+
+on:
+  push:
+    branches:
+      - feature/product-ui-reference-v1
+    paths:
+      - .github/workflows/domino-live-smoke-temp.yml
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify live classic domino flow
+        env:
+          API_BASE: https://yasser-khaled-family-api.modynawe.workers.dev
+        run: |
+          sleep 5
+          node <<'NODE'
+          const base=process.env.API_BASE;
+          async function request(path,{method='GET',body,token}={}){
+            const headers={accept:'application/json',origin:'capacitor://localhost'};
+            if(body!==undefined)headers['content-type']='application/json';
+            if(token)headers['x-game-token']=token;
+            const response=await fetch(base+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});
+            const payload=await response.json();
+            if(!response.ok)throw new Error(`${method} ${path} -> ${response.status} ${JSON.stringify(payload)}`);
+            return payload;
+          }
+          const host=await request('/v1/games/rooms',{method:'POST',body:{gameId:'domino',learnerId:'yasser'}});
+          const guest=await request('/v1/games/rooms/join',{method:'POST',body:{code:host.room.code,learnerId:'khaled'}});
+          const hostView=await request(`/v1/games/rooms/${host.room.code}`,{token:host.playerToken});
+          const state=hostView.room.state;
+          if(state.board?.length!==1)throw new Error(`opening board=${state.board?.length}`);
+          if(state.boneyardCount!==14)throw new Error(`boneyard=${state.boneyardCount}`);
+          const counts=Object.values(state.handCounts||{}).sort((a,b)=>a-b);
+          if(JSON.stringify(counts)!=='[6,7]')throw new Error(`hands=${JSON.stringify(counts)}`);
+          if(state.currentPlayerId===state.board[0].playedBy)throw new Error('opening turn did not advance');
+          if(state.hands||state.boneyard||guest.room.state.hands||guest.room.state.boneyard)throw new Error('private state leaked');
+          console.log(`LIVE_CLASSIC_DOMINO_OK room=${host.room.code}`);
+          NODE
