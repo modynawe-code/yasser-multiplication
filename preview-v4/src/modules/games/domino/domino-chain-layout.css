@@ -1,0 +1,19 @@
+/* Responsive anchored chain layout. Gameplay state stays owned by domino-controller.js. */
+.domino-table{min-height:340px;padding:0!important}
+.domino-board{position:absolute!important;inset:18px 18px 66px!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;display:block!important;overflow:hidden!important;padding:0!important;direction:ltr!important;scrollbar-width:none!important}
+.domino-board::-webkit-scrollbar{display:none!important}
+.domino-board .domino-board-tile{position:absolute!important;margin:0!important;transform-origin:center center!important;transform:rotate(var(--domino-board-rotation,0deg)) scale(var(--domino-board-scale,1))!important;transition:left .18s ease,top .18s ease,transform .18s ease,box-shadow .18s ease,filter .18s ease!important;will-change:left,top,transform}
+.domino-board.choose-side .domino-board-tile.board-end-left,.domino-board.choose-side .domino-board-tile.board-end-right{filter:brightness(1.08);box-shadow:0 0 0 4px #f2c94c,0 10px 20px #0004!important;z-index:6}
+.domino-stock{top:auto!important;bottom:9px!important;left:12px!important;min-width:66px!important;padding:6px 9px 6px 43px!important}
+.domino-stock:before,.domino-stock:after{width:26px!important;height:41px!important}.domino-stock:before{left:10px!important;top:7px!important}.domino-stock:after{left:15px!important;top:4px!important}
+.domino-hand{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));justify-items:center;align-items:start;gap:10px 8px!important;overflow:visible!important;padding:8px 2px 6px!important;min-height:0!important;scroll-snap-type:none!important}
+.domino-hand-item{width:max-content;max-width:100%;margin:0!important}
+.domino-hand-item.selected{border-color:#176b4b!important;background:#e2f3ea!important;box-shadow:0 0 0 4px #176b4b24!important}
+.domino-select-whole{position:absolute;inset:0;border:0;background:transparent;cursor:pointer;border-radius:12px}
+.domino-side-picker{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:2px 0 8px;padding:8px 10px;border-radius:14px;background:#f6f3df;border:1px solid #e5d794}
+.domino-side-picker[hidden]{display:none!important}.domino-side-picker span{font-weight:900;color:#405047}.domino-side-picker button{border:0;border-radius:10px;background:#176b4b;color:#fff;font:800 13px/1.2 inherit;padding:8px 13px;cursor:pointer}
+.domino-hand-panel[hidden]{display:none!important}
+@media(max-width:720px){.domino-table{min-height:350px}.domino-board{inset:16px 10px 64px!important}.domino-hand{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px 4px!important}.domino-hand .domino-tile{--tile-w:88px;--tile-h:48px;--pip:7.5px}.domino-side-picker{align-items:stretch}.domino-side-picker span{flex-basis:100%;text-align:center}.domino-side-picker button{flex:1}}
+@media(max-width:460px){.domino-table{min-height:330px}.domino-board{inset:14px 8px 60px!important}.domino-hand .domino-tile{--tile-w:78px;--tile-h:43px;--pip:6.5px}.domino-stock{transform:scale(.88)!important;transform-origin:left bottom}}
+@media (orientation:landscape) and (max-height:620px) and (max-width:1100px){.domino-table{padding:0!important}.domino-board{inset:8px 8px 48px!important}.domino-hand{grid-template-columns:repeat(3,minmax(0,1fr))!important;overflow-y:auto!important}.domino-stock{bottom:5px!important;transform:scale(.82)!important;transform-origin:left bottom}}
+@media(prefers-reduced-motion:reduce){.domino-board .domino-board-tile{transition:none!important}}
