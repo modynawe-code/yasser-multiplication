@@ -1,48 +1,89 @@
-/* MIT reference tile artwork from andrew1407/Domino. See THIRD_PARTY_NOTICE.md. */
+/*
+ * Domino face presentation.
+ * The original MIT SVG set remains vendored under assets/domino/tiles for
+ * provenance/reference. Live faces are rendered as clean inline SVG geometry
+ * because the upstream exports contain a large off-canvas sprite drawing that
+ * is unsafe to crop through a normal <img> element.
+ */
 .domino-tile[data-domino-visual="true"]{
+  position:relative!important;
+  display:block!important;
   background:transparent!important;
   border:0!important;
   border-radius:0!important;
   box-shadow:none!important;
   overflow:visible!important;
+  padding:0!important;
+  line-height:0!important;
 }
+
 .domino-reference-face{
   position:absolute;
-  left:50%;
-  top:50%;
-  width:var(--tile-h);
-  height:var(--tile-w);
-  transform:translate(-50%,-50%) rotate(var(--domino-face-rotation,90deg));
-  transform-origin:center;
+  inset:0;
+  width:100%;
+  height:100%;
   display:block;
+  overflow:visible;
   pointer-events:none;
   filter:drop-shadow(0 5px 5px #0004);
 }
-.domino-fallback-face{
-  position:absolute;
-  inset:0;
-  display:none;
-  align-items:stretch;
-  background:linear-gradient(145deg,#fffefa,#f0ede3);
-  border:2px solid #242823;
-  border-radius:11px;
-  box-shadow:0 7px 13px #0004,inset 0 1px 0 #fff;
-  overflow:hidden;
+
+.domino-svg-shadow{
+  fill:#0b120e38;
 }
-.domino-tile.asset-failed .domino-reference-face{display:none}
-.domino-tile.asset-failed .domino-fallback-face{display:flex}
+
+.domino-svg-body{
+  fill:#fffdf7;
+  stroke:#343936;
+  stroke-width:2.4;
+}
+
+.domino-svg-inner{
+  fill:none;
+  stroke:#c9ccc7;
+  stroke-width:1.2;
+  opacity:.82;
+}
+
+.domino-svg-divider-shadow{
+  stroke:#ffffff;
+  stroke-width:2.8;
+  stroke-linecap:round;
+  opacity:.78;
+}
+
+.domino-svg-divider{
+  stroke:#5c625e;
+  stroke-width:1.8;
+  stroke-linecap:round;
+}
+
+.domino-svg-pip{
+  fill:#171b18;
+  stroke:#050605;
+  stroke-width:.65;
+}
+
+.domino-svg-pip-highlight{
+  fill:#ffffff;
+  opacity:.28;
+}
+
 .domino-hand-item.playable .domino-reference-face{
-  filter:drop-shadow(0 7px 7px #0b3d2b45) drop-shadow(0 0 2px #64c99f);
+  filter:drop-shadow(0 8px 8px #0b3d2b45) drop-shadow(0 0 2px #64c99f);
 }
+
 .domino-board.choose-side .domino-board-tile.board-end-left,
 .domino-board.choose-side .domino-board-tile.board-end-right{
   cursor:pointer;
   z-index:8;
 }
+
 .domino-board.choose-side .domino-board-tile.board-end-left .domino-reference-face,
 .domino-board.choose-side .domino-board-tile.board-end-right .domino-reference-face{
   filter:drop-shadow(0 0 6px #f2c94c) drop-shadow(0 7px 6px #0005);
 }
+
 .domino-board.choose-side .domino-board-tile.board-end-left:focus-visible,
 .domino-board.choose-side .domino-board-tile.board-end-right:focus-visible{
   outline:4px solid #f2c94c;
