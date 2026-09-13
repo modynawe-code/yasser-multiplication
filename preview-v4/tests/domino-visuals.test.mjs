@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {
   DOMINO_PIP_POSITIONS,
   dominoHalfMarkup,
@@ -8,6 +9,8 @@ import {
   dominoAssetPath,
   enhanceDominoTile
 } from '../src/modules/games/domino/domino-visuals.js';
+
+const referenceCss=readFileSync(new URL('../src/modules/games/domino/domino-reference-assets.css',import.meta.url),'utf8');
 
 test('domino pip layouts match standard values 0 through 6',()=>{
   const expected={0:[],1:['mm'],2:['tl','br'],3:['tl','mm','br'],4:['tl','tr','bl','br'],5:['tl','tr','mm','bl','br'],6:['tl','ml','bl','tr','mr','br']};
@@ -71,4 +74,10 @@ test('visual enhancer marks doubles without deciding board orientation',()=>{
   assert.equal(classes.has('vertical'),false);
   assert.match(tile.rendered,/data-reference="assets\/domino\/tiles\/5-5\.svg"/);
   assert.match(tile.rendered,/<svg class="domino-reference-face"/);
+});
+
+test('reference face CSS cannot return laid-out board tiles to relative flow',()=>{
+  const genericRule=referenceCss.match(/\.domino-tile\[data-domino-visual="true"\]\s*\{([^}]*)\}/)?.[1]||'';
+  assert.doesNotMatch(genericRule,/position\s*:\s*relative\s*!important/i);
+  assert.match(referenceCss,/\.domino-board \.domino-board-tile\[data-domino-visual="true"\]\s*\{\s*position\s*:\s*absolute\s*!important\s*;/i);
 });
