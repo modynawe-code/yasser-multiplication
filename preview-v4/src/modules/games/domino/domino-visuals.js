@@ -51,10 +51,9 @@ function decorateBoard(root){
   const board=root.querySelector?.('#dominoBoard');if(!board)return;
   const tiles=[...board.querySelectorAll(':scope > .domino-tile')];
   tiles.forEach((tile,index)=>{
-    const isTurn=(index+1)%5===0&&index<tiles.length-1;
     tile.classList.add('domino-board-tile');
-    tile.classList.toggle('chain-turn',isTurn);
-    tile.classList.toggle('vertical',isTurn||tile.classList.contains('is-double'));
+    tile.classList.remove('chain-turn');
+    tile.classList.toggle('vertical',tile.classList.contains('is-double'));
     tile.style.setProperty('--chain-order',String(index));
   });
 }
