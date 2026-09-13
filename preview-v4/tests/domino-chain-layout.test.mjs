@@ -11,6 +11,10 @@ test('visible chain stays centered as it grows',()=>{const o={width:680,height:3
 
 test('opening double is horizontal',()=>{const p=planDominoChain({tiles:[tile(6,6)],anchorIndex:0,width:500,height:300,tileWidth:82,tileHeight:44});assert.equal(p.placements[0].rotation%180,0);assert.equal(p.scale,1);});
 
+test('desktop uses the full width before creating a turn',()=>{const tiles=[tile(2,0),tile(0,1),tile(1,5),tile(5,0),tile(0,3),tile(3,1),tile(1,4),tile(4,2)];const p=planDominoChain({tiles,anchorIndex:4,width:900,height:300,tileWidth:82,tileHeight:44,padding:6});assert.equal(p.scale,1);assert.ok(p.placements.every(x=>x.rotation%180===0));});
+
+test('the same chain turns on a phone only after using available width',()=>{const tiles=[tile(2,0),tile(0,1),tile(1,5),tile(5,0),tile(0,3),tile(3,1),tile(1,4),tile(4,2)];const p=planDominoChain({tiles,anchorIndex:4,width:340,height:300,tileWidth:82,tileHeight:44,padding:6});assert.ok(DOMINO_NORMAL_SCALES.includes(p.scale));assert.ok(p.placements.some(x=>x.rotation%180!==0));const horizontal=p.placements.filter(x=>x.rotation%180===0);assert.ok(horizontal.length>=4);});
+
 test('later doubles are perpendicular to local path',()=>{const tiles=[tile(6,4),tile(4,4),tile(4,3),tile(3,2),tile(2,2),tile(2,1),tile(1,0)];const p=planDominoChain({tiles,anchorIndex:3,width:680,height:360,tileWidth:82,tileHeight:44});for(const [i,t] of tiles.entries())if(i!==3&&t.left===t.right)assert.equal((p.placements[i].rotation-p.placements[i].pathRotation+360)%180,90);});
 
 test('legal chain stays physically connected through dynamic turns and doubles',()=>{const p=planDominoChain({tiles:LEGAL_CHAIN,anchorIndex:13,width:680,height:360,tileWidth:82,tileHeight:44});assert.equal(p.placements.length,LEGAL_CHAIN.length);for(let i=0;i<p.placements.length-1;i++)assert.equal(touches(p.placements[i],p.placements[i+1],82,44),true,`gap at ${i}-${i+1}`);});
