@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {chooseAutomaticDominoSide,dominoSideChoiceIsEquivalent} from '../src/modules/games/domino/domino-placement-policy.js';
+test('one legal side plays directly',()=>assert.equal(chooseAutomaticDominoSide({state:{board:[]},sides:['right']}),'right'));
+test('equal open ends make two-side choice equivalent',()=>{const state={leftEnd:6,rightEnd:6,board:[{},{}]};assert.equal(dominoSideChoiceIsEquivalent(state,['left','right']),true);assert.equal(chooseAutomaticDominoSide({state,sides:['left','right'],anchorIndex:0}),'left');});
+test('equivalent placement uses the less crowded side around visual anchor',()=>{const state={leftEnd:4,rightEnd:4,board:[{},{},{},{},{}]};assert.equal(chooseAutomaticDominoSide({state,sides:['left','right'],anchorIndex:3}),'right');});
+test('strategically different two-side choice stays manual',()=>{const state={leftEnd:2,rightEnd:5,board:[{},{}]};assert.equal(dominoSideChoiceIsEquivalent(state,['left','right']),false);assert.equal(chooseAutomaticDominoSide({state,sides:['left','right'],anchorIndex:0}),null);});
