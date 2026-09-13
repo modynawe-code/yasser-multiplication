@@ -78,18 +78,34 @@ jobs:
           const dominoHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'domino',learnerId:'yasser'}});
           if(!/^\d{6}$/.test(dominoHost?.room?.code||''))throw new Error('Domino room code contract failed');
           const dominoGuest=await request('/v1/games/rooms/join',{method:'POST',body:{code:dominoHost.room.code,learnerId:'khaled'}});
-          if(dominoGuest?.room?.status!=='playing'||dominoGuest?.room?.state?.hand?.length!==7)throw new Error('Domino join/deal contract failed');
+          if(dominoGuest?.room?.status!=='playing')throw new Error('Domino join contract failed');
           if(dominoGuest?.room?.state?.hands||dominoGuest?.room?.state?.boneyard)throw new Error('Domino private tiles leaked');
+          if(dominoGuest?.room?.state?.board?.length!==1)throw new Error('Domino automatic opening move failed');
           if(dominoGuest?.room?.state?.boneyardCount!==14)throw new Error('Domino boneyard count contract failed');
+          const dominoCounts=Object.values(dominoGuest?.room?.state?.handCounts||{}).sort((a,b)=>a-b);
+          if(JSON.stringify(dominoCounts)!=='[6,7]')throw new Error(`Domino post-opening hand counts failed: ${JSON.stringify(dominoCounts)}`);
+
           const dominoHostView=await request(`/v1/games/rooms/${dominoHost.room.code}`,{token:dominoHost.playerToken});
-          if(dominoHostView?.room?.state?.hand?.length!==7||dominoHostView?.room?.state?.hands)throw new Error('Domino host private-hand projection failed');
+          const opening=dominoHostView?.room?.state?.board?.[0];
+          if(!opening||dominoHostView?.room?.state?.currentPlayerId===opening.playedBy)throw new Error('Domino turn did not advance after automatic opener');
+          if(dominoHostView?.room?.state?.hands||dominoHostView?.room?.state?.boneyard)throw new Error('Domino host projection leaked private state');
+
           const currentPlayerId=dominoHostView.room.state.currentPlayerId;
           const currentIsHost=currentPlayerId===dominoHostView.room.selfPlayerId;
           const currentView=currentIsHost?dominoHostView:dominoGuest;
           const currentToken=currentIsHost?dominoHost.playerToken:dominoGuest.playerToken;
-          const openingTile=currentView.room.state.hand[0];
-          const dominoPlayed=await request(`/v1/games/rooms/${dominoHost.room.code}/actions`,{method:'POST',token:currentToken,body:{expectedVersion:currentView.room.version,type:'play',tileId:openingTile,side:'right'}});
-          if(dominoPlayed?.room?.state?.board?.length!==1)throw new Error('Domino opening move failed');
+          const currentState=currentView.room.state;
+          const ends=[currentState.leftEnd,currentState.rightEnd];
+          const playable=(currentState.hand||[]).find(tile=>tile.split('-').map(Number).some(value=>ends.includes(value)));
+          if(playable){
+            const values=playable.split('-').map(Number);
+            const side=values.includes(currentState.leftEnd)?'left':'right';
+            const dominoPlayed=await request(`/v1/games/rooms/${dominoHost.room.code}/actions`,{method:'POST',token:currentToken,body:{expectedVersion:currentView.room.version,type:'play',tileId:playable,side}});
+            if(dominoPlayed?.room?.state?.board?.length!==2)throw new Error('Domino legal classic move failed');
+          }else{
+            const dominoDrawn=await request(`/v1/games/rooms/${dominoHost.room.code}/actions`,{method:'POST',token:currentToken,body:{expectedVersion:currentView.room.version,type:'draw'}});
+            if(dominoDrawn?.room?.state?.boneyardCount!==13)throw new Error('Domino classic draw failed');
+          }
 
           console.log(`Production games smoke passed: XO ${xoHost.room.code}, RPS ${rpsHost.room.code}, Domino ${dominoHost.room.code}.`);
           NODE
