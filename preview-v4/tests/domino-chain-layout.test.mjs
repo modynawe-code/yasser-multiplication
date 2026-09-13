@@ -7,7 +7,7 @@ function boundsOf(p,w,h){const vertical=p.rotation%180!==0;const width=(vertical
 function touches(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);const gapX=Math.max(0,Math.max(A.left,B.left)-Math.min(A.right,B.right));const gapY=Math.max(0,Math.max(A.top,B.top)-Math.min(A.bottom,B.bottom));return gapX<.1&&gapY<.1;}
 function overlapArea(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);const overlapX=Math.max(0,Math.min(A.right,B.right)-Math.max(A.left,B.left));const overlapY=Math.max(0,Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top));return overlapX*overlapY;}
 
-test('anchor stays centered as chain grows',()=>{const o={width:680,height:360,tileWidth:82,tileHeight:44};for(const [tiles,anchor] of [[[tile(6,6)],0],[[tile(6,5),tile(6,6)],1],[[tile(6,5),tile(6,6),tile(6,2)],1]]){const p=planDominoChain({...o,tiles,anchorIndex:anchor});assert.equal(p.placements[anchor].x,340);assert.equal(p.placements[anchor].y,180);}});
+test('visible chain stays centered as it grows',()=>{const o={width:680,height:360,tileWidth:82,tileHeight:44};for(const [tiles,anchor] of [[[tile(6,6)],0],[[tile(6,5),tile(6,6)],1],[[tile(6,5),tile(6,6),tile(6,2)],1]]){const p=planDominoChain({...o,tiles,anchorIndex:anchor});const bounds=p.placements.map(x=>boundsOf(x,82,44));const left=Math.min(...bounds.map(x=>x.left)),right=Math.max(...bounds.map(x=>x.right)),top=Math.min(...bounds.map(x=>x.top)),bottom=Math.max(...bounds.map(x=>x.bottom));assert.ok(Math.abs((left+right)/2-340)<.1);assert.ok(Math.abs((top+bottom)/2-180)<.1);}});
 
 test('opening double is horizontal',()=>{const p=planDominoChain({tiles:[tile(6,6)],anchorIndex:0,width:500,height:300,tileWidth:82,tileHeight:44});assert.equal(p.placements[0].rotation%180,0);assert.equal(p.scale,1);});
 
