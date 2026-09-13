@@ -47,12 +47,13 @@ export function enhanceDominoTile(tile){
   return true;
 }
 
-function decorateBoard(root){
+export function decorateBoard(root){
   const board=root.querySelector?.('#dominoBoard');if(!board)return;
   const tiles=[...board.querySelectorAll(':scope > .domino-tile')];
   tiles.forEach((tile,index)=>{
     tile.classList.add('domino-board-tile');
-    tile.classList.remove('chain-turn','vertical');
+    tile.classList.remove('chain-turn');
+    tile.classList.toggle('vertical',tile.classList.contains('is-double'));
     tile.style.setProperty('--chain-order',String(index));
   });
 }
