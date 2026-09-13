@@ -6,7 +6,6 @@
  * is unsafe to crop through a normal <img> element.
  */
 .domino-tile[data-domino-visual="true"]{
-  position:relative!important;
   display:block!important;
   background:transparent!important;
   border:0!important;
@@ -15,6 +14,14 @@
   overflow:visible!important;
   padding:0!important;
   line-height:0!important;
+}
+
+/* Board tiles must stay absolutely positioned by domino-chain-layout.js.
+ * Do not let the generic visual-face rule turn them back into relative-flow
+ * elements, otherwise each tile keeps its static position and the chain
+ * appears as a diagonal staircase on mobile. */
+.domino-board .domino-board-tile[data-domino-visual="true"]{
+  position:absolute!important;
 }
 
 .domino-reference-face{
