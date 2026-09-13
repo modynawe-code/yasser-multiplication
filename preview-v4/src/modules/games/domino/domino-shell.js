@@ -58,7 +58,6 @@ export function ensureDominoShell(){
               <div><small>قطعك</small><strong id="dominoHandTitle">اختر قطعة مناسبة</strong></div>
               <div class="domino-hand-actions">
                 <button class="domino-secondary" id="dominoDraw" type="button" disabled>اسحب قطعة</button>
-                <button class="domino-secondary" id="dominoPass" type="button" disabled>تمرير الدور</button>
               </div>
             </div>
             <div class="domino-hand" id="dominoHand" aria-label="قطع اللاعب"></div>
