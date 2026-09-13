@@ -74,7 +74,7 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
 
   function boardMarkup(){
     const host=byId('dominoBoard');if(!host||!state)return;
-    if(!state.board.length){host.innerHTML='<div class="domino-board-empty">ابدأ بأول قطعة</div>';return;}
+    if(!state.board.length){host.innerHTML='<div class="domino-board-empty">نجهز أول قطعة…</div>';return;}
     host.innerHTML=state.board.map(item=>tileFace(item.left,item.right,{compact:true})).join('');
   }
 
@@ -113,12 +113,11 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
     const isTurn=state.status==='playing'&&state.currentPlayer===self,hasMove=isTurn&&state.hand.some(tile=>legalSides(state,tile).length>0);
     if(banner){
       banner.classList.toggle('your-turn',isTurn);
-      banner.textContent=state.status==='playing'?(isTurn?'دورك الآن — اختر قطعة مناسبة':`دور ${current?.displayName||'اللاعب الثاني'} الآن`):'انتهت الجولة';
+      banner.textContent=state.status==='playing'?(isTurn?(hasMove?'دورك الآن — العب قطعة مضيئة':state.boneyardCount>0?'دورك الآن — اسحب من المخزون':'ننتظر تحديث الدور…'):`دور ${current?.displayName||'اللاعب الثاني'} الآن`):'انتهت الجولة';
     }
-    if(handTitle)handTitle.textContent=isTurn?(hasMove?'اختر قطعة مضيئة':'ما عندك قطعة مناسبة'):'شاهد الطاولة وانتظر دورك';
-    const draw=byId('dominoDraw'),pass=byId('dominoPass');
+    if(handTitle)handTitle.textContent=!isTurn?'شاهد الطاولة وانتظر دورك':hasMove?'اختر قطعة مضيئة':state.boneyardCount>0?'ما عندك قطعة مناسبة — اسحب من المخزون':'لا توجد حركة متاحة';
+    const draw=byId('dominoDraw');
     if(draw)draw.disabled=busy||!isTurn||hasMove||state.boneyardCount<=0;
-    if(pass)pass.disabled=busy||!isTurn||hasMove||state.boneyardCount>0;
   }
 
   function renderWaiting(){
@@ -143,7 +142,6 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
       'not-your-turn':'مو دورك الآن.',
       'tile-does-not-match':'هذه القطعة ما تركب على طرف الطاولة.',
       'playable-tile-available':'عندك قطعة تقدر تلعبها.',
-      'draw-before-pass':'اسحب من المخزون قبل تمرير الدور.',
       'boneyard-empty':'المخزون انتهى.'
     };
     return messages[code]||'تعذر تنفيذ الحركة. حاول مرة ثانية.';
@@ -156,7 +154,6 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
   }
   function play(tileId,side){return withAction(()=>session.play(tileId,side));}
   function draw(){return withAction(()=>session.draw());}
-  function pass(){return withAction(()=>session.pass());}
   function rematch(){return withAction(()=>session.reset());}
 
   async function createRoom(){
@@ -190,7 +187,6 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
     byId('dominoJoinRoom')?.addEventListener('click',joinRoom);
     byId('dominoResumeRoom')?.addEventListener('click',resumeRoom);
     byId('dominoDraw')?.addEventListener('click',draw);
-    byId('dominoPass')?.addEventListener('click',pass);
     byId('dominoRematch')?.addEventListener('click',rematch);
   }
   function start(){
