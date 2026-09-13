@@ -1,6 +1,5 @@
-const SEGMENT_LENGTHS=Object.freeze([4,2,9,2,9,2,9]);
-const LEFT_DIRECTIONS=Object.freeze(['left','down','right','down','left','down','right']);
-const RIGHT_DIRECTIONS=Object.freeze(['right','up','left','up','right','up','left']);
+export const DOMINO_NORMAL_SCALES=Object.freeze([1,.88,.76]);
+const EMERGENCY_SCALES=Object.freeze([.70,.64,.58,.52,.46]);
 const ANGLES=Object.freeze({right:0,down:90,left:180,up:270});
 
 function clamp(value,min,max){return Math.min(max,Math.max(min,value));}
@@ -8,87 +7,138 @@ function normalizeNumber(value,fallback){const parsed=Number(value);return Numbe
 function normalizeTile(tile){return {left:Number(tile?.left),right:Number(tile?.right)};}
 function normalizeAngle(value){return ((value%360)+360)%360;}
 function isDouble(tile){return tile.left===tile.right;}
+function oppositeHorizontal(direction){return direction==='left'?'right':'left';}
 function halfExtents(rotation,tileWidth,tileHeight){return rotation%180===0?{x:tileWidth/2,y:tileHeight/2}:{x:tileHeight/2,y:tileWidth/2};}
-function axisFor(direction){return direction==='left'||direction==='right'?'x':'y';}
-function coefficientFor(direction){return direction==='left'||direction==='up'?-1:1;}
-function rowFor(side,segment){return side==='left'?-(segment+1):segment+1;}
+function rotationFor(tile,direction,side){
+  const movementAngle=ANGLES[direction];
+  const flowAngle=side==='right'?movementAngle:normalizeAngle(movementAngle+180);
+  return isDouble(tile)?normalizeAngle(flowAngle+90):flowAngle;
+}
+function rowFor(side,lane){return side==='left'?-(lane+1):lane+1;}
+function scaledExtents(rotation,tileWidth,tileHeight,scale){return halfExtents(rotation,tileWidth*scale,tileHeight*scale);}
 
-function cornerCandidate(position,{direction,previousDirection,previousIsDouble,tileWidth,tileHeight}){
-  const next={...position};
-  if(direction==='down'||direction==='up'){
-    const coefficientX=previousDirection==='left'?-1:1;
-    const coefficientY=direction==='up'?-1:1;
-    if(previousIsDouble){
-      next.x+=tileHeight*coefficientX;
-      next.y+=tileWidth*.5*coefficientY;
-    }else{
-      next.x+=tileWidth*.75*coefficientX;
-      next.y+=tileWidth*.25*coefficientY;
-    }
-  }else{
-    const coefficientX=previousDirection==='left'||direction==='left'?-1:1;
-    const coefficientY=previousDirection==='up'||direction==='up'?-1:1;
-    if(previousIsDouble)next.x+=tileWidth*coefficientX;
-    else{
-      next.x+=tileWidth*.75*coefficientX;
-      next.y+=tileWidth*.25*coefficientY;
-    }
+function withinBoard(candidate,{width,height,padding,tileWidth,tileHeight,scale}){
+  const half=scaledExtents(candidate.rotation,tileWidth,tileHeight,scale);
+  return candidate.x-half.x>=padding-.01&&candidate.x+half.x<=width-padding+.01&&candidate.y-half.y>=padding-.01&&candidate.y+half.y<=height-padding+.01;
+}
+
+function attachedCandidate(previous,attachDirection,pathDirection,tile,{side,tileWidth,tileHeight,scale,overlap}){
+  const rotation=rotationFor(tile,pathDirection,side);
+  const previousHalf=scaledExtents(previous.rotation,tileWidth,tileHeight,scale);
+  const currentHalf=scaledExtents(rotation,tileWidth,tileHeight,scale);
+  const visualOverlap=overlap*scale;
+  let x=previous.x,y=previous.y;
+  if(attachDirection==='right')x+=previousHalf.x+currentHalf.x-visualOverlap;
+  else if(attachDirection==='left')x-=previousHalf.x+currentHalf.x-visualOverlap;
+  else if(attachDirection==='down')y+=previousHalf.y+currentHalf.y-visualOverlap;
+  else y-=previousHalf.y+currentHalf.y-visualOverlap;
+  return {x,y,rotation,pathRotation:ANGLES[pathDirection],isDouble:isDouble(tile),anchor:false};
+}
+
+function clampTurnInside(candidate,{horizontalDirection,nextTile,side,width,padding,tileWidth,tileHeight,scale}){
+  const currentHalf=scaledExtents(candidate.rotation,tileWidth,tileHeight,scale);
+  let requiredHalfX=currentHalf.x;
+  if(nextTile){
+    const exitDirection=oppositeHorizontal(horizontalDirection);
+    const exitRotation=rotationFor(nextTile,exitDirection,side);
+    requiredHalfX=Math.max(requiredHalfX,scaledExtents(exitRotation,tileWidth,tileHeight,scale).x);
   }
-  return next;
+  if(horizontalDirection==='right')candidate.x=Math.min(candidate.x,width-padding-requiredHalfX);
+  else candidate.x=Math.max(candidate.x,padding+requiredHalfX);
+  return candidate;
 }
 
-function nudgeToTouch(previous,current,{tileWidth,tileHeight,overlap}){
-  const previousHalf=halfExtents(previous.rotation,tileWidth,tileHeight);
-  const currentHalf=halfExtents(current.rotation,tileWidth,tileHeight);
-  const dx=current.x-previous.x,dy=current.y-previous.y;
-  const gapX=Math.abs(dx)-(previousHalf.x+currentHalf.x);
-  const gapY=Math.abs(dy)-(previousHalf.y+currentHalf.y);
-  if(gapX>0)current.x-=Math.sign(dx)*(gapX+overlap);
-  if(gapY>0)current.y-=Math.sign(dy)*(gapY+overlap);
-  return current;
+function clampExitInside(candidate,{width,padding,tileWidth,tileHeight,scale}){
+  const half=scaledExtents(candidate.rotation,tileWidth,tileHeight,scale);
+  candidate.x=clamp(candidate.x,padding+half.x,width-padding-half.x);
+  return candidate;
 }
 
-function placeArm({tiles,placements,anchorIndex,indices,directions,side,tileWidth,tileHeight,overlap}){
-  let position={x:0,y:0},previousIndex=anchorIndex,previousDirection=null,cursor=0;
-  for(let segment=0;segment<SEGMENT_LENGTHS.length&&cursor<indices.length;segment++){
-    const direction=directions[segment],capacity=SEGMENT_LENGTHS[segment],group=indices.slice(cursor,cursor+capacity);
-    const axis=axisFor(direction),coefficient=coefficientFor(direction);
-    for(let item=0;item<group.length;item++){
-      const index=group[item],tile=tiles[index],double=isDouble(tile);
-      const movementAngle=ANGLES[direction];
-      const flowAngle=side==='right'?movementAngle:normalizeAngle(movementAngle+180);
-      const rotation=double?normalizeAngle(flowAngle+90):flowAngle;
-      const previous=placements[previousIndex];
-      if(segment===0&&item===0){
-        const previousHalf=halfExtents(previous.rotation,tileWidth,tileHeight);
-        const currentHalf=halfExtents(rotation,tileWidth,tileHeight);
-        position[axis]+=coefficient*((axis==='x'?previousHalf.x+currentHalf.x:previousHalf.y+currentHalf.y)-overlap);
-      }else if(item===0){
-        position=cornerCandidate(position,{direction,previousDirection,previousIsDouble:isDouble(tiles[previousIndex]),tileWidth,tileHeight});
-        const candidate={x:position.x,y:position.y,rotation};
-        nudgeToTouch(previous,candidate,{tileWidth,tileHeight,overlap});
-        position={x:candidate.x,y:candidate.y};
+function placeArmDynamic({tiles,placements,anchorIndex,indices,side,startHorizontal,verticalDirection,width,height,padding,tileWidth,tileHeight,scale,overlap}){
+  if(!indices.length)return true;
+  let previous=placements[anchorIndex];
+  let horizontalDirection=startHorizontal;
+  let phase='horizontal';
+  let verticalOriginY=null;
+  let lane=0;
+  const scaledWidth=tileWidth*scale,scaledHeight=tileHeight*scale;
+  const laneTarget=Math.max(scaledHeight*1.2,(scaledWidth+scaledHeight)/2-overlap*scale);
+  const context={side,width,height,padding,tileWidth,tileHeight,scale,overlap};
+
+  for(let position=0;position<indices.length;position++){
+    const index=indices[position],tile=tiles[index],finalItem=position===indices.length-1;
+    let candidate;
+    if(phase==='horizontal'){
+      const straight=attachedCandidate(previous,horizontalDirection,horizontalDirection,tile,context);
+      const straightHalf=scaledExtents(straight.rotation,tileWidth,tileHeight,scale);
+      const sideRoom=horizontalDirection==='right'
+        ?width-padding-(straight.x+straightHalf.x)
+        :(straight.x-straightHalf.x)-padding;
+      const canStayStraight=withinBoard(straight,context)&&(finalItem||sideRoom>=scaledHeight*.55);
+      if(canStayStraight){
+        candidate=straight;
       }else{
-        const previousHalf=halfExtents(previous.rotation,tileWidth,tileHeight);
-        const currentHalf=halfExtents(rotation,tileWidth,tileHeight);
-        position[axis]+=coefficient*((axis==='x'?previousHalf.x+currentHalf.x:previousHalf.y+currentHalf.y)-overlap);
+        candidate=attachedCandidate(previous,horizontalDirection,verticalDirection,tile,context);
+        const nextTile=finalItem?null:tiles[indices[position+1]];
+        clampTurnInside(candidate,{horizontalDirection,nextTile,side,width,padding,tileWidth,tileHeight,scale});
+        if(!withinBoard(candidate,context))return false;
+        phase='vertical';
+        verticalOriginY=candidate.y;
       }
-      placements[index]={x:position.x,y:position.y,rotation,pathRotation:movementAngle,row:rowFor(side,segment),isDouble:double,anchor:false};
-      previousIndex=index;
+    }else{
+      const moved=Math.abs(previous.y-verticalOriginY);
+      if(moved>=laneTarget){
+        const nextHorizontal=oppositeHorizontal(horizontalDirection);
+        candidate=attachedCandidate(previous,verticalDirection,nextHorizontal,tile,context);
+        clampExitInside(candidate,{width,padding,tileWidth,tileHeight,scale});
+        if(!withinBoard(candidate,context))return false;
+        horizontalDirection=nextHorizontal;
+        phase='horizontal';
+        lane+=1;
+        verticalOriginY=null;
+      }else{
+        candidate=attachedCandidate(previous,verticalDirection,verticalDirection,tile,context);
+        if(!withinBoard(candidate,context))return false;
+      }
     }
-    cursor+=group.length;
-    previousDirection=direction;
+    candidate.row=rowFor(side,lane);
+    placements[index]=Object.freeze(candidate);
+    previous=candidate;
   }
+  return true;
 }
 
-function boundsFor(placements,tileWidth,tileHeight){
-  let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
-  for(const placement of placements){
-    const half=halfExtents(placement.rotation,tileWidth,tileHeight);
-    left=Math.min(left,placement.x-half.x);right=Math.max(right,placement.x+half.x);
-    top=Math.min(top,placement.y-half.y);bottom=Math.max(bottom,placement.y+half.y);
-  }
-  return {left,right,top,bottom};
+function preferredScaleIndex(count,width,height,tileWidth,tileHeight){
+  const density=(count*tileWidth*tileHeight)/Math.max(1,width*height);
+  if(density<=.34)return 0;
+  if(density<=.62)return 1;
+  return 2;
+}
+
+function candidateScales({count,width,height,tileWidth,tileHeight,maxScale}){
+  const preferredIndex=preferredScaleIndex(count,width,height,tileWidth,tileHeight);
+  const ceiling=clamp(normalizeNumber(maxScale,1),.35,1);
+  const normal=DOMINO_NORMAL_SCALES.slice(preferredIndex).filter(scale=>scale<=ceiling+.001);
+  const emergency=EMERGENCY_SCALES.filter(scale=>scale<=ceiling+.001&&scale<(normal.at(-1)??1)-.001);
+  const values=[...normal,...emergency];
+  if(!values.length)values.push(Math.min(ceiling,.46));
+  return values;
+}
+
+function attemptLayout({tiles,anchorIndex,width,height,padding,tileWidth,tileHeight,overlap,scale}){
+  const placements=new Array(tiles.length);
+  placements[anchorIndex]=Object.freeze({
+    x:width/2,y:height/2,rotation:0,pathRotation:0,row:0,isDouble:isDouble(tiles[anchorIndex]),anchor:true,scale
+  });
+  const leftIndices=Array.from({length:anchorIndex},(_,offset)=>anchorIndex-1-offset);
+  const rightIndices=Array.from({length:tiles.length-anchorIndex-1},(_,offset)=>anchorIndex+1+offset);
+  const common={tiles,placements,anchorIndex,width,height,padding,tileWidth,tileHeight,scale,overlap};
+  const leftOk=placeArmDynamic({...common,indices:leftIndices,side:'left',startHorizontal:'left',verticalDirection:'down'});
+  if(!leftOk)return null;
+  const rightOk=placeArmDynamic({...common,indices:rightIndices,side:'right',startHorizontal:'right',verticalDirection:'up'});
+  if(!rightOk)return null;
+  if(placements.some(item=>!item))return null;
+  return Object.freeze(placements.map(item=>Object.freeze({...item,scale})));
 }
 
 export function planDominoChain(options={}){
@@ -97,18 +147,15 @@ export function planDominoChain(options={}){
   const tileWidth=Math.max(24,normalizeNumber(options.tileWidth,82)),tileHeight=Math.max(16,normalizeNumber(options.tileHeight,44));
   const padding=Math.max(0,normalizeNumber(options.padding,6)),overlap=Math.max(1,normalizeNumber(options.overlap,1.5));
   const anchorIndex=clamp(Math.trunc(normalizeNumber(options.anchorIndex,0)),0,Math.max(0,count-1));
-  if(!count||width<=0||height<=0)return Object.freeze({placements:Object.freeze([]),scale:1,anchorSlot:-1,capacity:28});
-  const canonical=new Array(count);
-  canonical[anchorIndex]={x:0,y:0,rotation:0,pathRotation:0,row:0,isDouble:isDouble(tiles[anchorIndex]),anchor:true};
-  placeArm({tiles,placements:canonical,anchorIndex,indices:Array.from({length:anchorIndex},(_,offset)=>anchorIndex-1-offset),directions:LEFT_DIRECTIONS,side:'left',tileWidth,tileHeight,overlap});
-  placeArm({tiles,placements:canonical,anchorIndex,indices:Array.from({length:count-anchorIndex-1},(_,offset)=>anchorIndex+1+offset),directions:RIGHT_DIRECTIONS,side:'right',tileWidth,tileHeight,overlap});
-  if(canonical.some(item=>!item))return Object.freeze({placements:Object.freeze([]),scale:1,anchorSlot:-1,capacity:28});
-  const bounds=boundsFor(canonical,tileWidth,tileHeight);
-  const requiredHalfX=Math.max(Math.abs(bounds.left),Math.abs(bounds.right),tileWidth/2);
-  const requiredHalfY=Math.max(Math.abs(bounds.top),Math.abs(bounds.bottom),tileHeight/2);
-  const availableHalfX=Math.max(1,width/2-padding),availableHalfY=Math.max(1,height/2-padding);
-  const scale=Math.min(1,availableHalfX/requiredHalfX,availableHalfY/requiredHalfY);
-  const centerX=width/2,centerY=height/2;
-  const placements=canonical.map(item=>Object.freeze({...item,x:centerX+item.x*scale,y:centerY+item.y*scale,scale}));
-  return Object.freeze({placements:Object.freeze(placements),scale,anchorSlot:anchorIndex,capacity:28});
+  if(!count||width<=0||height<=0)return Object.freeze({placements:Object.freeze([]),scale:1,anchorSlot:-1,capacity:28,mode:'empty'});
+
+  const scales=candidateScales({count,width,height,tileWidth,tileHeight,maxScale:options.maxScale});
+  for(const scale of scales){
+    const placements=attemptLayout({tiles,anchorIndex,width,height,padding,tileWidth,tileHeight,overlap,scale});
+    if(!placements)continue;
+    const mode=DOMINO_NORMAL_SCALES.includes(scale)?'tiered':'emergency-fit';
+    return Object.freeze({placements,scale,anchorSlot:anchorIndex,capacity:28,mode});
+  }
+
+  return Object.freeze({placements:Object.freeze([]),scale:scales.at(-1)??1,anchorSlot:anchorIndex,capacity:28,mode:'unavailable'});
 }
