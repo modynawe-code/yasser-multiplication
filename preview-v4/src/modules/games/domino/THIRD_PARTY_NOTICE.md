@@ -1,10 +1,19 @@
-# Third-party notice — Domino reference
+# Third-party notice — Domino engine
 
-The family Domino implementation uses the open-source project `andrew1407/Domino`
-(https://github.com/andrew1407/Domino) as a reference for multiplayer domino game
-structure and rule flow.
+The family Domino implementation adapts the classic game-rule flow from the open-source project `andrew1407/Domino`:
 
-The referenced project is distributed under the MIT License:
+https://github.com/andrew1407/Domino
+
+The adapted backend engine is implemented in `backend/src/domino-classic-engine.mjs` and follows the upstream classic behavior for the double-six deck, deal size, automatic opening move, move validation/orientation, drawing, automatic skipping when the stock is empty, and dead-end detection.
+
+Relevant upstream sources include:
+
+- `server/src/gameSession/classicDomino.service.ts`
+- `server/src/gameSession/entities/DominoTile.ts`
+- `server/src/gameSession/gameSession.gateway.ts`
+- `server/src/gameSession/storage/storage.service.ts`
+
+The upstream project is distributed under the MIT License:
 
 MIT License
 
