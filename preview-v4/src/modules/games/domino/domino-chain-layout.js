@@ -17,6 +17,21 @@ function rotationFor(tile,direction,side){
 function rowFor(side,lane){return side==='left'?-(lane+1):lane+1;}
 function scaledExtents(rotation,tileWidth,tileHeight,scale){return halfExtents(rotation,tileWidth*scale,tileHeight*scale);}
 
+function straightArmSpan({tiles,indices,side,direction,tileWidth,tileHeight,scale,overlap,anchorRotation=0}){
+  const anchorHalf=scaledExtents(anchorRotation,tileWidth,tileHeight,scale).x;
+  if(!indices.length)return anchorHalf;
+  let distance=0,previousRotation=anchorRotation,currentHalfX=anchorHalf;
+  for(const index of indices){
+    const rotation=rotationFor(tiles[index],direction,side);
+    const previousHalf=scaledExtents(previousRotation,tileWidth,tileHeight,scale);
+    const currentHalf=scaledExtents(rotation,tileWidth,tileHeight,scale);
+    distance+=previousHalf.x+currentHalf.x-overlap*scale;
+    previousRotation=rotation;
+    currentHalfX=currentHalf.x;
+  }
+  return distance+currentHalfX;
+}
+
 function centerChainInBoard(placements,{width,height,padding,tileWidth,tileHeight,scale}){
   let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
   for(const placement of placements){
@@ -143,11 +158,17 @@ function candidateScales({count,width,height,tileWidth,tileHeight,maxScale}){
 
 function attemptLayout({tiles,anchorIndex,width,height,padding,tileWidth,tileHeight,overlap,scale}){
   const placements=new Array(tiles.length);
-  placements[anchorIndex]=Object.freeze({
-    x:width/2,y:height/2,rotation:0,pathRotation:0,row:0,isDouble:isDouble(tiles[anchorIndex]),anchor:true,scale
-  });
   const leftIndices=Array.from({length:anchorIndex},(_,offset)=>anchorIndex-1-offset);
   const rightIndices=Array.from({length:tiles.length-anchorIndex-1},(_,offset)=>anchorIndex+1+offset);
+  const leftSpan=straightArmSpan({tiles,indices:leftIndices,side:'left',direction:'left',tileWidth,tileHeight,scale,overlap});
+  const rightSpan=straightArmSpan({tiles,indices:rightIndices,side:'right',direction:'right',tileWidth,tileHeight,scale,overlap});
+  const anchorHalf=scaledExtents(0,tileWidth,tileHeight,scale).x;
+  const straightFits=leftSpan+rightSpan<=width-padding*2+.01;
+  const preferredAnchorX=straightFits?width/2+(leftSpan-rightSpan)/2:width/2;
+  const anchorX=clamp(preferredAnchorX,padding+anchorHalf,width-padding-anchorHalf);
+  placements[anchorIndex]=Object.freeze({
+    x:anchorX,y:height/2,rotation:0,pathRotation:0,row:0,isDouble:isDouble(tiles[anchorIndex]),anchor:true,scale
+  });
   const common={tiles,placements,anchorIndex,width,height,padding,tileWidth,tileHeight,scale,overlap};
   const leftOk=placeArmDynamic({...common,indices:leftIndices,side:'left',startHorizontal:'left',verticalDirection:'down'});
   if(!leftOk)return null;
