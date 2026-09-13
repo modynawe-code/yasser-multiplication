@@ -23,7 +23,7 @@ test('mid-game phone layout avoids material self-overlap',()=>{const tiles=LEGAL
 
 test('normal phone play uses discrete readable scale tiers',()=>{for(const count of [1,7,14]){const tiles=LEGAL_CHAIN.slice(0,count);const p=planDominoChain({tiles,anchorIndex:Math.floor((count-1)/2),width:340,height:300,tileWidth:82,tileHeight:44,padding:6});assert.ok(DOMINO_NORMAL_SCALES.includes(p.scale),`count ${count} used ${p.scale}`);assert.equal(p.mode,'tiered');}});
 
-test('maxScale prevents zooming back in during the same round',()=>{const tiles=LEGAL_CHAIN.slice(0,7);const p=planDominoChain({tiles,anchorIndex:3,width:340,height:300,tileWidth:82,tileHeight:44,padding:6,maxScale:.76});assert.ok(p.scale<=.76);});
+test('opening anchor stays horizontal when it reaches a phone turn',()=>{const tiles=LEGAL_CHAIN.slice(0,8);const p=planDominoChain({tiles,anchorIndex:3,width:340,height:300,tileWidth:82,tileHeight:44,padding:6});assert.equal(p.placements.length,tiles.length);assert.equal(p.placements[3].rotation%180,0);assert.ok(p.placements.some(x=>x.pathRotation===90));});
 
 test('full double-six stays inside phone tablet and desktop boards without horizontal scroll',()=>{const tiles=[];for(let l=0;l<=6;l++)for(let r=l;r<=6;r++)tiles.push(tile(l,r));for(const v of [{width:300,height:300},{width:680,height:360},{width:900,height:280}]){const p=planDominoChain({...v,tiles,anchorIndex:14,tileWidth:82,tileHeight:44,padding:6});assert.equal(p.placements.length,28);assert.notEqual(p.mode,'unavailable');assert.ok(new Set(p.placements.map(x=>x.row)).size>1);for(const x of p.placements){const b=boundsOf(x,82,44);assert.ok(b.left>=5.8);assert.ok(b.right<=v.width-5.8);assert.ok(b.top>=5.8);assert.ok(b.bottom<=v.height-5.8);}}});
 
