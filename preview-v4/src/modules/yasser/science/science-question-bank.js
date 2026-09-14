@@ -19,6 +19,37 @@ const TOPIC_BY_LEGACY_UNIT=Object.freeze({
   heredity:'heredity'
 });
 
+const RUNTIME_UNIT_BY_TOPIC=Object.freeze({
+  'cell-theory':'cells',
+  'cell-chemistry':'cells',
+  'plant-animal-cell':'cells',
+  'organization-levels':'organization',
+  'cell-processes':'cell-processes'
+});
+
+const RUNTIME_OVERRIDES=Object.freeze({
+  'science:collected:scientists-sequence-01':Object.freeze({
+    type:'choice',
+    choices:Object.freeze([
+      'هوك → ليفنهوك → براون → شلايدن → شفان',
+      'ليفنهوك → هوك → شفان → براون → شلايدن',
+      'براون → هوك → ليفنهوك → شفان → شلايدن',
+      'هوك → براون → ليفنهوك → شفان → شلايدن'
+    ]),
+    answer:'هوك → ليفنهوك → براون → شلايدن → شفان'
+  }),
+  'science:collected:photosynthesis-respiration-opposites-01':Object.freeze({
+    type:'choice',
+    choices:Object.freeze([
+      'البناء الضوئي ينتج الجلوكوز والأكسجين، والتنفس الخلوي يستخدمهما ويطلق ثاني أكسيد الكربون والماء والطاقة.',
+      'العمليتان تستخدمان الأكسجين فقط وتنتجان الجلوكوز.',
+      'البناء الضوئي والتنفس الخلوي عمليتان متماثلتان تمامًا.',
+      'التنفس الخلوي يصنع الغذاء من الماء وثاني أكسيد الكربون باستخدام الضوء.'
+    ]),
+    answer:'البناء الضوئي ينتج الجلوكوز والأكسجين، والتنفس الخلوي يستخدمهما ويطلق ثاني أكسيد الكربون والماء والطاقة.'
+  })
+});
+
 function sourceAuthority(source={}){
   if(source.kind==='uploaded-summary')return 'study-summary';
   if(source.kind==='uploaded-exam')return 'user-upload';
@@ -58,6 +89,24 @@ function adaptScienceQuestion(question){
   });
 }
 
+function adaptCollectedForRuntime(question){
+  const override=RUNTIME_OVERRIDES[question.id]||{};
+  const source=question.sources?.[0]||{};
+  return Object.freeze({
+    id:question.id,
+    unit:RUNTIME_UNIT_BY_TOPIC[question.topicId]||'cells',
+    concept:question.conceptId,
+    type:override.type||question.type,
+    difficulty:question.difficulty||1,
+    prompt:question.prompt,
+    choices:[...(override.choices||question.choices||[])],
+    answer:override.answer||question.answer,
+    feedback:question.explanation||'راجع الإجابة الصحيحة ثم حاول مرة أخرى.',
+    assetId:question.assetId||'',
+    source:{label:source.label||'',kind:source.kind||'verified-source',page:source.page??null}
+  });
+}
+
 export const YASSER_SCIENCE_RUNTIME_QUESTIONS=Object.freeze(YASSER_SCIENCE_QUESTIONS.map(adaptScienceQuestion));
 export const YASSER_SCIENCE_COLLECTED_ALL=Object.freeze([
   ...YASSER_SCIENCE_COLLECTED_QUESTIONS,
@@ -66,6 +115,10 @@ export const YASSER_SCIENCE_COLLECTED_ALL=Object.freeze([
 export const YASSER_SCIENCE_SHARED_QUESTIONS=Object.freeze([
   ...YASSER_SCIENCE_RUNTIME_QUESTIONS,
   ...YASSER_SCIENCE_COLLECTED_ALL
+]);
+export const YASSER_SCIENCE_PLAYABLE_QUESTIONS=Object.freeze([
+  ...YASSER_SCIENCE_QUESTIONS,
+  ...YASSER_SCIENCE_COLLECTED_ALL.map(adaptCollectedForRuntime)
 ]);
 
 export const YASSER_SCIENCE_QUESTION_BANK=createQuestionBank(YASSER_SCIENCE_SHARED_QUESTIONS,{
