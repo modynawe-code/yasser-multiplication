@@ -23,5 +23,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: science-textbook-pages
-          path: /tmp/science-textbook-pages.jpg
+          path: |
+            /tmp/science-textbook-pages.jpg
+            /tmp/science-textbook-pages-full/*.jpg
           retention-days: 3
