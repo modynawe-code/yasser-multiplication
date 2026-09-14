@@ -17,7 +17,7 @@ test('chapter 1 cells is the current science scope with the complete verified pl
   assert.equal(DEFAULT_YASSER_SCIENCE_CHAPTER_ID,'chapter-1-cells');
   assert.equal(YASSER_SCIENCE_CHAPTERS[0].label,'الفصل 1: الخلايا');
   const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS);
-  assert.equal(questions.length,102);
+  assert.equal(questions.length,105);
   assert.ok(questions.every(question=>CHAPTER_ONE_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>!CHAPTER_TWO_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>['choice','trueFalse'].includes(question.type)));
