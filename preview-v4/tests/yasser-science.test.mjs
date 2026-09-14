@@ -45,6 +45,17 @@ test('review prefers a different question for the same missed concept when avail
   assert.notEqual(session.questions[0].id,missed.id);
 });
 
+test('correct alternate review clears the original missed question',()=>{
+  const missed=YASSER_SCIENCE_QUESTIONS.find(item=>item.id==='cell-image-wall-01');
+  let progress=applyScienceAttempt({}, {mode:'quick',questionId:missed.id,concept:missed.concept,unit:missed.unit,answer:'خطأ',correctAnswer:missed.answer,isCorrect:false,earned:0,answeredAt:'2026-09-14T10:00:00.000Z'});
+  const session=createScienceSession({mode:'review',count:1,reviewQuestionIds:[missed.id],rng:()=>.5});
+  assert.notEqual(session.questions[0].id,missed.id);
+  assert.equal(session.questions[0].reviewTargetId,missed.id);
+  const result=submitScienceAnswer({session,answer:session.questions[0].answer,answeredAt:'2026-09-14T10:05:00.000Z'});
+  progress=applyScienceAttempt(progress,result.attempt);
+  assert.deepEqual(getScienceReviewQuestionIds(progress),[]);
+});
+
 test('school exam balances coverage across all science units',()=>{
   const session=createScienceSession({mode:'exam',count:20,rng:()=>.5});
   const counts=new Map();

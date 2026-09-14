@@ -65,7 +65,7 @@ function selectReviewQuestions(questions,reviewQuestionIds,limit,rng){
   for(const target of shuffle(targets,rng)){
     const alternatives=questions.filter(question=>question.concept===target.concept&&question.id!==target.id&&!used.has(question.id));
     const pick=shuffle(alternatives,rng)[0]||(!used.has(target.id)?target:null);
-    if(pick){selected.push(pick);used.add(pick.id);}
+    if(pick){selected.push(Object.freeze({...pick,reviewTargetId:target.id}));used.add(pick.id);}
     if(selected.length>=limit)return selected;
   }
   const remaining=shuffle(questions.filter(question=>concepts.has(question.concept)&&!used.has(question.id)),rng);
@@ -99,7 +99,7 @@ export function submitScienceAnswer({session,answer,answeredAt=new Date().toISOS
   if(isCorrect){session.correct+=1;session.streak+=1;session.bestStreak=Math.max(session.bestStreak,session.streak);}else{session.wrong+=1;session.streak=0;}
   const earned=isCorrect?10+Math.min(10,Math.floor(Math.max(session.streak-1,0)/3)*2):0;
   session.points+=earned;
-  const attempt=Object.freeze({mode:session.mode,questionId:question.id,concept:question.concept,unit:question.unit,answer:String(answer),correctAnswer:String(question.answer),isCorrect,earned,answeredAt});
+  const attempt=Object.freeze({mode:session.mode,questionId:question.id,reviewTargetId:question.reviewTargetId||null,concept:question.concept,unit:question.unit,answer:String(answer),correctAnswer:String(question.answer),isCorrect,earned,answeredAt});
   session.answers.push(attempt);session.index+=1;
   if(session.index>=session.questions.length)session.completed=true;
   return {accepted:true,attempt,question};
@@ -120,10 +120,11 @@ export function applyScienceSessionSummary(progress,session){
 export function getScienceReviewQuestionIds(progress,{limit=12}={}){
   const misses=[];const seen=new Set();
   for(const attempt of progress?.attempts||[]){
-    if(seen.has(attempt.questionId))continue;
-    seen.add(attempt.questionId);
+    const targetId=attempt.reviewTargetId||attempt.questionId;
+    if(seen.has(targetId))continue;
+    seen.add(targetId);
     if(attempt.isCorrect)continue;
-    misses.push(attempt.questionId);if(misses.length>=limit)break;
+    misses.push(targetId);if(misses.length>=limit)break;
   }
   return misses;
 }
