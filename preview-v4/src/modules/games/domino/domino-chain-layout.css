@@ -2,7 +2,7 @@
 .domino-table{min-height:0!important;height:clamp(300px,32vw,390px);padding:0!important}
 .domino-board{position:absolute!important;inset:18px 18px 62px!important;width:auto!important;height:auto!important;min-height:0!important;max-height:none!important;display:block!important;overflow:hidden!important;padding:0!important;direction:ltr!important;scrollbar-width:none!important}
 .domino-board::-webkit-scrollbar{display:none!important}
-.domino-board .domino-board-tile{position:absolute!important;margin:0!important;transform-origin:center center!important;transform:rotate(var(--domino-board-rotation,0deg)) scale(var(--domino-board-scale,1))!important;transition:left .18s ease,top .18s ease,transform .18s ease,filter .18s ease!important;will-change:left,top,transform}
+.domino-board .domino-board-tile{position:absolute!important;margin:0!important;transform-origin:center center!important;transform:rotate(var(--domino-board-rotation,0deg)) scale(var(--domino-board-scale,1))!important;transition:filter .18s ease!important}
 .domino-board .domino-tile{--tile-w:96px;--tile-h:50px;--pip:8px}
 .domino-stock{top:auto!important;bottom:9px!important;left:12px!important;min-width:66px!important;padding:6px 9px 6px 43px!important}
 .domino-stock:before,.domino-stock:after{width:26px!important;height:41px!important}.domino-stock:before{left:10px!important;top:7px!important}.domino-stock:after{left:15px!important;top:4px!important}
