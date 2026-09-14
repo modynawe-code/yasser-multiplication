@@ -10,7 +10,7 @@ import {
 } from '../src/shared/question-bank/index.js';
 import {YASSER_SCIENCE_COLLECTED_ALL,YASSER_SCIENCE_QUESTION_BANK,YASSER_SCIENCE_PLAYABLE_QUESTIONS} from '../src/modules/yasser/science/science-question-bank.js';
 import {YASSER_SCIENCE_QUESTIONS,YASSER_SCIENCE_ASSETS} from '../src/modules/yasser/science/science-data.js';
-import {YASSER_SCIENCE_VISUAL_ASSETS} from '../src/modules/yasser/science/science-visuals.js';
+import {YASSER_SCIENCE_VISUAL_ASSETS,YASSER_SCIENCE_VISUAL_QUESTIONS} from '../src/modules/yasser/science/science-visuals.js';
 import {filterScienceQuestionsByChapter} from '../src/modules/yasser/science/science-chapters.js';
 
 test('shared question record is subject-agnostic and validates answers',()=>{
@@ -29,7 +29,8 @@ test('question bank detects normalized exact duplicates instead of counting repo
 });
 
 test('expanded science collection is verified, textbook-backed and duplicate-free',()=>{
-  assert.equal(YASSER_SCIENCE_COLLECTED_ALL.length,75);
+  assert.equal(YASSER_SCIENCE_VISUAL_QUESTIONS.length,18);
+  assert.equal(YASSER_SCIENCE_COLLECTED_ALL.length,78);
   assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>question.verified));
   assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>question.sources.some(source=>['textbook','user-upload'].includes(source.authority))));
   assert.equal(findExactQuestionDuplicates(YASSER_SCIENCE_COLLECTED_ALL).length,0);
