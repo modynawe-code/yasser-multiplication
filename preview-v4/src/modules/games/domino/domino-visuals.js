@@ -118,10 +118,10 @@ export function decorateBoard(root){
 
   const tileWidth=numericStyle(tiles[0],'width',82);
   const tileHeight=numericStyle(tiles[0],'height',44);
-  const anchorKey=board.dataset.anchorKey||'';
-  const found=tiles.findIndex(tile=>tile.dataset.dominoKey===anchorKey);
+  const anchorId=board.dataset.anchorId||'';
+  const found=tiles.findIndex(tile=>tile.dataset.dominoId===anchorId);
   const anchorIndex=found>=0?found:0;
-  const signature=`${Math.round(width)}x${Math.round(height)}:${anchorKey}:${tiles.map(tile=>`${tile.dataset.dominoId||tile.dataset.dominoKey}:${tile.dataset.left}-${tile.dataset.right}`).join('|')}`;
+  const signature=`${Math.round(width)}x${Math.round(height)}:${anchorId}:${tiles.map(tile=>`${tile.dataset.dominoId||tile.dataset.dominoKey}:${tile.dataset.left}-${tile.dataset.right}`).join('|')}`;
   if(board.dataset.layoutSignature===signature&&board.classList.contains('is-laid-out'))return;
   const plan=planDominoChain({
     tiles:tiles.map(tile=>({left:Number(tile.dataset.left),right:Number(tile.dataset.right)})),
