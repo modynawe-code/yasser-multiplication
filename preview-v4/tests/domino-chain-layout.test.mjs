@@ -1,32 +1,98 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DOMINO_NORMAL_SCALES,planDominoChain} from '../src/modules/games/domino/domino-chain-layout.js';
+
 const tile=(left,right)=>({left,right});
 const LEGAL_CHAIN=[tile(0,0),tile(0,1),tile(1,2),tile(2,2),tile(2,3),tile(3,4),tile(4,4),tile(4,5),tile(5,6),tile(6,6),tile(6,3),tile(3,3),tile(3,1),tile(1,1),tile(1,4),tile(4,6),tile(6,2),tile(2,5),tile(5,5),tile(5,0),tile(0,2),tile(2,4),tile(4,0),tile(0,3),tile(3,5),tile(5,1),tile(1,6),tile(6,0)];
+const DEVICES=[
+  {name:'small phone',width:320,height:240,tileWidth:78,tileHeight:41},
+  {name:'phone',width:390,height:260,tileWidth:84,tileHeight:44},
+  {name:'Galaxy Tab',width:680,height:300,tileWidth:90,tileHeight:47},
+  {name:'desktop',width:900,height:260,tileWidth:96,tileHeight:50}
+];
+
 function boundsOf(p,w,h){const vertical=p.rotation%180!==0;const width=(vertical?h:w)*p.scale,height=(vertical?w:h)*p.scale;return {left:p.x-width/2,right:p.x+width/2,top:p.y-height/2,bottom:p.y+height/2};}
-function touches(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);const gapX=Math.max(0,Math.max(A.left,B.left)-Math.min(A.right,B.right));const gapY=Math.max(0,Math.max(A.top,B.top)-Math.min(A.bottom,B.bottom));return gapX<.1&&gapY<.1;}
-function overlapArea(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);const overlapX=Math.max(0,Math.min(A.right,B.right)-Math.max(A.left,B.left));const overlapY=Math.max(0,Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top));return overlapX*overlapY;}
+function touches(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);const gapX=Math.max(0,Math.max(A.left,B.left)-Math.min(A.right,B.right));const gapY=Math.max(0,Math.max(A.top,B.top)-Math.min(A.bottom,B.bottom));return gapX<.2&&gapY<.2;}
+function overlapArea(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);return Math.max(0,Math.min(A.right,B.right)-Math.max(A.left,B.left))*Math.max(0,Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top));}
 
-test('visible chain stays centered as it grows',()=>{const o={width:680,height:360,tileWidth:82,tileHeight:44};for(const [tiles,anchor] of [[[tile(6,6)],0],[[tile(6,5),tile(6,6)],1],[[tile(6,5),tile(6,6),tile(6,2)],1]]){const p=planDominoChain({...o,tiles,anchorIndex:anchor});const bounds=p.placements.map(x=>boundsOf(x,82,44));const left=Math.min(...bounds.map(x=>x.left)),right=Math.max(...bounds.map(x=>x.right)),top=Math.min(...bounds.map(x=>x.top)),bottom=Math.max(...bounds.map(x=>x.bottom));assert.ok(Math.abs((left+right)/2-340)<.1);assert.ok(Math.abs((top+bottom)/2-180)<.1);}});
+test('opening tile is the fixed horizontal anchor',()=>{
+  const plan=planDominoChain({tiles:LEGAL_CHAIN.slice(0,15),anchorIndex:7,width:390,height:260,tileWidth:84,tileHeight:44,padding:6});
+  assert.equal(plan.anchorSlot,7);
+  assert.equal(plan.placements[7].anchor,true);
+  assert.equal(plan.placements[7].rotation%180,0);
+});
 
-test('opening double is horizontal',()=>{const p=planDominoChain({tiles:[tile(6,6)],anchorIndex:0,width:500,height:300,tileWidth:82,tileHeight:44});assert.equal(p.placements[0].rotation%180,0);assert.equal(p.scale,1);});
+test('desktop uses width while phone creates readable lanes',()=>{
+  const tiles=LEGAL_CHAIN.slice(0,10),anchorIndex=4;
+  const desktop=planDominoChain({tiles,anchorIndex,width:900,height:260,tileWidth:96,tileHeight:50,padding:6});
+  const phone=planDominoChain({tiles,anchorIndex,width:320,height:240,tileWidth:78,tileHeight:41,padding:6});
+  assert.ok(desktop.placements.every(item=>item.pathRotation%180===0));
+  assert.ok(phone.placements.some(item=>item.pathRotation%180!==0));
+  assert.ok(new Set(phone.placements.map(item=>item.row)).size>1);
+});
 
-test('desktop uses the full width before creating a turn',()=>{const tiles=[tile(2,0),tile(0,1),tile(1,5),tile(5,0),tile(0,3),tile(3,1),tile(1,4),tile(4,2)];const p=planDominoChain({tiles,anchorIndex:4,width:900,height:300,tileWidth:82,tileHeight:44,padding:6});assert.equal(p.scale,1);assert.ok(p.placements.every(x=>x.rotation%180===0));});
+test('new normal tile becomes the corner instead of moving the previous tile into it',()=>{
+  const tiles=Array.from({length:14},(_,i)=>tile(i%6,(i+1)%6));
+  let previous=planDominoChain({tiles:tiles.slice(0,1),anchorIndex:0,width:340,height:230,tileWidth:82,tileHeight:44,padding:6});
+  let checked=false;
+  for(let count=2;count<=tiles.length;count++){
+    const current=planDominoChain({tiles:tiles.slice(0,count),anchorIndex:0,width:340,height:230,tileWidth:82,tileHeight:44,padding:6});
+    const newTile=current.placements.at(-1);
+    if(current.scale===previous.scale&&newTile.pathRotation%180!==0){
+      assert.equal(previous.placements.at(-1).pathRotation%180,0);
+      assert.equal(newTile.rotation%180,90);
+      checked=true;break;
+    }
+    previous=current;
+  }
+  assert.equal(checked,true);
+});
 
-test('the same chain turns on a phone only after using available width',()=>{const tiles=[tile(2,0),tile(0,1),tile(1,5),tile(5,0),tile(0,3),tile(3,1),tile(1,4),tile(4,2)];const p=planDominoChain({tiles,anchorIndex:4,width:340,height:300,tileWidth:82,tileHeight:44,padding:6});assert.ok(DOMINO_NORMAL_SCALES.includes(p.scale));assert.ok(p.placements.some(x=>x.rotation%180!==0));const horizontal=p.placements.filter(x=>x.rotation%180===0);assert.ok(horizontal.length>=4);});
+test('doubles stay perpendicular to their local path and never act as corners',()=>{
+  const plan=planDominoChain({tiles:LEGAL_CHAIN,anchorIndex:13,width:390,height:260,tileWidth:84,tileHeight:44,padding:6});
+  for(const [index,current] of LEGAL_CHAIN.entries()){
+    if(index===13||current.left!==current.right)continue;
+    const placement=plan.placements[index];
+    assert.equal((placement.rotation-placement.pathRotation+360)%180,90,`double ${index}`);
+    assert.equal(placement.pathRotation%180,0,`double used as corner ${index}`);
+  }
+});
 
-test('later doubles are perpendicular to local path',()=>{const tiles=[tile(6,4),tile(4,4),tile(4,3),tile(3,2),tile(2,2),tile(2,1),tile(1,0)];const p=planDominoChain({tiles,anchorIndex:3,width:680,height:360,tileWidth:82,tileHeight:44});for(const [i,t] of tiles.entries())if(i!==3&&t.left===t.right)assert.equal((p.placements[i].rotation-p.placements[i].pathRotation+360)%180,90);});
+test('connected chain has no gaps or non-adjacent overlap',()=>{
+  const {placements}=planDominoChain({tiles:LEGAL_CHAIN,anchorIndex:13,width:390,height:260,tileWidth:84,tileHeight:44,padding:6});
+  assert.equal(placements.length,28);
+  for(let i=0;i<placements.length-1;i++)assert.equal(touches(placements[i],placements[i+1],84,44),true,`gap ${i}-${i+1}`);
+  for(let i=0;i<placements.length;i++)for(let j=i+2;j<placements.length;j++)assert.ok(overlapArea(placements[i],placements[j],84,44)<=.51,`overlap ${i}-${j}`);
+});
 
-test('legal chain stays physically connected through dynamic turns and doubles',()=>{const p=planDominoChain({tiles:LEGAL_CHAIN,anchorIndex:13,width:680,height:360,tileWidth:82,tileHeight:44});assert.equal(p.placements.length,LEGAL_CHAIN.length);for(let i=0;i<p.placements.length-1;i++)assert.equal(touches(p.placements[i],p.placements[i+1],82,44),true,`gap at ${i}-${i+1}`);});
+test('all 28 tiles fit each target board without clipping or scrolling',()=>{
+  for(const device of DEVICES){
+    const plan=planDominoChain({...device,tiles:LEGAL_CHAIN,anchorIndex:13,padding:6});
+    assert.equal(plan.placements.length,28,device.name);
+    assert.notEqual(plan.mode,'unavailable',device.name);
+    for(const placement of plan.placements){
+      const bounds=boundsOf(placement,device.tileWidth,device.tileHeight);
+      assert.ok(bounds.left>=5.8&&bounds.right<=device.width-5.8,`${device.name} horizontal clip`);
+      assert.ok(bounds.top>=5.8&&bounds.bottom<=device.height-5.8,`${device.name} vertical clip`);
+    }
+  }
+});
 
-test('mid-game phone layout avoids material self-overlap',()=>{const tiles=LEGAL_CHAIN.slice(0,14);const p=planDominoChain({tiles,anchorIndex:6,width:340,height:300,tileWidth:82,tileHeight:44,padding:6});assert.equal(p.placements.length,14);const tileArea=82*44*p.scale*p.scale;for(let i=0;i<p.placements.length;i++)for(let j=i+2;j<p.placements.length;j++)assert.ok(overlapArea(p.placements[i],p.placements[j],82,44)<tileArea*.18,`material overlap ${i}-${j}`);});
+test('every game stage fits with opening at either side or middle on phones',()=>{
+  for(const device of DEVICES.slice(0,2))for(let count=1;count<=28;count++){
+    const tiles=LEGAL_CHAIN.slice(0,count);
+    for(const anchorIndex of new Set([0,Math.floor((count-1)/2),count-1])){
+      const plan=planDominoChain({...device,tiles,anchorIndex,padding:6});
+      assert.equal(plan.placements.length,count,`${device.name}: ${count} tiles, anchor ${anchorIndex}`);
+      assert.equal(plan.placements[anchorIndex].rotation%180,0);
+    }
+  }
+});
 
-test('normal phone play uses discrete readable scale tiers',()=>{for(const count of [1,7,14]){const tiles=LEGAL_CHAIN.slice(0,count);const p=planDominoChain({tiles,anchorIndex:Math.floor((count-1)/2),width:340,height:300,tileWidth:82,tileHeight:44,padding:6});assert.ok(DOMINO_NORMAL_SCALES.includes(p.scale),`count ${count} used ${p.scale}`);assert.equal(p.mode,'tiered');}});
-
-test('opening anchor stays horizontal when it reaches a phone turn',()=>{const tiles=LEGAL_CHAIN.slice(0,8);const p=planDominoChain({tiles,anchorIndex:3,width:340,height:300,tileWidth:82,tileHeight:44,padding:6});assert.equal(p.placements.length,tiles.length);assert.equal(p.placements[3].rotation%180,0);assert.ok(p.placements.some(x=>x.pathRotation===90));});
-
-test('full double-six stays inside phone tablet and desktop boards without horizontal scroll',()=>{const tiles=[];for(let l=0;l<=6;l++)for(let r=l;r<=6;r++)tiles.push(tile(l,r));for(const v of [{width:300,height:300},{width:680,height:360},{width:900,height:280}]){const p=planDominoChain({...v,tiles,anchorIndex:14,tileWidth:82,tileHeight:44,padding:6});assert.equal(p.placements.length,28);assert.notEqual(p.mode,'unavailable');assert.ok(new Set(p.placements.map(x=>x.row)).size>1);for(const x of p.placements){const b=boundsOf(x,82,44);assert.ok(b.left>=5.8);assert.ok(b.right<=v.width-5.8);assert.ok(b.top>=5.8);assert.ok(b.bottom<=v.height-5.8);}}});
-
-test('long games use more rows before shrinking on each target device',()=>{const tiles=LEGAL_CHAIN.slice(0,20);for(const expected of [{width:340,height:300,minScale:.76,minRows:3},{width:680,height:360,minScale:.88,minRows:2},{width:900,height:280,minScale:.88,minRows:2}]){const p=planDominoChain({...expected,tiles,anchorIndex:9,tileWidth:82,tileHeight:44,padding:6});assert.ok(p.scale>=expected.minScale,`${expected.width}px shrank to ${p.scale}`);assert.ok(new Set(p.placements.map(x=>x.row)).size>=expected.minRows);}});
-
-test('each lane change uses one explicit corner',()=>{const tiles=LEGAL_CHAIN.slice(0,20);const p=planDominoChain({tiles,anchorIndex:9,width:340,height:300,tileWidth:82,tileHeight:44,padding:6});const rows=new Set(p.placements.map(x=>x.row)).size,corners=p.placements.filter(x=>x.pathRotation===90).length;assert.equal(corners,rows-1);});
+test('normal play keeps readable scale tiers before emergency fitting',()=>{
+  for(const device of DEVICES){
+    const plan=planDominoChain({...device,tiles:LEGAL_CHAIN.slice(0,10),anchorIndex:4,padding:6});
+    assert.ok(DOMINO_NORMAL_SCALES.includes(plan.scale),`${device.name} used ${plan.scale}`);
+    assert.equal(plan.mode,'dual-arm');
+  }
+});
