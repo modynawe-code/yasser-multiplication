@@ -50,7 +50,9 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
   function visualAnchorIndex(){
     if(!state?.board?.length)return 0;
     const found=state.board.findIndex(item=>tileKey(item?.left,item?.right)===visualAnchorKey);
-    return found>=0?found:Math.floor((state.board.length-1)/2);
+    if(found>=0)return found;
+    const opening=state.board.findIndex(item=>item?.opening===true);
+    return opening>=0?opening:Math.floor((state.board.length-1)/2);
   }
 
   function renderPicker(){
@@ -87,7 +89,7 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
     if(!state)return;
     if(visualAnchorRound!==state.round){visualAnchorRound=state.round;visualAnchorKey=null;selectedTileId=null;}
     if(!visualAnchorKey&&state.board.length){
-      const item=state.board[state.board.length===1?0:Math.floor((state.board.length-1)/2)];
+      const item=state.board.find(candidate=>candidate?.opening===true)||state.board[state.board.length===1?0:Math.floor((state.board.length-1)/2)];
       visualAnchorKey=tileKey(item?.left,item?.right);
     }
   }
