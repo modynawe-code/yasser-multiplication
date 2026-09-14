@@ -121,6 +121,8 @@ export function decorateBoard(root){
   const anchorKey=board.dataset.anchorKey||'';
   const found=tiles.findIndex(tile=>tile.dataset.dominoKey===anchorKey);
   const anchorIndex=found>=0?found:0;
+  const signature=`${Math.round(width)}x${Math.round(height)}:${anchorKey}:${tiles.map(tile=>`${tile.dataset.dominoId||tile.dataset.dominoKey}:${tile.dataset.left}-${tile.dataset.right}`).join('|')}`;
+  if(board.dataset.layoutSignature===signature&&board.classList.contains('is-laid-out'))return;
   const plan=planDominoChain({
     tiles:tiles.map(tile=>({left:Number(tile.dataset.left),right:Number(tile.dataset.right)})),
     anchorIndex,width,height,tileWidth,tileHeight,padding:6
@@ -141,6 +143,7 @@ export function decorateBoard(root){
   board.style.setProperty('--domino-layout-scale',String(plan.scale));
   board.dataset.layoutScale=String(plan.scale);
   board.dataset.layoutMode=plan.mode;
+  board.dataset.layoutSignature=signature;
 }
 
 export function enhanceDominoTiles(root=document){
