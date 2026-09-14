@@ -42,7 +42,7 @@ function legalSides(state,tileId){
 }
 
 export function createDominoController({roomClient=createGameRoomClient()}={}){
-  let bound=false,busy=false,selectedLearner=null,state=null,room=null,selectedTileId=null,visualAnchorKey=null,visualAnchorRound=null;
+  let bound=false,busy=false,selectedLearner=null,state=null,room=null,selectedTileId=null,visualAnchorId=null,visualAnchorRound=null;
   const session=createDominoOnlineSession({roomClient,onRoom:handleRoom,onError:handleError});
 
   function participants(){return listGameParticipants();}
@@ -51,7 +51,7 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
   function setCode(code){const box=byId('dominoRoomCodeBox'),value=byId('dominoRoomCode');if(value)value.textContent=code||'------';if(box)box.hidden=!code;}
   function visualAnchorIndex(){
     if(!state?.board?.length)return 0;
-    const found=state.board.findIndex(item=>tileKey(item?.left,item?.right)===visualAnchorKey);
+    const found=state.board.findIndex(item=>item?.tileId===visualAnchorId);
     if(found>=0)return found;
     const opening=state.board.findIndex(item=>item?.opening===true);
     return opening>=0?opening:Math.floor((state.board.length-1)/2);
@@ -89,10 +89,10 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
 
   function syncVisualAnchor(){
     if(!state)return;
-    if(visualAnchorRound!==state.round){visualAnchorRound=state.round;visualAnchorKey=null;selectedTileId=null;}
-    if(!visualAnchorKey&&state.board.length){
+    if(visualAnchorRound!==state.round){visualAnchorRound=state.round;visualAnchorId=null;selectedTileId=null;}
+    if(!visualAnchorId&&state.board.length){
       const item=state.board.find(candidate=>candidate?.opening===true)||state.board[state.board.length===1?0:Math.floor((state.board.length-1)/2)];
-      visualAnchorKey=tileKey(item?.left,item?.right);
+      visualAnchorId=item?.tileId||null;
     }
   }
 
@@ -125,13 +125,13 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
     if(!state.board.length){
       host.innerHTML='<div class="domino-board-empty">نجهز أول قطعة…</div>';
       host.classList.remove('choose-side');
-      delete host.dataset.anchorKey;
+      delete host.dataset.anchorId;
       return;
     }
     const self=session.snapshot.selfLearnerId;
     const isTurn=state.status==='playing'&&state.currentPlayer===self;
     const selectedSides=selectedTileId&&isTurn?legalSides(state,selectedTileId):[];
-    host.dataset.anchorKey=visualAnchorKey||'';
+    host.dataset.anchorId=visualAnchorId||'';
     host.classList.toggle('choose-side',selectedSides.length>1);
     host.querySelector('.domino-board-empty')?.remove();
     const existing=new Map([...host.querySelectorAll(':scope > .domino-tile[data-domino-id]')].map(node=>[node.dataset.dominoId,node]));
@@ -242,7 +242,7 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
   async function withAction(action){if(busy)return;busy=true;setActionStatus('');renderGame();try{await action();}catch(error){handleError(error);}finally{busy=false;renderGame();}}
   function play(tileId,side){selectedTileId=null;return withAction(()=>session.play(tileId,side));}
   function draw(){selectedTileId=null;return withAction(()=>session.draw());}
-  function rematch(){selectedTileId=null;visualAnchorKey=null;return withAction(()=>session.reset());}
+  function rematch(){selectedTileId=null;visualAnchorId=null;return withAction(()=>session.reset());}
 
   async function createRoom(){
     if(!selectedLearner){setStatus('اختر اللاعب أولًا.',true);return;}
@@ -268,7 +268,7 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
   }
 
   function backToGames(){
-    session.stop();state=null;room=null;selectedTileId=null;visualAnchorKey=null;visualAnchorRound=null;
+    session.stop();state=null;room=null;selectedTileId=null;visualAnchorId=null;visualAnchorRound=null;
     document.body.classList.remove('domino-game-mode');setActionStatus('');setStatus('');showView('gamesHomeView');
   }
   function bind(){
@@ -287,7 +287,7 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
   function start(){
     ensureDominoShell();bind();document.body.classList.add('domino-game-mode','games-mode');
     selectedLearner=selectedLearner||participants()[0]?.learnerId||null;
-    state=null;room=null;selectedTileId=null;visualAnchorKey=null;visualAnchorRound=null;
+    state=null;room=null;selectedTileId=null;visualAnchorId=null;visualAnchorRound=null;
     setCode('');setActionStatus('');byId('dominoTableWrap').hidden=true;byId('dominoSetup').hidden=false;renderPicker();setStatus('');showView('dominoGameView');
   }
   return Object.freeze({start,backToGames});
