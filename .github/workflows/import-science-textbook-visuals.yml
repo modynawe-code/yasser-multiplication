@@ -5,6 +5,7 @@ on:
     branches: [feature/product-ui-reference-v1]
     paths:
       - '.github/workflows/import-science-textbook-visuals.yml'
+      - 'preview-v4/tools/import-science-textbook-visuals.py'
   workflow_dispatch:
 
 permissions:
@@ -24,9 +25,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-ara
-      - name: Install PDF image extraction tools
-        run: python -m pip install --disable-pip-version-check pymupdf pillow requests pytesseract opencv-python-headless numpy
-      - name: Extract exact chapter-one visuals from textbook PDF
+      - name: Install PDF/OCR tools
+        run: python -m pip install --disable-pip-version-check pymupdf pillow requests pytesseract
+      - name: Extract exact chapter-one excerpts from textbook PDF
         run: python preview-v4/tools/import-science-textbook-visuals.py
       - name: Commit textbook visuals
         run: |
@@ -37,5 +38,5 @@ jobs:
             echo "Textbook visuals already current."
             exit 0
           fi
-          git commit -m "chore: vendor exact science textbook visuals"
+          git commit -m "chore: refine exact science textbook visuals"
           git push origin HEAD:feature/product-ui-reference-v1
