@@ -1,0 +1,27 @@
+name: Render Science Textbook Pages
+
+on:
+  push:
+    branches: [feature/product-ui-reference-v1]
+    paths:
+      - '.github/workflows/render-science-book-pages.yml'
+      - 'preview-v4/tools/render-science-book-pages.py'
+  workflow_dispatch:
+
+jobs:
+  render-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/product-ui-reference-v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check pymupdf pillow requests
+      - run: python preview-v4/tools/render-science-book-pages.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: science-textbook-pages
+          path: /tmp/science-textbook-pages.jpg
+          retention-days: 3
