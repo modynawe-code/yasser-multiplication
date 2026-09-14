@@ -29,7 +29,7 @@ test('legacy Yasser science WebP assets stay complete for later chapters',async(
 
 test('chapter-one visual assets come from exact textbook excerpts, not reconstructed SVGs',async()=>{
   const entries=Object.entries(YASSER_SCIENCE_BOOK_VISUAL_ASSETS);
-  assert.ok(entries.length>=15,`textbook visual count=${entries.length}`);
+  assert.ok(entries.length>=18,`textbook visual count=${entries.length}`);
   assert.deepEqual(Object.keys(YASSER_SCIENCE_VISUAL_ASSETS).sort(),Object.keys(YASSER_SCIENCE_BOOK_VISUAL_ASSETS).sort());
   const hashes=new Set();
   for(const [id,asset] of entries){
@@ -42,5 +42,5 @@ test('chapter-one visual assets come from exact textbook excerpts, not reconstru
     hashes.add(asset.source.sha256);
     await assertWebP(new URL(`../${asset.src}`,import.meta.url),id);
   }
-  assert.ok(hashes.size>=10,`expected at least 10 distinct textbook excerpts, got ${hashes.size}`);
+  assert.ok(hashes.size>=17,`expected at least 17 distinct textbook excerpts, got ${hashes.size}`);
 });
