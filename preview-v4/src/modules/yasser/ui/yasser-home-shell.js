@@ -52,18 +52,23 @@ function ensureYasserSubjectGateway(){
         <span class="subject-choice-mark" aria-hidden="true">ق</span>
         <span class="subject-choice-copy"><strong>القرآن الكريم</strong><small>تلاوة وحفظ • سادس ابتدائي</small></span>
         <span class="subject-choice-action">ابدأ</span>
+      </button>
+      <button class="subject-choice subject-choice-science" id="introScience" type="button">
+        <span class="subject-choice-mark" aria-hidden="true">ع</span>
+        <span class="subject-choice-copy"><strong>العلوم</strong><small>مسابقات واختبارات • الفصل الأول</small></span>
+        <span class="subject-choice-action">ابدأ</span>
       </button>`;
     oldStart.replaceWith(gateway);
   }
   const brandTitle=document.querySelector('.brand h1');
   const brandSubtitle=document.querySelector('.brand p');
   if(brandTitle)brandTitle.textContent='تعلم ياسر';
-  if(brandSubtitle)brandSubtitle.textContent='الرياضيات • القرآن';
+  if(brandSubtitle)brandSubtitle.textContent='الرياضيات • القرآن • العلوم';
 }
 
 function showYasserIntro(){
   document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='introView'));
-  document.body.classList.remove('yasser-quran-mode','hub-mode','khaled-mode','mashaal-mode');
+  document.body.classList.remove('yasser-quran-mode','yasser-science-mode','hub-mode','khaled-mode','mashaal-mode');
   document.body.classList.add('intro-mode');
   window.scrollTo(0,0);
 }
@@ -73,6 +78,7 @@ export function ensureYasserHomeShell(){
   if(!home||home.dataset.presentation==='yasser-home-v2')return false;
 
   ensureStyle('src/modules/yasser/ui/yasser-home.css','yasser-home');
+  ensureStyle('src/modules/yasser/science/yasser-science.css','yasser-science');
   ensureYasserSubjectGateway();
   home.dataset.presentation='yasser-home-v2';
   home.innerHTML=`
@@ -133,6 +139,10 @@ export function ensureYasserHomeShell(){
     document.getElementById('yasserQuranBack')?.addEventListener('click',event=>{
       event.preventDefault();event.stopImmediatePropagation();closeYasserQuran();showYasserIntro();
     },{capture:true,once:true});
+  });
+  document.getElementById('introScience')?.addEventListener('click',async()=>{
+    const {openYasserScience}=await import('../science/yasser-science.js');
+    openYasserScience();
   });
   return true;
 }
