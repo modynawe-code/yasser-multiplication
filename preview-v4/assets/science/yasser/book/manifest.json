@@ -4,312 +4,276 @@
   "page_count": 214,
   "assets": [
     {
-      "id": "organization-levels",
-      "src": "assets/science/yasser/book/organization-levels.webp",
-      "alt": "مستويات التنظيم كما تظهر في كتاب العلوم",
+      "id": "cell-summary",
+      "src": "assets/science/yasser/book/cell-summary.webp",
+      "alt": "صورة خلية من ملخص مفردات الفصل في كتاب العلوم",
       "page": 22,
       "bbox": [
-        81,
-        882,
-        2160,
-        1180
+        260,
+        465,
+        355,
+        290
       ],
-      "sha256": "23ed135a220e78f29d37122b7001e25f540e2ab9f65d7f51e83500269bd22462",
-      "width": 2160,
-      "height": 1180,
-      "matched_phrase": "الجهاز الحيوي",
-      "ocr_score": 1.0
+      "sha256": "1103f3cea7fbdf07f6123824be4f895fe13a5e4b8b8f42dd3bb26a8573aafef0",
+      "width": 355,
+      "height": 290
     },
     {
-      "id": "heart",
-      "src": "assets/science/yasser/book/heart.webp",
-      "alt": "القلب ضمن مستويات التنظيم من كتاب العلوم",
-      "page": 27,
-      "bbox": [
-        81,
-        874,
-        2160,
-        980
-      ],
-      "sha256": "ab9eab017626c0420f605ff195af2e1cedb93e97e5078eb549debd3751ee97a6",
-      "width": 2160,
-      "height": 980,
-      "matched_phrase": "عضو",
-      "ocr_score": 1.0
-    },
-    {
-      "id": "tissues",
-      "src": "assets/science/yasser/book/tissues.webp",
-      "alt": "الأنسجة من كتاب العلوم",
+      "id": "tissue-summary",
+      "src": "assets/science/yasser/book/tissue-summary.webp",
+      "alt": "صورة مجهرية لنسيج من كتاب العلوم",
       "page": 22,
       "bbox": [
-        81,
-        440,
-        2160,
-        1100
+        260,
+        755,
+        355,
+        270
       ],
-      "sha256": "9643c5b158f0f309cfd30cf06bc526ee87e50ce230e4e088bb79bf84083d0cea",
-      "width": 2160,
-      "height": 1100,
-      "matched_phrase": "النسيج",
-      "ocr_score": 1.0
+      "sha256": "ebbb793860fb2618ffba4418daf334b94f5c04ca1b716a4b578f459efed23437",
+      "width": 355,
+      "height": 270
     },
     {
-      "id": "water-cell-components",
-      "src": "assets/science/yasser/book/water-cell-components.webp",
-      "alt": "مكونات الخلية والماء من كتاب العلوم",
+      "id": "organ-system-summary",
+      "src": "assets/science/yasser/book/organ-system-summary.webp",
+      "alt": "صورة جهاز حيوي تضم القلب والرئتين من كتاب العلوم",
+      "page": 22,
+      "bbox": [
+        260,
+        1040,
+        355,
+        285
+      ],
+      "sha256": "b985786af278182ffaa32795bec1d3c7c2a6edc0becd67dce75f72a9a160b4f2",
+      "width": 355,
+      "height": 285
+    },
+    {
+      "id": "passive-transport-summary",
+      "src": "assets/science/yasser/book/passive-transport-summary.webp",
+      "alt": "رسم النقل السلبي من كتاب العلوم",
+      "page": 22,
+      "bbox": [
+        260,
+        1355,
+        355,
+        275
+      ],
+      "sha256": "f1dec1fd1bc9fca99414e41258ac522b8e0d01addca3cfdfce49b718eaf9d97e",
+      "width": 355,
+      "height": 275
+    },
+    {
+      "id": "osmosis-summary",
+      "src": "assets/science/yasser/book/osmosis-summary.webp",
+      "alt": "رسم الخاصية الأسموزية من كتاب العلوم",
+      "page": 22,
+      "bbox": [
+        260,
+        1675,
+        355,
+        280
+      ],
+      "sha256": "4fe4fd8f37aef7919297f8d1b068142197cd9607cfbc8f4fe2eb68f816b25f4b",
+      "width": 355,
+      "height": 280
+    },
+    {
+      "id": "active-transport-summary",
+      "src": "assets/science/yasser/book/active-transport-summary.webp",
+      "alt": "رسم النقل النشط من كتاب العلوم",
+      "page": 22,
+      "bbox": [
+        260,
+        1995,
+        355,
+        285
+      ],
+      "sha256": "967294d9aa160edb45b9847bd3a91a92e50e86e9adc0326a77b1066186db32f9",
+      "width": 355,
+      "height": 285
+    },
+    {
+      "id": "volvox",
+      "src": "assets/science/yasser/book/volvox.webp",
+      "alt": "صورة مستعمرة الفولفكس من كتاب العلوم",
       "page": 26,
       "bbox": [
-        81,
-        30,
-        2160,
-        1050
+        125,
+        115,
+        605,
+        645
       ],
-      "sha256": "0771c2525c981c2661f325ed6c24b054e05640bdd6acc3625d378dc556c0e77e",
-      "width": 2160,
-      "height": 1050,
-      "matched_phrase": "الماء",
-      "ocr_score": 1.0
+      "sha256": "7411e2684b9d870f197d1076fb5c0e49174ec50d75f9b5f55af46ac88a6ff426",
+      "width": 605,
+      "height": 645
     },
     {
-      "id": "cell-comparison",
-      "src": "assets/science/yasser/book/cell-comparison.webp",
-      "alt": "الخلية النباتية والخلية الحيوانية من كتاب العلوم",
-      "page": 33,
+      "id": "paramecium",
+      "src": "assets/science/yasser/book/paramecium.webp",
+      "alt": "صورة البراميسيوم من كتاب العلوم",
+      "page": 26,
       "bbox": [
-        81,
-        1513,
-        2160,
-        1450
+        1120,
+        95,
+        645,
+        640
       ],
-      "sha256": "31a95b664f8864388879601136b4bbe25f623b0abf177343ab2d4080abc26117",
-      "width": 2160,
-      "height": 1450,
-      "matched_phrase": "الخلية النباتية",
-      "ocr_score": 1.0
+      "sha256": "82e60b0f1fc6e91ffc258953a0d445e3d1f79109db42cb7003edf14bb04bc9a9",
+      "width": 645,
+      "height": 640
     },
     {
-      "id": "plant-cell-parts",
-      "src": "assets/science/yasser/book/plant-cell-parts.webp",
-      "alt": "الخلية النباتية من كتاب العلوم",
-      "page": 33,
+      "id": "tissue-types",
+      "src": "assets/science/yasser/book/tissue-types.webp",
+      "alt": "صور أنواع الأنسجة الحيوانية من كتاب العلوم",
+      "page": 27,
       "bbox": [
-        81,
-        1813,
-        2160,
-        1150
+        1030,
+        915,
+        900,
+        1345
       ],
-      "sha256": "e8f423120524dd82b13bb470830ff3efbd712af9766546a86153dbee7116e5da",
-      "width": 2160,
-      "height": 1150,
-      "matched_phrase": "الخلية النباتية",
-      "ocr_score": 1.0
+      "sha256": "41b4b6e76f6d6ce69eedb54e2daf1330dc00c72ee46d47c0949cac3b42c01a89",
+      "width": 900,
+      "height": 1345
     },
     {
-      "id": "animal-cell-parts",
-      "src": "assets/science/yasser/book/animal-cell-parts.webp",
-      "alt": "الخلية الحيوانية من كتاب العلوم",
+      "id": "animal-cell",
+      "src": "assets/science/yasser/book/animal-cell.webp",
+      "alt": "رسم الخلية الحيوانية كما يظهر في كتاب العلوم",
       "page": 35,
       "bbox": [
-        81,
-        1323,
-        2160,
-        1150
+        55,
+        1510,
+        1875,
+        970
       ],
-      "sha256": "5bd66b4925fad263db372e9c740de448e7bc128a6ec9fed5bb0c338983d809ff",
-      "width": 2160,
-      "height": 1150,
-      "matched_phrase": "الخلية الحيوانية",
-      "ocr_score": 1.0
+      "sha256": "8bcf55a5a2dffabfd3f1b387bc246ae1fc91ac4fcf9a6d9f600b6ebc98e96882",
+      "width": 1875,
+      "height": 970
     },
     {
-      "id": "cell-wall-membrane",
-      "src": "assets/science/yasser/book/cell-wall-membrane.webp",
-      "alt": "الجدار الخلوي والغشاء البلازمي من كتاب العلوم",
-      "page": 35,
-      "bbox": [
-        81,
-        538,
-        2160,
-        900
-      ],
-      "sha256": "fdc3d9c78d0d65bf38e5c6f53daa73014661d5038e78c4e016614f178cad1f46",
-      "width": 2160,
-      "height": 900,
-      "matched_phrase": "الغشاء البلازمي",
-      "ocr_score": 1.0
-    },
-    {
-      "id": "chloroplast-closeup",
-      "src": "assets/science/yasser/book/chloroplast-closeup.webp",
-      "alt": "البلاستيدات الخضراء من كتاب العلوم",
+      "id": "plant-cell",
+      "src": "assets/science/yasser/book/plant-cell.webp",
+      "alt": "رسم الخلية النباتية كما يظهر في كتاب العلوم",
       "page": 36,
       "bbox": [
-        81,
-        252,
-        2160,
-        900
+        20,
+        120,
+        1900,
+        810
       ],
-      "sha256": "b649b99df3a583af5424e0cec28133c6d95350bf15daaf6123e6ac8ae1bf2fb2",
-      "width": 2160,
-      "height": 900,
-      "matched_phrase": "البلاستيدة الخضراء",
-      "ocr_score": 1.0
+      "sha256": "70239d7cc92514bddb635ad2b3c5894974c275de0fea65147d7541dd4cf53fc8",
+      "width": 1900,
+      "height": 810
     },
     {
-      "id": "mitochondria-closeup",
-      "src": "assets/science/yasser/book/mitochondria-closeup.webp",
-      "alt": "الميتوكندريا من كتاب العلوم",
-      "page": 36,
+      "id": "osmosis-large",
+      "src": "assets/science/yasser/book/osmosis-large.webp",
+      "alt": "رسم الخاصية الأسموزية مع النبات من كتاب العلوم",
+      "page": 37,
       "bbox": [
-        81,
-        30,
-        2160,
-        900
+        55,
+        230,
+        985,
+        750
       ],
-      "sha256": "2e05a584193c83b82abc6f0662f0576bfb0a5731d200606465a0449f709ac290",
-      "width": 2160,
-      "height": 900,
-      "matched_phrase": "الميتوكندريا",
-      "ocr_score": 1.0
+      "sha256": "d38a549e2107f4dd8421783c170fd545713907527a942e995c37ad16439b1c04",
+      "width": 985,
+      "height": 750
     },
     {
-      "id": "nucleus-closeup",
-      "src": "assets/science/yasser/book/nucleus-closeup.webp",
-      "alt": "النواة من كتاب العلوم",
-      "page": 35,
+      "id": "diffusion-large",
+      "src": "assets/science/yasser/book/diffusion-large.webp",
+      "alt": "رسم الانتشار قبل وبعد من كتاب العلوم",
+      "page": 37,
       "bbox": [
-        81,
-        1018,
-        2160,
-        900
+        1040,
+        1190,
+        885,
+        1070
       ],
-      "sha256": "bd88ed2cc37e3f560327e090c65c922f1863aee42490576d29d980f2fca85795",
-      "width": 2160,
-      "height": 900,
-      "matched_phrase": "النواة",
-      "ocr_score": 1.0
+      "sha256": "d1afbbd0dfa8dc1cbdb5327d51e62cb39718d82152ea7e24d5dd48a00cd7693c",
+      "width": 885,
+      "height": 1070
     },
     {
-      "id": "vacuole-plant",
-      "src": "assets/science/yasser/book/vacuole-plant.webp",
-      "alt": "الفجوة في الخلية النباتية من كتاب العلوم",
-      "page": 35,
+      "id": "photosynthesis-diagram",
+      "src": "assets/science/yasser/book/photosynthesis-diagram.webp",
+      "alt": "مخطط البناء الضوئي من كتاب العلوم",
+      "page": 39,
       "bbox": [
-        81,
-        1613,
-        2160,
-        900
+        45,
+        0,
+        950,
+        2460
       ],
-      "sha256": "24b4da75d5a148f2be8a6074b0e2c636642c7e2d91b262ba4fd2ac60b17dad9e",
-      "width": 2160,
-      "height": 900,
-      "matched_phrase": "الفجوة",
-      "ocr_score": 1.0
+      "sha256": "ef873f3b773d9a1f8461b44580f0b54646c1925543c8b448355493d718322ca7",
+      "width": 950,
+      "height": 2460
     },
     {
-      "id": "diffusion-gradient",
-      "src": "assets/science/yasser/book/diffusion-gradient.webp",
-      "alt": "الانتشار من كتاب العلوم",
-      "page": 41,
-      "bbox": [
-        81,
-        803,
-        2160,
-        1000
-      ],
-      "sha256": "3f18f02dfaeca9ab63de4c98232a95fd5197f087c540b34bc8052d3fb812588f",
-      "width": 2160,
-      "height": 1000,
-      "matched_phrase": "الانتشار",
-      "ocr_score": 1.0
-    },
-    {
-      "id": "osmosis-membrane",
-      "src": "assets/science/yasser/book/osmosis-membrane.webp",
-      "alt": "الخاصية الأسموزية من كتاب العلوم",
-      "page": 41,
-      "bbox": [
-        81,
-        803,
-        2160,
-        1000
-      ],
-      "sha256": "3f18f02dfaeca9ab63de4c98232a95fd5197f087c540b34bc8052d3fb812588f",
-      "width": 2160,
-      "height": 1000,
-      "matched_phrase": "الأسموزية",
-      "ocr_score": 1.0
-    },
-    {
-      "id": "active-transport-energy",
-      "src": "assets/science/yasser/book/active-transport-energy.webp",
-      "alt": "النقل النشط من كتاب العلوم",
+      "id": "photosynthesis-respiration-table",
+      "src": "assets/science/yasser/book/photosynthesis-respiration-table.webp",
+      "alt": "جدول مقارنة البناء الضوئي والتنفس من كتاب العلوم",
       "page": 40,
       "bbox": [
-        81,
-        1963,
-        2160,
-        1000
+        185,
+        235,
+        750,
+        955
       ],
-      "sha256": "015b0598f961c22aacd591ddd8573cae375c41b79bf28ceadd754a572608efa1",
-      "width": 2160,
-      "height": 1000,
-      "matched_phrase": "النقل النشط",
-      "ocr_score": 1.0
+      "sha256": "e57a08b06c292bc2e89f6ca5398928258a09ca0e523e33a31d8518c1c67af2cc",
+      "width": 750,
+      "height": 955
     },
     {
-      "id": "passive-transport",
-      "src": "assets/science/yasser/book/passive-transport.webp",
-      "alt": "النقل السلبي من كتاب العلوم",
-      "page": 45,
-      "bbox": [
-        81,
-        355,
-        2160,
-        1000
-      ],
-      "sha256": "bba5769bffd45cc93f2a5007a3b9e95a529406e1fb43a5ed65abfaf65385a3ca",
-      "width": 2160,
-      "height": 1000,
-      "matched_phrase": "النقل السلبي",
-      "ocr_score": 1.0
-    },
-    {
-      "id": "photosynthesis-flow",
-      "src": "assets/science/yasser/book/photosynthesis-flow.webp",
-      "alt": "البناء الضوئي من كتاب العلوم",
-      "page": 46,
-      "bbox": [
-        81,
-        715,
-        2160,
-        1150
-      ],
-      "sha256": "45c55decd58eec41e5c4fbbaab79d800ef561c4e416698f73df373a6ca50b7bc",
-      "width": 2160,
-      "height": 1150,
-      "matched_phrase": "البناء الضوئي",
-      "ocr_score": 0.8
-    },
-    {
-      "id": "respiration-flow",
-      "src": "assets/science/yasser/book/respiration-flow.webp",
-      "alt": "التنفس الخلوي من كتاب العلوم",
+      "id": "photosynthesis-respiration-cycle",
+      "src": "assets/science/yasser/book/photosynthesis-respiration-cycle.webp",
+      "alt": "مخطط العلاقة بين البناء الضوئي والتنفس من كتاب العلوم",
       "page": 40,
       "bbox": [
-        81,
-        1087,
-        2160,
-        1150
+        940,
+        180,
+        980,
+        870
       ],
-      "sha256": "03a01758d795b17275d2b50584b1fe52728a021365c71936c73505d51dd0ab6b",
-      "width": 2160,
-      "height": 1150,
-      "matched_phrase": "التنفس الخلوي",
-      "ocr_score": 1.0
+      "sha256": "8d0e9161d5a1c19769b6c25dd69d8bce5bda92863109af66be566746cb3e093c",
+      "width": 980,
+      "height": 870
+    },
+    {
+      "id": "amoeba-engulfing",
+      "src": "assets/science/yasser/book/amoeba-engulfing.webp",
+      "alt": "صورة الأميبا وهي تبتلع الغذاء من كتاب العلوم",
+      "page": 41,
+      "bbox": [
+        260,
+        20,
+        1515,
+        770
+      ],
+      "sha256": "30ff09b276a94be78856ea5edb32261300e2366ed9807f468ff99d740bb6c875",
+      "width": 1515,
+      "height": 770
+    },
+    {
+      "id": "active-transport-large",
+      "src": "assets/science/yasser/book/active-transport-large.webp",
+      "alt": "رسم النقل النشط عبر الغشاء من كتاب العلوم",
+      "page": 41,
+      "bbox": [
+        245,
+        1005,
+        790,
+        615
+      ],
+      "sha256": "23acf97af24ed68153f25e5e9a9de14cdbe267e7fd271e959ebd81e4043df0f7",
+      "width": 790,
+      "height": 615
     }
   ],
-  "missing": [],
-  "unique": 17
+  "unique": 18,
+  "verification": "hand-verified-crops"
 }
