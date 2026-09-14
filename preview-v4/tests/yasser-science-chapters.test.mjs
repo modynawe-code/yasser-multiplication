@@ -1,0 +1,68 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {YASSER_SCIENCE_QUESTIONS} from '../src/modules/yasser/science/science-data.js';
+import {
+  DEFAULT_YASSER_SCIENCE_CHAPTER_ID,
+  YASSER_SCIENCE_CHAPTERS,
+  filterScienceProgressByChapter,
+  filterScienceQuestionsByChapter
+} from '../src/modules/yasser/science/science-chapters.js';
+import {createScienceSession} from '../src/modules/yasser/science/science-engine.js';
+
+const CHAPTER_ONE_UNITS=new Set(['cells','organization','cell-processes']);
+const CHAPTER_TWO_UNITS=new Set(['division','heredity']);
+
+test('chapter 1 cells is the default science chapter',()=>{
+  assert.equal(DEFAULT_YASSER_SCIENCE_CHAPTER_ID,'chapter-1-cells');
+  assert.equal(YASSER_SCIENCE_CHAPTERS[0].label,'الفصل 1: الخلايا');
+  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_QUESTIONS);
+  assert.ok(questions.length>=10);
+  assert.ok(questions.every(question=>CHAPTER_ONE_UNITS.has(question.unit)));
+  assert.ok(questions.every(question=>!CHAPTER_TWO_UNITS.has(question.unit)));
+});
+
+test('chapter 2 is isolated from chapter 1',()=>{
+  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_QUESTIONS,'chapter-2-cell-heredity');
+  assert.ok(questions.length>=10);
+  assert.ok(questions.every(question=>CHAPTER_TWO_UNITS.has(question.unit)));
+  assert.ok(questions.every(question=>!CHAPTER_ONE_UNITS.has(question.unit)));
+});
+
+test('quick, image and school exam sessions stay inside selected chapter',()=>{
+  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_QUESTIONS,DEFAULT_YASSER_SCIENCE_CHAPTER_ID);
+  for(const mode of ['quick','images','exam']){
+    const session=createScienceSession({mode,count:mode==='exam'?20:8,questions,rng:()=>.5});
+    assert.ok(session.questions.length>0,mode);
+    assert.ok(session.questions.every(question=>CHAPTER_ONE_UNITS.has(question.unit)),mode);
+  }
+});
+
+test('chapter progress excludes other chapters and recomputes chapter points',()=>{
+  const progress={
+    points:999,
+    attempts:[
+      {questionId:'a',concept:'cell-theory',unit:'cells',isCorrect:true,earned:10,answeredAt:'2026-09-14T10:00:00.000Z'},
+      {questionId:'b',concept:'organ',unit:'organization',isCorrect:false,earned:0,answeredAt:'2026-09-14T10:01:00.000Z'},
+      {questionId:'c',concept:'meiosis',unit:'division',isCorrect:true,earned:20,answeredAt:'2026-09-14T10:02:00.000Z'}
+    ]
+  };
+  const chapterOne=filterScienceProgressByChapter(progress,'chapter-1-cells');
+  assert.equal(chapterOne.attempts.length,2);
+  assert.equal(chapterOne.points,10);
+  assert.equal(chapterOne.concepts.meiosis,undefined);
+  const chapterTwo=filterScienceProgressByChapter(progress,'chapter-2-cell-heredity');
+  assert.equal(chapterTwo.attempts.length,1);
+  assert.equal(chapterTwo.points,20);
+});
+
+test('science UI exposes chapter selector and full image zoom affordance',()=>{
+  const source=readFileSync(new URL('../src/modules/yasser/science/yasser-science.js',import.meta.url),'utf8');
+  const css=readFileSync(new URL('../src/modules/yasser/science/yasser-science.css',import.meta.url),'utf8');
+  assert.match(source,/scienceChapterTabs/);
+  assert.match(source,/الفصل الذي يذاكره ياسر الآن/);
+  assert.match(source,/scienceImageModal/);
+  assert.match(source,/تكبير الصورة/);
+  assert.match(css,/science-image-modal/);
+  assert.match(css,/cursor:zoom-in/);
+});
