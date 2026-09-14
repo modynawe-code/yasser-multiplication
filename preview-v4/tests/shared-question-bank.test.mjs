@@ -43,14 +43,20 @@ test('question bank detects normalized exact duplicates instead of counting repo
   assert.deepEqual([...duplicates[0].ids],['a','b']);
 });
 
+test('expanded science collection is verified, source-backed and duplicate-free',()=>{
+  assert.equal(YASSER_SCIENCE_COLLECTED_QUESTIONS.length,45);
+  assert.ok(YASSER_SCIENCE_COLLECTED_QUESTIONS.every(question=>question.verified));
+  assert.ok(YASSER_SCIENCE_COLLECTED_QUESTIONS.every(question=>question.sources.some(source=>['textbook','user-upload'].includes(source.authority))));
+  assert.equal(findExactQuestionDuplicates(YASSER_SCIENCE_COLLECTED_QUESTIONS).length,0);
+});
+
 test('existing science data and collected source-backed questions share one reusable bank',()=>{
   assert.equal(YASSER_SCIENCE_QUESTION_BANK.validation.ok,true,YASSER_SCIENCE_QUESTION_BANK.validation.errors.join('\n'));
-  assert.equal(YASSER_SCIENCE_COLLECTED_QUESTIONS.length,15);
   assert.equal(YASSER_SCIENCE_QUESTION_BANK.questions.length,YASSER_SCIENCE_QUESTIONS.length+YASSER_SCIENCE_COLLECTED_QUESTIONS.length);
   const coverage=getQuestionBankCoverage(YASSER_SCIENCE_QUESTION_BANK);
   assert.equal(coverage.bySubject.science,YASSER_SCIENCE_QUESTION_BANK.questions.length);
   assert.equal(coverage.byUnit['unit-1-diversity-of-life'],YASSER_SCIENCE_QUESTION_BANK.questions.length);
   assert.ok((coverage.byChapter['chapter-1-cells']||0)>YASSER_SCIENCE_COLLECTED_QUESTIONS.length);
   assert.ok((coverage.byChapter['chapter-2-cell-heredity']||0)>0);
-  assert.equal(queryQuestionBank(YASSER_SCIENCE_QUESTION_BANK,{chapterId:'chapter-1-cells',tags:['collected']}).length,15);
+  assert.equal(queryQuestionBank(YASSER_SCIENCE_QUESTION_BANK,{chapterId:'chapter-1-cells',tags:['collected']}).length,YASSER_SCIENCE_COLLECTED_QUESTIONS.length);
 });
