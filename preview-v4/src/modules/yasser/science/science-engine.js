@@ -57,6 +57,40 @@ function selectBalancedByUnit(pool,limit,rng){
   return shuffle(selected,rng);
 }
 
+function selectBalancedByAsset(pool,limit,rng){
+  const groups=new Map();
+  for(const question of pool){
+    const assetId=question.assetId||'no-asset';
+    if(!groups.has(assetId))groups.set(assetId,[]);
+    groups.get(assetId).push(question);
+  }
+  const buckets=shuffle([...groups.entries()],rng).map(([assetId,items])=>({assetId,items:shuffle(items,rng)}));
+  const selected=[];
+  while(selected.length<limit&&buckets.some(bucket=>bucket.items.length)){
+    for(const bucket of buckets){
+      if(selected.length>=limit)break;
+      const next=bucket.items.shift();if(next)selected.push(next);
+    }
+  }
+  return shuffle(selected,rng);
+}
+
+function selectExamQuestions(pool,limit,rng){
+  if(!limit)return [];
+  const imagePool=pool.filter(question=>Boolean(question.assetId));
+  const nonImagePool=pool.filter(question=>!question.assetId);
+  const imageTarget=Math.min(imagePool.length,limit,Math.max(limit>=10?2:1,Math.round(limit*.2)));
+  const imageSelection=selectBalancedByAsset(imagePool,imageTarget,rng);
+  const regularTarget=Math.max(0,limit-imageSelection.length);
+  const regularSelection=selectBalancedByUnit(nonImagePool,Math.min(regularTarget,nonImagePool.length),rng);
+  const used=new Set([...imageSelection,...regularSelection].map(question=>question.id));
+  if(imageSelection.length+regularSelection.length<limit){
+    const fallback=selectBalancedByUnit(pool.filter(question=>!used.has(question.id)),limit-imageSelection.length-regularSelection.length,rng);
+    regularSelection.push(...fallback);
+  }
+  return shuffle([...imageSelection,...regularSelection],rng);
+}
+
 function selectReviewQuestions(questions,reviewQuestionIds,limit,rng){
   const byId=new Map(questions.map(question=>[question.id,question]));
   const targets=reviewQuestionIds.map(id=>byId.get(id)).filter(Boolean);
@@ -82,7 +116,8 @@ export function createScienceSession({mode='quick',count,progress,questions=YASS
   }
   const pool=safeMode==='images'?questions.filter(item=>Boolean(item.assetId)):questions;
   const limit=Math.min(requested,pool.length);
-  if(safeMode==='exam')return createSessionState(safeMode,selectBalancedByUnit(pool,limit,rng));
+  if(safeMode==='images')return createSessionState(safeMode,selectBalancedByAsset(pool,limit,rng));
+  if(safeMode==='exam')return createSessionState(safeMode,selectExamQuestions(pool,limit,rng));
   const weak=new Set(weakConceptIds(progress));
   const priority=shuffle(pool.filter(item=>weak.has(item.concept)),rng);
   const regular=shuffle(pool.filter(item=>!weak.has(item.concept)),rng);

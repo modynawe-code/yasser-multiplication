@@ -6,12 +6,14 @@ const ASSETS=[
   'cell-comparison-exam.webp',
   'organization-levels-exam.webp',
   'meiosis-exam.webp',
-  'heart-exam.webp'
+  'heart-exam.webp',
+  'bird-nest-exam.webp',
+  'pedigree-summary.webp'
 ];
 
 const readAsset=name=>readFile(new URL(`../assets/science/yasser/${name}`,import.meta.url));
 
-test('Yasser science exam WebP assets are complete RIFF files',async()=>{
+test('Yasser science WebP assets are complete RIFF files',async()=>{
   for(const name of ASSETS){
     const data=await readAsset(name);
     assert.ok(data.length>4000,`${name}: unexpectedly small`);
