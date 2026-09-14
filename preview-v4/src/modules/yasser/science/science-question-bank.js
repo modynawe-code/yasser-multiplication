@@ -2,6 +2,7 @@ import {createQuestionBank,createQuestionRecord} from '../../../shared/question-
 import {YASSER_SCIENCE_QUESTIONS,YASSER_SCIENCE_SCOPE} from './science-data.js';
 import {YASSER_SCIENCE_COLLECTED_QUESTIONS} from './science-collected-questions.js';
 import {YASSER_SCIENCE_COLLECTED_QUESTIONS_BATCH2} from './science-collected-questions-batch2.js';
+import {YASSER_SCIENCE_VISUAL_QUESTIONS} from './science-visuals.js';
 
 const CHAPTER_BY_LEGACY_UNIT=Object.freeze({
   cells:'chapter-1-cells',
@@ -110,7 +111,8 @@ function adaptCollectedForRuntime(question){
 export const YASSER_SCIENCE_RUNTIME_QUESTIONS=Object.freeze(YASSER_SCIENCE_QUESTIONS.map(adaptScienceQuestion));
 export const YASSER_SCIENCE_COLLECTED_ALL=Object.freeze([
   ...YASSER_SCIENCE_COLLECTED_QUESTIONS,
-  ...YASSER_SCIENCE_COLLECTED_QUESTIONS_BATCH2
+  ...YASSER_SCIENCE_COLLECTED_QUESTIONS_BATCH2,
+  ...YASSER_SCIENCE_VISUAL_QUESTIONS
 ]);
 export const YASSER_SCIENCE_SHARED_QUESTIONS=Object.freeze([
   ...YASSER_SCIENCE_RUNTIME_QUESTIONS,
