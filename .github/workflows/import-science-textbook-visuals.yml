@@ -26,17 +26,24 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-ara
       - name: Install PDF/OCR tools
-        run: python -m pip install --disable-pip-version-check pymupdf pillow requests pytesseract
-      - name: Extract exact chapter-one excerpts from textbook PDF
+        run: python -m pip install --disable-pip-version-check pymupdf pillow requests pytesseract opencv-python-headless numpy
+      - name: Extract focused chapter-one figures from textbook PDF
         run: python preview-v4/tools/import-science-textbook-visuals.py
+      - name: Upload crop contact sheet
+        uses: actions/upload-artifact@v4
+        with:
+          name: science-textbook-contact-sheet
+          path: /tmp/science-textbook-contact-sheet.jpg
+          retention-days: 3
       - name: Commit textbook visuals
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin feature/product-ui-reference-v1
           git add preview-v4/assets/science/yasser/book preview-v4/src/modules/yasser/science/science-book-visuals.generated.js
           if git diff --cached --quiet; then
             echo "Textbook visuals already current."
             exit 0
           fi
-          git commit -m "chore: refine exact science textbook visuals"
+          git commit -m "chore: focus exact science textbook figures"
           git push origin HEAD:feature/product-ui-reference-v1
