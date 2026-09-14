@@ -10,6 +10,7 @@ import {
 } from '../src/shared/question-bank/index.js';
 import {YASSER_SCIENCE_QUESTION_BANK} from '../src/modules/yasser/science/science-question-bank.js';
 import {YASSER_SCIENCE_QUESTIONS} from '../src/modules/yasser/science/science-data.js';
+import {YASSER_SCIENCE_COLLECTED_QUESTIONS} from '../src/modules/yasser/science/science-collected-questions.js';
 
 test('shared question record is subject-agnostic and validates answers',()=>{
   const science=createQuestionRecord({
@@ -42,12 +43,14 @@ test('question bank detects normalized exact duplicates instead of counting repo
   assert.deepEqual([...duplicates[0].ids],['a','b']);
 });
 
-test('existing Yasser science bank is bridged into unit and chapter hierarchy without changing runtime data',()=>{
+test('existing science data and collected source-backed questions share one reusable bank',()=>{
   assert.equal(YASSER_SCIENCE_QUESTION_BANK.validation.ok,true,YASSER_SCIENCE_QUESTION_BANK.validation.errors.join('\n'));
-  assert.equal(YASSER_SCIENCE_QUESTION_BANK.questions.length,YASSER_SCIENCE_QUESTIONS.length);
+  assert.equal(YASSER_SCIENCE_COLLECTED_QUESTIONS.length,15);
+  assert.equal(YASSER_SCIENCE_QUESTION_BANK.questions.length,YASSER_SCIENCE_QUESTIONS.length+YASSER_SCIENCE_COLLECTED_QUESTIONS.length);
   const coverage=getQuestionBankCoverage(YASSER_SCIENCE_QUESTION_BANK);
-  assert.equal(coverage.bySubject.science,YASSER_SCIENCE_QUESTIONS.length);
-  assert.equal(coverage.byUnit['unit-1-diversity-of-life'],YASSER_SCIENCE_QUESTIONS.length);
-  assert.ok((coverage.byChapter['chapter-1-cells']||0)>0);
+  assert.equal(coverage.bySubject.science,YASSER_SCIENCE_QUESTION_BANK.questions.length);
+  assert.equal(coverage.byUnit['unit-1-diversity-of-life'],YASSER_SCIENCE_QUESTION_BANK.questions.length);
+  assert.ok((coverage.byChapter['chapter-1-cells']||0)>YASSER_SCIENCE_COLLECTED_QUESTIONS.length);
   assert.ok((coverage.byChapter['chapter-2-cell-heredity']||0)>0);
+  assert.equal(queryQuestionBank(YASSER_SCIENCE_QUESTION_BANK,{chapterId:'chapter-1-cells',tags:['collected']}).length,15);
 });
