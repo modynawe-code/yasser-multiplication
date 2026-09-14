@@ -1,5 +1,6 @@
 import {createQuestionBank,createQuestionRecord} from '../../../shared/question-bank/index.js';
 import {YASSER_SCIENCE_QUESTIONS,YASSER_SCIENCE_SCOPE} from './science-data.js';
+import {YASSER_SCIENCE_COLLECTED_QUESTIONS} from './science-collected-questions.js';
 
 const CHAPTER_BY_LEGACY_UNIT=Object.freeze({
   cells:'chapter-1-cells',
@@ -42,7 +43,7 @@ function adaptScienceQuestion(question){
     answer:question.answer,
     explanation:question.feedback,
     assetId:question.assetId||'',
-    tags:['yasser','science','grade-6','term-1'],
+    tags:['yasser','science','grade-6','term-1','legacy-runtime'],
     sources:[{
       id:`legacy:${question.id}`,
       label:source.label||'',
@@ -56,7 +57,11 @@ function adaptScienceQuestion(question){
   });
 }
 
-export const YASSER_SCIENCE_SHARED_QUESTIONS=Object.freeze(YASSER_SCIENCE_QUESTIONS.map(adaptScienceQuestion));
+export const YASSER_SCIENCE_RUNTIME_QUESTIONS=Object.freeze(YASSER_SCIENCE_QUESTIONS.map(adaptScienceQuestion));
+export const YASSER_SCIENCE_SHARED_QUESTIONS=Object.freeze([
+  ...YASSER_SCIENCE_RUNTIME_QUESTIONS,
+  ...YASSER_SCIENCE_COLLECTED_QUESTIONS
+]);
 
 export const YASSER_SCIENCE_QUESTION_BANK=createQuestionBank(YASSER_SCIENCE_SHARED_QUESTIONS,{
   id:'science-grade6-term1',
