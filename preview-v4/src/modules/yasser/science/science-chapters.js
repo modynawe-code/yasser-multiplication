@@ -27,7 +27,7 @@ export function filterScienceQuestionsByChapter(questions,chapterId=DEFAULT_YASS
 export function filterScienceProgressByChapter(progress,chapterId=DEFAULT_YASSER_SCIENCE_CHAPTER_ID){
   const chapter=getScienceChapter(chapterId);const allowed=new Set(chapter.unitIds);
   const attempts=(progress?.attempts||[]).filter(attempt=>allowed.has(attempt.unit));
-  const concepts={};
+  const concepts={};let points=0;
   for(const attempt of attempts){
     const current=concepts[attempt.concept]||{correct:0,wrong:0,last:null};
     concepts[attempt.concept]={
@@ -35,6 +35,7 @@ export function filterScienceProgressByChapter(progress,chapterId=DEFAULT_YASSER
       wrong:current.wrong+(attempt.isCorrect?0:1),
       last:attempt.answeredAt||current.last
     };
+    points+=Number(attempt.earned)||0;
   }
-  return {...(progress||{}),attempts,concepts};
+  return {...(progress||{}),attempts,concepts,points};
 }
