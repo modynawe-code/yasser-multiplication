@@ -1,0 +1,300 @@
+{
+  "source": "https://www.wajibati.net/wp-content/uploads/2025/08/kj-alum6f1_1_n7u8nrhvd4.pdf",
+  "pdf_sha256": "f8b22e30f41153312b05e40d452a46d423c410d60ff6278f93de927bb12c1152",
+  "page_count": 214,
+  "scan_range": [
+    9,
+    72
+  ],
+  "assets": [
+    {
+      "id": "organization-levels",
+      "src": "assets/science/yasser/book/organization-levels.webp",
+      "alt": "مستويات التنظيم كما تظهر في كتاب العلوم",
+      "page": 70,
+      "bbox": [
+        18,
+        162,
+        2087,
+        2683
+      ],
+      "sha256": "06aea7c82283c96692420d1240456364bb95a4f0bc0cca74a0a44ba9a89e683b",
+      "width": 2133,
+      "height": 2739,
+      "matched_phrase": "المخلوقات الحية تنظيم"
+    },
+    {
+      "id": "cell-comparison",
+      "src": "assets/science/yasser/book/cell-comparison.webp",
+      "alt": "الخلية النباتية والخلية الحيوانية من كتاب العلوم",
+      "page": 42,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "9121c0d069c76b6d9ac2ebc39e2c9537e16b8fbd4c996f56ebc19adcdfc0a57a",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "الخلية الحيوانية"
+    },
+    {
+      "id": "plant-cell-parts",
+      "src": "assets/science/yasser/book/plant-cell-parts.webp",
+      "alt": "الخلية النباتية من كتاب العلوم",
+      "page": 42,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "9121c0d069c76b6d9ac2ebc39e2c9537e16b8fbd4c996f56ebc19adcdfc0a57a",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "الخلية النباتية"
+    },
+    {
+      "id": "animal-cell-parts",
+      "src": "assets/science/yasser/book/animal-cell-parts.webp",
+      "alt": "الخلية الحيوانية من كتاب العلوم",
+      "page": 30,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "192bce38125d0fd618f7e54afd2a54af39192429f0179badcd2d13374aa03db6",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "الخلية الحيوانية"
+    },
+    {
+      "id": "cell-wall-membrane",
+      "src": "assets/science/yasser/book/cell-wall-membrane.webp",
+      "alt": "الجدار الخلوي والغشاء البلازمي من كتاب العلوم",
+      "page": 42,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "9121c0d069c76b6d9ac2ebc39e2c9537e16b8fbd4c996f56ebc19adcdfc0a57a",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "الغشاء البلازمي"
+    },
+    {
+      "id": "chloroplast-closeup",
+      "src": "assets/science/yasser/book/chloroplast-closeup.webp",
+      "alt": "البلاستيدات الخضراء من كتاب العلوم",
+      "page": 23,
+      "bbox": [
+        69,
+        80,
+        2238,
+        2894
+      ],
+      "sha256": "9c7d3907e0659db26b0d061dae8c1785994623d08bc2fec7b2bb176769399846",
+      "width": 2281,
+      "height": 2941,
+      "matched_phrase": "البلاستيدة الخضراء"
+    },
+    {
+      "id": "mitochondria-closeup",
+      "src": "assets/science/yasser/book/mitochondria-closeup.webp",
+      "alt": "الميتوكندريا من كتاب العلوم",
+      "page": 42,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "9121c0d069c76b6d9ac2ebc39e2c9537e16b8fbd4c996f56ebc19adcdfc0a57a",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "الميتوكندريا"
+    },
+    {
+      "id": "nucleus-closeup",
+      "src": "assets/science/yasser/book/nucleus-closeup.webp",
+      "alt": "النواة من كتاب العلوم",
+      "page": 42,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "9121c0d069c76b6d9ac2ebc39e2c9537e16b8fbd4c996f56ebc19adcdfc0a57a",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "النواة"
+    },
+    {
+      "id": "vacuole-plant",
+      "src": "assets/science/yasser/book/vacuole-plant.webp",
+      "alt": "الفجوة في الخلية النباتية من كتاب العلوم",
+      "page": 65,
+      "bbox": [
+        71,
+        16,
+        2034,
+        2708
+      ],
+      "sha256": "d1d08064441862b28c407db4d868d719b80212a22f789a3f6c59844da402e619",
+      "width": 2090,
+      "height": 2752,
+      "matched_phrase": "الفجوات"
+    },
+    {
+      "id": "diffusion-gradient",
+      "src": "assets/science/yasser/book/diffusion-gradient.webp",
+      "alt": "الانتشار من كتاب العلوم",
+      "page": 42,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "9121c0d069c76b6d9ac2ebc39e2c9537e16b8fbd4c996f56ebc19adcdfc0a57a",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "الانتشار"
+    },
+    {
+      "id": "osmosis-membrane",
+      "src": "assets/science/yasser/book/osmosis-membrane.webp",
+      "alt": "الخاصية الأسموزية من كتاب العلوم",
+      "page": 45,
+      "bbox": [
+        69,
+        172,
+        2235,
+        2174
+      ],
+      "sha256": "762df5143eb9e79e3f3200688e68db573c714b18348dacd23e5d3b54ea7be957",
+      "width": 2281,
+      "height": 2230,
+      "matched_phrase": "الخاصية الأسموزية"
+    },
+    {
+      "id": "active-transport-energy",
+      "src": "assets/science/yasser/book/active-transport-energy.webp",
+      "alt": "النقل النشط من كتاب العلوم",
+      "page": 45,
+      "bbox": [
+        69,
+        172,
+        2235,
+        2174
+      ],
+      "sha256": "762df5143eb9e79e3f3200688e68db573c714b18348dacd23e5d3b54ea7be957",
+      "width": 2281,
+      "height": 2230,
+      "matched_phrase": "النقل النشط"
+    },
+    {
+      "id": "passive-transport",
+      "src": "assets/science/yasser/book/passive-transport.webp",
+      "alt": "النقل السلبي من كتاب العلوم",
+      "page": 45,
+      "bbox": [
+        69,
+        172,
+        2235,
+        2174
+      ],
+      "sha256": "762df5143eb9e79e3f3200688e68db573c714b18348dacd23e5d3b54ea7be957",
+      "width": 2281,
+      "height": 2230,
+      "matched_phrase": "النقل السلبي"
+    },
+    {
+      "id": "photosynthesis-flow",
+      "src": "assets/science/yasser/book/photosynthesis-flow.webp",
+      "alt": "البناء الضوئي من كتاب العلوم",
+      "page": 70,
+      "bbox": [
+        18,
+        162,
+        2087,
+        2683
+      ],
+      "sha256": "06aea7c82283c96692420d1240456364bb95a4f0bc0cca74a0a44ba9a89e683b",
+      "width": 2133,
+      "height": 2739,
+      "matched_phrase": "البناء الضوئي"
+    },
+    {
+      "id": "respiration-flow",
+      "src": "assets/science/yasser/book/respiration-flow.webp",
+      "alt": "التنفس الخلوي من كتاب العلوم",
+      "page": 40,
+      "bbox": [
+        18,
+        18,
+        2237,
+        1405
+      ],
+      "sha256": "9cbcfc312cebdff187cc9942e53afe5440d11fdb90dc3d4a03588b7fa0f5d6d6",
+      "width": 2283,
+      "height": 1451,
+      "matched_phrase": "التنفس الخلوي"
+    },
+    {
+      "id": "tissues",
+      "src": "assets/science/yasser/book/tissues.webp",
+      "alt": "الأنسجة من كتاب العلوم",
+      "page": 53,
+      "bbox": [
+        69,
+        16,
+        2036,
+        2543
+      ],
+      "sha256": "8ae096c557e2802969371ba52ba22a279059d5de15d1974bc17754c976e0311d",
+      "width": 2092,
+      "height": 2587,
+      "matched_phrase": "النسيج"
+    },
+    {
+      "id": "water-cell-components",
+      "src": "assets/science/yasser/book/water-cell-components.webp",
+      "alt": "مكونات الخلية والماء من كتاب العلوم",
+      "page": 30,
+      "bbox": [
+        18,
+        132,
+        2080,
+        2713
+      ],
+      "sha256": "192bce38125d0fd618f7e54afd2a54af39192429f0179badcd2d13374aa03db6",
+      "width": 2126,
+      "height": 2769,
+      "matched_phrase": "الماء"
+    },
+    {
+      "id": "heart",
+      "src": "assets/science/yasser/book/heart.webp",
+      "alt": "القلب ضمن مستويات التنظيم من كتاب العلوم",
+      "page": 25,
+      "bbox": [
+        265,
+        16,
+        1837,
+        2702
+      ],
+      "sha256": "04e626e6713e6d1afb7f38dbdb5a83b387a6109ccb94153fcfe2967bc523259a",
+      "width": 1893,
+      "height": 2746,
+      "matched_phrase": "العضو"
+    }
+  ],
+  "missing": []
+}
