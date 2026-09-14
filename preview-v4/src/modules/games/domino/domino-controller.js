@@ -3,6 +3,7 @@ import {createGameRoomClient} from '../online/game-room-client.js';
 import {ensureDominoShell} from './domino-shell.js';
 import {getGameParticipant,listGameParticipants,gameParticipantMarkup} from '../core/game-participant-registry.js';
 import {chooseAutomaticDominoSide} from './domino-placement-policy.js';
+import {decorateBoard,enhanceDominoTile} from './domino-visuals.js';
 
 const byId=id=>document.getElementById(id);
 let singleton=null;
@@ -24,10 +25,11 @@ function tileKey(left,right){
   const a=Number(left),b=Number(right);
   return Number.isInteger(a)&&Number.isInteger(b)?`${Math.min(a,b)}-${Math.max(a,b)}`:'';
 }
-function tileFace(left,right,{compact=false,className='',dataKey=''}={}){
+function tileFace(left,right,{compact=false,className='',dataKey='',dataId=''}={}){
   const classes=['domino-tile',compact?'compact':'',className].filter(Boolean).join(' ');
   const key=dataKey?` data-domino-key="${dataKey}"`:'';
-  return `<span class="${classes}"${key} aria-label="${left} و ${right}"><span>${left}</span><i></i><span>${right}</span></span>`;
+  const id=dataId?` data-domino-id="${dataId}"`:'';
+  return `<span class="${classes}"${key}${id} aria-label="${left} و ${right}"><span>${left}</span><i></i><span>${right}</span></span>`;
 }
 function legalSides(state,tileId){
   const values=tileValues(tileId);
@@ -95,15 +97,25 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
   }
 
   function bindBoardEndTarget(node,side){
-    if(!node||!selectedTileId)return;
+    if(!node)return;
+    node.onclick=null;node.onkeydown=null;
+    if(!selectedTileId||!side){node.removeAttribute('role');node.removeAttribute('tabindex');node.removeAttribute('aria-label');return;}
     node.setAttribute('role','button');
     node.setAttribute('tabindex','0');
     node.setAttribute('aria-label',side==='left'?'العب القطعة في الطرف الأيسر':'العب القطعة في الطرف الأيمن');
     const activate=()=>selectedTileId&&play(selectedTileId,side);
-    node.addEventListener('click',activate);
-    node.addEventListener('keydown',event=>{
+    node.onclick=activate;
+    node.onkeydown=event=>{
       if(event.key==='Enter'||event.key===' '){event.preventDefault();activate();}
-    });
+    };
+  }
+
+  function createBoardTile(item){
+    const holder=document.createElement('div');
+    holder.innerHTML=tileFace(item.left,item.right,{compact:true,dataKey:tileKey(item.left,item.right),dataId:item.tileId});
+    const node=holder.firstElementChild;
+    enhanceDominoTile(node);
+    return node;
   }
 
   function boardMarkup(){
@@ -121,16 +133,20 @@ export function createDominoController({roomClient=createGameRoomClient()}={}){
     const selectedSides=selectedTileId&&isTurn?legalSides(state,selectedTileId):[];
     host.dataset.anchorKey=visualAnchorKey||'';
     host.classList.toggle('choose-side',selectedSides.length>1);
-    host.innerHTML=state.board.map((item,index)=>{
-      const ends=[];
-      if(index===0)ends.push('board-end-left');
-      if(index===state.board.length-1)ends.push('board-end-right');
-      return tileFace(item.left,item.right,{compact:true,className:ends.join(' '),dataKey:tileKey(item.left,item.right)});
-    }).join('');
-    if(selectedSides.length>1){
-      if(selectedSides.includes('left'))bindBoardEndTarget(host.querySelector('.board-end-left'),'left');
-      if(selectedSides.includes('right'))bindBoardEndTarget(host.querySelector('.board-end-right'),'right');
-    }
+    host.querySelector('.domino-board-empty')?.remove();
+    const existing=new Map([...host.querySelectorAll(':scope > .domino-tile[data-domino-id]')].map(node=>[node.dataset.dominoId,node]));
+    state.board.forEach((item,index)=>{
+      const node=existing.get(item.tileId)||createBoardTile(item);
+      existing.delete(item.tileId);
+      node.classList.toggle('board-end-left',index===0);
+      node.classList.toggle('board-end-right',index===state.board.length-1);
+      node.dataset.dominoKey=tileKey(item.left,item.right);
+      if(host.children[index]!==node)host.insertBefore(node,host.children[index]||null);
+    });
+    existing.forEach(node=>node.remove());
+    bindBoardEndTarget(host.querySelector('.board-end-left'),selectedSides.includes('left')?'left':null);
+    bindBoardEndTarget(host.querySelector('.board-end-right'),selectedSides.includes('right')?'right':null);
+    decorateBoard(document);
   }
 
   function handMarkup(){
