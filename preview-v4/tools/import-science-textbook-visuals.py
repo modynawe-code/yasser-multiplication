@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 import difflib
 import hashlib
-import io
 import json
-import math
 import re
 import sys
 from pathlib import Path
 
-import cv2
-import numpy as np
 import pymupdf
 import pytesseract
 import requests
@@ -19,332 +15,186 @@ from pytesseract import Output
 BOOK_URL = "https://www.wajibati.net/wp-content/uploads/2025/08/kj-alum6f1_1_n7u8nrhvd4.pdf"
 OUT_DIR = Path("preview-v4/assets/science/yasser/book")
 MANIFEST_PATH = Path("preview-v4/src/modules/yasser/science/science-book-visuals.generated.js")
-SCAN_START = 8
-SCAN_END = 72
 RENDER_SCALE = 2.15
 
+# Pages are PDF page numbers (1-based). Restricting each target to its actual lesson
+# prevents an OCR match in later units from being mistaken for a chapter-one figure.
 TARGETS = {
-    "organization-levels": ["مستويات التنظيم", "المخلوقات الحية تنظيم", "خلية نسيج عضو جهاز"],
-    "cell-comparison": ["الخلية النباتية والخلية الحيوانية", "الخلية النباتية", "الخلية الحيوانية"],
-    "plant-cell-parts": ["الخلية النباتية", "أجزاء الخلية النباتية"],
-    "animal-cell-parts": ["الخلية الحيوانية", "أجزاء الخلية الحيوانية"],
-    "cell-wall-membrane": ["الجدار الخلوي", "الغشاء البلازمي"],
-    "chloroplast-closeup": ["البلاستيدات الخضراء", "البلاستيدة الخضراء"],
-    "mitochondria-closeup": ["الميتوكندريا"],
-    "nucleus-closeup": ["النواة"],
-    "vacuole-plant": ["الفجوات", "الفجوة"],
-    "diffusion-gradient": ["الانتشار"],
-    "osmosis-membrane": ["الخاصية الأسموزية", "الأسموزية"],
-    "active-transport-energy": ["النقل النشط"],
-    "passive-transport": ["النقل السلبي"],
-    "photosynthesis-flow": ["البناء الضوئي"],
-    "respiration-flow": ["التنفس الخلوي"],
-    "tissues": ["الأنسجة", "النسيج"],
-    "water-cell-components": ["مكونات خلايا الإنسان", "الماء"],
-    "heart": ["القلب", "العضو"],
+    "organization-levels": {"phrases":["مستويات التنظيم","كيف تنتظم أجسام المخلوقات الحية","الجهاز الحيوي"],"pages":[18,32],"height":1180,"bias":140},
+    "heart": {"phrases":["القلب","عضو"],"pages":[18,32],"height":980,"bias":0},
+    "tissues": {"phrases":["الأنسجة","النسيج"],"pages":[18,32],"height":1100,"bias":0},
+    "water-cell-components": {"phrases":["مكونات خلايا الإنسان","الماء"],"pages":[18,32],"height":1050,"bias":0},
+    "cell-comparison": {"phrases":["الخلية النباتية والخلية الحيوانية","الخلية النباتية","الخلية الحيوانية"],"pages":[33,45],"height":1450,"bias":250},
+    "plant-cell-parts": {"phrases":["الخلية النباتية","الجدار الخلوي","البلاستيدات الخضراء"],"pages":[33,45],"height":1150,"bias":80},
+    "animal-cell-parts": {"phrases":["الخلية الحيوانية","الغشاء البلازمي"],"pages":[33,45],"height":1150,"bias":80},
+    "cell-wall-membrane": {"phrases":["الجدار الخلوي","الغشاء البلازمي"],"pages":[33,45],"height":900,"bias":0},
+    "chloroplast-closeup": {"phrases":["البلاستيدات الخضراء","البلاستيدة الخضراء"],"pages":[33,45],"height":900,"bias":0},
+    "mitochondria-closeup": {"phrases":["الميتوكندريا"],"pages":[33,45],"height":900,"bias":0},
+    "nucleus-closeup": {"phrases":["النواة"],"pages":[33,45],"height":900,"bias":0},
+    "vacuole-plant": {"phrases":["الفجوات","الفجوة"],"pages":[33,45],"height":900,"bias":0},
+    "diffusion-gradient": {"phrases":["الانتشار"],"pages":[40,50],"height":1000,"bias":80},
+    "osmosis-membrane": {"phrases":["الخاصية الأسموزية","الأسموزية"],"pages":[40,50],"height":1000,"bias":80},
+    "active-transport-energy": {"phrases":["النقل النشط"],"pages":[40,50],"height":1000,"bias":80},
+    "passive-transport": {"phrases":["النقل السلبي"],"pages":[40,50],"height":1000,"bias":80},
+    "photosynthesis-flow": {"phrases":["البناء الضوئي"],"pages":[45,54],"height":1150,"bias":160},
+    "respiration-flow": {"phrases":["التنفس الخلوي"],"pages":[38,54],"height":1150,"bias":160},
 }
 
 ALIASES = {
-    "organization-levels": "مستويات التنظيم كما تظهر في كتاب العلوم",
-    "cell-comparison": "الخلية النباتية والخلية الحيوانية من كتاب العلوم",
-    "plant-cell-parts": "الخلية النباتية من كتاب العلوم",
-    "animal-cell-parts": "الخلية الحيوانية من كتاب العلوم",
-    "cell-wall-membrane": "الجدار الخلوي والغشاء البلازمي من كتاب العلوم",
-    "chloroplast-closeup": "البلاستيدات الخضراء من كتاب العلوم",
-    "mitochondria-closeup": "الميتوكندريا من كتاب العلوم",
-    "nucleus-closeup": "النواة من كتاب العلوم",
-    "vacuole-plant": "الفجوة في الخلية النباتية من كتاب العلوم",
-    "diffusion-gradient": "الانتشار من كتاب العلوم",
-    "osmosis-membrane": "الخاصية الأسموزية من كتاب العلوم",
-    "active-transport-energy": "النقل النشط من كتاب العلوم",
-    "passive-transport": "النقل السلبي من كتاب العلوم",
-    "photosynthesis-flow": "البناء الضوئي من كتاب العلوم",
-    "respiration-flow": "التنفس الخلوي من كتاب العلوم",
-    "tissues": "الأنسجة من كتاب العلوم",
-    "water-cell-components": "مكونات الخلية والماء من كتاب العلوم",
-    "heart": "القلب ضمن مستويات التنظيم من كتاب العلوم",
+    "organization-levels":"مستويات التنظيم كما تظهر في كتاب العلوم",
+    "heart":"القلب ضمن مستويات التنظيم من كتاب العلوم",
+    "tissues":"الأنسجة من كتاب العلوم",
+    "water-cell-components":"مكونات الخلية والماء من كتاب العلوم",
+    "cell-comparison":"الخلية النباتية والخلية الحيوانية من كتاب العلوم",
+    "plant-cell-parts":"الخلية النباتية من كتاب العلوم",
+    "animal-cell-parts":"الخلية الحيوانية من كتاب العلوم",
+    "cell-wall-membrane":"الجدار الخلوي والغشاء البلازمي من كتاب العلوم",
+    "chloroplast-closeup":"البلاستيدات الخضراء من كتاب العلوم",
+    "mitochondria-closeup":"الميتوكندريا من كتاب العلوم",
+    "nucleus-closeup":"النواة من كتاب العلوم",
+    "vacuole-plant":"الفجوة في الخلية النباتية من كتاب العلوم",
+    "diffusion-gradient":"الانتشار من كتاب العلوم",
+    "osmosis-membrane":"الخاصية الأسموزية من كتاب العلوم",
+    "active-transport-energy":"النقل النشط من كتاب العلوم",
+    "passive-transport":"النقل السلبي من كتاب العلوم",
+    "photosynthesis-flow":"البناء الضوئي من كتاب العلوم",
+    "respiration-flow":"التنفس الخلوي من كتاب العلوم",
 }
 
 ARABIC_DIACRITICS = re.compile(r"[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed]")
 
-
-def normalize(text: str) -> str:
+def normalize(text):
     text = ARABIC_DIACRITICS.sub("", text or "")
     text = text.replace("ـ", "").replace("أ", "ا").replace("إ", "ا").replace("آ", "ا")
     text = text.replace("ة", "ه").replace("ى", "ي")
     text = re.sub(r"[^\u0600-\u06ffA-Za-z0-9%]+", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 
+def similarity(a,b):
+    if not a or not b: return 0.0
+    if a == b: return 1.0
+    if min(len(a),len(b)) < 3: return 0.0
+    return difflib.SequenceMatcher(None,a,b).ratio()
 
-def download_book() -> bytes:
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; FamilyLearningAssetImporter/1.0)"}
-    response = requests.get(BOOK_URL, timeout=90, headers=headers)
-    response.raise_for_status()
-    data = response.content
-    if len(data) < 1_000_000 or not data.startswith(b"%PDF"):
-        raise RuntimeError(f"Unexpected textbook payload: {len(data)} bytes")
-    return data
+def download_book():
+    r = requests.get(BOOK_URL, timeout=90, headers={"User-Agent":"Mozilla/5.0 FamilyLearning/1.0"})
+    r.raise_for_status()
+    if len(r.content) < 1_000_000 or not r.content.startswith(b"%PDF"):
+        raise RuntimeError("Unexpected textbook PDF response")
+    return r.content
 
+def render_page(doc,page_index):
+    pix = doc[page_index].get_pixmap(matrix=pymupdf.Matrix(RENDER_SCALE,RENDER_SCALE),alpha=False)
+    return Image.frombytes("RGB",[pix.width,pix.height],pix.samples)
 
-def render_page(doc, page_index: int) -> Image.Image:
-    page = doc[page_index]
-    matrix = pymupdf.Matrix(RENDER_SCALE, RENDER_SCALE)
-    pix = page.get_pixmap(matrix=matrix, alpha=False)
-    return Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
-
-def token_similarity(a: str, b: str) -> float:
-    if not a or not b:
-        return 0.0
-    if a == b:
-        return 1.0
-    if len(a) <= 3 or len(b) <= 3:
-        return 0.0
-    return difflib.SequenceMatcher(None, a, b).ratio()
-
-
-def ocr_page(image: Image.Image):
-    data = pytesseract.image_to_data(image, lang="ara+eng", config="--psm 6", output_type=Output.DICT)
-    tokens = []
-    count = len(data.get("text", []))
-    for i in range(count):
-        raw = data["text"][i]
-        text = normalize(raw)
-        if not text:
-            continue
-        try:
-            conf = float(data["conf"][i])
-        except Exception:
-            conf = 0
-        if conf < 18:
-            continue
+def ocr_page(image):
+    data = pytesseract.image_to_data(image,lang="ara+eng",config="--psm 6",output_type=Output.DICT)
+    tokens=[]
+    for i,raw in enumerate(data.get("text",[])):
+        text=normalize(raw)
+        if not text: continue
+        try: conf=float(data["conf"][i])
+        except Exception: conf=0
+        if conf < 12: continue
         tokens.append({
-            "text": text,
-            "left": int(data["left"][i]),
-            "top": int(data["top"][i]),
-            "width": int(data["width"][i]),
-            "height": int(data["height"][i]),
-            "conf": conf,
+            "text":text,"left":int(data["left"][i]),"top":int(data["top"][i]),
+            "width":int(data["width"][i]),"height":int(data["height"][i]),
+            "block":int(data["block_num"][i]),"line":int(data["line_num"][i]),"conf":conf
         })
     return tokens
 
+def groups_by_line(tokens):
+    groups={}
+    for token in tokens:
+        groups.setdefault((token["block"],token["line"]),[]).append(token)
+    return list(groups.values())
 
-def phrase_score(tokens, phrase):
-    words = [normalize(w) for w in normalize(phrase).split() if normalize(w)]
-    if not words or not tokens:
-        return 0.0, None
-    matched = []
-    sims = []
-    for word in words:
-        best = max(tokens, key=lambda token: token_similarity(word, token["text"]))
-        sim = token_similarity(word, best["text"])
-        sims.append(sim)
-        if sim >= 0.68:
-            matched.append(best)
-    score = sum(sims) / len(sims)
-    if not matched:
-        return score, None
-    center_y = sum(item["top"] + item["height"] / 2 for item in matched) / len(matched)
-    return score, center_y
+def union_bbox(tokens):
+    left=min(t["left"] for t in tokens); top=min(t["top"] for t in tokens)
+    right=max(t["left"]+t["width"] for t in tokens); bottom=max(t["top"]+t["height"] for t in tokens)
+    return [left,top,right-left,bottom-top]
 
+def match_phrase(tokens,phrase):
+    words=[w for w in normalize(phrase).split() if w]
+    if not words: return None
+    best=None
+    for line_tokens in groups_by_line(tokens):
+        matched=[]; sims=[]
+        for word in words:
+            token=max(line_tokens,key=lambda t:similarity(word,t["text"]))
+            sim=similarity(word,token["text"]); sims.append(sim)
+            if sim>=0.58: matched.append(token)
+        coverage=len(matched)/len(words)
+        score=(sum(sims)/len(sims))*coverage
+        if coverage < (0.5 if len(words)>1 else 1): continue
+        candidate={"score":score,"bbox":union_bbox(matched),"phrase":phrase}
+        if best is None or candidate["score"]>best["score"]: best=candidate
+    return best
 
-def find_page_hits(ocr_cache, phrases):
-    hits = []
-    for page_index, payload in ocr_cache.items():
-        best_score = 0.0
-        best_y = None
-        best_phrase = None
-        for phrase in phrases:
-            score, y = phrase_score(payload["tokens"], phrase)
-            if score > best_score:
-                best_score, best_y, best_phrase = score, y, phrase
-        if best_score >= 0.62:
-            hits.append({"page_index": page_index, "score": best_score, "target_y": best_y, "phrase": best_phrase})
-    return sorted(hits, key=lambda item: (-item["score"], item["page_index"]))
-
-
-def merge_boxes(boxes, gap=30):
-    boxes = [list(map(int, box)) for box in boxes]
-    changed = True
-    while changed:
-        changed = False
-        output = []
-        while boxes:
-            x, y, w, h = boxes.pop(0)
-            x2, y2 = x + w, y + h
-            merged = False
-            for idx, (ox, oy, ow, oh) in enumerate(boxes):
-                ox2, oy2 = ox + ow, oy + oh
-                if not (x2 + gap < ox or ox2 + gap < x or y2 + gap < oy or oy2 + gap < y):
-                    nx, ny = min(x, ox), min(y, oy)
-                    nx2, ny2 = max(x2, ox2), max(y2, oy2)
-                    boxes[idx] = [nx, ny, nx2 - nx, ny2 - ny]
-                    merged = True
-                    changed = True
-                    break
-            if not merged:
-                output.append([x, y, w, h])
-        boxes = output
-    return boxes
-
-
-def visual_regions(image: Image.Image):
-    rgb = np.asarray(image)
-    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
-    sat = hsv[:, :, 1]
-    val = hsv[:, :, 2]
-    color_mask = ((sat > 36) & (val > 35)).astype(np.uint8) * 255
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (19, 19))
-    mask = cv2.morphologyEx(color_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
-    mask = cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (13, 13)), iterations=1)
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    h, w = rgb.shape[:2]
-    boxes = []
-    for contour in contours:
-        x, y, bw, bh = cv2.boundingRect(contour)
-        area = bw * bh
-        if bw < w * 0.10 or bh < h * 0.055 or area < w * h * 0.004:
-            continue
-        if bw > w * 0.96 and bh > h * 0.92:
-            continue
-        boxes.append([x, y, bw, bh])
-    return merge_boxes(boxes, gap=max(20, int(w * 0.018)))
-
-
-def region_score(box, image_size, target_y, used_key):
-    x, y, w, h = box
-    iw, ih = image_size
-    area_ratio = (w * h) / max(iw * ih, 1)
-    center_y = y + h / 2
-    if target_y is None:
-        proximity = 0.45
-    else:
-        proximity = abs(center_y - target_y) / max(ih, 1)
-    edge_penalty = 0.25 if y < ih * 0.08 or y + h > ih * 0.94 else 0
-    duplicate_penalty = 0.42 if used_key else 0
-    return area_ratio * 3.2 + (1.0 - min(proximity, 1.0)) * 1.2 - edge_penalty - duplicate_penalty
-
-
-def choose_region(page_hits, ocr_cache, used):
-    candidates = []
-    for hit in page_hits[:8]:
-        page_index = hit["page_index"]
-        payload = ocr_cache[page_index]
-        image = payload["image"]
-        boxes = visual_regions(image)
-        for box in boxes:
-            rounded = tuple(int(v / 25) for v in box)
-            key = (page_index, rounded)
-            score = region_score(box, image.size, hit["target_y"], key in used) + hit["score"] * 0.55
-            candidates.append({
-                "page_index": page_index,
-                "box": box,
-                "key": key,
-                "score": score,
-                "phrase": hit["phrase"],
-            })
-    if not candidates:
-        return None
-    candidates.sort(key=lambda item: item["score"], reverse=True)
+def find_target(doc,target,cache):
+    first,last=target["pages"]
+    candidates=[]
+    for page_num in range(first,min(last,doc.page_count)+1):
+        index=page_num-1
+        if index not in cache:
+            image=render_page(doc,index); cache[index]={"image":image,"tokens":ocr_page(image)}
+        tokens=cache[index]["tokens"]
+        for phrase in target["phrases"]:
+            hit=match_phrase(tokens,phrase)
+            if hit and hit["score"]>=0.48:
+                candidates.append({**hit,"page_index":index})
+    if not candidates: return None
+    candidates.sort(key=lambda x:x["score"],reverse=True)
     return candidates[0]
 
+def crop_exact_excerpt(image,match,target):
+    _,ty,_,th=match["bbox"]
+    center_y=ty+th/2+target.get("bias",0)
+    height=min(int(target.get("height",1000)),image.height-80)
+    top=max(30,int(center_y-height/2)); bottom=min(image.height-30,top+height)
+    if bottom-top < height:
+        top=max(30,bottom-height)
+    # Keep the page width so the original diagram geometry/labels are never redrawn.
+    margin=max(30,int(image.width*0.035))
+    return image.crop((margin,top,image.width-margin,bottom)),[margin,top,image.width-2*margin,bottom-top]
 
-def crop_visual(image: Image.Image, box, padding=28):
-    x, y, w, h = box
-    left = max(0, x - padding)
-    top = max(0, y - padding)
-    right = min(image.width, x + w + padding)
-    bottom = min(image.height, y + h + padding)
-    return image.crop((left, top, right, bottom))
-
-
-def js_escape(value: str) -> str:
-    return json.dumps(value, ensure_ascii=False)
-
+def js(value): return json.dumps(value,ensure_ascii=False)
 
 def write_manifest(records):
-    lines = [
+    lines=[
         "// Generated from the Saudi Grade 6 science textbook. Do not hand-edit.",
-        f"export const YASSER_SCIENCE_BOOK_SOURCE=Object.freeze({{label:'كتاب العلوم سادس ابتدائي ف1',kind:'textbook-exact',authority:'textbook',url:{js_escape(BOOK_URL)}}});",
-        "export const YASSER_SCIENCE_BOOK_VISUAL_ASSETS=Object.freeze({",
+        f"export const YASSER_SCIENCE_BOOK_SOURCE=Object.freeze({{label:'كتاب العلوم سادس ابتدائي ف1',kind:'textbook-exact',authority:'textbook',url:{js(BOOK_URL)}}});",
+        "export const YASSER_SCIENCE_BOOK_VISUAL_ASSETS=Object.freeze({"
     ]
-    for item in records:
-        bbox = item["bbox"]
-        lines.append(
-            f"  {js_escape(item['id'])}:Object.freeze({{id:{js_escape(item['id'])},src:{js_escape(item['src'])},alt:{js_escape(item['alt'])},source:Object.freeze({{...YASSER_SCIENCE_BOOK_SOURCE,page:{item['page']},bbox:Object.freeze([{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}]),sha256:{js_escape(item['sha256'])}}})}}),"
-        )
-    lines.append("});")
-    lines.append("")
-    MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text("\n".join(lines), encoding="utf-8")
-
+    for r in records:
+        b=r["bbox"]
+        lines.append(f"  {js(r['id'])}:Object.freeze({{id:{js(r['id'])},src:{js(r['src'])},alt:{js(r['alt'])},source:Object.freeze({{...YASSER_SCIENCE_BOOK_SOURCE,page:{r['page']},bbox:Object.freeze([{b[0]},{b[1]},{b[2]},{b[3]}]),sha256:{js(r['sha256'])}}})}}),")
+    lines += ["});",""]
+    MANIFEST_PATH.write_text("\n".join(lines),encoding="utf-8")
 
 def main():
-    pdf_bytes = download_book()
-    doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
-    if doc.page_count < 100:
-        raise RuntimeError(f"Unexpected textbook page count: {doc.page_count}")
-
-    ocr_cache = {}
-    end = min(SCAN_END, doc.page_count)
-    for page_index in range(SCAN_START, end):
-        image = render_page(doc, page_index)
-        tokens = ocr_page(image)
-        ocr_cache[page_index] = {"image": image, "tokens": tokens}
-        if page_index % 8 == 0:
-            print(f"OCR page {page_index + 1}/{end}")
-
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    used = set()
-    records = []
-    missing = []
-
-    for asset_id, phrases in TARGETS.items():
-        hits = find_page_hits(ocr_cache, phrases)
-        selected = choose_region(hits, ocr_cache, used)
-        if not selected:
-            missing.append(asset_id)
-            print(f"MISS {asset_id}: OCR/visual region not found")
-            continue
-        used.add(selected["key"])
-        page_image = ocr_cache[selected["page_index"]]["image"]
-        crop = crop_visual(page_image, selected["box"])
-        output_path = OUT_DIR / f"{asset_id}.webp"
-        crop.save(output_path, "WEBP", quality=96, method=6)
-        sha256 = hashlib.sha256(output_path.read_bytes()).hexdigest()
-        record = {
-            "id": asset_id,
-            "src": f"assets/science/yasser/book/{asset_id}.webp",
-            "alt": ALIASES[asset_id],
-            "page": selected["page_index"] + 1,
-            "bbox": selected["box"],
-            "sha256": sha256,
-            "width": crop.width,
-            "height": crop.height,
-            "matched_phrase": selected["phrase"],
-        }
-        records.append(record)
-        print(f"OK {asset_id}: page={record['page']} crop={crop.width}x{crop.height} phrase={selected['phrase']} score={selected['score']:.3f}")
-
-    if len(records) < 12:
-        raise RuntimeError(f"Only {len(records)} textbook visuals extracted; refusing to replace chapter visuals. Missing: {missing}")
-
+    pdf=download_book(); doc=pymupdf.open(stream=pdf,filetype="pdf")
+    if doc.page_count<100: raise RuntimeError(f"Unexpected page count: {doc.page_count}")
+    OUT_DIR.mkdir(parents=True,exist_ok=True); MANIFEST_PATH.parent.mkdir(parents=True,exist_ok=True)
+    cache={}; records=[]; missing=[]
+    for asset_id,target in TARGETS.items():
+        hit=find_target(doc,target,cache)
+        if not hit:
+            missing.append(asset_id); print(f"MISS {asset_id}"); continue
+        image=cache[hit["page_index"]]["image"]
+        crop,bbox=crop_exact_excerpt(image,hit,target)
+        path=OUT_DIR/f"{asset_id}.webp"; crop.save(path,"WEBP",quality=96,method=6)
+        sha=hashlib.sha256(path.read_bytes()).hexdigest()
+        record={"id":asset_id,"src":f"assets/science/yasser/book/{asset_id}.webp","alt":ALIASES[asset_id],"page":hit["page_index"]+1,"bbox":bbox,"sha256":sha,"width":crop.width,"height":crop.height,"matched_phrase":hit["phrase"],"ocr_score":round(hit["score"],3)}
+        records.append(record); print(f"OK {asset_id}: p{record['page']} {crop.width}x{crop.height} {hit['phrase']} score={hit['score']:.2f}")
+    if len(records)<15: raise RuntimeError(f"Only {len(records)} textbook excerpts found; missing={missing}")
+    unique=len({r["sha256"] for r in records})
+    if unique<10: raise RuntimeError(f"Only {unique} unique textbook excerpts; refusing weak import")
     write_manifest(records)
-    metadata = {
-        "source": BOOK_URL,
-        "pdf_sha256": hashlib.sha256(pdf_bytes).hexdigest(),
-        "page_count": doc.page_count,
-        "scan_range": [SCAN_START + 1, end],
-        "assets": records,
-        "missing": missing,
-    }
-    (OUT_DIR / "manifest.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Extracted {len(records)} exact textbook visuals; missing {len(missing)}")
+    (OUT_DIR/"manifest.json").write_text(json.dumps({"source":BOOK_URL,"pdf_sha256":hashlib.sha256(pdf).hexdigest(),"page_count":doc.page_count,"assets":records,"missing":missing,"unique":unique},ensure_ascii=False,indent=2),encoding="utf-8")
+    print(f"Extracted {len(records)} textbook excerpts ({unique} unique).")
 
-
-if __name__ == "__main__":
-    try:
-        main()
+if __name__=="__main__":
+    try: main()
     except Exception as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        raise
+        print(f"ERROR: {exc}",file=sys.stderr); raise
