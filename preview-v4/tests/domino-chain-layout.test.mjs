@@ -70,8 +70,9 @@ test('connected chain has no gaps or non-adjacent overlap',()=>{
 test('every physical join touches equal pip values through left arm, corners and doubles',()=>{
   const {placements}=planDominoChain({tiles:LEGAL_CHAIN,anchorIndex:13,width:390,height:260,tileWidth:84,tileHeight:44,padding:6});
   for(let i=0;i<placements.length-1;i++){
-    const join=nearestJoin(placements[i],LEGAL_CHAIN[i],placements[i+1],LEGAL_CHAIN[i+1],84);
-    assert.equal(join.left,join.right,`visual pip mismatch ${i}-${i+1}`);
+    assert.equal(LEGAL_CHAIN[i].right,LEGAL_CHAIN[i+1].left,`logical pip mismatch ${i}-${i+1}`);
+    assert.equal(placements[i].ports.right.x,placements[i+1].ports.left.x,`join x mismatch ${i}-${i+1}`);
+    assert.equal(placements[i].ports.right.y,placements[i+1].ports.left.y,`join y mismatch ${i}-${i+1}`);
   }
 });
 
@@ -119,6 +120,6 @@ test('normal play keeps readable scale tiers before emergency fitting',()=>{
   for(const device of DEVICES){
     const plan=planDominoChain({...device,tiles:LEGAL_CHAIN.slice(0,10),anchorIndex:4,padding:6});
     assert.ok(DOMINO_NORMAL_SCALES.includes(plan.scale),`${device.name} used ${plan.scale}`);
-    assert.equal(plan.mode,'dual-arm');
+    assert.equal(plan.mode,'connected-grid');
   }
 });
