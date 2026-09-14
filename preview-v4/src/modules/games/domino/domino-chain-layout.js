@@ -8,10 +8,10 @@ function normalizeTile(tile){return {left:Number(tile?.left),right:Number(tile?.
 function isDouble(tile){return tile.left===tile.right;}
 function halfExtents(rotation,tileWidth,tileHeight,scale){return rotation%180===0?{x:tileWidth*scale/2,y:tileHeight*scale/2}:{x:tileHeight*scale/2,y:tileWidth*scale/2};}
 function boundsOf(item,context){const half=halfExtents(item.rotation,context.tileWidth,context.tileHeight,context.scale);return {left:item.x-half.x,right:item.x+half.x,top:item.y-half.y,bottom:item.y+half.y};}
-function rotationFor(tile,direction,{anchor=false,corner=false,verticalSign=1}={}){
+function rotationFor(tile,direction,{anchor=false,corner=false,verticalSign=1,arm=direction}={}){
   if(anchor)return 0;
-  if(corner)return direction==='right'?(verticalSign>0?90:270):(verticalSign>0?270:90);
-  const angle=ANGLES[direction];
+  if(corner)return arm==='right'?(verticalSign>0?90:270):(verticalSign>0?270:90);
+  const angle=(ANGLES[direction]+(arm==='left'?180:0))%360;
   return isDouble(tile)?(angle+90)%360:angle;
 }
 function attached(previous,direction,rotation,context,y=previous.y){
@@ -28,7 +28,15 @@ function flatArmNeed(tiles,direction,context){
 }
 function collides(item,index,items,context){return items.some(other=>Math.abs(index-other.index)>1&&materialOverlap({...item,index},other,context)>.5);}
 function available(item,index,items,context){return insideHorizontal(item,context.padding,context.width-context.padding,context)&&!collides(item,index,items,context);}
+function needsEarlyTurn(item,direction,context){
+  if(context.width>720)return false;
+  const bounds=boundsOf(item,context);
+  const clearance=direction==='right'?context.width-context.padding-bounds.right:bounds.left-context.padding;
+  const doubleAndExit=(context.tileHeight+context.tileWidth/2-context.overlap*2)*context.scale;
+  return clearance<doubleAndExit;
+}
 function placeArm({tiles,indices,direction,verticalSign,anchor,occupied,context}){
+  const arm=direction;
   const rowPitch=(context.tileWidth/2+context.tileHeight/2+6)*context.scale;
   let explored=0;
   function search(position,previous,currentDirection,row,afterCorner,placed){
@@ -37,24 +45,33 @@ function placeArm({tiles,indices,direction,verticalSign,anchor,occupied,context}
     const items=[...occupied,...placed],index=indices[position];
     const tile=tiles[index];
     if(afterCorner){
-      const rotation=rotationFor(tile,currentDirection);
+      const rotation=rotationFor(tile,currentDirection,{arm});
       const item=attached(previous,currentDirection,rotation,context,previous.y+verticalSign*rowPitch/2);
       if(!available(item,index,items,context))return null;
       Object.assign(item,{pathRotation:ANGLES[currentDirection],row:verticalSign*row,isDouble:isDouble(tile),anchor:false,index});
       return search(position+1,item,currentDirection,row,false,[...placed,item]);
     }
-    const rotation=rotationFor(tile,currentDirection),straight=attached(previous,currentDirection,rotation,context);
-    if(available(straight,index,items,context)){
+    const rotation=rotationFor(tile,currentDirection,{arm}),straight=attached(previous,currentDirection,rotation,context);
+    const straightAvailable=available(straight,index,items,context);
+    const turnFirst=!isDouble(tile)&&straightAvailable&&needsEarlyTurn(straight,currentDirection,context);
+    if(straightAvailable&&!turnFirst){
       Object.assign(straight,{pathRotation:ANGLES[currentDirection],row:verticalSign*row,isDouble:isDouble(tile),anchor:false,index});
       const result=search(position+1,straight,currentDirection,row,false,[...placed,straight]);
       if(result)return result;
     }
     if(isDouble(tile))return null;
-    const cornerRotation=rotationFor(tile,currentDirection,{corner:true,verticalSign});
+    const cornerRotation=rotationFor(tile,currentDirection,{corner:true,verticalSign,arm});
     const corner=attached(previous,currentDirection,cornerRotation,context,previous.y+verticalSign*rowPitch/2);
-    if(!available(corner,index,items,context))return null;
-    Object.assign(corner,{pathRotation:verticalSign>0?90:270,row:verticalSign*row,isDouble:false,anchor:false,index});
-    return search(position+1,corner,currentDirection==='right'?'left':'right',row+1,true,[...placed,corner]);
+    if(available(corner,index,items,context)){
+      Object.assign(corner,{pathRotation:verticalSign>0?90:270,row:verticalSign*row,isDouble:false,anchor:false,index});
+      const result=search(position+1,corner,currentDirection==='right'?'left':'right',row+1,true,[...placed,corner]);
+      if(result)return result;
+    }
+    if(turnFirst){
+      Object.assign(straight,{pathRotation:ANGLES[currentDirection],row:verticalSign*row,isDouble:false,anchor:false,index});
+      return search(position+1,straight,currentDirection,row,false,[...placed,straight]);
+    }
+    return null;
   }
   return search(0,anchor,direction,0,false,[]);
 }
@@ -77,12 +94,9 @@ function buildDualArm({tiles,anchorIndex,width,height,padding,tileWidth,tileHeig
   const context={width,height,padding,tileWidth,tileHeight,scale,overlap};
   const leftIndices=Array.from({length:anchorIndex},(_,i)=>anchorIndex-1-i);
   const rightIndices=Array.from({length:tiles.length-anchorIndex-1},(_,i)=>anchorIndex+1+i);
-  const leftNeed=flatArmNeed(leftIndices.map(index=>tiles[index]),'left',context);
-  const rightNeed=flatArmNeed(rightIndices.map(index=>tiles[index]),'right',context);
-  const usable=width-padding*2,totalNeed=leftNeed+rightNeed;
+  const usable=width-padding*2;
   const anchorHalf=tileWidth*scale/2,minSide=Math.min(usable/2,anchorHalf+tileHeight*scale);
-  const ideal=totalNeed<=usable?padding+(usable-totalNeed)/2+leftNeed:padding+usable*(leftNeed/Math.max(1,totalNeed));
-  const minX=padding+minSide,maxX=width-padding-minSide,startX=clamp(ideal,minX,maxX);
+  const minX=padding+minSide,maxX=width-padding-minSide,startX=clamp(width/2,minX,maxX);
   const candidates=[startX];
   for(let offset=4;offset<=maxX-minX+4;offset+=4){
     if(startX-offset>=minX)candidates.push(startX-offset);
