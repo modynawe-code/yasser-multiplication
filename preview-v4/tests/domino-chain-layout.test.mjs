@@ -14,6 +14,8 @@ const DEVICES=[
 function boundsOf(p,w,h){const vertical=p.rotation%180!==0;const width=(vertical?h:w)*p.scale,height=(vertical?w:h)*p.scale;return {left:p.x-width/2,right:p.x+width/2,top:p.y-height/2,bottom:p.y+height/2};}
 function touches(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);const gapX=Math.max(0,Math.max(A.left,B.left)-Math.min(A.right,B.right));const gapY=Math.max(0,Math.max(A.top,B.top)-Math.min(A.bottom,B.bottom));return gapX<.2&&gapY<.2;}
 function overlapArea(a,b,w,h){const A=boundsOf(a,w,h),B=boundsOf(b,w,h);return Math.max(0,Math.min(A.right,B.right)-Math.max(A.left,B.left))*Math.max(0,Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top));}
+function visualHalves(placement,tile,w){const angle=placement.rotation*Math.PI/180,d=w*placement.scale/4,dx=Math.cos(angle)*d,dy=Math.sin(angle)*d;return[{value:tile.left,x:placement.x-dx,y:placement.y-dy},{value:tile.right,x:placement.x+dx,y:placement.y+dy}];}
+function nearestJoin(a,tileA,b,tileB,w){let nearest=null;for(const A of visualHalves(a,tileA,w))for(const B of visualHalves(b,tileB,w)){const distance=Math.hypot(A.x-B.x,A.y-B.y);if(!nearest||distance<nearest.distance)nearest={left:A.value,right:B.value,distance};}return nearest;}
 
 test('opening tile is the fixed horizontal anchor',()=>{
   const plan=planDominoChain({tiles:LEGAL_CHAIN.slice(0,15),anchorIndex:7,width:390,height:260,tileWidth:84,tileHeight:44,padding:6});
@@ -63,6 +65,30 @@ test('connected chain has no gaps or non-adjacent overlap',()=>{
   assert.equal(placements.length,28);
   for(let i=0;i<placements.length-1;i++)assert.equal(touches(placements[i],placements[i+1],84,44),true,`gap ${i}-${i+1}`);
   for(let i=0;i<placements.length;i++)for(let j=i+2;j<placements.length;j++)assert.ok(overlapArea(placements[i],placements[j],84,44)<=.51,`overlap ${i}-${j}`);
+});
+
+test('every physical join touches equal pip values through left arm, corners and doubles',()=>{
+  const {placements}=planDominoChain({tiles:LEGAL_CHAIN,anchorIndex:13,width:390,height:260,tileWidth:84,tileHeight:44,padding:6});
+  for(let i=0;i<placements.length-1;i++){
+    const join=nearestJoin(placements[i],LEGAL_CHAIN[i],placements[i+1],LEGAL_CHAIN[i+1],84);
+    assert.equal(join.left,join.right,`visual pip mismatch ${i}-${i+1}`);
+  }
+});
+
+test('left arm faces preserve logical pip order instead of mirroring the chain',()=>{
+  const tiles=[tile(0,1),tile(1,2),tile(2,3),tile(3,4),tile(4,5)];
+  const {placements}=planDominoChain({tiles,anchorIndex:3,width:900,height:260,tileWidth:96,tileHeight:50,padding:6});
+  assert.equal(placements[2].rotation%360,0);
+  assert.equal(nearestJoin(placements[2],tiles[2],placements[3],tiles[3],96).left,3);
+});
+
+test('mobile reserves the edge turn before a following double',()=>{
+  const base=[tile(0,1),tile(1,2),tile(2,3),tile(3,4)];
+  const before=planDominoChain({tiles:base,anchorIndex:0,width:320,height:240,tileWidth:78,tileHeight:41,padding:6});
+  const after=planDominoChain({tiles:[...base,tile(4,4)],anchorIndex:0,width:320,height:240,tileWidth:78,tileHeight:41,padding:6});
+  assert.equal(before.placements[3].rotation,after.placements[3].rotation);
+  assert.equal(after.placements[4].pathRotation%180,0);
+  assert.equal((after.placements[4].rotation-after.placements[4].pathRotation+360)%180,90);
 });
 
 test('all 28 tiles fit each target board without clipping or scrolling',()=>{
