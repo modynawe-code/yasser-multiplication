@@ -1,4 +1,5 @@
-import {YASSER_SCIENCE_ASSETS,YASSER_SCIENCE_QUESTIONS,YASSER_SCIENCE_SCOPE} from './science-data.js';
+import {YASSER_SCIENCE_ASSETS,YASSER_SCIENCE_SCOPE} from './science-data.js';
+import {YASSER_SCIENCE_PLAYABLE_QUESTIONS} from './science-question-bank.js';
 import {DEFAULT_YASSER_SCIENCE_CHAPTER_ID,YASSER_SCIENCE_CHAPTERS,filterScienceProgressByChapter,filterScienceQuestionsByChapter,getScienceChapter} from './science-chapters.js';
 import {applyScienceAttempt,applyScienceSessionSummary,createScienceSession,getScienceDashboard,getScienceReviewQuestionIds,sessionWrongQuestionIds,submitScienceAnswer} from './science-engine.js';
 
@@ -12,7 +13,7 @@ function ensureStyle(){if(document.querySelector('link[data-module-style="yasser
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
 function clearTimer(){if(feedbackTimer){clearTimeout(feedbackTimer);feedbackTimer=null;}}
 function selectedChapter(){return getScienceChapter(selectedChapterId);}
-function chapterQuestions(){return filterScienceQuestionsByChapter(YASSER_SCIENCE_QUESTIONS,selectedChapterId);}
+function chapterQuestions(){return filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS,selectedChapterId);}
 function chapterProgress(){return filterScienceProgressByChapter(progress,selectedChapterId);}
 
 function ensureShell(){
