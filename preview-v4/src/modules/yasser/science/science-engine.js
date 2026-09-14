@@ -1,4 +1,5 @@
 import {YASSER_SCIENCE_ASSETS,YASSER_SCIENCE_QUESTIONS} from './science-data.js';
+import {YASSER_SCIENCE_VISUAL_ASSETS} from './science-visuals.js';
 
 const emptyProgress=()=>({version:1,attempts:[],concepts:{},points:0,bestStreak:0,updatedAt:null});
 const cloneProgress=(progress)=>({
@@ -143,7 +144,9 @@ export function createScienceSession({mode='quick',count,progress,questions=YASS
     const limit=Math.min(requested,reviewQuestionIds.length,questions.length);
     return createSessionState(safeMode,selectReviewQuestions(questions,reviewQuestionIds,limit,rng));
   }
-  const pool=safeMode==='images'?questions.filter(item=>Boolean(item.assetId)):questions;
+  const allVisualQuestions=questions.filter(item=>Boolean(item.assetId));
+  const textbookVisualQuestions=allVisualQuestions.filter(item=>Boolean(YASSER_SCIENCE_VISUAL_ASSETS[item.assetId]));
+  const pool=safeMode==='images'?(textbookVisualQuestions.length?textbookVisualQuestions:allVisualQuestions):questions;
   const limit=Math.min(requested,pool.length);
   if(safeMode==='images')return createSessionState(safeMode,selectBalancedByAsset(pool,limit,rng));
   if(safeMode==='exam')return createSessionState(safeMode,selectExamQuestions(pool,limit,rng));
