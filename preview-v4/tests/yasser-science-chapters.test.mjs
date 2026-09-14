@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {YASSER_SCIENCE_QUESTIONS} from '../src/modules/yasser/science/science-data.js';
+import {YASSER_SCIENCE_PLAYABLE_QUESTIONS} from '../src/modules/yasser/science/science-question-bank.js';
 import {
   DEFAULT_YASSER_SCIENCE_CHAPTER_ID,
   YASSER_SCIENCE_CHAPTERS,
@@ -13,24 +13,34 @@ import {createScienceSession} from '../src/modules/yasser/science/science-engine
 const CHAPTER_ONE_UNITS=new Set(['cells','organization','cell-processes']);
 const CHAPTER_TWO_UNITS=new Set(['division','heredity']);
 
-test('chapter 1 cells is the default science chapter',()=>{
+test('chapter 1 cells is the default science chapter with the complete verified playable bank',()=>{
   assert.equal(DEFAULT_YASSER_SCIENCE_CHAPTER_ID,'chapter-1-cells');
   assert.equal(YASSER_SCIENCE_CHAPTERS[0].label,'الفصل 1: الخلايا');
-  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_QUESTIONS);
-  assert.ok(questions.length>=10);
+  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS);
+  assert.equal(questions.length,87);
   assert.ok(questions.every(question=>CHAPTER_ONE_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>!CHAPTER_TWO_UNITS.has(question.unit)));
+  assert.ok(questions.every(question=>['choice','trueFalse'].includes(question.type)));
+  assert.ok(questions.every(question=>Array.isArray(question.choices)&&question.choices.includes(question.answer)));
+});
+
+test('chapter 1 playable bank has minimum coverage across cells, organization and cell processes',()=>{
+  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS);
+  const count=(unit)=>questions.filter(question=>question.unit===unit).length;
+  assert.ok(count('cells')>=45,`cells=${count('cells')}`);
+  assert.ok(count('organization')>=10,`organization=${count('organization')}`);
+  assert.ok(count('cell-processes')>=20,`cell-processes=${count('cell-processes')}`);
 });
 
 test('chapter 2 is isolated from chapter 1',()=>{
-  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_QUESTIONS,'chapter-2-cell-heredity');
+  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'chapter-2-cell-heredity');
   assert.ok(questions.length>=10);
   assert.ok(questions.every(question=>CHAPTER_TWO_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>!CHAPTER_ONE_UNITS.has(question.unit)));
 });
 
 test('quick, image and school exam sessions stay inside selected chapter',()=>{
-  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_QUESTIONS,DEFAULT_YASSER_SCIENCE_CHAPTER_ID);
+  const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS,DEFAULT_YASSER_SCIENCE_CHAPTER_ID);
   for(const mode of ['quick','images','exam']){
     const session=createScienceSession({mode,count:mode==='exam'?20:8,questions,rng:()=>.5});
     assert.ok(session.questions.length>0,mode);
@@ -61,6 +71,7 @@ test('science UI exposes chapter selector and full image zoom affordance',()=>{
   const css=readFileSync(new URL('../src/modules/yasser/science/yasser-science.css',import.meta.url),'utf8');
   assert.match(source,/scienceChapterTabs/);
   assert.match(source,/الفصل الذي يذاكره ياسر الآن/);
+  assert.match(source,/YASSER_SCIENCE_PLAYABLE_QUESTIONS/);
   assert.match(source,/scienceImageModal/);
   assert.match(source,/تكبير الصورة/);
   assert.match(css,/science-image-modal/);
