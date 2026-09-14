@@ -20,8 +20,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install Arabic OCR
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-ara
       - name: Install PDF image extraction tools
-        run: python -m pip install --disable-pip-version-check pymupdf pillow requests
+        run: python -m pip install --disable-pip-version-check pymupdf pillow requests pytesseract opencv-python-headless numpy
       - name: Extract exact chapter-one visuals from textbook PDF
         run: python preview-v4/tools/import-science-textbook-visuals.py
       - name: Commit textbook visuals
