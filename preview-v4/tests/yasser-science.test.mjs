@@ -8,13 +8,13 @@ import {applyScienceAttempt,createScienceSession,getScienceDashboard,getScienceR
 test('science bank is valid and traceable to source material',()=>{
   const result=validateScienceBank();
   assert.equal(result.ok,true,result.errors.join('\n'));
-  assert.ok(YASSER_SCIENCE_QUESTIONS.length>=30);
+  assert.ok(YASSER_SCIENCE_QUESTIONS.length>=35);
   assert.ok(YASSER_SCIENCE_QUESTIONS.every(item=>item.source?.label&&item.source?.page));
 });
 
-test('image challenge only contains questions with registered assets',()=>{
-  const session=createScienceSession({mode:'images',count:20,rng:()=>.5});
-  assert.ok(session.questions.length>=5);
+test('image challenge contains eight source-backed visual questions',()=>{
+  const session=createScienceSession({mode:'images',rng:()=>.5});
+  assert.equal(session.questions.length,8);
   assert.ok(session.questions.every(item=>item.assetId&&YASSER_SCIENCE_ASSETS[item.assetId]));
 });
 
@@ -27,6 +27,40 @@ test('wrong answer enters review queue and concept stats',()=>{
   const progress=applyScienceAttempt({},result.attempt);
   assert.deepEqual(getScienceReviewQuestionIds(progress),[question.id]);
   assert.equal(progress.concepts[question.concept].wrong,1);
+});
+
+test('latest corrected answer clears the question from review',()=>{
+  const question=YASSER_SCIENCE_QUESTIONS.find(item=>item.id==='cell-energy-01');
+  let progress={};
+  progress=applyScienceAttempt(progress,{mode:'quick',questionId:question.id,concept:question.concept,unit:question.unit,answer:'خطأ',correctAnswer:question.answer,isCorrect:false,earned:0,answeredAt:'2026-09-14T10:00:00.000Z'});
+  progress=applyScienceAttempt(progress,{mode:'review',questionId:question.id,concept:question.concept,unit:question.unit,answer:question.answer,correctAnswer:question.answer,isCorrect:true,earned:10,answeredAt:'2026-09-14T10:05:00.000Z'});
+  assert.deepEqual(getScienceReviewQuestionIds(progress),[]);
+});
+
+test('review prefers a different question for the same missed concept when available',()=>{
+  const missed=YASSER_SCIENCE_QUESTIONS.find(item=>item.id==='cell-image-wall-01');
+  const session=createScienceSession({mode:'review',count:1,reviewQuestionIds:[missed.id],rng:()=>.5});
+  assert.equal(session.questions.length,1);
+  assert.equal(session.questions[0].concept,missed.concept);
+  assert.notEqual(session.questions[0].id,missed.id);
+});
+
+test('school exam balances coverage across all science units',()=>{
+  const session=createScienceSession({mode:'exam',count:20,rng:()=>.5});
+  const counts=new Map();
+  for(const question of session.questions)counts.set(question.unit,(counts.get(question.unit)||0)+1);
+  assert.equal(counts.size,5);
+  const values=[...counts.values()];
+  assert.ok(Math.max(...values)-Math.min(...values)<=1);
+});
+
+test('review attempts do not inflate exam readiness',()=>{
+  let progress={};
+  for(let index=0;index<10;index++)progress=applyScienceAttempt(progress,{mode:'quick',questionId:`q${index}`,concept:`c${index}`,unit:'cells',answer:'x',correctAnswer:'y',isCorrect:false,earned:0,answeredAt:`2026-09-14T10:${String(index).padStart(2,'0')}:00.000Z`});
+  for(let index=0;index<10;index++)progress=applyScienceAttempt(progress,{mode:'review',questionId:`r${index}`,concept:`r${index}`,unit:'cells',answer:'x',correctAnswer:'x',isCorrect:true,earned:10,answeredAt:`2026-09-14T11:${String(index).padStart(2,'0')}:00.000Z`});
+  const dashboard=getScienceDashboard(progress);
+  assert.equal(dashboard.recentAccuracy,0);
+  assert.equal(dashboard.readiness,'تحتاج مراجعة');
 });
 
 test('dashboard readiness is based on attempts, not arbitrary points',()=>{

@@ -85,7 +85,7 @@ function renderQuestion(){
   document.getElementById('scienceStep').textContent=`السؤال ${session.index+1} من ${total}`;document.getElementById('scienceProgress').style.width=`${pct}%`;
   document.querySelector('.science-progress-track')?.setAttribute('aria-valuenow',String(pct));document.getElementById('sciencePoints').textContent=String(session.points);document.getElementById('scienceStreak').textContent=String(session.streak);
   document.getElementById('sciencePrompt').textContent=question.prompt;document.getElementById('scienceFeedback').textContent='';document.getElementById('scienceFeedback').className='science-feedback';
-  const source=document.getElementById('scienceSource');source.textContent=`نمط سؤال من: ${question.source.label} • ص ${question.source.page}`;
+  const source=document.getElementById('scienceSource');source.hidden=session.mode==='exam';source.textContent=question.assetId?'سؤال بصري من نمط الاختبارات السابقة':'سؤال من نمط الاختبارات السابقة';
   const wrap=document.getElementById('scienceImageWrap');const image=document.getElementById('scienceImage');const asset=question.assetId?YASSER_SCIENCE_ASSETS[question.assetId]:null;
   wrap.hidden=!asset;if(asset){image.src=asset.src;image.alt=asset.alt;}else{image.removeAttribute('src');image.alt='';}
   const answers=document.getElementById('scienceAnswers');answers.innerHTML='';
@@ -113,7 +113,7 @@ function finishScience(){
   const total=Math.max(session.answers.length,1);const pct=Math.round((session.correct/total)*100);document.getElementById('scienceResultScore').textContent=`${pct}%`;
   document.getElementById('scienceResultCorrect').textContent=String(session.correct);document.getElementById('scienceResultWrong').textContent=String(session.wrong);document.getElementById('scienceResultStreak').textContent=String(session.bestStreak);
   document.getElementById('scienceResultTitle').textContent=pct>=90?'إتقان قوي':pct>=75?'نتيجة جيدة':'نحتاج جولة مراجعة';
-  document.getElementById('scienceResultCopy').textContent=session.mode==='exam'?'انتهى الاختبار. الأخطاء محفوظة للمراجعة بصياغات أخرى.':'الأخطاء انتقلت تلقائيًا للمراجعة القادمة.';
+  document.getElementById('scienceResultCopy').textContent=session.mode==='exam'?'انتهى الاختبار. الأخطاء محفوظة للمراجعة، ويُعاد المفهوم بصياغة بديلة متى توفر سؤال مناسب.':'الأخطاء انتقلت تلقائيًا للمراجعة القادمة.';
   const reviewIds=sessionWrongQuestionIds(session);const review=document.getElementById('scienceReviewMistakes');review.hidden=!reviewIds.length;review.onclick=()=>startScience('review',reviewIds);
 }
 

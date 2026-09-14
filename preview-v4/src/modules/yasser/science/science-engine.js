@@ -33,23 +33,63 @@ function weakConceptIds(progress){
     .map(([id])=>id);
 }
 
+function createSessionState(mode,selected){
+  return {
+    mode,questions:selected,index:0,answers:[],correct:0,wrong:0,
+    streak:0,bestStreak:0,points:0,completed:false
+  };
+}
+
+function selectBalancedByUnit(pool,limit,rng){
+  const groups=new Map();
+  for(const question of pool){
+    if(!groups.has(question.unit))groups.set(question.unit,[]);
+    groups.get(question.unit).push(question);
+  }
+  const buckets=shuffle([...groups.entries()],rng).map(([unit,items])=>({unit,items:shuffle(items,rng)}));
+  const selected=[];
+  while(selected.length<limit&&buckets.some(bucket=>bucket.items.length)){
+    for(const bucket of buckets){
+      if(selected.length>=limit)break;
+      const next=bucket.items.shift();if(next)selected.push(next);
+    }
+  }
+  return shuffle(selected,rng);
+}
+
+function selectReviewQuestions(questions,reviewQuestionIds,limit,rng){
+  const byId=new Map(questions.map(question=>[question.id,question]));
+  const targets=reviewQuestionIds.map(id=>byId.get(id)).filter(Boolean);
+  if(!targets.length)return [];
+  const selected=[];const used=new Set();const concepts=new Set(targets.map(question=>question.concept));
+  for(const target of shuffle(targets,rng)){
+    const alternatives=questions.filter(question=>question.concept===target.concept&&question.id!==target.id&&!used.has(question.id));
+    const pick=shuffle(alternatives,rng)[0]||(!used.has(target.id)?target:null);
+    if(pick){selected.push(pick);used.add(pick.id);}
+    if(selected.length>=limit)return selected;
+  }
+  const remaining=shuffle(questions.filter(question=>concepts.has(question.concept)&&!used.has(question.id)),rng);
+  selected.push(...remaining.slice(0,limit-selected.length));
+  return selected;
+}
+
 export function createScienceSession({mode='quick',count,progress,questions=YASSER_SCIENCE_QUESTIONS,rng=Math.random,reviewQuestionIds=[]}={}){
   const safeMode=['quick','images','exam','review'].includes(mode)?mode:'quick';
-  let pool=safeMode==='images'?questions.filter(item=>Boolean(item.assetId)):questions;
+  const requested=Number(count)||({quick:10,images:8,exam:20,review:10}[safeMode]||10);
   if(safeMode==='review'&&reviewQuestionIds.length){
-    const ids=new Set(reviewQuestionIds);pool=questions.filter(item=>ids.has(item.id));
+    const limit=Math.min(requested,reviewQuestionIds.length,questions.length);
+    return createSessionState(safeMode,selectReviewQuestions(questions,reviewQuestionIds,limit,rng));
   }
-  const limit=Math.min(Number(count)||({quick:10,images:8,exam:20,review:10}[safeMode]||10),pool.length);
+  const pool=safeMode==='images'?questions.filter(item=>Boolean(item.assetId)):questions;
+  const limit=Math.min(requested,pool.length);
+  if(safeMode==='exam')return createSessionState(safeMode,selectBalancedByUnit(pool,limit,rng));
   const weak=new Set(weakConceptIds(progress));
   const priority=shuffle(pool.filter(item=>weak.has(item.concept)),rng);
   const regular=shuffle(pool.filter(item=>!weak.has(item.concept)),rng);
-  const weakSlots=safeMode==='exam'?Math.min(Math.ceil(limit*.25),priority.length):Math.min(Math.ceil(limit*.4),priority.length);
+  const weakSlots=Math.min(Math.ceil(limit*.4),priority.length);
   const selected=[...priority.slice(0,weakSlots),...regular.slice(0,limit-weakSlots)];
   if(selected.length<limit)selected.push(...priority.slice(weakSlots,weakSlots+(limit-selected.length)));
-  return {
-    mode:safeMode,questions:shuffle(selected,rng),index:0,answers:[],correct:0,wrong:0,
-    streak:0,bestStreak:0,points:0,completed:false
-  };
+  return createSessionState(safeMode,shuffle(selected,rng));
 }
 
 export function submitScienceAnswer({session,answer,answeredAt=new Date().toISOString()}={}){
@@ -59,7 +99,7 @@ export function submitScienceAnswer({session,answer,answeredAt=new Date().toISOS
   if(isCorrect){session.correct+=1;session.streak+=1;session.bestStreak=Math.max(session.bestStreak,session.streak);}else{session.wrong+=1;session.streak=0;}
   const earned=isCorrect?10+Math.min(10,Math.floor(Math.max(session.streak-1,0)/3)*2):0;
   session.points+=earned;
-  const attempt=Object.freeze({questionId:question.id,concept:question.concept,unit:question.unit,answer:String(answer),correctAnswer:String(question.answer),isCorrect,earned,answeredAt});
+  const attempt=Object.freeze({mode:session.mode,questionId:question.id,concept:question.concept,unit:question.unit,answer:String(answer),correctAnswer:String(question.answer),isCorrect,earned,answeredAt});
   session.answers.push(attempt);session.index+=1;
   if(session.index>=session.questions.length)session.completed=true;
   return {accepted:true,attempt,question};
@@ -80,14 +120,17 @@ export function applyScienceSessionSummary(progress,session){
 export function getScienceReviewQuestionIds(progress,{limit=12}={}){
   const misses=[];const seen=new Set();
   for(const attempt of progress?.attempts||[]){
-    if(attempt.isCorrect||seen.has(attempt.questionId))continue;
-    seen.add(attempt.questionId);misses.push(attempt.questionId);if(misses.length>=limit)break;
+    if(seen.has(attempt.questionId))continue;
+    seen.add(attempt.questionId);
+    if(attempt.isCorrect)continue;
+    misses.push(attempt.questionId);if(misses.length>=limit)break;
   }
   return misses;
 }
 
 export function getScienceDashboard(progress){
-  const attempts=progress?.attempts||[];const total=attempts.length;const correct=attempts.filter(item=>item.isCorrect).length;
+  const attempts=(progress?.attempts||[]).filter(item=>item.mode!=='review');
+  const total=attempts.length;const correct=attempts.filter(item=>item.isCorrect).length;
   const recent=attempts.slice(0,30);const recentCorrect=recent.filter(item=>item.isCorrect).length;
   const accuracy=total?Math.round((correct/total)*100):0;const recentAccuracy=recent.length?Math.round((recentCorrect/recent.length)*100):0;
   const reviewCount=getScienceReviewQuestionIds(progress).length;
