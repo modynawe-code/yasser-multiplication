@@ -77,18 +77,47 @@ function selectBalancedByAsset(pool,limit,rng){
 
 function selectExamQuestions(pool,limit,rng){
   if(!limit)return [];
-  const imagePool=pool.filter(question=>Boolean(question.assetId));
-  const nonImagePool=pool.filter(question=>!question.assetId);
-  const imageTarget=Math.min(imagePool.length,limit,Math.max(limit>=10?2:1,Math.round(limit*.2)));
-  const imageSelection=selectBalancedByAsset(imagePool,imageTarget,rng);
-  const regularTarget=Math.max(0,limit-imageSelection.length);
-  const regularSelection=selectBalancedByUnit(nonImagePool,Math.min(regularTarget,nonImagePool.length),rng);
-  const used=new Set([...imageSelection,...regularSelection].map(question=>question.id));
-  if(imageSelection.length+regularSelection.length<limit){
-    const fallback=selectBalancedByUnit(pool.filter(question=>!used.has(question.id)),limit-imageSelection.length-regularSelection.length,rng);
-    regularSelection.push(...fallback);
+  const groups=new Map();
+  for(const question of pool){
+    if(!groups.has(question.unit))groups.set(question.unit,[]);
+    groups.get(question.unit).push(question);
   }
-  return shuffle([...imageSelection,...regularSelection],rng);
+  const buckets=shuffle([...groups.entries()],rng).map(([unit,items])=>({
+    unit,
+    quota:0,
+    images:shuffle(items.filter(question=>Boolean(question.assetId)),rng),
+    regular:shuffle(items.filter(question=>!question.assetId),rng),
+    selected:[]
+  }));
+  if(!buckets.length)return [];
+
+  const base=Math.floor(limit/buckets.length),remainder=limit%buckets.length;
+  buckets.forEach((bucket,index)=>{bucket.quota=base+(index<remainder?1:0);});
+
+  const imageCount=pool.filter(question=>Boolean(question.assetId)).length;
+  let imageBudget=Math.min(imageCount,limit,Math.max(limit>=10?2:1,Math.round(limit*.2)));
+  while(imageBudget>0){
+    let added=false;
+    for(const bucket of buckets){
+      if(imageBudget<=0)break;
+      if(bucket.selected.length>=bucket.quota||!bucket.images.length)continue;
+      bucket.selected.push(bucket.images.shift());imageBudget-=1;added=true;
+    }
+    if(!added)break;
+  }
+
+  for(const bucket of buckets){
+    while(bucket.selected.length<bucket.quota&&bucket.regular.length)bucket.selected.push(bucket.regular.shift());
+    while(bucket.selected.length<bucket.quota&&bucket.images.length)bucket.selected.push(bucket.images.shift());
+  }
+
+  const selected=buckets.flatMap(bucket=>bucket.selected);
+  const used=new Set(selected.map(question=>question.id));
+  if(selected.length<limit){
+    const fallback=selectBalancedByUnit(pool.filter(question=>!used.has(question.id)),limit-selected.length,rng);
+    selected.push(...fallback);
+  }
+  return shuffle(selected.slice(0,limit),rng);
 }
 
 function selectReviewQuestions(questions,reviewQuestionIds,limit,rng){
