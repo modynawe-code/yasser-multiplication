@@ -1,0 +1,33 @@
+name: Review Science Unit 2 Pages
+
+on:
+  push:
+    branches: [feature/product-ui-reference-v1]
+    paths:
+      - '.github/workflows/review-science-unit2-pages.yml'
+      - 'preview-v4/tools/review-science-unit2-pages.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/product-ui-reference-v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PDF tools
+        run: python -m pip install --disable-pip-version-check pymupdf pillow requests
+      - name: Render Unit 2 pages
+        run: python preview-v4/tools/review-science-unit2-pages.py
+      - name: Upload review sheets
+        uses: actions/upload-artifact@v4
+        with:
+          name: science-unit2-page-review
+          path: /tmp/science-unit2-review/*.jpg
+          retention-days: 3
