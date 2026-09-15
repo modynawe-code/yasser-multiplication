@@ -1,0 +1,53 @@
+import {createQuestionRecord} from '../../../shared/question-bank/index.js';
+
+const UNIT_ID='unit-2-life-processes';
+const CHAPTER3='chapter-3-plants-microorganisms';
+const CHAPTER4='chapter-4-human-animals';
+const BASE=Object.freeze({subjectId:'science',gradeId:'grade-6',termId:'term-1',curriculumYear:'1448',unitId:UNIT_ID});
+
+const SOURCES=Object.freeze({
+  textbook:Object.freeze({id:'science6-textbook-1448-u2',label:'علوم سادس ف1 1448 - الوحدة الثانية',provider:'واجباتي',url:'https://www.wajibati.net/كتاب-العلوم-سادس-ابتدائي-الفصل-الاول-1442/',year:'1448',examType:'أسئلة ومراجعات المنهج',authority:'textbook',kind:'textbook'}),
+  wajibati:Object.freeze({id:'wajibati-period2-1447',label:'اختبار الفترة الثانية علوم سادس ف1 1447',provider:'واجباتي',url:'https://www.wajibati.net/اختبار-علوم-سادس-ابتدائي-الفترة-الثان/',year:'1447',examType:'الفترة الثانية',authority:'training-model',kind:'past-exam-model'}),
+  madty:Object.freeze({id:'madty-period2-1447-b2',label:'اختبار الفترة الثانية علوم سادس ف1 1447',provider:'مادتي',url:'https://www.madty.net/exam-ftre-alom/',year:'1447',examType:'الفترة الثانية',authority:'training-model',kind:'past-exam-model'}),
+  mnhaji:Object.freeze({id:'mnhaji-period2-1447-b2',label:'اختبار الفترة الثانية علوم سادس ف1 1447',provider:'منهجي',url:'https://www.mnhaji.com/aikhtibar-eulum-sadis/',year:'1447',examType:'الفترة الثانية',authority:'training-model',kind:'past-exam-model'})
+});
+
+function q(chapterId,key,topicId,conceptId,type,prompt,choices,answer,explanation,difficulty=1,sources=[SOURCES.textbook]){
+  return createQuestionRecord({...BASE,chapterId,id:`science:unit2:b2:${key}`,topicId,conceptId,type,prompt,choices,answer,explanation,difficulty,tags:['science','grade-6','term-1','unit-2',chapterId,'source-backed','answer-verified'],sources,verified:true});
+}
+
+const C3=Object.freeze([
+  q(CHAPTER3,'guard-cells','plant-life-processes','guard-cells','choice','ما وظيفة الخلايا الحارسة الموجودة حول الثغر؟',['تنظيم فتح الثغر وإغلاقه','نقل الغذاء في اللحاء','امتصاص الماء من التربة','إنتاج حبوب اللقاح'],'تنظيم فتح الثغر وإغلاقه','الخلايا الحارسة تتحكم في فتح الثغور وإغلاقها، وبذلك تنظّم تبادل الغازات وفقد الماء.',2,[SOURCES.textbook]),
+  q(CHAPTER3,'stomata-gases','plant-life-processes','stomata-gas-exchange','choice','أي تركيب في الورقة يسمح بدخول ثاني أكسيد الكربون وخروج الأكسجين وبخار الماء؟',['الثغور','الخشب','اللحاء','القلنسوة'],'الثغور','الثغور فتحات في الورقة يتم عبرها تبادل الغازات وخروج بخار الماء.',1,[SOURCES.textbook]),
+  q(CHAPTER3,'bee-pollination','plant-life-processes','pollination-agents','choice','ما الدور الذي تقوم به النحلة في تكاثر النباتات الزهرية؟',['نقل حبوب اللقاح بين الأزهار','نقل الماء إلى الأوراق','تكوين البذور داخل المبيض مباشرة','فتح الثغور وإغلاقها'],'نقل حبوب اللقاح بين الأزهار','تساعد النحلة على التلقيح بنقل حبوب اللقاح من زهرة إلى أخرى.',1,[SOURCES.textbook,SOURCES.madty]),
+  q(CHAPTER3,'stigma-function','plant-life-processes','stigma','choice','أي جزء من الزهرة يستقبل حبوب اللقاح؟',['الميسم','المتك','السبلة','الخيط'],'الميسم','الميسم هو الجزء الذي تستقر عليه حبوب اللقاح أثناء التلقيح.',1,[SOURCES.textbook]),
+  q(CHAPTER3,'moss-spores','plant-life-processes','moss-reproduction','choice','تتكاثر الحزازيات غالبًا بواسطة:',['الأبواغ','البذور داخل الثمار','المخاريط فقط','الانشطار الثنائي'],'الأبواغ','الحزازيات نباتات لا بذرية، ومن وسائل تكاثرها الأبواغ.',2,[SOURCES.textbook]),
+  q(CHAPTER3,'pine-cones','plant-life-processes','gymnosperm-reproduction','choice','أين تتكون بذور الصنوبر؟',['في المخاريط','داخل ثمار لحمية','في الثغور','داخل الجذور'],'في المخاريط','الصنوبر من معراة البذور وتوجد بذوره مرتبطة بالمخاريط.',2,[SOURCES.textbook]),
+  q(CHAPTER3,'binary-fission-result','microorganism-life-processes','binary-fission-result','choice','ماذا ينتج غالبًا عن الانشطار الثنائي في البكتيريا؟',['خليتان جديدتان','أربع خلايا جنسية','بذرة واحدة','بوغ واحد فقط'],'خليتان جديدتان','تنقسم الخلية البكتيرية في الانشطار الثنائي إلى خليتين جديدتين.',1,[SOURCES.textbook]),
+  q(CHAPTER3,'binary-fission-asexual','microorganism-life-processes','binary-fission-asexual','trueFalse','الانشطار الثنائي طريقة تكاثر لاجنسي شائعة في البكتيريا.',['صح','خطأ'],'صح','لا يحتاج الانشطار الثنائي إلى اتحاد خلايا جنسية، لذلك يعد تكاثرًا لاجنسيًا.',1,[SOURCES.textbook]),
+  q(CHAPTER3,'conjugation-number','microorganism-life-processes','conjugation-purpose','choice','ما الفائدة الأساسية من الاقتران بين خليتين بكتيريتين؟',['تبادل المادة الوراثية','زيادة عدد الخلايا مباشرة إلى أربع','إنتاج حبوب لقاح','صنع الغذاء بالضوء'],'تبادل المادة الوراثية','في الاقتران تنتقل أو تتبادل مادة وراثية بين خليتين، ولا يعد مجرد انقسام لزيادة العدد.',2,[SOURCES.textbook]),
+  q(CHAPTER3,'yeast-bud','microorganism-life-processes','yeast-budding-sequence','choice','في تكاثر الخميرة بالتبرعم، ماذا يظهر أولًا على الخلية الأم؟',['نتوء صغير ينمو تدريجيًا','مخروط يحمل بذورًا','جذر جديد','كيس بذري كبير'],'نتوء صغير ينمو تدريجيًا','يبدأ التبرعم بظهور برعم صغير على الخلية الأم ثم ينمو وقد ينفصل عنها.',2,[SOURCES.textbook]),
+  q(CHAPTER3,'bread-mold-spores','microorganism-life-processes','bread-mold-spores','choice','أي تركيب في عفن الخبز يحتوي الأبواغ التي تساعده على التكاثر؟',['محافظ الأبواغ','الثغور','المتك','الشعيرات الجذرية'],'محافظ الأبواغ','يحمل عفن الخبز تراكيب تحتوي الأبواغ التي تنتشر وتكوّن فطرًا جديدًا عند توافر الظروف المناسبة.',2,[SOURCES.textbook,SOURCES.madty]),
+  q(CHAPTER3,'fungi-no-photosynthesis','microorganism-life-processes','fungi-nutrition-b2','trueFalse','الفطريات المجهرية تصنع غذاءها بعملية البناء الضوئي.',['صح','خطأ'],'خطأ','الفطريات لا تقوم بالبناء الضوئي، بل تحصل على غذائها من مواد عضوية في الوسط المحيط.',1,[SOURCES.textbook]),
+  q(CHAPTER3,'microbe-visibility','microorganism-life-processes','microorganism-visibility','choice','أي وصف يطابق المخلوق الحي الدقيق كما يرد كثيرًا في الاختبارات؟',['مخلوق حي لا يُرى غالبًا بالعين المجردة','مخلوق لا يتكون من خلايا','مخلوق يعيش في التربة فقط','نبات صغير يمكن رؤيته دائمًا بالعين'],'مخلوق حي لا يُرى غالبًا بالعين المجردة','المخلوقات الحية الدقيقة تحتاج غالبًا إلى المجهر لرؤيتها.',1,[SOURCES.mnhaji,SOURCES.wajibati,SOURCES.textbook]),
+  q(CHAPTER3,'phloem-false','plant-life-processes','phloem-water-minerals','trueFalse','اللحاء هو النسيج الذي ينقل الماء والأملاح المعدنية من الجذور إلى أعلى النبات.',['صح','خطأ'],'خطأ','الخشب ينقل الماء والأملاح المعدنية، أما اللحاء فينقل الغذاء المصنّع.',1,[SOURCES.mnhaji,SOURCES.wajibati,SOURCES.textbook])
+]);
+
+const C4=Object.freeze([
+  q(CHAPTER4,'respiration-definition-b2','body-processes','respiration-definition','choice','ما العملية التي تزود الجسم بالأكسجين وتخلّصه من ثاني أكسيد الكربون؟',['التنفس','الهضم','الإخراج','الحركة'],'التنفس','التنفس يتيح للجسم الحصول على الأكسجين والتخلص من ثاني أكسيد الكربون.',1,[SOURCES.mnhaji,SOURCES.textbook]),
+  q(CHAPTER4,'digestion-complex-simple','body-processes','digestion-complex-simple','choice','أي عملية تحول المواد الغذائية المعقدة إلى مواد أبسط يمكن للخلايا الاستفادة منها؟',['الهضم','الدوران','الإحساس','الإخراج'],'الهضم','الهضم يفتت الغذاء ويحوّله إلى مواد أبسط يسهل امتصاصها والاستفادة منها.',1,[SOURCES.mnhaji,SOURCES.wajibati,SOURCES.textbook]),
+  q(CHAPTER4,'excretion-waste','body-processes','excretion-waste-b2','choice','ما العملية التي يتخلص فيها الجسم من الفضلات التي تنتجها الخلايا؟',['الإخراج','التلقيح','التبرعم','البناء الضوئي'],'الإخراج','الإخراج يزيل الفضلات الناتجة عن عمليات الجسم.',1,[SOURCES.mnhaji,SOURCES.textbook]),
+  q(CHAPTER4,'kidney-function','body-processes','kidneys','choice','أي عضو يساعد على تنقية الدم من الفضلات وتكوين البول؟',['الكليتان','الرئتان','المعدة','القصبة الهوائية'],'الكليتان','تقوم الكليتان بترشيح الدم والتخلص من فضلات وماء زائد عبر البول.',2,[SOURCES.textbook]),
+  q(CHAPTER4,'diaphragm-inhale','body-processes','diaphragm','choice','ماذا يحدث للحجاب الحاجز عند الشهيق؟',['ينقبض ويتحرك إلى أسفل','يرتخي ويتحرك إلى أعلى','يتوقف عن الحركة','يغلق القصبة الهوائية'],'ينقبض ويتحرك إلى أسفل','عند الشهيق ينقبض الحجاب الحاجز فيزداد حجم التجويف الصدري ويدخل الهواء.',2,[SOURCES.textbook]),
+  q(CHAPTER4,'gas-exchange','body-processes','gas-exchange','choice','أين يتم تبادل الأكسجين وثاني أكسيد الكربون بين الهواء والدم في الرئتين؟',['الحويصلات الهوائية','المريء','المعدة','الأمعاء الغليظة'],'الحويصلات الهوائية','جدران الحويصلات الهوائية الرقيقة تساعد على تبادل الغازات مع الدم.',2,[SOURCES.textbook]),
+  q(CHAPTER4,'heart-pump','body-processes','heart-pump','choice','ما الوظيفة الرئيسة للقلب في جهاز الدوران؟',['ضخ الدم إلى أجزاء الجسم','هضم الغذاء','تنقية الهواء','تكوين الهرمونات'],'ضخ الدم إلى أجزاء الجسم','القلب عضلة تضخ الدم عبر الأوعية الدموية.',1,[SOURCES.textbook]),
+  q(CHAPTER4,'open-circulatory','body-processes','open-circulatory-system','choice','جهاز الدوران الذي يدفع الدم مباشرة إلى أنسجة جسم الحيوان يسمى:',['جهاز الدوران المفتوح','جهاز الدوران المغلق','الجهاز الهضمي','الجهاز التنفسي'],'جهاز الدوران المفتوح','في جهاز الدوران المفتوح يندفع السائل الدوري إلى تجاويف الجسم ويلامس الأنسجة مباشرة.',2,[SOURCES.wajibati,SOURCES.textbook]),
+  q(CHAPTER4,'arteries-away','body-processes','arteries','trueFalse','الشرايين أوعية دموية تحمل الدم بعيدًا عن القلب.',['صح','خطأ'],'صح','اتجاه جريان الدم في الشرايين يكون من القلب إلى أعضاء الجسم أو الرئتين.',2,[SOURCES.textbook]),
+  q(CHAPTER4,'tendon-connection','movement-senses','tendon-connection-b2','choice','أي نسيج يربط العضلة بالعظم؟',['الوتر','الرباط','الغضروف','العصب'],'الوتر','الأوتار تربط العضلات بالعظام وتنقل قوة انقباض العضلة إليها.',1,[SOURCES.madty,SOURCES.mnhaji,SOURCES.textbook]),
+  q(CHAPTER4,'ligament-connection','movement-senses','ligament','choice','أي نسيج يربط عظمًا بعظم عند المفصل؟',['الرباط','الوتر','العضلة','العصب'],'الرباط','الأربطة تثبت العظام عند المفاصل بربط عظم بعظم.',2,[SOURCES.textbook]),
+  q(CHAPTER4,'muscle-force','movement-senses','muscle-force-b2','trueFalse','يتحرك الجسم بفعل قوة تنتجها العضلات عند انقباضها.',['صح','خطأ'],'صح','انقباض العضلات يولد قوة تحرك العظام عند المفاصل.',1,[SOURCES.madty,SOURCES.mnhaji,SOURCES.textbook]),
+  q(CHAPTER4,'skeletal-protection','movement-senses','skeletal-protection','choice','أي وظيفة مما يلي يقوم بها الجهاز الهيكلي؟',['دعم الجسم وحماية بعض الأعضاء','إفراز العصارات الهاضمة فقط','تبادل الغازات في الرئتين','نقل الغذاء في النبات'],'دعم الجسم وحماية بعض الأعضاء','الهيكل يعطي الجسم دعامة وشكلًا ويحمي أعضاء داخلية مهمة.',1,[SOURCES.textbook]),
+  q(CHAPTER4,'endocrine-hormones','movement-senses','endocrine-hormones-b2','choice','أي جهاز يفرز الهرمونات التي تنتقل عبر الدم لتنظيم أنشطة الجسم؟',['جهاز الغدد الصماء','الجهاز الهيكلي','الجهاز الهضمي','الجهاز العضلي'],'جهاز الغدد الصماء','الغدد الصماء تفرز هرمونات إلى الدم لتؤثر في أعضاء وأنسجة مختلفة.',1,[SOURCES.madty,SOURCES.textbook])
+]);
+
+export const YASSER_SCIENCE_UNIT2_QUESTIONS_BATCH2=Object.freeze([...C3,...C4]);
