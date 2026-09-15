@@ -3,12 +3,14 @@ from pathlib import Path
 import math
 import requests
 import pymupdf
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 BOOK_URL='https://www.wajibati.net/wp-content/uploads/2025/08/kj-alum6f1_1_n7u8nrhvd4.pdf'
 OUT=Path('/tmp/science-unit2-review')
 PAGE_RANGES=[range(76,105),range(106,133)]
+SELECTED_PAGES=(83,84,87,88,97,98,99,104,112,114,117,123,125,131,132)
 SCALE=1.0
+DETAIL_SCALE=1.8
 THUMB=(360,465)
 
 
@@ -20,8 +22,8 @@ def download():
     return r.content
 
 
-def render(doc,page_no):
-    pix=doc[page_no-1].get_pixmap(matrix=pymupdf.Matrix(SCALE,SCALE),alpha=False)
+def render(doc,page_no,scale=SCALE):
+    pix=doc[page_no-1].get_pixmap(matrix=pymupdf.Matrix(scale,scale),alpha=False)
     return Image.frombytes('RGB',[pix.width,pix.height],pix.samples)
 
 
@@ -48,7 +50,9 @@ def main():
         raise RuntimeError(f'Unexpected page count: {doc.page_count}')
     sheet(doc,PAGE_RANGES[0],'chapter3-pages-76-104.jpg')
     sheet(doc,PAGE_RANGES[1],'chapter4-pages-106-132.jpg')
-    print('Rendered Unit 2 review sheets.')
+    for page_no in SELECTED_PAGES:
+        render(doc,page_no,DETAIL_SCALE).save(OUT/f'page-{page_no}.jpg','JPEG',quality=92,optimize=True)
+    print(f'Rendered Unit 2 review sheets and {len(SELECTED_PAGES)} detail pages.')
 
 if __name__=='__main__':
     main()
