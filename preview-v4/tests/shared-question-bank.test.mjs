@@ -53,10 +53,15 @@ test('existing science data and collected source-backed questions share one reus
   assert.equal(YASSER_SCIENCE_QUESTION_BANK.questions.length,YASSER_SCIENCE_QUESTIONS.length+YASSER_SCIENCE_COLLECTED_ALL.length);
   const coverage=getQuestionBankCoverage(YASSER_SCIENCE_QUESTION_BANK);
   assert.equal(coverage.bySubject.science,YASSER_SCIENCE_QUESTION_BANK.questions.length);
+  const unitOneCoverage=coverage.byUnit['unit-1-diversity-of-life']||0;
   const unitTwoCoverage=coverage.byUnit['unit-2-life-processes']||0;
+  const unitThreeCoverage=coverage.byUnit['unit-3-ecosystems-resources']||0;
   assert.ok(unitTwoCoverage>=22,`unit 2 coverage=${unitTwoCoverage}`);
-  assert.equal(coverage.byUnit['unit-1-diversity-of-life'],YASSER_SCIENCE_QUESTION_BANK.questions.length-unitTwoCoverage);
+  assert.ok(unitThreeCoverage>=52,`unit 3 coverage=${unitThreeCoverage}`);
+  assert.equal(unitOneCoverage+unitTwoCoverage+unitThreeCoverage,YASSER_SCIENCE_QUESTION_BANK.questions.length);
   assert.ok((coverage.byChapter['chapter-1-cells']||0)>78);
   assert.ok((coverage.byChapter['chapter-2-cell-heredity']||0)>0);
   assert.ok((coverage.byChapter['chapter-3-plants-microorganisms']||0)>=22);
+  assert.ok((coverage.byChapter['chapter-5-ecosystems']||0)>=31);
+  assert.ok((coverage.byChapter['chapter-6-earth-resources']||0)>=21);
 });
