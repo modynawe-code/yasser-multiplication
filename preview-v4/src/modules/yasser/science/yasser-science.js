@@ -21,6 +21,8 @@ function currentChapter(){return getScienceChapter(currentUnit().currentChapterI
 function unitQuestions(){return filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,activeUnitId);}
 function visualUnitQuestions(){return unitQuestions().filter(question=>question.assetId&&SCIENCE_ASSETS[question.assetId]);}
 function unitProgress(){return filterScienceProgressByUnit(progress,activeUnitId);}
+function scopeLabel(){return String(YASSER_SCIENCE_SCOPE.label||'سادس ابتدائي • الفصل الدراسي الأول').replace(' • الفترة الأولى','').replace('الفصل الأول','الفصل الدراسي الأول');}
+function chapterDisplayName(label=''){return label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');}
 
 function ensureShell(){
   if(document.getElementById('yasserScienceView'))return;
@@ -28,25 +30,25 @@ function ensureShell(){
   const view=document.createElement('section');view.id='yasserScienceView';view.className='view';
   view.innerHTML=`<div class="yasser-science-shell">
     <header class="yasser-science-head">
-      <div><div class="kicker">علوم ياسر</div><h1>علوم الفصل الدراسي الأول</h1><p>${YASSER_SCIENCE_SCOPE.label}</p></div>
+      <div><div class="kicker">علوم ياسر</div><h1>علوم الفصل الدراسي الأول</h1><p>${scopeLabel()}</p></div>
       <button class="icon-btn" id="yasserScienceBack" type="button">رجوع</button>
     </header>
 
     <section class="science-unit-switch" id="scienceUnitSwitch" aria-label="وحدات العلوم"></section>
 
     <section class="science-unit-card" id="scienceUnitCard" aria-label="الوحدة المختارة">
-      <div class="science-unit-badge" id="scienceUnitBadge">الوحدة 2</div>
-      <div class="science-unit-copy"><span id="scienceUnitState">الوحدة الحالية</span><strong id="scienceUnitName">عمليات الحياة</strong><small id="scienceUnitNote">يعرض لياسر فقط المحتوى المفتوح حاليًا، بدون الدروس المتقدمة.</small></div>
-      <div class="science-current-stage"><span>الآن</span><strong id="scienceChapterName"></strong><small id="scienceBankCount"></small></div>
+      <div class="science-unit-badge" id="scienceUnitBadge">الوحدة 3</div>
+      <div class="science-unit-copy"><span id="scienceUnitState">الوحدة الحالية</span><strong id="scienceUnitName">الأنظمة البيئية ومواردها</strong><small id="scienceUnitNote">ابدأ بالفصل الحالي وتقدم خطوة بخطوة.</small></div>
+      <div class="science-current-stage"><span id="scienceStageLabel">الآن</span><strong id="scienceChapterName"></strong><small id="scienceBankCount"></small></div>
     </section>
 
-    <section class="yasser-science-dashboard" id="scienceDashboard" aria-label="تقدم العلوم"></section>
-
-    <section class="yasser-science-modes" id="scienceModes" aria-label="أنشطة الوحدة الحالية">
+    <section class="yasser-science-modes" id="scienceModes" aria-label="أنشطة الوحدة المختارة">
       <button type="button" data-science-mode="quick"><span class="science-mode-code">10</span><span><strong>تدريب سريع</strong><small>10 أسئلة متنوعة مع تصحيح فوري</small></span></button>
       <button type="button" data-science-mode="images"><span class="science-mode-code" id="scienceImageModeCount">10</span><span><strong>تحدي الصور</strong><small id="scienceImageModeCopy">أسئلة بصرية بالصور والمخططات</small></span></button>
       <button type="button" data-science-mode="exam"><span class="science-mode-code">20</span><span><strong>اختبار المدرسة</strong><small>20 سؤالًا مما تم فتحه، بدون كشف الإجابة أثناء الحل</small></span></button>
     </section>
+
+    <section class="yasser-science-dashboard" id="scienceDashboard" aria-label="تقدم العلوم"></section>
 
     <section class="yasser-science-session" id="scienceSession" hidden>
       <div class="science-session-bar">
@@ -95,23 +97,29 @@ function renderUnitSwitch(){
 
 function renderUnitCard(){
   const unit=currentUnit(),chapter=currentChapter(),questions=unitQuestions(),visualQuestions=visualUnitQuestions(),visualAssets=new Set(visualQuestions.map(question=>question.assetId));
+  const isCurrent=unit.status==='current';
   document.getElementById('scienceUnitBadge').textContent=`الوحدة ${unit.number}`;
-  document.getElementById('scienceUnitState').textContent=unit.status==='current'?'الوحدة الحالية':'وحدة مكتملة — للمراجعة';
+  document.getElementById('scienceUnitState').textContent=isCurrent?'الوحدة الحالية':'وحدة للمراجعة';
   document.getElementById('scienceUnitName').textContent=unit.shortLabel;
-  document.getElementById('scienceUnitNote').textContent=unit.status==='current'?'يعرض لياسر فقط المحتوى المفتوح حاليًا، بدون الدروس المتقدمة.':'مراجعة المحتوى الذي سبق تجهيزه فقط.';
-  document.getElementById('scienceChapterName').textContent=chapter.label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');
-  document.getElementById('scienceBankCount').textContent=`${questions.length} سؤالًا • ${visualAssets.size} صورة ومخططًا`;
+  document.getElementById('scienceUnitNote').textContent=isCurrent?'ابدأ بالفصل الحالي وتقدم خطوة بخطوة.':'راجع المحتوى المفتوح في هذه الوحدة.';
+  document.getElementById('scienceStageLabel').textContent=isCurrent?'الآن':'فصل المراجعة';
+  document.getElementById('scienceChapterName').textContent=chapterDisplayName(chapter.label);
+  document.getElementById('scienceBankCount').textContent=`المحتوى المفتوح: ${questions.length} سؤالًا • ${visualAssets.size} سؤالًا مصورًا`;
 
   const imageButton=document.querySelector('[data-science-mode="images"]'),imageCount=document.getElementById('scienceImageModeCount'),imageCopy=document.getElementById('scienceImageModeCopy');
-  const hasImages=visualQuestions.length>0;
+  const hasImages=visualQuestions.length>0,imageRoundSize=Math.min(10,visualQuestions.length);
   if(imageButton){imageButton.disabled=!hasImages;imageButton.setAttribute('aria-disabled',String(!hasImages));}
-  if(imageCount)imageCount.textContent=hasImages?String(Math.min(10,visualQuestions.length)):'—';
-  if(imageCopy)imageCopy.textContent=hasImages?'أسئلة بصرية بالصور والمخططات':'لا توجد أسئلة بصرية في المحتوى المفتوح حاليًا';
+  if(imageCount)imageCount.textContent=hasImages?(visualQuestions.length>10?`${imageRoundSize} من ${visualQuestions.length}`:String(imageRoundSize)):'—';
+  if(imageCopy)imageCopy.textContent=hasImages?(visualQuestions.length>10?`كل جولة تعرض ${imageRoundSize} أسئلة بصرية من ${visualQuestions.length}`:'أسئلة بصرية بالصور والمخططات'):'لا توجد أسئلة بصرية في المحتوى المفتوح حاليًا';
 }
 
 function renderDashboard(){
   const dashboard=getScienceDashboard(unitProgress()),host=document.getElementById('scienceDashboard');if(!host)return;
-  host.innerHTML=`<div><span>جاهزية المحتوى المفتوح</span><strong>${dashboard.readiness}</strong></div><div><span>دقة آخر المحاولات</span><strong>${dashboard.recentAccuracy}%</strong></div><div><span>تحتاج مراجعة</span><strong>${dashboard.reviewCount}</strong></div><div><span>نقاط الوحدة</span><strong>${dashboard.points}</strong></div>`;
+  const hasAttempts=dashboard.total>0;
+  const progressState=!hasAttempts?'ابدأ أول تحدي':dashboard.total<10?'استمر بالتدريب':dashboard.readiness;
+  const recentAccuracy=hasAttempts?`${dashboard.recentAccuracy}%`:'—';
+  const reviewCount=hasAttempts?String(dashboard.reviewCount):'—';
+  host.innerHTML=`<div><span>حالة التقدم</span><strong>${progressState}</strong></div><div><span>دقة آخر المحاولات</span><strong>${recentAccuracy}</strong></div><div><span>تحتاج مراجعة</span><strong>${reviewCount}</strong></div><div><span>نقاط الوحدة</span><strong>${dashboard.points}</strong></div>`;
   const modes=document.getElementById('scienceModes');let review=document.getElementById('scienceReviewEntry');
   if(dashboard.reviewCount){
     if(!review){review=document.createElement('button');review.id='scienceReviewEntry';review.type='button';review.className='science-review-entry';review.innerHTML='<span>مراجعة ذكية</span><strong>أسئلتي اللي أخطأت فيها من هذه الوحدة</strong>';review.addEventListener('click',()=>startScience('review'));modes?.after(review);}
