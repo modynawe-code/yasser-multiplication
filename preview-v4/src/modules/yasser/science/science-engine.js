@@ -27,6 +27,11 @@ function shuffle(items,rng=Math.random){
   return output;
 }
 
+function randomizeQuestionChoices(question,rng=Math.random){
+  if(question?.type!=='choice'||!Array.isArray(question?.choices)||question.choices.length<2)return question;
+  return Object.freeze({...question,choices:Object.freeze(shuffle(question.choices,rng))});
+}
+
 function weakConceptIds(progress){
   return Object.entries(progress?.concepts||{})
     .filter(([,stat])=>(stat?.wrong||0)>(stat?.correct||0)*.45)
@@ -34,9 +39,9 @@ function weakConceptIds(progress){
     .map(([id])=>id);
 }
 
-function createSessionState(mode,selected){
+function createSessionState(mode,selected,rng=Math.random){
   return {
-    mode,questions:selected,index:0,answers:[],correct:0,wrong:0,
+    mode,questions:selected.map(question=>randomizeQuestionChoices(question,rng)),index:0,answers:[],correct:0,wrong:0,
     streak:0,bestStreak:0,points:0,completed:false
   };
 }
@@ -142,21 +147,21 @@ export function createScienceSession({mode='quick',count,progress,questions=YASS
   const requested=Number(count)||({quick:10,images:8,exam:20,review:10}[safeMode]||10);
   if(safeMode==='review'&&reviewQuestionIds.length){
     const limit=Math.min(requested,reviewQuestionIds.length,questions.length);
-    return createSessionState(safeMode,selectReviewQuestions(questions,reviewQuestionIds,limit,rng));
+    return createSessionState(safeMode,selectReviewQuestions(questions,reviewQuestionIds,limit,rng),rng);
   }
   const allVisualQuestions=questions.filter(item=>Boolean(item.assetId));
   const textbookVisualQuestions=allVisualQuestions.filter(item=>Boolean(YASSER_SCIENCE_VISUAL_ASSETS[item.assetId]));
   const pool=safeMode==='images'?(textbookVisualQuestions.length?textbookVisualQuestions:allVisualQuestions):questions;
   const limit=Math.min(requested,pool.length);
-  if(safeMode==='images')return createSessionState(safeMode,selectBalancedByAsset(pool,limit,rng));
-  if(safeMode==='exam')return createSessionState(safeMode,selectExamQuestions(pool,limit,rng));
+  if(safeMode==='images')return createSessionState(safeMode,selectBalancedByAsset(pool,limit,rng),rng);
+  if(safeMode==='exam')return createSessionState(safeMode,selectExamQuestions(pool,limit,rng),rng);
   const weak=new Set(weakConceptIds(progress));
   const priority=shuffle(pool.filter(item=>weak.has(item.concept)),rng);
   const regular=shuffle(pool.filter(item=>!weak.has(item.concept)),rng);
   const weakSlots=Math.min(Math.ceil(limit*.4),priority.length);
   const selected=[...priority.slice(0,weakSlots),...regular.slice(0,limit-weakSlots)];
   if(selected.length<limit)selected.push(...priority.slice(weakSlots,weakSlots+(limit-selected.length)));
-  return createSessionState(safeMode,shuffle(selected,rng));
+  return createSessionState(safeMode,shuffle(selected,rng),rng);
 }
 
 export function submitScienceAnswer({session,answer,answeredAt=new Date().toISOString()}={}){
