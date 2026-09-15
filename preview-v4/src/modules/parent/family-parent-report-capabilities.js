@@ -5,7 +5,7 @@ const REPORT_TYPES=Object.freeze(['academic','developmental','generic']);
 export function createFamilyParentReportCapabilityRegistry(){
   const entries=new Map();
 
-  function register(learnerId,{getState,renderReport,renderOverview,listSessions,reportType='generic'}={}){
+  function register(learnerId,{getState,renderReport,renderOverview,listSessions,resetProgress,reportType='generic'}={}){
     const profile=getLearnerProfile(learnerId);
     if(!profile)throw new TypeError('registered learner is required');
     if(typeof getState!=='function')throw new TypeError('parent report capability requires getState');
@@ -18,7 +18,8 @@ export function createFamilyParentReportCapabilityRegistry(){
       getState,
       renderReport,
       renderOverview:typeof renderOverview==='function'?renderOverview:null,
-      listSessions:typeof listSessions==='function'?listSessions:null
+      listSessions:typeof listSessions==='function'?listSessions:null,
+      resetProgress:typeof resetProgress==='function'?resetProgress:null
     });
     entries.set(profile.id,capability);
     return capability;

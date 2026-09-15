@@ -86,5 +86,11 @@ export function createGameProgressionService({storage=null,xpPolicy=DEFAULT_GAME
   }
 
   function get(learnerId){return snapshot(load(learnerId),step);}
-  return Object.freeze({record,get,key,policy,levelXp:step});
+  function reset(learnerId){
+    const id=String(learnerId||'').trim().toLowerCase();
+    const state=initial(id);
+    if(id)save(state);
+    return snapshot(state,step);
+  }
+  return Object.freeze({record,get,reset,key,policy,levelXp:step});
 }

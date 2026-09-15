@@ -81,5 +81,11 @@ export function createGameRewardProgressTracker({storage=null}={}){
   }
 
   function get(learnerId){return snapshot(load(learnerId));}
-  return Object.freeze({record,get,key});
+  function reset(learnerId){
+    const id=String(learnerId||'').trim().toLowerCase();
+    const state=initial(id);
+    if(id)save(state);
+    return snapshot(state);
+  }
+  return Object.freeze({record,get,reset,key});
 }

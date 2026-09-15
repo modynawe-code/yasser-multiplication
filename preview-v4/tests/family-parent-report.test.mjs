@@ -15,15 +15,34 @@ test('family report is wired from main through learner report capabilities inste
   assert.match(main,/familyParent\.start\(\)/);
 });
 
-test('parent report capability registry keeps stage-specific report types without fixed child-count assumptions',()=>{
+test('parent report capability registry keeps stage-specific report types and optional reset actions',()=>{
   const registry=createFamilyParentReportCapabilityRegistry();
   const render=()=>'<p>report</p>',overview=()=>'<p>overview</p>',sessions=()=>[];
-  registry.register('yasser',{getState:()=>({id:'y'}),renderReport:render,renderOverview:overview,listSessions:sessions,reportType:'academic'});
+  let resets=0;
+  registry.register('yasser',{getState:()=>({id:'y'}),renderReport:render,renderOverview:overview,listSessions:sessions,resetProgress:()=>{resets+=1;},reportType:'academic'});
   registry.register('mashaal',{getState:()=>({id:'m'}),renderReport:render,renderOverview:overview,listSessions:sessions,reportType:'developmental'});
   assert.equal(registry.get('yasser')?.reportType,'academic');
   assert.equal(registry.get('mashaal')?.reportType,'developmental');
+  assert.equal(typeof registry.get('yasser')?.resetProgress,'function');
+  registry.get('yasser').resetProgress();
+  assert.equal(resets,1);
+  assert.equal(registry.get('mashaal')?.resetProgress,null);
   assert.deepEqual(Object.keys(registry.exportStates()),['yasser','mashaal']);
   assert.equal(registry.list().length,2);
+});
+
+test('parent learner reset is parent-scoped, confirmed and wired to isolated reset stores',async()=>{
+  const main=await read('src/main.js'),controller=await read('src/modules/parent/family-parent-controller.js');
+  assert.match(controller,/إعادة ضبط تقدم الطفل/);
+  assert.match(controller,/globalThis\.confirm/);
+  assert.match(controller,/capability\.resetProgress/);
+  assert.match(main,/createInitialState/);
+  assert.match(main,/createInitialKhaledState/);
+  assert.match(main,/createInitialMashaalState/);
+  assert.match(main,/rewardRepository\.reset\(id\)/);
+  assert.match(main,/gameRewardRuntime\.resetProgress\(id\)/);
+  assert.match(main,/await localBackup\.flush\(\)/);
+  assert.doesNotMatch(main,/localStorage\.clear\(|storage\.clear\(/);
 });
 
 test('family shell keeps only structural report tabs and hydrates every registered learner dynamically',async()=>{

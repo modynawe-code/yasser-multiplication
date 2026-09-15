@@ -27,3 +27,21 @@ test('family game reward runtime composes rewards and progression over shared ga
   assert.equal(runtime.getSummary('mashaal').total,2);
   assert.equal(runtime.getProgression('mashaal').xp,20);
 });
+
+test('family reset primitives clear one learner rewards and game progress without touching siblings',()=>{
+  const bus=createGameEventBus(),storage=memoryStorage(),repository=createRewardRepository({storage});
+  const runtime=createFamilyGameRewardRuntime({repository,eventBus:bus,progressStorage:storage});
+  bus.publish(createGameEvent({type:'game.completed',gameId:'rock-paper-scissors',learnerId:'mashaal',sessionId:'m-1'}));
+  bus.publish(createGameEvent({type:'game.completed',gameId:'xo',learnerId:'khaled',sessionId:'k-1'}));
+  assert.equal(runtime.getProgression('mashaal').xp,20);
+  assert.equal(runtime.getProgression('khaled').xp,20);
+  assert.equal(runtime.getSummary('mashaal').total,2);
+  runtime.resetProgress('mashaal');
+  repository.reset('mashaal');
+  assert.equal(runtime.getProgress('mashaal').completions,0);
+  assert.equal(runtime.getProgression('mashaal').xp,0);
+  assert.equal(runtime.getProgression('mashaal').level,1);
+  assert.equal(runtime.getSummary('mashaal').total,0);
+  assert.equal(runtime.getProgression('khaled').xp,20);
+  runtime.stop();
+});

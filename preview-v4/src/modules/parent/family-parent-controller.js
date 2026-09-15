@@ -30,6 +30,25 @@ export function createFamilyParentController({reportCapabilities,onExitToHub,clo
     byId('familyCloudLogout').onclick=async()=>{await cloudAuth.logout();render('overview');};
   }
 
+  function resetPanel(content,capability){
+    if(typeof capability?.resetProgress!=='function')return;
+    const panel=document.createElement('section');panel.className='family-parent-reset-panel';
+    const copy=document.createElement('div'),title=document.createElement('strong'),note=document.createElement('p'),status=document.createElement('p');
+    title.textContent='إعادة ضبط التقدم';
+    note.textContent='يعيد المستوى والمحاولات والجلسات والجوائز وتقدم الألعاب لهذا الطفل على هذا الجهاز فقط.';
+    status.className='family-parent-reset-status';status.setAttribute('role','status');
+    copy.append(title,note,status);
+    const button=document.createElement('button');button.type='button';button.className='small-btn family-parent-reset-btn';button.textContent='إعادة ضبط تقدم الطفل';
+    button.onclick=async()=>{
+      const name=capability.profile?.displayName||'الطفل';
+      const message=`متأكد تبي تعيد تقدم ${name} بالكامل؟\n\nسيتم تصفير المستوى والمحاولات والجلسات والجوائز وXP الألعاب لهذا الطفل على هذا الجهاز. لا يمكن التراجع.`;
+      if(!(globalThis.confirm?.(message)??false))return;
+      button.disabled=true;status.textContent='جاري إعادة الضبط…';
+      try{await capability.resetProgress();status.textContent='تمت إعادة الضبط.';}catch{status.textContent='تعذرت إعادة الضبط. لم يتم حذف بيانات بقية الأطفال.';button.disabled=false;}
+    };
+    panel.append(copy,button);content.prepend(panel);
+  }
+
   function reportForTab(tab){
     if(tab==='overview')return familyOverviewEntries(reportCapabilities?.overviewEntries?.()||[]);
     if(tab==='sessions')return familySessionEntries(reportCapabilities?.sessionEntries?.()||[]);
@@ -42,6 +61,7 @@ export function createFamilyParentController({reportCapabilities,onExitToHub,clo
     all('[data-family-parent-tab]').forEach(button=>button.classList.toggle('active',button.dataset.familyParentTab===tab));
     const content=byId('familyParentContent');if(!content)return;
     content.innerHTML=reportForTab(tab);
+    const capability=reportCapabilities?.get?.(tab);if(capability)resetPanel(content,capability);
     if(tab==='overview')cloudPanel(content);
     const exportButton=byId('familyExportBtn');
     if(exportButton)exportButton.onclick=()=>{

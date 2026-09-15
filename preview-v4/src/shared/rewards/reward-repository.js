@@ -13,5 +13,9 @@ export function createRewardRepository({storage=globalThis.localStorage}={}){
     storage?.setItem?.(key(normalized.learnerId),JSON.stringify(normalized));
     return normalized;
   }
-  return Object.freeze({load,save,key});
+  function reset(learnerId){
+    const id=String(learnerId||'');
+    return save(createRewardLedger(id));
+  }
+  return Object.freeze({load,save,reset,key});
 }

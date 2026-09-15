@@ -68,10 +68,19 @@ export function createFamilyGameRewardRuntime({repository,eventBus=gameEventBus,
     return result;
   }
 
+  function resetProgress(learnerId){
+    const id=String(learnerId||'').trim().toLowerCase();
+    return Object.freeze({
+      progress:rewardProgress.reset(id),
+      progression:progression.reset(id)
+    });
+  }
+
   const unsubscribe=eventBus.subscribe(handle);
   return Object.freeze({
     stop(){unsubscribe?.();},
     handle,
+    resetProgress,
     getSummary:enrichedSummary,
     getProgress:rewardProgress.get,
     getProgression:progression.get,

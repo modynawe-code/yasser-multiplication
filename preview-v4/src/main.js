@@ -1,5 +1,5 @@
 import { createLocalStorageRepository } from './infrastructure/storage/local-storage-repository.js';
-import { normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
+import { createInitialState,normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
 import { createAppController } from './ui/app-controller.js';
 import { registerServiceWorker } from './platform/pwa/register-service-worker.js';
 import { ensureYasserHomeShell } from './modules/yasser/ui/yasser-home-shell.js';
@@ -8,7 +8,7 @@ import { hydrateLearnerHub } from './modules/hub/learner-hub-registry.js';
 import { createHubController } from './modules/hub/hub-controller.js';
 import { createLearnerRuntimeRegistry } from './modules/hub/learner-runtime-registry.js';
 import { createKhaledRepository } from './modules/khaled/infrastructure/storage/local-storage-repository.js';
-import { normalizeKhaledState,applyKhaledAttemptEvent } from './modules/khaled/domain/state-model.js';
+import { createInitialKhaledState,normalizeKhaledState,applyKhaledAttemptEvent } from './modules/khaled/domain/state-model.js';
 import { ensureKhaledHomeShell } from './modules/khaled/ui/khaled-home-shell.js';
 import { createKhaledController } from './modules/khaled/ui/khaled-controller.js';
 import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
@@ -17,7 +17,7 @@ import { createMashaalController } from './modules/mashaal/ui/mashaal-controller
 import { createMashaalTreasureController } from './modules/mashaal/ui/mashaal-treasure-controller.js';
 import { createMashaalGameChallengePresenter } from './modules/mashaal/ui/mashaal-game-challenge-presenter.js';
 import { createMashaalLocalStorageRepository } from './modules/mashaal/infrastructure/local-storage-repository.js';
-import { normalizeMashaalState } from './modules/mashaal/domain/state-model.js';
+import { createInitialMashaalState,normalizeMashaalState } from './modules/mashaal/domain/state-model.js';
 import { recordMashaalEvidence } from './modules/mashaal/application/progress-service.js';
 import { createMashaalGameLearningProvider } from './modules/mashaal/application/game-learning-provider.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
@@ -102,6 +102,22 @@ const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
 const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show()});
 const gameRewardRuntime=createFamilyGameRewardRuntime({repository:rewardRepository,onReward:announcement=>mashaalTreasures?.announce(announcement)});
+const resetTargets=Object.freeze({
+  yasser:Object.freeze({repository:yasserBaseRepository,initialState:createInitialState}),
+  khaled:Object.freeze({repository:khaledBaseRepository,initialState:createInitialKhaledState}),
+  mashaal:Object.freeze({repository:mashaalRepository,initialState:createInitialMashaalState})
+});
+async function resetLearnerProgress(learnerId){
+  const id=String(learnerId||'').trim().toLowerCase(),target=resetTargets[id];
+  if(!target)throw new TypeError('unknown learner reset target');
+  const saved=target.repository.save(target.initialState());
+  if(saved===false)throw new Error('failed to reset learner state');
+  rewardRepository.reset(id);
+  gameRewardRuntime.resetProgress(id);
+  await localBackup.flush();
+  globalThis.location?.reload?.();
+  return true;
+}
 mashaalTreasures=createMashaalTreasureController({getSummary:()=>gameRewardRuntime.getSummary('mashaal'),onExit:()=>mashaal.enter()});
 const learnerRuntimes=createLearnerRuntimeRegistry();
 const hubVisuals=createKhaledSceneController();
@@ -111,9 +127,9 @@ rewardCapabilities.register('yasser',{mode:'academic',getState:()=>yasser.getSta
 rewardCapabilities.register('khaled',{mode:'academic',getState:()=>khaled.getState(),onEnter:()=>khaled.enter(),motivationAnchor:'#khaledHomeView .khaled-stats'});
 rewardCapabilities.register('mashaal',{mode:'developmental',getState:()=>mashaal.getState(),onEnter:()=>mashaal.enter()});
 
-parentReportCapabilities.register('yasser',{reportType:'academic',getState:()=>yasser.getState(),renderReport:familyYasserReport,renderOverview:familyYasserOverview,listSessions:familyYasserSessions});
-parentReportCapabilities.register('khaled',{reportType:'academic',getState:()=>khaled.getState(),renderReport:familyKhaledReport,renderOverview:familyKhaledOverview,listSessions:familyKhaledSessions});
-parentReportCapabilities.register('mashaal',{reportType:'developmental',getState:()=>mashaal.getState(),renderReport:familyMashaalReport,renderOverview:familyMashaalOverview,listSessions:familyMashaalSessions});
+parentReportCapabilities.register('yasser',{reportType:'academic',getState:()=>yasser.getState(),renderReport:familyYasserReport,renderOverview:familyYasserOverview,listSessions:familyYasserSessions,resetProgress:()=>resetLearnerProgress('yasser')});
+parentReportCapabilities.register('khaled',{reportType:'academic',getState:()=>khaled.getState(),renderReport:familyKhaledReport,renderOverview:familyKhaledOverview,listSessions:familyKhaledSessions,resetProgress:()=>resetLearnerProgress('khaled')});
+parentReportCapabilities.register('mashaal',{reportType:'developmental',getState:()=>mashaal.getState(),renderReport:familyMashaalReport,renderOverview:familyMashaalOverview,listSessions:familyMashaalSessions,resetProgress:()=>resetLearnerProgress('mashaal')});
 
 cabinet=createRewardCabinetController({
   capabilityRegistry:rewardCapabilities,

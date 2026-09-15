@@ -42,3 +42,13 @@ test('unscored events do not change XP',()=>{
   service.record(event('game.retry'));
   assert.equal(service.get('yasser').xp,0);
 });
+
+test('reset clears only the selected learner progression',()=>{
+  const service=createGameProgressionService({storage:memoryStorage()});
+  service.record(event('game.completed',{learnerId:'yasser',sessionId:'y-1'}));
+  service.record(event('game.completed',{learnerId:'khaled',sessionId:'k-1'}));
+  service.reset('yasser');
+  assert.equal(service.get('yasser').xp,0);
+  assert.equal(service.get('yasser').level,1);
+  assert.equal(service.get('khaled').xp,20);
+});
