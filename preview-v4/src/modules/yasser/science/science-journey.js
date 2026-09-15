@@ -1,4 +1,5 @@
 const JOURNEY_STYLE='src/modules/yasser/science/science-journey.css';
+const JOURNEY_POLISH_STYLE='src/modules/yasser/science/science-journey-polish.css';
 let mounted=false;
 
 const JOURNEY_NODES=Object.freeze([
@@ -11,13 +12,18 @@ const JOURNEY_NODES=Object.freeze([
   {id:'reward',kind:'reward',side:'right',title:'صندوق الإنجاز',subtitle:'مكافأتك بانتظارك',state:'جائزة نهاية الرحلة',marker:'🎁',disabled:true}
 ]);
 
-function ensureStyle(){
-  if(document.querySelector('link[data-module-style="science-journey"]'))return;
+function ensureStyle(href,key){
+  if(document.querySelector(`link[data-module-style="${key}"]`))return;
   const link=document.createElement('link');
   link.rel='stylesheet';
-  link.href=JOURNEY_STYLE;
-  link.dataset.moduleStyle='science-journey';
+  link.href=href;
+  link.dataset.moduleStyle=key;
   document.head.appendChild(link);
+}
+
+function ensureStyles(){
+  ensureStyle(JOURNEY_STYLE,'science-journey');
+  ensureStyle(JOURNEY_POLISH_STYLE,'science-journey-polish');
 }
 
 function clickUnit(unitId){
@@ -56,6 +62,14 @@ function trailMarkup(){
   </svg>`;
 }
 
+function progressKeyMarkup(){
+  return `<div class="science-journey-progress-key" aria-label="اتجاه الرحلة">
+    <span class="is-done">✓ مراجعة الوحدات</span><i aria-hidden="true">←</i>
+    <span class="is-now">● أنت هنا: الفصل الخامس</span><i aria-hidden="true">←</i>
+    <span class="is-next">🔒 القادم: الفصل السادس</span>
+  </div>`;
+}
+
 function journeyMarkup(){
   return `<section class="science-journey" id="scienceJourney" aria-labelledby="scienceJourneyTitle">
     <div class="science-journey-world" aria-hidden="true">
@@ -76,6 +90,8 @@ function journeyMarkup(){
         <button type="button" data-journey-mode="quick">ابدأ المهمة</button>
       </div>
     </div>
+
+    ${progressKeyMarkup()}
 
     <div class="science-journey-map" aria-label="خريطة التقدم">
       ${trailMarkup()}
@@ -110,7 +126,7 @@ function bindJourney(host){
 export function mountScienceJourney(){
   const view=document.getElementById('yasserScienceView');
   if(!view||view.dataset.journeyMap==='true')return false;
-  ensureStyle();
+  ensureStyles();
   const head=view.querySelector('.yasser-science-head');
   if(!head)return false;
   const wrapper=document.createElement('div');
