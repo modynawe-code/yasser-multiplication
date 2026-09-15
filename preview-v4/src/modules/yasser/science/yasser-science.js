@@ -23,6 +23,7 @@ function visualUnitQuestions(){return unitQuestions().filter(question=>question.
 function unitProgress(){return filterScienceProgressByUnit(progress,activeUnitId);}
 function scopeLabel(){return String(YASSER_SCIENCE_SCOPE.label||'سادس ابتدائي • الفصل الدراسي الأول').replace(' • الفترة الأولى','').replace('الفصل الأول','الفصل الدراسي الأول');}
 function chapterDisplayName(label=''){return label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');}
+function visualQuestionLabel(count){if(count===1)return 'سؤال مصوّر';if(count===2)return 'سؤالان مصوّران';return `${count} أسئلة مصوّرة`;}
 
 function ensureShell(){
   if(document.getElementById('yasserScienceView'))return;
@@ -104,7 +105,7 @@ function renderUnitCard(){
   document.getElementById('scienceUnitNote').textContent=isCurrent?'ابدأ بالفصل الحالي وتقدم خطوة بخطوة.':'راجع المحتوى المفتوح في هذه الوحدة.';
   document.getElementById('scienceStageLabel').textContent=isCurrent?'الآن':'فصل المراجعة';
   document.getElementById('scienceChapterName').textContent=chapterDisplayName(chapter.label);
-  document.getElementById('scienceBankCount').textContent=`المحتوى المفتوح: ${questions.length} سؤالًا • ${visualAssets.size} سؤالًا مصورًا`;
+  document.getElementById('scienceBankCount').textContent=`المحتوى المفتوح: ${questions.length} سؤالًا • ${visualQuestionLabel(visualAssets.size)}`;
 
   const imageButton=document.querySelector('[data-science-mode="images"]'),imageCount=document.getElementById('scienceImageModeCount'),imageCopy=document.getElementById('scienceImageModeCopy');
   const hasImages=visualQuestions.length>0,imageRoundSize=Math.min(10,visualQuestions.length);
@@ -116,7 +117,7 @@ function renderUnitCard(){
 function renderDashboard(){
   const dashboard=getScienceDashboard(unitProgress()),host=document.getElementById('scienceDashboard');if(!host)return;
   const hasAttempts=dashboard.total>0;
-  const progressState=!hasAttempts?'ابدأ أول تحدي':dashboard.total<10?'استمر بالتدريب':dashboard.readiness;
+  const progressState=!hasAttempts?'لم تبدأ بعد':dashboard.total<10?'استمر بالتدريب':dashboard.readiness;
   const recentAccuracy=hasAttempts?`${dashboard.recentAccuracy}%`:'—';
   const reviewCount=hasAttempts?String(dashboard.reviewCount):'—';
   host.innerHTML=`<div><span>حالة التقدم</span><strong>${progressState}</strong></div><div><span>دقة آخر المحاولات</span><strong>${recentAccuracy}</strong></div><div><span>تحتاج مراجعة</span><strong>${reviewCount}</strong></div><div><span>نقاط الوحدة</span><strong>${dashboard.points}</strong></div>`;
