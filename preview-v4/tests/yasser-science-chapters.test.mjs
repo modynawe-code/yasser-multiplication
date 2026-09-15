@@ -17,6 +17,8 @@ import {createScienceSession} from '../src/modules/yasser/science/science-engine
 const CHAPTER_ONE_UNITS=new Set(['cells','organization','cell-processes']);
 const CHAPTER_TWO_UNITS=new Set(['division','heredity']);
 const CHAPTER_THREE_UNITS=new Set(['plant-processes','microorganisms']);
+const CHAPTER_FOUR_UNITS=new Set(['body-processes','movement-senses']);
+const UNIT_TWO_UNITS=new Set([...CHAPTER_THREE_UNITS,...CHAPTER_FOUR_UNITS]);
 
 test('unit 1 remains stable as a review scope',()=>{
   assert.equal(DEFAULT_YASSER_SCIENCE_CHAPTER_ID,'chapter-1-cells');
@@ -29,12 +31,17 @@ test('unit 1 remains stable as a review scope',()=>{
   assert.ok(questions.every(question=>Array.isArray(question.choices)&&question.choices.includes(question.answer)));
 });
 
-test('unit 2 is the current scope and exposes chapter 3 only',()=>{
+test('unit 2 is the current scope and exposes chapters 3 and 4',()=>{
   assert.equal(DEFAULT_YASSER_SCIENCE_UNIT_ID,'unit-2-life-processes');
-  assert.equal(YASSER_SCIENCE_UNITS.find(unit=>unit.id===DEFAULT_YASSER_SCIENCE_UNIT_ID)?.shortLabel,'عمليات الحياة');
+  const unit=YASSER_SCIENCE_UNITS.find(item=>item.id===DEFAULT_YASSER_SCIENCE_UNIT_ID);
+  assert.equal(unit?.shortLabel,'عمليات الحياة');
+  assert.equal(unit?.currentChapterId,'chapter-4-human-animals');
+  assert.deepEqual(unit?.allowedChapterIds,['chapter-3-plants-microorganisms','chapter-4-human-animals']);
   const questions=filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS);
-  assert.ok(questions.length>=22,`unit 2 current scope=${questions.length}`);
-  assert.ok(questions.every(question=>CHAPTER_THREE_UNITS.has(question.unit)));
+  assert.ok(questions.length>=40,`unit 2 current scope=${questions.length}`);
+  assert.ok(questions.some(question=>CHAPTER_THREE_UNITS.has(question.unit)));
+  assert.ok(questions.some(question=>CHAPTER_FOUR_UNITS.has(question.unit)));
+  assert.ok(questions.every(question=>UNIT_TWO_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>!CHAPTER_ONE_UNITS.has(question.unit)&&!CHAPTER_TWO_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>['choice','trueFalse'].includes(question.type)));
   assert.ok(questions.every(question=>question.choices.includes(question.answer)));
@@ -55,12 +62,12 @@ test('chapter 2 remains isolated and is not mixed into current practice',()=>{
   assert.ok(questions.every(question=>!CHAPTER_ONE_UNITS.has(question.unit)));
 });
 
-test('unit 2 quick and school exam sessions stay inside chapter 3',()=>{
+test('unit 2 quick and school exam sessions stay inside chapters 3 and 4',()=>{
   const questions=filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'unit-2-life-processes');
   for(const mode of ['quick','exam']){
     const session=createScienceSession({mode,count:mode==='exam'?20:10,questions,rng:()=>.5});
     assert.equal(session.questions.length,mode==='exam'?20:10,mode);
-    assert.ok(session.questions.every(question=>CHAPTER_THREE_UNITS.has(question.unit)),mode);
+    assert.ok(session.questions.every(question=>UNIT_TWO_UNITS.has(question.unit)),mode);
   }
 });
 
@@ -69,25 +76,27 @@ test('unit progress excludes other science units and recomputes points',()=>{
     {questionId:'a',concept:'cell-theory',unit:'cells',isCorrect:true,earned:10,answeredAt:'2026-09-14T10:00:00.000Z'},
     {questionId:'b',concept:'roots',unit:'plant-processes',isCorrect:true,earned:10,answeredAt:'2026-09-14T10:01:00.000Z'},
     {questionId:'c',concept:'bacteria',unit:'microorganisms',isCorrect:false,earned:0,answeredAt:'2026-09-14T10:02:00.000Z'},
+    {questionId:'e',concept:'digestion',unit:'body-processes',isCorrect:true,earned:10,answeredAt:'2026-09-14T10:02:30.000Z'},
     {questionId:'d',concept:'meiosis',unit:'division',isCorrect:true,earned:20,answeredAt:'2026-09-14T10:03:00.000Z'}
   ]};
   const unitTwo=filterScienceProgressByUnit(progress,'unit-2-life-processes');
-  assert.equal(unitTwo.attempts.length,2);assert.equal(unitTwo.points,10);assert.equal(unitTwo.concepts['cell-theory'],undefined);assert.equal(unitTwo.concepts.meiosis,undefined);
+  assert.equal(unitTwo.attempts.length,3);assert.equal(unitTwo.points,20);assert.equal(unitTwo.concepts['cell-theory'],undefined);assert.equal(unitTwo.concepts.meiosis,undefined);
   const chapterOne=filterScienceProgressByChapter(progress,'chapter-1-cells');
   assert.equal(chapterOne.attempts.length,1);assert.equal(chapterOne.points,10);
 });
 
-test('science UI is unit-first, defaults to unit 2 and does not expose advanced chapter 4',()=>{
+test('science UI is unit-first and unit 2 advances to chapter 4',()=>{
   const source=readFileSync(new URL('../src/modules/yasser/science/yasser-science.js',import.meta.url),'utf8');
+  const chapters=readFileSync(new URL('../src/modules/yasser/science/science-chapters.js',import.meta.url),'utf8');
   const css=readFileSync(new URL('../src/modules/yasser/science/yasser-science.css',import.meta.url),'utf8');
   assert.match(source,/علوم الفصل الدراسي الأول/);
   assert.match(source,/scienceUnitSwitch/);
   assert.match(source,/YASSER_SCIENCE_UNITS/);
   assert.match(source,/DEFAULT_YASSER_SCIENCE_UNIT_ID/);
-  assert.match(source,/بدون الدروس المتقدمة/);
-  assert.doesNotMatch(source,/الفصل الرابع/);
   assert.match(source,/أسئلة بصرية بالصور والمخططات/);
   assert.doesNotMatch(source,/صور الكتاب/);
+  assert.match(chapters,/currentChapterId:'chapter-4-human-animals'/);
+  assert.match(chapters,/allowedChapterIds:Object\.freeze\(\['chapter-3-plants-microorganisms','chapter-4-human-animals'\]\)/);
   assert.match(source,/YASSER_SCIENCE_UNIT2_VISUAL_ASSETS/);
   assert.match(source,/visualUnitQuestions/);
   assert.match(source,/scienceImageModal/);
