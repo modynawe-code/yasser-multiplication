@@ -30,7 +30,7 @@ test('question bank detects normalized exact duplicates instead of counting repo
 
 test('expanded science collection is verified, textbook-backed and duplicate-free',()=>{
   assert.equal(YASSER_SCIENCE_VISUAL_QUESTIONS.length,18);
-  assert.equal(YASSER_SCIENCE_COLLECTED_ALL.length,78);
+  assert.equal(YASSER_SCIENCE_COLLECTED_ALL.length,100);
   assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>question.verified));
   assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>question.sources.some(source=>['textbook','user-upload'].includes(source.authority))));
   assert.equal(findExactQuestionDuplicates(YASSER_SCIENCE_COLLECTED_ALL).length,0);
@@ -52,7 +52,9 @@ test('existing science data and collected source-backed questions share one reus
   assert.equal(YASSER_SCIENCE_QUESTION_BANK.questions.length,YASSER_SCIENCE_QUESTIONS.length+YASSER_SCIENCE_COLLECTED_ALL.length);
   const coverage=getQuestionBankCoverage(YASSER_SCIENCE_QUESTION_BANK);
   assert.equal(coverage.bySubject.science,YASSER_SCIENCE_QUESTION_BANK.questions.length);
-  assert.equal(coverage.byUnit['unit-1-diversity-of-life'],YASSER_SCIENCE_QUESTION_BANK.questions.length);
-  assert.ok((coverage.byChapter['chapter-1-cells']||0)>YASSER_SCIENCE_COLLECTED_ALL.length);
+  assert.equal(coverage.byUnit['unit-2-life-processes'],22);
+  assert.equal(coverage.byUnit['unit-1-diversity-of-life'],YASSER_SCIENCE_QUESTION_BANK.questions.length-22);
+  assert.ok((coverage.byChapter['chapter-1-cells']||0)>78);
   assert.ok((coverage.byChapter['chapter-2-cell-heredity']||0)>0);
+  assert.equal(coverage.byChapter['chapter-3-plants-microorganisms'],22);
 });
