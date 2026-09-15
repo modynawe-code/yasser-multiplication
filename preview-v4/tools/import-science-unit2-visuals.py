@@ -18,6 +18,10 @@ REFERENCE_SIZE=(1944,2506)
 # Crops selected for assessment value: structures/processes that appear as direct diagram questions.
 CROPS={
     'u2-leaf-stomata':{'page':83,'box':(215,830,1750,2280),'alt':'مقطع ورقة نبات يوضح الثغور والخلايا الحارسة وتبادل الغازات'},
+    'u2-flower-pollination':{'page':86,'box':(620,650,1900,2200),'alt':'رسم يوضح أجزاء الزهرة وانتقال حبوب اللقاح'},
+    'u2-moss-life-cycle':{'page':87,'box':(260,820,1780,2250),'alt':'مخطط دورة حياة الحزازيات وتكوين الأبواغ'},
+    'u2-pine-life-cycle':{'page':88,'box':(120,250,980,2250),'alt':'مخطط دورة حياة الصنوبر والمخاريط والبذور'},
+    'u2-binary-fission':{'page':97,'box':(170,1240,1800,2210),'alt':'مخطط الانشطار الثنائي في مخلوق حي دقيق'},
     'u2-yeast-budding':{'page':98,'box':(160,210,930,1020),'alt':'مراحل تكاثر الخميرة بالتبرعم'},
     'u2-bacteria-conjugation':{'page':98,'box':(160,1370,940,2080),'alt':'مخطط يوضح اقتران خليتين بكتيريتين وتبادل المادة الوراثية'},
     'u2-bread-mold':{'page':99,'box':(950,1410,1810,2310),'alt':'رسم عفن الخبز يوضح الخيوط الفطرية ومحافظ الأبواغ'},
