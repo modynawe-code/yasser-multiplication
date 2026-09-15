@@ -17,8 +17,19 @@ test('science journey keeps the real current curriculum path',()=>{
   assert.match(journey,/disabled:true/);
 });
 
+test('science journey uses an explicit adventure map instead of nth-of-type timeline layout',()=>{
+  assert.match(journey,/side:'right'/);
+  assert.match(journey,/side:'left'/);
+  assert.match(journey,/science-journey-trail/);
+  assert.match(journey,/science-journey-avatar/);
+  assert.doesNotMatch(css,/nth-of-type/);
+  assert.match(css,/science-journey-row\.is-right/);
+  assert.match(css,/science-journey-row\.is-left/);
+});
+
 test('science journey has child-friendly responsive and reduced-motion styling',()=>{
-  assert.match(css,/science-journey-path/);
+  assert.match(css,/science-journey-map/);
+  assert.match(css,/science-journey-trail-main/);
   assert.match(css,/@media\(max-width:760px\)/);
   assert.match(css,/prefers-reduced-motion/);
 });
