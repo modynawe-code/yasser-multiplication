@@ -1,11 +1,12 @@
 import {YASSER_SCIENCE_ASSETS,YASSER_SCIENCE_SCOPE} from './science-data.js';
 import {YASSER_SCIENCE_PLAYABLE_QUESTIONS} from './science-question-bank.js';
 import {YASSER_SCIENCE_VISUAL_ASSETS} from './science-visuals.js';
+import {YASSER_SCIENCE_UNIT2_VISUAL_ASSETS} from './science-unit2-visuals.generated.js';
 import {DEFAULT_YASSER_SCIENCE_UNIT_ID,YASSER_SCIENCE_UNITS,filterScienceProgressByUnit,filterScienceQuestionsByUnit,getScienceChapter,getScienceUnit} from './science-chapters.js';
 import {applyScienceAttempt,applyScienceSessionSummary,createScienceSession,getScienceDashboard,getScienceReviewQuestionIds,sessionWrongQuestionIds,submitScienceAnswer} from './science-engine.js';
 
 const STORAGE_KEY='family-learning:yasser:science:v1';
-const SCIENCE_ASSETS=Object.freeze({...YASSER_SCIENCE_ASSETS,...YASSER_SCIENCE_VISUAL_ASSETS});
+const SCIENCE_ASSETS=Object.freeze({...YASSER_SCIENCE_ASSETS,...YASSER_SCIENCE_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT2_VISUAL_ASSETS});
 let mounted=false,session=null,progress=loadProgress(),feedbackTimer=null,activeUnitId=DEFAULT_YASSER_SCIENCE_UNIT_ID;
 
 function storage(){try{return globalThis.localStorage;}catch{return null;}}
@@ -17,6 +18,7 @@ function clearTimer(){if(feedbackTimer){clearTimeout(feedbackTimer);feedbackTime
 function currentUnit(){return getScienceUnit(activeUnitId);}
 function currentChapter(){return getScienceChapter(currentUnit().currentChapterId);}
 function unitQuestions(){return filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,activeUnitId);}
+function visualUnitQuestions(){return unitQuestions().filter(question=>question.assetId&&SCIENCE_ASSETS[question.assetId]);}
 function unitProgress(){return filterScienceProgressByUnit(progress,activeUnitId);}
 
 function ensureShell(){
@@ -41,7 +43,7 @@ function ensureShell(){
 
     <section class="yasser-science-modes" id="scienceModes" aria-label="أنشطة الوحدة الحالية">
       <button type="button" data-science-mode="quick"><span class="science-mode-code">10</span><span><strong>تدريب سريع</strong><small>10 أسئلة متنوعة مع تصحيح فوري</small></span></button>
-      <button type="button" data-science-mode="images"><span class="science-mode-code" id="scienceImageModeCount">10</span><span><strong>تحدي الصور</strong><small id="scienceImageModeCopy">10 أسئلة بصرية من صور الكتاب والاختبارات</small></span></button>
+      <button type="button" data-science-mode="images"><span class="science-mode-code" id="scienceImageModeCount">10</span><span><strong>تحدي الصور</strong><small id="scienceImageModeCopy">أسئلة بصرية بالصور والمخططات</small></span></button>
       <button type="button" data-science-mode="exam"><span class="science-mode-code">20</span><span><strong>اختبار المدرسة</strong><small>20 سؤالًا مما تم فتحه، بدون كشف الإجابة أثناء الحل</small></span></button>
     </section>
 
@@ -91,7 +93,7 @@ function renderUnitSwitch(){
 }
 
 function renderUnitCard(){
-  const unit=currentUnit(),chapter=currentChapter(),questions=unitQuestions(),visualAssets=new Set(questions.filter(question=>question.assetId).map(question=>question.assetId));
+  const unit=currentUnit(),chapter=currentChapter(),questions=unitQuestions(),visualQuestions=visualUnitQuestions(),visualAssets=new Set(visualQuestions.map(question=>question.assetId));
   document.getElementById('scienceUnitBadge').textContent=`الوحدة ${unit.number}`;
   document.getElementById('scienceUnitState').textContent=unit.status==='current'?'الوحدة الحالية':'وحدة مكتملة — للمراجعة';
   document.getElementById('scienceUnitName').textContent=unit.shortLabel;
@@ -100,10 +102,10 @@ function renderUnitCard(){
   document.getElementById('scienceBankCount').textContent=`${questions.length} سؤالًا • ${visualAssets.size} صورة ومخططًا`;
 
   const imageButton=document.querySelector('[data-science-mode="images"]'),imageCount=document.getElementById('scienceImageModeCount'),imageCopy=document.getElementById('scienceImageModeCopy');
-  const hasImages=visualAssets.size>0;
+  const hasImages=visualQuestions.length>0;
   if(imageButton){imageButton.disabled=!hasImages;imageButton.setAttribute('aria-disabled',String(!hasImages));}
-  if(imageCount)imageCount.textContent=hasImages?String(Math.min(10,visualAssets.size)):'—';
-  if(imageCopy)imageCopy.textContent=hasImages?'أسئلة بصرية من صور الكتاب والاختبارات':'يُفعّل بعد إضافة صور الكتاب الأصلية لهذه الوحدة';
+  if(imageCount)imageCount.textContent=hasImages?String(Math.min(10,visualQuestions.length)):'—';
+  if(imageCopy)imageCopy.textContent=hasImages?'أسئلة بصرية بالصور والمخططات':'لا توجد أسئلة بصرية في المحتوى المفتوح حاليًا';
 }
 
 function renderDashboard(){
@@ -121,10 +123,10 @@ function showLanding(){clearTimer();closeImageZoom();session=null;document.getEl
 function selectUnit(unitId){if(!YASSER_SCIENCE_UNITS.some(unit=>unit.id===unitId))return;activeUnitId=unitId;showLanding();}
 
 function startScience(mode,reviewIds=[]){
-  clearTimer();closeImageZoom();const scopedProgress=unitProgress(),questions=unitQuestions();
-  if(mode==='images'&&!questions.some(question=>question.assetId)){showLanding();return;}
+  clearTimer();closeImageZoom();const scopedProgress=unitProgress(),allQuestions=unitQuestions(),imageQuestions=visualUnitQuestions(),questions=mode==='images'?imageQuestions:allQuestions;
+  if(mode==='images'&&!questions.length){showLanding();return;}
   const ids=mode==='review'?(reviewIds.length?reviewIds:getScienceReviewQuestionIds(scopedProgress)):[];
-  const count=mode==='images'?10:undefined;
+  const count=mode==='images'?Math.min(10,questions.length):undefined;
   session=createScienceSession({mode,count,progress:scopedProgress,questions,reviewQuestionIds:ids});
   if(!session.questions.length){showLanding();return;}
   document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;const reviewEntry=document.getElementById('scienceReviewEntry');if(reviewEntry)reviewEntry.hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;
@@ -136,7 +138,7 @@ function renderQuestion(){
   closeImageZoom();const question=session.questions[session.index],total=session.questions.length,completed=session.answers.length,pct=Math.round((completed/Math.max(total,1))*100);
   document.getElementById('scienceStep').textContent=`السؤال ${session.index+1} من ${total}`;document.getElementById('scienceProgress').style.width=`${pct}%`;document.querySelector('.science-progress-track')?.setAttribute('aria-valuenow',String(pct));document.getElementById('sciencePoints').textContent=String(session.points);document.getElementById('scienceStreak').textContent=String(session.streak);
   document.getElementById('sciencePrompt').textContent=question.prompt;document.getElementById('scienceFeedback').textContent='';document.getElementById('scienceFeedback').className='science-feedback';
-  const source=document.getElementById('scienceSource');source.hidden=session.mode==='exam';source.textContent=question.assetId?'سؤال بصري من محتوى الوحدة واختباراتها':'سؤال من محتوى الوحدة واختباراتها';
+  const source=document.getElementById('scienceSource');source.hidden=session.mode==='exam';source.textContent=question.assetId?'سؤال بصري':'سؤال من محتوى الوحدة';
   const wrap=document.getElementById('scienceImageWrap'),image=document.getElementById('scienceImage'),asset=question.assetId?SCIENCE_ASSETS[question.assetId]:null;
   wrap.hidden=!asset;if(asset){image.src=asset.src;image.alt=asset.alt;document.getElementById('scienceImageOpen').dataset.assetId=asset.id;}else{image.removeAttribute('src');image.alt='';document.getElementById('scienceImageOpen').removeAttribute('data-asset-id');}
   const answers=document.getElementById('scienceAnswers');answers.innerHTML='';
