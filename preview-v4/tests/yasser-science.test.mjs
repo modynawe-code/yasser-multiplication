@@ -18,6 +18,19 @@ test('image challenge contains eight source-backed visual questions',()=>{
   assert.ok(session.questions.every(item=>item.assetId&&YASSER_SCIENCE_ASSETS[item.assetId]));
 });
 
+test('multiple-choice answers are shuffled per session while true/false order stays fixed',()=>{
+  const choiceQuestion={id:'choice-shuffle',unit:'cells',concept:'shuffle',type:'choice',choices:['الصحيح','ب','ج','د'],answer:'الصحيح',feedback:'الصحيح',source:{label:'اختبار',page:1}};
+  const choiceSession=createScienceSession({mode:'quick',count:1,questions:[choiceQuestion],rng:()=>0});
+  assert.deepEqual(choiceSession.questions[0].choices,['ب','ج','د','الصحيح']);
+  assert.equal(choiceSession.questions[0].answer,'الصحيح');
+  const result=submitScienceAnswer({session:choiceSession,answer:'الصحيح'});
+  assert.equal(result.attempt.isCorrect,true);
+
+  const trueFalseQuestion={id:'tf-fixed',unit:'cells',concept:'shuffle-tf',type:'trueFalse',choices:['صح','خطأ'],answer:'صح',feedback:'صحيح',source:{label:'اختبار',page:1}};
+  const trueFalseSession=createScienceSession({mode:'quick',count:1,questions:[trueFalseQuestion],rng:()=>0});
+  assert.deepEqual(trueFalseSession.questions[0].choices,['صح','خطأ']);
+});
+
 test('wrong answer enters review queue and concept stats',()=>{
   const session=createScienceSession({mode:'quick',count:1,rng:()=>.1});
   const question=session.questions[0];
