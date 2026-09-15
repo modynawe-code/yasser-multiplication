@@ -6,7 +6,7 @@ import pymupdf
 from PIL import Image, ImageDraw
 
 BOOK_URL='https://www.wajibati.net/wp-content/uploads/2025/08/kj-alum6f1_1_n7u8nrhvd4.pdf'
-PAGES=[22,26,27,*range(32,43),45,46,47]
+PAGES=list(range(134,191))
 OUT=Path('/tmp/science-textbook-pages.jpg')
 PAGES_DIR=Path('/tmp/science-textbook-pages-full')
 PAGES_DIR.mkdir(parents=True,exist_ok=True)
