@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 
 const journey=await readFile(new URL('../src/modules/yasser/science/science-journey.js',import.meta.url),'utf8');
 const css=await readFile(new URL('../src/modules/yasser/science/science-journey.css',import.meta.url),'utf8');
+const polish=await readFile(new URL('../src/modules/yasser/science/science-journey-polish.css',import.meta.url),'utf8');
 const index=await readFile(new URL('../index.html',import.meta.url),'utf8');
 
 test('science journey keeps the real current curriculum path',()=>{
@@ -27,11 +28,28 @@ test('science journey uses an explicit adventure map instead of nth-of-type time
   assert.match(css,/science-journey-row\.is-left/);
 });
 
+test('science journey polish keeps stations road-facing and the current avatar inside the route',()=>{
+  assert.match(journey,/science-journey-polish\.css/);
+  assert.match(journey,/science-journey-progress-key/);
+  assert.match(polish,/\.science-journey-row\{direction:ltr\}/);
+  assert.match(polish,/data-journey-node="chapter-5"/);
+  assert.match(polish,/science-journey-node::after/);
+  assert.match(polish,/scienceTrailFlow/);
+});
+
+test('science journey gives boss and reward distinct visual treatment',()=>{
+  assert.match(polish,/is-boss \.science-journey-node/);
+  assert.match(polish,/is-reward \.science-journey-node/);
+  assert.match(polish,/تحدي الفصل/);
+});
+
 test('science journey has child-friendly responsive and reduced-motion styling',()=>{
   assert.match(css,/science-journey-map/);
   assert.match(css,/science-journey-trail-main/);
   assert.match(css,/@media\(max-width:760px\)/);
   assert.match(css,/prefers-reduced-motion/);
+  assert.match(polish,/@media\(max-width:760px\)/);
+  assert.match(polish,/prefers-reduced-motion/);
 });
 
 test('science journey exposes real quick and image actions',()=>{
