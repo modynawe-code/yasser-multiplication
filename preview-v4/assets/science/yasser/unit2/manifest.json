@@ -19,6 +19,66 @@
       "height": 1450
     },
     {
+      "id": "u2-flower-pollination",
+      "src": "assets/science/yasser/unit2/u2-flower-pollination.webp",
+      "alt": "رسم يوضح أجزاء الزهرة وانتقال حبوب اللقاح",
+      "page": 86,
+      "bbox": [
+        620,
+        650,
+        1280,
+        1550
+      ],
+      "sha256": "f6ddf7370320d5283724d4a354915edc82563df9fd19547f46c1829b39fcefd7",
+      "width": 1280,
+      "height": 1550
+    },
+    {
+      "id": "u2-moss-life-cycle",
+      "src": "assets/science/yasser/unit2/u2-moss-life-cycle.webp",
+      "alt": "مخطط دورة حياة الحزازيات وتكوين الأبواغ",
+      "page": 87,
+      "bbox": [
+        260,
+        820,
+        1520,
+        1430
+      ],
+      "sha256": "413520ef51f2b4d1db0e2e996b7f2c7b310c4fc1ce0daedcc927b7f802337e4b",
+      "width": 1520,
+      "height": 1430
+    },
+    {
+      "id": "u2-pine-life-cycle",
+      "src": "assets/science/yasser/unit2/u2-pine-life-cycle.webp",
+      "alt": "مخطط دورة حياة الصنوبر والمخاريط والبذور",
+      "page": 88,
+      "bbox": [
+        120,
+        250,
+        860,
+        2000
+      ],
+      "sha256": "101a496c6cc28c26704bb5d41641046b5cf9463b2538af57e48b008dfa034091",
+      "width": 860,
+      "height": 2000
+    },
+    {
+      "id": "u2-binary-fission",
+      "src": "assets/science/yasser/unit2/u2-binary-fission.webp",
+      "alt": "مخطط الانشطار الثنائي في مخلوق حي دقيق",
+      "page": 97,
+      "bbox": [
+        170,
+        1240,
+        1630,
+        970
+      ],
+      "sha256": "371f6857af5f02cd2943b9108bc34112f4f48d0b23b7b1c64c1086308b442c69",
+      "width": 1630,
+      "height": 970
+    },
+    {
       "id": "u2-yeast-budding",
       "src": "assets/science/yasser/unit2/u2-yeast-budding.webp",
       "alt": "مراحل تكاثر الخميرة بالتبرعم",
@@ -139,6 +199,6 @@
       "height": 1800
     }
   ],
-  "unique": 9,
+  "unique": 13,
   "verification": "selected-assessment-figures"
 }
