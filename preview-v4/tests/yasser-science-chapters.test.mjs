@@ -86,7 +86,10 @@ test('science UI is unit-first, defaults to unit 2 and does not expose advanced 
   assert.match(source,/DEFAULT_YASSER_SCIENCE_UNIT_ID/);
   assert.match(source,/بدون الدروس المتقدمة/);
   assert.doesNotMatch(source,/الفصل الرابع/);
-  assert.match(source,/يُفعّل بعد إضافة صور الكتاب الأصلية لهذه الوحدة/);
+  assert.match(source,/أسئلة بصرية بالصور والمخططات/);
+  assert.doesNotMatch(source,/صور الكتاب/);
+  assert.match(source,/YASSER_SCIENCE_UNIT2_VISUAL_ASSETS/);
+  assert.match(source,/visualUnitQuestions/);
   assert.match(source,/scienceImageModal/);
   assert.match(source,/تكبير الصورة/);
   assert.match(css,/science-unit-switch/);
