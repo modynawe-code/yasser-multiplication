@@ -21,7 +21,7 @@ function currentChapter(){return getScienceChapter(currentUnit().currentChapterI
 function unitQuestions(){return filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,activeUnitId);}
 function visualUnitQuestions(){return unitQuestions().filter(question=>question.assetId&&SCIENCE_ASSETS[question.assetId]);}
 function unitProgress(){return filterScienceProgressByUnit(progress,activeUnitId);}
-function scopeLabel(){return String(YASSER_SCIENCE_SCOPE.label||'سادس ابتدائي • الفصل الدراسي الأول').replace(' • الفترة الأولى','').replace('الفصل الأول','الفصل الدراسي الأول');}
+function scopeLabel(){return String(YASSER_SCIENCE_SCOPE.label||'سادس ابتدائي').split(' • ')[0];}
 function chapterDisplayName(label=''){return label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');}
 function visualQuestionLabel(count){if(count===1)return 'سؤال مصوّر';if(count===2)return 'سؤالان مصوّران';return `${count} أسئلة مصوّرة`;}
 
@@ -97,15 +97,15 @@ function renderUnitSwitch(){
 }
 
 function renderUnitCard(){
-  const unit=currentUnit(),chapter=currentChapter(),questions=unitQuestions(),visualQuestions=visualUnitQuestions(),visualAssets=new Set(visualQuestions.map(question=>question.assetId));
+  const unit=currentUnit(),chapter=currentChapter(),questions=unitQuestions(),visualQuestions=visualUnitQuestions();
   const isCurrent=unit.status==='current';
   document.getElementById('scienceUnitBadge').textContent=`الوحدة ${unit.number}`;
   document.getElementById('scienceUnitState').textContent=isCurrent?'الوحدة الحالية':'وحدة للمراجعة';
   document.getElementById('scienceUnitName').textContent=unit.shortLabel;
   document.getElementById('scienceUnitNote').textContent=isCurrent?'ابدأ بالفصل الحالي وتقدم خطوة بخطوة.':'راجع المحتوى المفتوح في هذه الوحدة.';
-  document.getElementById('scienceStageLabel').textContent=isCurrent?'الآن':'فصل المراجعة';
-  document.getElementById('scienceChapterName').textContent=chapterDisplayName(chapter.label);
-  document.getElementById('scienceBankCount').textContent=`المحتوى المفتوح: ${questions.length} سؤالًا • ${visualQuestionLabel(visualAssets.size)}`;
+  document.getElementById('scienceStageLabel').textContent=isCurrent?'الآن':'مراجعة الوحدة';
+  document.getElementById('scienceChapterName').textContent=isCurrent?chapterDisplayName(chapter.label):unit.shortLabel;
+  document.getElementById('scienceBankCount').textContent=`المحتوى المفتوح: ${questions.length} سؤالًا • ${visualQuestionLabel(visualQuestions.length)}`;
 
   const imageButton=document.querySelector('[data-science-mode="images"]'),imageCount=document.getElementById('scienceImageModeCount'),imageCopy=document.getElementById('scienceImageModeCopy');
   const hasImages=visualQuestions.length>0,imageRoundSize=Math.min(10,visualQuestions.length);
@@ -140,7 +140,8 @@ function startScience(mode,reviewIds=[]){
   session=createScienceSession({mode,count,progress:scopedProgress,questions,reviewQuestionIds:ids});
   if(!session.questions.length){showLanding();return;}
   document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;const reviewEntry=document.getElementById('scienceReviewEntry');if(reviewEntry)reviewEntry.hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;
-  document.getElementById('scienceModeLabel').textContent=`${modeLabel(session.mode)} • ${currentUnit().shortLabel} • ${currentChapter().shortLabel}`;renderQuestion();
+  const unit=currentUnit(),stage=unit.status==='current'?currentChapter().shortLabel:'مراجعة الوحدة';
+  document.getElementById('scienceModeLabel').textContent=`${modeLabel(session.mode)} • ${unit.shortLabel} • ${stage}`;renderQuestion();
 }
 
 function renderQuestion(){
