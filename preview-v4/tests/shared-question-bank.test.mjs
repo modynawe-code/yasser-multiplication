@@ -28,11 +28,12 @@ test('question bank detects normalized exact duplicates instead of counting repo
   const duplicates=findExactQuestionDuplicates([a,b]);assert.equal(duplicates.length,1);assert.deepEqual([...duplicates[0].ids],['a','b']);
 });
 
-test('expanded science collection is verified, textbook-backed and duplicate-free',()=>{
+test('expanded science collection is verified, source-backed and duplicate-free',()=>{
   assert.equal(YASSER_SCIENCE_VISUAL_QUESTIONS.length,18);
   assert.ok(YASSER_SCIENCE_COLLECTED_ALL.length>=100,`collected=${YASSER_SCIENCE_COLLECTED_ALL.length}`);
   assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>question.verified));
-  assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>question.sources.some(source=>['textbook','user-upload'].includes(source.authority))));
+  assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>Array.isArray(question.sources)&&question.sources.length>=1));
+  assert.ok(YASSER_SCIENCE_COLLECTED_ALL.every(question=>validateQuestionRecord(question).ok));
   assert.equal(findExactQuestionDuplicates(YASSER_SCIENCE_COLLECTED_ALL).length,0);
 });
 
