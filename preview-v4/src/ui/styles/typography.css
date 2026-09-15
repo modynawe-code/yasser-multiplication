@@ -1,0 +1,25 @@
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap");
+
+:root{
+  --font-ui:"Tajawal",Tahoma,"Segoe UI",Arial,sans-serif;
+  --font-body-weight:500;
+  --font-control-weight:700;
+  --font-heading-weight:800;
+  --font-display-weight:900;
+}
+
+html,body{
+  font-family:var(--font-ui);
+  font-weight:var(--font-body-weight);
+  font-synthesis:none;
+}
+
+button,input,select,textarea{font-family:inherit}
+
+.btn{font-weight:var(--font-control-weight)}
+.icon-btn,.kicker,.section-label,.progress-title,.streak,.question-label,.feedback,.fact,.tag,.parent-nav button{
+  font-weight:var(--font-heading-weight);
+}
+.logo,.table-chip,.focus-strip span,.question,.answer,.free-answer input{
+  font-weight:var(--font-display-weight);
+}
