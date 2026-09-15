@@ -32,6 +32,7 @@ import { createFamilySyncCapabilityRegistry } from './shared/sync/family-sync-ca
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 import { appendCloudSession } from './shared/sync/session-sync.js';
 import { createLocalBackupService } from './shared/backup/local-backup-service.js';
+import { resetLearnerScopedProgress } from './shared/progress/learner-scoped-reset.js';
 import { createRewardRepository } from './shared/rewards/reward-repository.js';
 import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
 import { createRewardCapabilityRegistry } from './shared/rewards/reward-capability-registry.js';
@@ -112,6 +113,7 @@ async function resetLearnerProgress(learnerId){
   if(!target)throw new TypeError('unknown learner reset target');
   const saved=target.repository.save(target.initialState());
   if(saved===false)throw new Error('failed to reset learner state');
+  resetLearnerScopedProgress(localBackup.storage,id);
   rewardRepository.reset(id);
   gameRewardRuntime.resetProgress(id);
   await localBackup.flush();
