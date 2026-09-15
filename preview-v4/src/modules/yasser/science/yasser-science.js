@@ -2,11 +2,12 @@ import {YASSER_SCIENCE_ASSETS,YASSER_SCIENCE_SCOPE} from './science-data.js';
 import {YASSER_SCIENCE_PLAYABLE_QUESTIONS} from './science-question-bank.js';
 import {YASSER_SCIENCE_VISUAL_ASSETS} from './science-visuals.js';
 import {YASSER_SCIENCE_UNIT2_VISUAL_ASSETS} from './science-unit2-visuals.generated.js';
+import {YASSER_SCIENCE_UNIT3_VISUAL_ASSETS} from './science-unit3-visuals.generated.js';
 import {DEFAULT_YASSER_SCIENCE_UNIT_ID,YASSER_SCIENCE_UNITS,filterScienceProgressByUnit,filterScienceQuestionsByUnit,getScienceChapter,getScienceUnit} from './science-chapters.js';
 import {applyScienceAttempt,applyScienceSessionSummary,createScienceSession,getScienceDashboard,getScienceReviewQuestionIds,sessionWrongQuestionIds,submitScienceAnswer} from './science-engine.js';
 
 const STORAGE_KEY='family-learning:yasser:science:v1';
-const SCIENCE_ASSETS=Object.freeze({...YASSER_SCIENCE_ASSETS,...YASSER_SCIENCE_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT2_VISUAL_ASSETS});
+const SCIENCE_ASSETS=Object.freeze({...YASSER_SCIENCE_ASSETS,...YASSER_SCIENCE_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT2_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT3_VISUAL_ASSETS});
 let mounted=false,session=null,progress=loadProgress(),feedbackTimer=null,activeUnitId=DEFAULT_YASSER_SCIENCE_UNIT_ID;
 
 function storage(){try{return globalThis.localStorage;}catch{return null;}}
@@ -98,7 +99,7 @@ function renderUnitCard(){
   document.getElementById('scienceUnitState').textContent=unit.status==='current'?'الوحدة الحالية':'وحدة مكتملة — للمراجعة';
   document.getElementById('scienceUnitName').textContent=unit.shortLabel;
   document.getElementById('scienceUnitNote').textContent=unit.status==='current'?'يعرض لياسر فقط المحتوى المفتوح حاليًا، بدون الدروس المتقدمة.':'مراجعة المحتوى الذي سبق تجهيزه فقط.';
-  document.getElementById('scienceChapterName').textContent=chapter.label.replace('الفصل 3:','الفصل الثالث —').replace('الفصل 1:','الفصل الأول —');
+  document.getElementById('scienceChapterName').textContent=chapter.label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');
   document.getElementById('scienceBankCount').textContent=`${questions.length} سؤالًا • ${visualAssets.size} صورة ومخططًا`;
 
   const imageButton=document.querySelector('[data-science-mode="images"]'),imageCount=document.getElementById('scienceImageModeCount'),imageCopy=document.getElementById('scienceImageModeCopy');
