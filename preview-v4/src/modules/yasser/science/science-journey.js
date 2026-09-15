@@ -1,6 +1,16 @@
 const JOURNEY_STYLE='src/modules/yasser/science/science-journey.css';
 let mounted=false;
 
+const JOURNEY_NODES=Object.freeze([
+  {id:'unit-1',kind:'review',side:'right',title:'الوحدة الأولى',subtitle:'تنوع الحياة',state:'راجعتها وأتقنتها',unitId:'unit-1-diversity-of-life',marker:'✓'},
+  {id:'unit-2',kind:'review',side:'left',title:'الوحدة الثانية',subtitle:'عمليات الحياة',state:'راجعتها وأتقنتها',unitId:'unit-2-life-processes',marker:'✓'},
+  {id:'unit-3',kind:'unit',side:'right',title:'الوحدة الثالثة',subtitle:'الأنظمة البيئية ومواردها',state:'الوحدة الحالية',unitId:'unit-3-ecosystems-resources',marker:'3'},
+  {id:'chapter-5',kind:'chapter',side:'left',title:'الفصل الخامس',subtitle:'الأنظمة البيئية',state:'أنت هنا',unitId:'unit-3-ecosystems-resources',marker:'5',current:true,avatar:true},
+  {id:'boss',kind:'boss',side:'right',title:'تحدي خبير الأنظمة البيئية',subtitle:'التحدي الختامي للفصل',state:'يفتح بعد الإتقان',marker:'★',disabled:true},
+  {id:'chapter-6',kind:'locked',side:'left',title:'الفصل السادس',subtitle:'موارد الأرض والحفاظ عليها',state:'المحطة القادمة',marker:'🔒',disabled:true},
+  {id:'reward',kind:'reward',side:'right',title:'صندوق الإنجاز',subtitle:'مكافأتك بانتظارك',state:'جائزة نهاية الرحلة',marker:'🎁',disabled:true}
+]);
+
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="science-journey"]'))return;
   const link=document.createElement('link');
@@ -20,50 +30,65 @@ function startMode(mode){
   document.querySelector(`[data-science-mode="${mode}"]`)?.click();
 }
 
-function station({kind,title,subtitle,state,unitId,marker,disabled=false,current=false}){
+function station(node){
+  const {id,kind,side,title,subtitle,state,unitId,marker,disabled=false,current=false,avatar=false}=node;
   const tag=disabled?'div':'button';
   const attrs=disabled?'aria-disabled="true"':`type="button"${unitId?` data-journey-unit="${unitId}"`:''}`;
-  return `<${tag} class="science-journey-station is-${kind}${current?' is-current':''}${disabled?' is-locked':''}" ${attrs}>
-    <span class="science-journey-node" aria-hidden="true">${marker}</span>
-    <span class="science-journey-card">
-      <small>${state}</small>
-      <strong>${title}</strong>
-      <span>${subtitle}</span>
-      ${current?'<span class="science-journey-you">أنت هنا</span>':''}
-    </span>
-  </${tag}>`;
+  const avatarMarkup=avatar?`<span class="science-journey-avatar" aria-hidden="true"><span class="science-journey-avatar-label">أنت هنا</span><img src="assets/visual/original/yasser/encourage.png" alt="" decoding="async" /></span>`:'';
+  return `<div class="science-journey-row is-${side}" data-journey-node="${id}">
+    <${tag} class="science-journey-station is-${kind}${current?' is-current':''}${disabled?' is-locked':''}" ${attrs}>
+      <span class="science-journey-node" aria-hidden="true">${marker}</span>
+      <span class="science-journey-card">
+        <small>${state}</small>
+        <strong>${title}</strong>
+        <span>${subtitle}</span>
+      </span>
+      ${avatarMarkup}
+    </${tag}>
+  </div>`;
+}
+
+function trailMarkup(){
+  return `<svg class="science-journey-trail" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path class="science-journey-trail-shadow" d="M790 70 C640 110 650 180 500 205 C350 230 210 240 230 335 C250 430 610 365 770 440 C900 500 690 570 515 590 C335 610 180 650 245 745 C305 835 685 760 785 860 C825 900 770 945 690 965"/>
+    <path class="science-journey-trail-main" d="M790 70 C640 110 650 180 500 205 C350 230 210 240 230 335 C250 430 610 365 770 440 C900 500 690 570 515 590 C335 610 180 650 245 745 C305 835 685 760 785 860 C825 900 770 945 690 965"/>
+    <path class="science-journey-trail-dash" d="M790 70 C640 110 650 180 500 205 C350 230 210 240 230 335 C250 430 610 365 770 440 C900 500 690 570 515 590 C335 610 180 650 245 745 C305 835 685 760 785 860 C825 900 770 945 690 965"/>
+  </svg>`;
 }
 
 function journeyMarkup(){
   return `<section class="science-journey" id="scienceJourney" aria-labelledby="scienceJourneyTitle">
-    <div class="science-journey-sky" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="science-journey-world" aria-hidden="true">
+      <span class="world-cloud cloud-one"></span><span class="world-cloud cloud-two"></span>
+      <span class="world-orb orb-leaf">🌿</span><span class="world-orb orb-globe">🌎</span><span class="world-orb orb-drop">💧</span><span class="world-orb orb-lab">🔬</span>
+      <span class="world-hill hill-one"></span><span class="world-hill hill-two"></span>
+    </div>
+
     <div class="science-journey-intro">
-      <div>
-        <span class="science-journey-kicker">رحلة ياسر</span>
+      <div class="science-journey-title-block">
+        <span class="science-journey-kicker">رحلة ياسر • علوم</span>
         <h2 id="scienceJourneyTitle">مغامرتك في عالم العلوم</h2>
-        <p>تحرك بين المحطات، راجع اللي خلصته، وافتح التحدي الجاي.</p>
+        <p>كل محطة تقربك من التحدي والجائزة. أنت الآن في الفصل الخامس.</p>
       </div>
       <div class="science-daily-mission" aria-label="مهمة اليوم">
-        <span>مهمة اليوم</span>
-        <strong>10 أسئلة + تحدي صور</strong>
+        <span class="science-mission-flag" aria-hidden="true">⚑</span>
+        <div><small>مهمة اليوم</small><strong>10 أسئلة + تحدي صور</strong><em>مهمة قصيرة وتخلصها اليوم</em></div>
         <button type="button" data-journey-mode="quick">ابدأ المهمة</button>
       </div>
     </div>
 
-    <div class="science-journey-path" aria-label="خريطة التقدم">
-      ${station({kind:'review',title:'الوحدة الأولى',subtitle:'تنوع الحياة',state:'مراجعة جاهزة',unitId:'unit-1-diversity-of-life',marker:'✓'})}
-      ${station({kind:'review',title:'الوحدة الثانية',subtitle:'عمليات الحياة',state:'مراجعة جاهزة',unitId:'unit-2-life-processes',marker:'✓'})}
-      ${station({kind:'unit',title:'الوحدة الثالثة',subtitle:'الأنظمة البيئية ومواردها',state:'الوحدة الحالية',unitId:'unit-3-ecosystems-resources',marker:'3',current:true})}
-      <div class="science-journey-avatar" aria-hidden="true"><img src="assets/visual/original/yasser/encourage.png" alt="" decoding="async" /></div>
-      ${station({kind:'chapter',title:'الفصل الخامس',subtitle:'الأنظمة البيئية',state:'مفتوح الآن',unitId:'unit-3-ecosystems-resources',marker:'5',current:true})}
-      ${station({kind:'boss',title:'تحدي خبير الأنظمة البيئية',subtitle:'تحدي ختامي للفصل',state:'يفتح بعد الإتقان',marker:'★',disabled:true})}
-      ${station({kind:'locked',title:'الفصل السادس',subtitle:'موارد الأرض والحفاظ عليها',state:'المحطة القادمة',marker:'🔒',disabled:true})}
-      ${station({kind:'reward',title:'صندوق الإنجاز',subtitle:'مكافأة نهاية الرحلة',state:'جائزة قادمة',marker:'🎁',disabled:true})}
+    <div class="science-journey-map" aria-label="خريطة التقدم">
+      ${trailMarkup()}
+      <div class="science-journey-decor science-decor-tree tree-a" aria-hidden="true"><i></i><b></b></div>
+      <div class="science-journey-decor science-decor-tree tree-b" aria-hidden="true"><i></i><b></b></div>
+      <div class="science-journey-decor science-decor-rock rock-a" aria-hidden="true"></div>
+      <div class="science-journey-decor science-decor-rock rock-b" aria-hidden="true"></div>
+      ${JOURNEY_NODES.map(station).join('')}
     </div>
 
     <div class="science-journey-actions">
-      <button type="button" class="science-journey-primary" data-journey-unit="unit-3-ecosystems-resources">أكمل من الفصل الخامس</button>
-      <button type="button" class="science-journey-secondary" data-journey-mode="images">تحدي الصور</button>
+      <button type="button" class="science-journey-primary" data-journey-unit="unit-3-ecosystems-resources"><span>▶</span> أكمل من الفصل الخامس</button>
+      <button type="button" class="science-journey-secondary" data-journey-mode="images"><span>▣</span> تحدي الصور</button>
     </div>
   </section>`;
 }
