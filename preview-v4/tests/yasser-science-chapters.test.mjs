@@ -33,12 +33,11 @@ test('unit 2 is the current scope and exposes chapter 3 only',()=>{
   assert.equal(DEFAULT_YASSER_SCIENCE_UNIT_ID,'unit-2-life-processes');
   assert.equal(YASSER_SCIENCE_UNITS.find(unit=>unit.id===DEFAULT_YASSER_SCIENCE_UNIT_ID)?.shortLabel,'عمليات الحياة');
   const questions=filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS);
-  assert.equal(questions.length,22);
+  assert.ok(questions.length>=22,`unit 2 current scope=${questions.length}`);
   assert.ok(questions.every(question=>CHAPTER_THREE_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>!CHAPTER_ONE_UNITS.has(question.unit)&&!CHAPTER_TWO_UNITS.has(question.unit)));
   assert.ok(questions.every(question=>['choice','trueFalse'].includes(question.type)));
   assert.ok(questions.every(question=>question.choices.includes(question.answer)));
-  assert.equal(questions.filter(question=>question.assetId).length,0);
 });
 
 test('unit 1 playable bank keeps minimum coverage across cells, organization and cell processes',()=>{

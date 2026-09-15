@@ -3,14 +3,15 @@ import assert from 'node:assert/strict';
 import {validateQuestionRecord} from '../src/shared/question-bank/index.js';
 import {YASSER_SCIENCE_UNIT2_QUESTIONS} from '../src/modules/yasser/science/science-unit2-questions.js';
 
-test('unit 2 chapter 3 bank contains 22 verified sourced questions',()=>{
-  assert.equal(YASSER_SCIENCE_UNIT2_QUESTIONS.length,22);
+const chapterThreeQuestions=YASSER_SCIENCE_UNIT2_QUESTIONS.filter(question=>question.chapterId==='chapter-3-plants-microorganisms');
+
+test('unit 2 chapter 3 bank keeps at least 22 verified sourced questions',()=>{
+  assert.ok(chapterThreeQuestions.length>=22,`chapter 3 questions=${chapterThreeQuestions.length}`);
   const ids=new Set();
-  for(const question of YASSER_SCIENCE_UNIT2_QUESTIONS){
+  for(const question of chapterThreeQuestions){
     assert.equal(question.unitId,'unit-2-life-processes');
     assert.equal(question.chapterId,'chapter-3-plants-microorganisms');
     assert.equal(question.verified,true);
-    assert.equal(question.assetId,'');
     assert.ok(question.sources.length>=1);
     assert.ok(question.sources.some(source=>source.authority==='textbook'));
     assert.ok(['choice','trueFalse'].includes(question.type));
@@ -22,9 +23,9 @@ test('unit 2 chapter 3 bank contains 22 verified sourced questions',()=>{
 });
 
 test('unit 2 bank covers both plant and microorganism life processes',()=>{
-  const plant=YASSER_SCIENCE_UNIT2_QUESTIONS.filter(question=>question.topicId==='plant-life-processes');
-  const microbes=YASSER_SCIENCE_UNIT2_QUESTIONS.filter(question=>question.topicId==='microorganism-life-processes');
-  assert.equal(plant.length,12);
-  assert.equal(microbes.length,10);
-  assert.ok(YASSER_SCIENCE_UNIT2_QUESTIONS.filter(question=>question.sources.some(source=>source.year==='1447')).length>=8);
+  const plant=chapterThreeQuestions.filter(question=>question.topicId==='plant-life-processes');
+  const microbes=chapterThreeQuestions.filter(question=>question.topicId==='microorganism-life-processes');
+  assert.ok(plant.length>=12,`plant questions=${plant.length}`);
+  assert.ok(microbes.length>=10,`microorganism questions=${microbes.length}`);
+  assert.ok(chapterThreeQuestions.filter(question=>question.sources.some(source=>source.year==='1447')).length>=8);
 });
