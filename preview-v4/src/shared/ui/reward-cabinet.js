@@ -16,10 +16,10 @@ function ensureStyle(){
   if(document.querySelector('link[data-module-style="reward-cabinet"]'))return;
   const link=document.createElement('link');link.rel='stylesheet';link.href='src/shared/ui/reward-cabinet.css';link.dataset.moduleStyle='reward-cabinet';document.head.appendChild(link);
 }
-function academicCapabilities(registry){return registry?.list?.({mode:'academic'})||[];}
+function rewardCapabilities(registry){return registry?.list?.()||[];}
 function hydrateLearnerSwitch(view,registry){
   const nav=view?.querySelector?.('.reward-learner-switch');if(!nav)return;
-  nav.innerHTML=academicCapabilities(registry).map(item=>`<button type="button" data-reward-learner="${item.learnerId}">${item.displayName}</button>`).join('');
+  nav.innerHTML=rewardCapabilities(registry).map(item=>`<button type="button" data-reward-learner="${item.learnerId}">${item.displayName}</button>`).join('');
 }
 function ensureView(registry){
   let view=document.getElementById('rewardCabinetView');
@@ -103,7 +103,7 @@ function challengeMarkup(status){
 
 export function createRewardCabinetController({capabilityRegistry,getStatus,onExit}={}){
   let activeLearner=null,bound=false;
-  function capability(learnerId){const item=capabilityRegistry?.get?.(learnerId);return item?.mode==='academic'?item:null;}
+  function capability(learnerId){return capabilityRegistry?.get?.(learnerId)||null;}
   function showOnly(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
   function closeReveal(view){const modal=view?.querySelector?.('#rewardReveal');if(modal){modal.hidden=true;modal.dataset.graphicKey='';}}
   async function revealReward(view,card){
@@ -148,7 +148,7 @@ export function createRewardCabinetController({capabilityRegistry,getStatus,onEx
   function refresh(learnerId,status){if(activeLearner===learnerId)render(learnerId,status);}
   function start(){
     ensureStyle();const view=ensureView(capabilityRegistry);if(!view)return false;
-    for(const item of academicCapabilities(capabilityRegistry))ensureOpenButton(item,open);
+    for(const item of rewardCapabilities(capabilityRegistry))ensureOpenButton(item,open);
     bindDynamic(view);
     if(!bound){document.getElementById('rewardCabinetBack')?.addEventListener('click',close);bound=true;}
     return true;
