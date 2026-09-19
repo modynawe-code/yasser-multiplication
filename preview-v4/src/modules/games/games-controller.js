@@ -28,6 +28,19 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   const gameLauncher=createGameLauncher({registry:gameRegistry,playerService:gamePlayers});
   gameLauncher.register('xo',()=>openXoLobby());
   gameLauncher.register('rock-paper-scissors',({game})=>openRps(game));
+  gameLauncher.register('family-pixel-puzzle',()=>openFamilyPixelPuzzle());
+
+  function openFamilyPixelPuzzle(){
+    const isAndroid=/Android/i.test(String(globalThis.navigator?.userAgent||''));
+    if(!isAndroid){
+      globalThis.alert?.('لعبة الصور تعمل على جهاز أندرويد بعد تثبيت النسخة المحلية مرة واحدة.');
+      return Object.freeze({opened:false,reason:'android-only'});
+    }
+    const fallback=encodeURIComponent('https://modynawe-code.github.io/yasser-multiplication/');
+    const intent=`intent://open/#Intent;scheme=family-pixel-puzzle;package=com.vigafun.funfinity.foodhunt;component=com.vigafun.funfinity.foodhunt/com.unity3d.player.UnityPlayerActivity;S.browser_fallback_url=${fallback};end`;
+    globalThis.location.href=intent;
+    return Object.freeze({opened:true,platform:'android'});
+  }
 
   function participant(id){return getGameParticipant(id)||fallbackParticipant(String(id||''));}
   function educationalParticipants(){return gamePlayers.listEligible(gameRegistry.get('xo'));}
