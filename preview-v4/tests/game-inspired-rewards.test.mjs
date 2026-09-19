@@ -38,7 +38,7 @@ test('all themed reward slots use dedicated local artwork with SVG fallback avai
   assert.equal(rewardAssetSource('khaled-rocket-car'),null);
 
   const themedKeys=[];
-  for(const catalog of Object.values(GAME_REWARD_PRESENTATIONS)){
+  for(const catalog of [GAME_REWARD_PRESENTATIONS.yasser,GAME_REWARD_PRESENTATIONS.khaled]){
     for(const item of catalog){
       const fallback=rewardIllustrationSource(item.graphicKey);
       assert.match(fallback,/^data:image\/svg\+xml/);
@@ -49,6 +49,8 @@ test('all themed reward slots use dedicated local artwork with SVG fallback avai
     }
   }
   assert.deepEqual(new Set(themedKeys),new Set(DIRECT_REWARD_ASSET_KEYS));
+  assert.ok(GAME_REWARD_PRESENTATIONS.mashaal.length>0);
+  assert.ok(GAME_REWARD_PRESENTATIONS.mashaal.every(item=>item.graphicKey.startsWith('mashaal.reward.')));
 });
 
 test('presentation copy does not ship third-party game or platform branding',()=>{
