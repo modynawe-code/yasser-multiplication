@@ -23,6 +23,8 @@ test('initial catalog covers the active online architecture paths',()=>{
   assert.equal(gameRegistry.get('xo').networkMode,'turn-based');
   assert.equal(gameRegistry.get('rock-paper-scissors').networkMode,'simultaneous');
   assert.equal(gameRegistry.get('domino').networkMode,'turn-based');
+  assert.equal(gameRegistry.get('family-pixel-puzzle').networkMode,'none');
+  assert.equal(gameRegistry.get('family-pixel-puzzle').playModes.includes('solo'),true);
   assert.equal(gameRegistry.get('number-race'),null);
 });
 
