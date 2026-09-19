@@ -17,6 +17,7 @@ const DIRECT_REWARD_ASSET_KEYS=Object.freeze([
 
 const REWARD_ASSET_SET=new Set(REWARD_ASSET_KEYS);
 const DIRECT_REWARD_ASSET_SET=new Set(DIRECT_REWARD_ASSET_KEYS);
+const ORIGINAL_PNG_ASSET_SET=new Set(UPLOADED_REWARD_ASSET_KEYS);
 const OVERRIDE_WEBP_BASE64=Object.freeze({'yasser-pro-shield':'assets/rewards/yasser-pro-shield-fixed.b64'});
 const assetCache=new Map();
 
@@ -38,7 +39,8 @@ export function rewardAssetSource(graphicKey){
 
 export function directRewardAssetSource(graphicKey){
   const key=String(graphicKey||'');
-  return DIRECT_REWARD_ASSET_SET.has(key)?`assets/rewards/${key}.webp`:null;
+  if(!DIRECT_REWARD_ASSET_SET.has(key))return null;
+  return `assets/rewards/${key}.${ORIGINAL_PNG_ASSET_SET.has(key)?'png':'webp'}`;
 }
 
 function validPngBase64(text){

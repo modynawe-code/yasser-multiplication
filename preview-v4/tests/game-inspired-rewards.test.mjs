@@ -44,7 +44,8 @@ test('all themed reward slots use dedicated local artwork with SVG fallback avai
       assert.match(fallback,/^data:image\/svg\+xml/);
       themedKeys.push(item.graphicKey);
       const direct=directRewardAssetSource(item.graphicKey);
-      assert.equal(direct,`assets/rewards/${item.graphicKey}.webp`);
+      const extension=UPLOADED_REWARD_ASSET_KEYS.includes(item.graphicKey)?'png':'webp';
+      assert.equal(direct,`assets/rewards/${item.graphicKey}.${extension}`);
       assert.equal(await getRewardImageUrl(item.graphicKey),direct);
     }
   }
