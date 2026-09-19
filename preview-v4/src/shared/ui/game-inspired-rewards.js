@@ -1,5 +1,6 @@
 import { REWARD_CATALOG } from '../rewards/reward-catalog.js';
 import { UPLOADED_REWARD_COLLECTION,UPLOADED_REWARD_VISUALS } from './uploaded-rewards.js';
+import { MASHAAL_REWARD_CATALOG } from '../../modules/mashaal/rewards/mashaal-reward-catalog.js';
 
 const freezeItem=item=>Object.freeze({...item,rewardIds:Object.freeze([...(item.rewardIds||[item.rewardId])])});
 const personal=(id,rewardIds,label,graphicKey,kind,hint,tier='rare')=>freezeItem({id,rewardIds,label,graphicKey,kind,hint,tier,category:'personal',unlockCount:1});
@@ -33,7 +34,11 @@ const YASSER=Object.freeze([
   ...SHARED_CHESTS
 ]);
 
-export const GAME_REWARD_PRESENTATIONS=Object.freeze({khaled:KHALED,yasser:YASSER});
+const MASHAAL=Object.freeze(MASHAAL_REWARD_CATALOG.map(item=>freezeItem({
+  ...item,rewardIds:[item.id],graphicKey:item.graphicKey||item.id,kind:'mashaal',
+  hint:'واصلي اللعب والتعلم لفتح هذه الجائزة.',category:'personal',unlockCount:1
+})));
+export const GAME_REWARD_PRESENTATIONS=Object.freeze({khaled:KHALED,yasser:YASSER,mashaal:MASHAAL});
 
 function genericCatalog(){
   return REWARD_CATALOG.map(item=>freezeItem({...item,rewardIds:[item.id],kind:'legacy',hint:'واصل التعلم لفتح هذه الجائزة.',tier:item.importance==='major'?'epic':'rare',category:'personal',unlockCount:1}));
