@@ -1,6 +1,6 @@
 import { REWARD_CATALOG } from '../rewards/reward-catalog.js';
 import { rewardPresentationCatalog,rewardPresentationCount,rewardPresentationUnlocked,rewardPresentationUnlock,latestRewardPresentation } from './game-inspired-rewards.js';
-import { hydrateRewardImages } from './reward-assets.js';
+import { hydrateRewardImages,getRewardImageUrl } from './reward-assets.js';
 
 function safeNumber(value){const number=Number(value);return Number.isFinite(number)?Math.max(0,number):0;}
 function rewardCount(summary,rewardId){return safeNumber(summary?.counts?.[rewardId]);}
@@ -36,9 +36,22 @@ function ensureView(registry){
     <section class="reward-cabinet-summary" id="rewardCabinetSummary" aria-label="ملخص الجوائز"></section>
     <section class="reward-cabinet-layout">
       <aside class="reward-feature" id="rewardCabinetFeature" aria-label="الجائزة المميزة"></aside>
-      <section class="reward-collection"><h2>مجموعة الجوائز</h2><div class="reward-cabinet-grid" id="rewardCabinetGrid"></div></section>
+      <section class="reward-collection"><h2>مجموعة الجوائز</h2><p class="reward-collection-help">اضغط الجائزة المفتوحة لفتح صندوقها</p><div class="reward-cabinet-grid" id="rewardCabinetGrid"></div></section>
       <aside class="reward-challenge" id="rewardCabinetChallenge" aria-label="تحديات التعلم"></aside>
     </section>
+    <div class="reward-reveal" id="rewardReveal" hidden role="dialog" aria-modal="true" aria-labelledby="rewardRevealTitle">
+      <div class="reward-reveal-panel">
+        <button type="button" class="reward-reveal-close" data-reward-reveal-close aria-label="إغلاق">×</button>
+        <div class="reward-reveal-stage" data-reward-reveal-stage="chest">
+          <button type="button" class="reward-chest" data-reward-chest aria-label="فتح صندوق الجائزة"><span class="reward-chest-lid"></span><span class="reward-chest-body"></span><span class="reward-chest-lock"></span></button>
+          <p>اضغط الصندوق وافتح جائزتك</p>
+        </div>
+        <div class="reward-reveal-prize" data-reward-reveal-prize hidden>
+          <div class="reward-reveal-image-wrap"><img data-reward-reveal-image alt="" decoding="async"></div>
+          <h2 id="rewardRevealTitle" data-reward-reveal-title></h2><p>محفوظة في خزانتك</p>
+        </div>
+      </div>
+    </div>
   </div>`;
   main.appendChild(view);hydrateLearnerSwitch(view,registry);return view;
 }
@@ -58,7 +71,7 @@ export function buildRewardCabinetMarkup({status={},learnerId=null,excludeReward
   const summary=status?.summary||{},catalog=rewardPresentationCatalog(learnerId);
   return catalog.filter(item=>item.id!==excludeRewardId).map(item=>{
     const count=rewardPresentationCount(item,summary),unlocked=rewardPresentationUnlocked(item,summary),latest=rewardPresentationUnlock(item,summary),date=formatUnlockDate(latest?.at);
-    return `<article class="reward-cabinet-card ${unlocked?'unlocked':'locked'}" data-reward-id="${item.id}" data-unlocked="${unlocked}" data-reward-kind="${item.category||'personal'}" data-reward-tier="${item.tier||'rare'}">
+    return `<article class="reward-cabinet-card ${unlocked?'unlocked':'locked'}" data-reward-id="${item.id}" data-reward-label="${item.label}" data-reward-graphic-key="${item.graphicKey}" data-unlocked="${unlocked}" data-reward-kind="${item.category||'personal'}" data-reward-tier="${item.tier||'rare'}" ${unlocked?'role="button" tabindex="0" aria-label="فتح صندوق '+item.label+'"':''}>
       <div class="reward-cabinet-art">${imageMarkup(item.graphicKey)}</div>
       <div class="reward-cabinet-copy"><strong>${item.label}</strong><span class="reward-state">${unlocked?'مفتوح':'مقفل'}</span>${count>1?`<small>مرات الفتح: ${count}</small>`:''}${date?`<small>فتح: ${date}</small>`:!unlocked&&item.hint?`<small class="reward-hint">${item.hint}</small>`:''}</div>
     </article>`;
@@ -80,9 +93,25 @@ export function createRewardCabinetController({capabilityRegistry,getStatus,onEx
   let activeLearner=null,bound=false;
   function capability(learnerId){const item=capabilityRegistry?.get?.(learnerId);return item?.mode==='academic'?item:null;}
   function showOnly(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
+  function closeReveal(view){const modal=view?.querySelector?.('#rewardReveal');if(modal){modal.hidden=true;modal.dataset.graphicKey='';}}
+  async function revealReward(view,card){
+    if(card?.dataset?.unlocked!=='true')return;
+    const modal=view.querySelector('#rewardReveal'),prize=modal?.querySelector('[data-reward-reveal-prize]'),stage=modal?.querySelector('[data-reward-reveal-stage]'),image=modal?.querySelector('[data-reward-reveal-image]'),title=modal?.querySelector('[data-reward-reveal-title]');if(!modal||!prize||!stage||!image||!title)return;
+    modal.hidden=false;modal.dataset.graphicKey=card.dataset.rewardGraphicKey||'';stage.hidden=false;prize.hidden=true;title.textContent=card.dataset.rewardLabel||'';image.removeAttribute('src');modal.querySelector('[data-reward-chest]')?.focus();
+  }
+  async function openChest(view){
+    const modal=view?.querySelector?.('#rewardReveal'),key=modal?.dataset?.graphicKey;if(!modal||!key)return;
+    const chest=modal.querySelector('[data-reward-chest]');chest?.classList.add('opening');
+    const url=await getRewardImageUrl(key);const image=modal.querySelector('[data-reward-reveal-image]');if(url&&image)image.src=url;
+    setTimeout(()=>{modal.querySelector('[data-reward-reveal-stage]').hidden=true;modal.querySelector('[data-reward-reveal-prize]').hidden=false;chest?.classList.remove('opening');},260);
+  }
   function bindDynamic(view){
     view.querySelectorAll('[data-reward-learner]').forEach(button=>{button.onclick=()=>open(button.dataset.rewardLearner);});
+    view.querySelectorAll('.reward-cabinet-card.unlocked').forEach(card=>{card.onclick=()=>revealReward(view,card);card.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();revealReward(view,card);}};});
     const challenge=view.querySelector('#rewardChallengeStart');if(challenge)challenge.onclick=close;
+    const chest=view.querySelector('[data-reward-chest]');if(chest)chest.onclick=()=>openChest(view);
+    view.querySelectorAll('[data-reward-reveal-close]').forEach(button=>button.onclick=()=>closeReveal(view));
+    const modal=view.querySelector('#rewardReveal');if(modal)modal.onclick=event=>{if(event.target===modal)closeReveal(view);};
   }
   function render(learnerId,status){
     const learner=capability(learnerId),view=document.getElementById('rewardCabinetView');if(!learner||!view)return false;view.dataset.learner=learnerId;
