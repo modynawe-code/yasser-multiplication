@@ -13,7 +13,9 @@ const status={
 test('reward cabinet renders the full eight-item catalog with shared graphic keys',()=>{
   const markup=buildRewardCabinetMarkup({status});
   assert.equal((markup.match(/data-reward-id=/g)||[]).length,8);
-  assert.match(markup,/data-reward-graphic="mastery-cup"/);
+  assert.doesNotMatch(markup,/data-reward-graphic="mastery-cup"/);
+  assert.match(markup,/data-reward-id="mastery-cup" data-unlocked="true" data-claimed="false"/);
+  assert.match(markup,/reward-mystery-chest/);
   assert.match(markup,/data-reward-id="mastery-cup" data-unlocked="true"/);
   assert.match(markup,/data-reward-id="weekly-cup" data-unlocked="false"/);
   assert.doesNotMatch(markup,/assets\/rewards\/yasser|assets\/rewards\/khaled/);
