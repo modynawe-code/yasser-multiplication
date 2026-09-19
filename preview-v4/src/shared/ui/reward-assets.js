@@ -1,5 +1,7 @@
 import { rewardIllustrationSource } from './game-inspired-rewards.js';
 import { UPLOADED_REWARD_ASSET_KEYS } from './uploaded-rewards.js';
+import { MASHAAL_REWARD_CATALOG } from '../../modules/mashaal/rewards/mashaal-reward-catalog.js';
+import { mashaalRewardGraphicMarkup } from '../../modules/mashaal/ui/mashaal-reward-graphics.js';
 
 const REWARD_ASSET_KEYS=Object.freeze([
   'mastery-cup','weekly-cup','accuracy-medal','mastery-shield',
@@ -19,6 +21,15 @@ const OVERRIDE_WEBP_BASE64=Object.freeze({'yasser-pro-shield':'assets/rewards/ya
 const assetCache=new Map();
 
 export { REWARD_ASSET_KEYS, DIRECT_REWARD_ASSET_KEYS };
+
+const MASHAAL_ASSET_BY_GRAPHIC=new Map(MASHAAL_REWARD_CATALOG.map(item=>[item.graphicKey,item.assetPath||null]));
+function mashaalGraphicSource(graphicKey){
+  const key=String(graphicKey||'');if(!MASHAAL_ASSET_BY_GRAPHIC.has(key))return null;
+  const direct=MASHAAL_ASSET_BY_GRAPHIC.get(key);if(direct)return direct;
+  const markup=mashaalRewardGraphicMarkup(key);const match=markup.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);if(!match)return null;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><style>.fill{fill:#ff77b7}.accent{fill:#ffd45c}.soft{fill:none;stroke:#b98cff}.shine{fill:#fff}.cut{fill:#fff4fb}.stroke{fill:none;stroke:#ff77b7;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.wide{stroke-width:12}.mid{stroke-width:8}.thin{stroke-width:5}</style>${match[1]}</svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
 
 export function rewardAssetSource(graphicKey){
   const key=String(graphicKey||'');
@@ -58,6 +69,7 @@ export async function getRewardImageUrl(graphicKey,{fetchImpl=globalThis.fetch}=
     const url=await loadTextAsset(override,{fetchImpl,mime:'image/webp',validate:validWebpBase64});
     if(url)return url;
   }
+  const mashaal=mashaalGraphicSource(key);if(mashaal)return mashaal;
   const direct=directRewardAssetSource(key);if(direct)return direct;
   const illustration=rewardIllustrationSource(key);if(illustration)return illustration;
   const source=rewardAssetSource(key);
