@@ -12,3 +12,11 @@ body.reward-cabinet-mode{background:#031e63;color:#fff}body.reward-cabinet-mode 
 .reward-feature-state[data-unlocked="true"][data-claimed="false"]{background:linear-gradient(#ffb928,#f07a11);border-color:#ffe36b;color:#fff}
 @keyframes reward-ready-pulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.04)}}
 @media(prefers-reduced-motion:reduce){.reward-cabinet-card.ready .reward-mystery-chest{animation:none}}
+
+/* Unified cabinet: keep every learner's original reward art inside a stable frame. */
+.reward-cabinet-art{min-height:112px;height:112px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.reward-cabinet-art>img{display:block;max-width:100%;max-height:100%;width:auto!important;height:auto!important;object-fit:contain}
+.reward-cabinet-copy{position:relative;z-index:2}
+.reward-feature-art>img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.reward-cabinet-view[data-learner="mashaal"] .reward-cabinet-art>img{max-width:88%;max-height:88%}
+@media(max-width:700px){.reward-cabinet-art{min-height:88px;height:88px}.reward-cabinet-view[data-learner="mashaal"] .reward-cabinet-art>img{max-width:82%;max-height:82%}}
