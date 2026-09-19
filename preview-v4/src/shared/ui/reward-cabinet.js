@@ -71,7 +71,7 @@ export function buildRewardCabinetMarkup({status={},learnerId=null,excludeReward
   const summary=status?.summary||{},catalog=rewardPresentationCatalog(learnerId);
   return catalog.filter(item=>item.id!==excludeRewardId).map(item=>{
     const count=rewardPresentationCount(item,summary),unlocked=rewardPresentationUnlocked(item,summary),latest=rewardPresentationUnlock(item,summary),date=formatUnlockDate(latest?.at);
-    return `<article class="reward-cabinet-card ${unlocked?'unlocked':'locked'}" data-reward-id="${item.id}" data-reward-label="${item.label}" data-reward-graphic-key="${item.graphicKey}" data-unlocked="${unlocked}" data-reward-kind="${item.category||'personal'}" data-reward-tier="${item.tier||'rare'}" ${unlocked?'role="button" tabindex="0" aria-label="فتح صندوق '+item.label+'"':''}>
+    return `<article class="reward-cabinet-card ${unlocked?'unlocked':'locked'}" data-reward-id="${item.id}" data-unlocked="${unlocked}" data-reward-label="${item.label}" data-reward-graphic-key="${item.graphicKey}" data-reward-kind="${item.category||'personal'}" data-reward-tier="${item.tier||'rare'}" ${unlocked?'role="button" tabindex="0" aria-label="فتح صندوق '+item.label+'"':''}>
       <div class="reward-cabinet-art">${imageMarkup(item.graphicKey)}</div>
       <div class="reward-cabinet-copy"><strong>${item.label}</strong><span class="reward-state">${unlocked?'مفتوح':'مقفل'}</span>${count>1?`<small>مرات الفتح: ${count}</small>`:''}${date?`<small>فتح: ${date}</small>`:!unlocked&&item.hint?`<small class="reward-hint">${item.hint}</small>`:''}</div>
     </article>`;
