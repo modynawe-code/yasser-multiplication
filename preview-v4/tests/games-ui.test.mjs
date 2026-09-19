@@ -91,6 +91,15 @@ test('XO controller uses shared player eligibility, online room and learning bou
   assert.doesNotMatch(controller,/local-storage-repository/);
 });
 
+test('family pixel puzzle launcher uses the published Android release as install fallback',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  assert.match(catalog,/family-pixel-puzzle/);
+  assert.match(controller,/family-puzzle-v0\.1\/Food_Hunt_Family_Puzzle_0\.41\.apk/);
+  assert.match(controller,/browser_fallback_url/);
+  assert.match(controller,/com\.vigafun\.funfinity\.foodhunt/);
+});
+
 test('RPS is lazy-loaded as an independent fun-game module',async()=>{
   const catalog=await read('src/modules/games/game-catalog.js');
   const controller=await read('src/modules/games/games-controller.js');
