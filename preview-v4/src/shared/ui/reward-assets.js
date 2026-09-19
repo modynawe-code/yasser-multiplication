@@ -27,7 +27,7 @@ function mashaalGraphicSource(graphicKey){
   const key=String(graphicKey||'');if(!MASHAAL_ASSET_BY_GRAPHIC.has(key))return null;
   const direct=MASHAAL_ASSET_BY_GRAPHIC.get(key);if(direct)return direct;
   const markup=mashaalRewardGraphicMarkup(key);const match=markup.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);if(!match)return null;
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><style>.fill{fill:#ff77b7}.accent{fill:#ffd45c}.soft{fill:none;stroke:#b98cff}.shine{fill:#fff}.cut{fill:#fff4fb}.stroke{fill:none;stroke:#ff77b7;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.wide{stroke-width:12}.mid{stroke-width:8}.thin{stroke-width:5}</style>${match[1]}</svg>`;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="mashaal-treasure-svg"><style>.fill{fill:#ff77b7}.accent{fill:#ffd45c}.soft{fill:none;stroke:#b98cff}.shine{fill:#fff}.cut{fill:#fff4fb}.stroke{fill:none;stroke:#ff77b7;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}.wide{stroke-width:12}.mid{stroke-width:8}.thin{stroke-width:5}</style>${match[1]}</svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
