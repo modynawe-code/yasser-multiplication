@@ -26,7 +26,7 @@ export const gameRegistry=createGameRegistry([
     minPlayers:1,
     maxPlayers:1,
     version:1,
-    metadata:{accent:'family',icon:familyPuzzleArt(),availabilityLabel:'أندرويد — محلي',description:'ركّب صور ياسر وخالد ومشاعل بأسلوب البكسل. تحتاج تثبيت النسخة المحلية مرة واحدة.'}
+    metadata:{accent:'family',icon:familyPuzzleArt(),availabilityLabel:'تحميل مباشر',description:'ركّب صور ياسر وخالد ومشاعل بأسلوب البكسل. اضغط لتحميل نسخة أندرويد مباشرة.'}
   },
   {
     id:'xo',
