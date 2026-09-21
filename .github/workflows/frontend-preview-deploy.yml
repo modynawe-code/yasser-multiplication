@@ -8,6 +8,7 @@ on:
     paths:
       - 'preview-v4/**'
       - 'tools/build-web-preview.mjs'
+      - 'tools/family-puzzle/**'
       - 'wrangler.frontend-preview.jsonc'
       - '.github/workflows/frontend-preview-deploy.yml'
   workflow_dispatch:
@@ -113,6 +114,78 @@ jobs:
           name: web-preview-package
           path: dist-web-preview
 
+      - uses: actions/checkout@v4
+        with:
+          path: source
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Restore stable family puzzle signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: yasser-khaled-android-debug-keystore-v1
+
+      - name: Ensure stable family puzzle signing key
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -dname "CN=Android Debug,O=Android,C=US" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000
+          fi
+
+      - name: Build direct-download family puzzle APK
+        run: |
+          set -euxo pipefail
+          mkdir -p dist-web-preview/downloads /tmp/family-puzzle
+          curl -L --fail --retry 5 --retry-delay 2 \
+            -o /tmp/family-puzzle/base.apk \
+            https://github.com/modynawe-code/yasser-multiplication/releases/download/family-puzzle-v0.1/Food_Hunt_Family_Puzzle_0.41.apk
+
+          echo "29267384c6eda13982fcc377f62f7a87faaa1c68459f5712b681634c9343c3ff  /tmp/family-puzzle/base.apk" | sha256sum -c -
+
+          base64 -d source/tools/family-puzzle/compat-manifest.bin.gz.b64 | gunzip > /tmp/family-puzzle/AndroidManifest.xml
+          test "$(wc -c < /tmp/family-puzzle/AndroidManifest.xml)" -eq 68064
+
+          cp /tmp/family-puzzle/base.apk /tmp/family-puzzle/unsigned.apk
+          zip -q -d /tmp/family-puzzle/unsigned.apk AndroidManifest.xml || true
+          zip -q -d /tmp/family-puzzle/unsigned.apk 'META-INF/*' || true
+          (
+            cd /tmp/family-puzzle
+            zip -q -0 unsigned.apk AndroidManifest.xml
+          )
+
+          BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          test -x "$BUILD_TOOLS/zipalign"
+          test -x "$BUILD_TOOLS/apksigner"
+
+          "$BUILD_TOOLS/zipalign" -P 16 -f -p 4 \
+            /tmp/family-puzzle/unsigned.apk \
+            /tmp/family-puzzle/aligned.apk
+
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$HOME/.android/debug.keystore" \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --ks-key-alias androiddebugkey \
+            --out dist-web-preview/downloads/Family_Pixel_Puzzle_0.41.apk \
+            /tmp/family-puzzle/aligned.apk
+
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs dist-web-preview/downloads/Family_Pixel_Puzzle_0.41.apk
+          "$BUILD_TOOLS/zipalign" -c -P 16 -v 4 dist-web-preview/downloads/Family_Pixel_Puzzle_0.41.apk
+          test "$(stat -c%s dist-web-preview/downloads/Family_Pixel_Puzzle_0.41.apk)" -gt 150000000
+          sha256sum dist-web-preview/downloads/Family_Pixel_Puzzle_0.41.apk
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
@@ -134,5 +207,6 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 -I "$BASE/downloads/Family_Pixel_Puzzle_0.41.apk" > /dev/null
 
 # manual deploy trigger: science integration 2026-09-11
