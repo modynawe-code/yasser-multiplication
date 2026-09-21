@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-99`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-100`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -81,6 +81,12 @@ function isVerifiedQuranPageImage(request){
     return rawPinned||jsdelivrPinned;
   }catch{return false;}
 }
+function isDirectApkDownload(request){
+  try{
+    const url=new URL(request.url);
+    return url.pathname.toLowerCase().endsWith('.apk');
+  }catch{return false;}
+}
 function isTajawalFontAsset(request){
   try{
     const url=new URL(request.url);
@@ -120,6 +126,10 @@ self.addEventListener('activate',event=>{event.waitUntil((async()=>{
 
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
+  if(isDirectApkDownload(event.request)){
+    event.respondWith(fetch(event.request,{cache:'no-store'}));
+    return;
+  }
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE_VERSION);
     if(isSaudiCurrencyImage(event.request)||isVerifiedQuranPageImage(event.request)||isTajawalFontAsset(event.request))return runtimeCacheAsset(event.request,cache);
