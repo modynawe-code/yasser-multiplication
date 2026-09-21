@@ -169,7 +169,7 @@ jobs:
           test -x "$BUILD_TOOLS/zipalign"
           test -x "$BUILD_TOOLS/apksigner"
 
-          "$BUILD_TOOLS/zipalign" -P 16 -f -p 4 \
+          "$BUILD_TOOLS/zipalign" -P 16 -f 4 \
             /tmp/family-puzzle/unsigned.apk \
             /tmp/family-puzzle/aligned.apk
 
