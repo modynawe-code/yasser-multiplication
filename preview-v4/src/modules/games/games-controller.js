@@ -31,7 +31,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   gameLauncher.register('family-pixel-puzzle',()=>openFamilyPixelPuzzle());
 
   function openFamilyPixelPuzzle(){
-    const apkDownload=new URL('downloads/Family_Pixel_Puzzle_0.41.apk',globalThis.document?.baseURI||globalThis.location?.href||'/').href;
+    const apkDownload='https://modynawe-code.github.io/yasser-multiplication/downloads/Family_Pixel_Puzzle_0.41.apk?v=compat-20260921-1';
     globalThis.location.href=apkDownload;
     return Object.freeze({opened:true,mode:'direct-download',downloadUrl:apkDownload});
   }
