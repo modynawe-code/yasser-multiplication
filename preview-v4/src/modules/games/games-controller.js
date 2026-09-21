@@ -31,18 +31,10 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   gameLauncher.register('family-pixel-puzzle',()=>openFamilyPixelPuzzle());
 
   function openFamilyPixelPuzzle(){
-    const apkDownload='https://github.com/modynawe-code/yasser-multiplication/releases/download/family-puzzle-v0.1/Food_Hunt_Family_Puzzle_0.41.apk';
-    const isAndroid=/Android/i.test(String(globalThis.navigator?.userAgent||''));
-    if(!isAndroid){
-      globalThis.alert?.('لعبة الصور مخصصة لأندرويد. افتح تطبيق تعلم العائلة من التابلت لتثبيتها أو تشغيلها.');
-      return Object.freeze({opened:false,reason:'android-only',downloadUrl:apkDownload});
-    }
-    const fallback=encodeURIComponent(apkDownload);
-    const intent=`intent://open/#Intent;scheme=family-pixel-puzzle;package=com.vigafun.funfinity.foodhunt;component=com.vigafun.funfinity.foodhunt/com.unity3d.player.UnityPlayerActivity;S.browser_fallback_url=${fallback};end`;
-    globalThis.location.href=intent;
-    return Object.freeze({opened:true,platform:'android',downloadUrl:apkDownload});
+    const apkDownload=new URL('downloads/Family_Pixel_Puzzle_0.41.apk',globalThis.document?.baseURI||globalThis.location?.href||'/').href;
+    globalThis.location.href=apkDownload;
+    return Object.freeze({opened:true,mode:'direct-download',downloadUrl:apkDownload});
   }
-
   function participant(id){return getGameParticipant(id)||fallbackParticipant(String(id||''));}
   function educationalParticipants(){return gamePlayers.listEligible(gameRegistry.get('xo'));}
   function ensureLocalPair(){
