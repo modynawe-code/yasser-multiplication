@@ -25,6 +25,8 @@ test('video lesson player is app-controlled and blocks direct interaction with t
   assert.match(source,/cueVideoById/);
   assert.match(source,/getPlaylistIndex/);
   assert.match(source,/expectedVideoId/);
+  assert.match(source,/strict-origin-when-cross-origin/);
+  assert.match(source,/youtubePlayerVars/);
   assert.match(source,/YT\.PlayerState\.ENDED/);
   assert.doesNotMatch(source,/youtube\.com\/watch/);
 });
@@ -59,4 +61,13 @@ test('lesson UI groups resolved playlist videos under curriculum chapters',async
   assert.match(source,/math-chapter-section/);
   assert.match(source,/جاري ترتيب عناوين الدروس/);
   assert.match(css,/\.math-chapter-lessons/);
+});
+
+
+test('lesson list uses compact collapsible chapter navigation',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  const css=await read('src/modules/yasser/math/yasser-math-lessons.css');
+  assert.match(source,/<details class="math-chapter-section"/);
+  assert.match(source,/<summary class="math-chapter-head"/);
+  assert.match(css,/math-chapter-head::-webkit-details-marker/);
 });
