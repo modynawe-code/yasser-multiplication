@@ -108,3 +108,11 @@ test('mobile lesson cards and player use compact responsive layouts',async()=>{
   assert.match(css,/math-complete-fallback/);
   assert.match(css,/@media\(orientation:landscape\) and \(max-height:600px\)/);
 });
+
+
+test('portrait expanded video preserves 16:9 instead of stretching the YouTube stage',async()=>{
+  const css=await read('src/modules/yasser/math/yasser-math-lessons.css');
+  assert.match(css,/@media \(orientation:portrait\) and \(max-width:820px\)/);
+  assert.match(css,/body\.math-player-expanded \.math-player-stage[\s\S]*aspect-ratio:16\/9/);
+  assert.match(css,/body\.math-player-expanded \.math-player-dialog[\s\S]*display:flex/);
+});
