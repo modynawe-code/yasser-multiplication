@@ -23,6 +23,8 @@ test('video lesson player is app-controlled and blocks direct interaction with t
   assert.match(source,/rel:0/);
   assert.match(source,/iframe\.style\.pointerEvents='none'/);
   assert.match(source,/cueVideoById/);
+  assert.match(source,/getPlaylistIndex/);
+  assert.match(source,/expectedVideoId/);
   assert.match(source,/YT\.PlayerState\.ENDED/);
   assert.doesNotMatch(source,/youtube\.com\/watch/);
 });
