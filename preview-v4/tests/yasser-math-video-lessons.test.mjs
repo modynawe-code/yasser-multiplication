@@ -83,3 +83,28 @@ test('math video fullscreen falls back to an in-app viewport mode when element f
   assert.match(css,/body\.math-player-expanded/);
   assert.match(css,/\.math-player-dialog:fullscreen/);
 });
+
+
+test('lesson UI presents concise curriculum titles and explicit progress semantics',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  assert.match(source,/cleanYoutubeLessonTitle/);
+  assert.match(source,/الدروس المكتملة/);
+  assert.match(source,/mathLastProgress/);
+  assert.match(source,/آخر درس:/);
+});
+
+test('player keeps core navigation controls and auto-completes near the end',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  assert.match(source,/id="mathPrevLesson"/);
+  assert.match(source,/id="mathNextControl"/);
+  assert.match(source,/current\/duration>=\.95/);
+  assert.match(source,/يُسجل الدرس مكتملًا تلقائيًا عند مشاهدة 95%/);
+});
+
+test('mobile lesson cards and player use compact responsive layouts',async()=>{
+  const css=await read('src/modules/yasser/math/yasser-math-lessons.css');
+  assert.match(css,/grid-template-columns:86px minmax\(0,1fr\) auto/);
+  assert.match(css,/grid-template-areas:[\s\S]*"prev back play forward next"/);
+  assert.match(css,/math-complete-fallback/);
+  assert.match(css,/@media\(orientation:landscape\) and \(max-height:600px\)/);
+});
