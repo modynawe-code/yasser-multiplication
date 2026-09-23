@@ -264,7 +264,9 @@ function renderCourseProgress(){
 function youtubePlayerVars(extra={}){
   const vars={controls:0,disablekb:1,playsinline:1,rel:0,fs:0,iv_load_policy:3,...extra};
   const origin=globalThis.location?.origin||'';
+  const href=globalThis.location?.href||'';
   if(/^https?:\/\//i.test(origin))vars.origin=origin;
+  if(/^https?:\/\//i.test(href))vars.widget_referrer=href;
   return vars;
 }
 function ensureYoutubeApi(){
@@ -391,6 +393,8 @@ function setLessonIframeInteractive(enabled){
   if(!iframe)return;
   iframe.style.pointerEvents=enabled?'auto':'none';
   iframe.setAttribute('tabindex','-1');
+  iframe.setAttribute('allow','autoplay; encrypted-media; picture-in-picture');
+  iframe.setAttribute('allowfullscreen','');
   if(enabled)iframe.removeAttribute('aria-hidden');
   else iframe.setAttribute('aria-hidden','true');
   iframe.referrerPolicy='strict-origin-when-cross-origin';
@@ -473,7 +477,7 @@ async function ensurePlayer(){
   await ensureYoutubeApi();
   if(player)return player;
   player=new YT.Player('mathYoutubePlayer',{
-    width:'100%',height:'100%',host:'https://www.youtube-nocookie.com',
+    width:'100%',height:'100%',host:'https://www.youtube.com',
     playerVars:youtubePlayerVars({enablejsapi:1}),
     events:{
       onReady:()=>enforceNonInteractiveIframe(),
