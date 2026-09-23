@@ -6,7 +6,7 @@ const LAST_KEY='family.yasser.math-video-last.v1';
 let backHandler=null;
 let player=null;
 let resolver=null;
-let resolverBusy=false;
+let resolverTask=Promise.resolve();
 let currentLesson=null;
 let progressTimer=null;
 let saveTick=0;
@@ -17,6 +17,9 @@ function readJson(key,fallback={}){
 }
 function writeJson(key,value){
   try{localStorage.setItem(key,JSON.stringify(value));}catch{}
+}
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 }
 function metaStore(){return readJson(META_KEY,{});}
 function progressStore(){return readJson(PROGRESS_KEY,{});}
@@ -231,37 +234,37 @@ function captureResolverLesson(lesson){
   saveMeta(lesson,{videoId:data.video_id,title:data.title||lesson.verifiedTitle,duration:resolver.getDuration?.()||0});
   return true;
 }
-async function resolveLessonMeta(lesson){
+async function resolveLessonMetaInternal(lesson){
   const known=metaStore()[lesson.id];
   if(known?.videoId)return known;
   await ensureYoutubeApi();
   return new Promise(resolve=>{
     const mount=document.getElementById('mathMetaResolver');
     if(!mount)return resolve(null);
-    if(resolverBusy)return resolve(null);
-    resolverBusy=true;
     let attempts=0;
-    const finish=()=>{
-      const meta=metaStore()[lesson.id]||null;
-      resolverBusy=false;
-      resolve(meta);
-    };
+    const finish=()=>resolve(metaStore()[lesson.id]||null);
     const capture=()=>{
       if(captureResolverLesson(lesson)){finish();return;}
-      if(++attempts>8){finish();return;}
+      if(++attempts>12){finish();return;}
       setTimeout(capture,250);
     };
     if(!resolver){
       resolver=new YT.Player(mount,{
         width:'1',height:'1',host:'https://www.youtube-nocookie.com',
         playerVars:{controls:0,disablekb:1,playsinline:1,rel:0,fs:0,iv_load_policy:3},
-        events:{onReady:()=>{resolver.cuePlaylist({listType:'playlist',list:YASSER_MATH_PLAYLIST_ID,index:lesson.playlistIndex});setTimeout(capture,300);}}
+        events:{onReady:()=>{resolver.cuePlaylist({listType:'playlist',list:YASSER_MATH_PLAYLIST_ID,index:lesson.playlistIndex});setTimeout(capture,350);}}
       });
     }else{
       resolver.cuePlaylist({listType:'playlist',list:YASSER_MATH_PLAYLIST_ID,index:lesson.playlistIndex});
-      setTimeout(capture,300);
+      setTimeout(capture,350);
     }
   });
+}
+function resolveLessonMeta(lesson){
+  const known=metaStore()[lesson.id];
+  if(known?.videoId)return Promise.resolve(known);
+  resolverTask=resolverTask.catch(()=>null).then(()=>resolveLessonMetaInternal(lesson));
+  return resolverTask;
 }
 async function warmMetadata(){
   await ensureYoutubeApi().catch(()=>null);
@@ -357,19 +360,13 @@ async function prepareCurrentVideo(lesson){
   let meta=metaStore()[lesson.id];
   if(!meta?.videoId)meta=await resolveLessonMeta(lesson);
   if(!meta?.videoId){
-    p.cuePlaylist({listType:'playlist',list:YASSER_MATH_PLAYLIST_ID,index:lesson.playlistIndex});
-    await new Promise(resolve=>setTimeout(resolve,800));
-    const data=p.getVideoData?.()||{};
-    if(data.video_id){
-      meta={videoId:data.video_id,title:data.title||lesson.verifiedTitle,duration:p.getDuration?.()||0};
-      saveMeta(lesson,meta);
-    }
+    const tap=document.getElementById('mathPlayerTap');
+    if(tap)tap.querySelector('strong').textContent='تعذر تجهيز هذا الدرس الآن';
+    return null;
   }
-  if(meta?.videoId){
-    p.cueVideoById({videoId:meta.videoId,startSeconds:Math.max(0,currentProgress().seconds||0)});
-    saveMeta(lesson,{...meta,duration:meta.duration||p.getDuration?.()||0});
-    enforceNonInteractiveIframe();
-  }
+  p.cueVideoById({videoId:meta.videoId,startSeconds:Math.max(0,currentProgress().seconds||0)});
+  saveMeta(lesson,{...meta,duration:meta.duration||p.getDuration?.()||0});
+  enforceNonInteractiveIframe();
   return meta;
 }
 async function openLesson(id){
