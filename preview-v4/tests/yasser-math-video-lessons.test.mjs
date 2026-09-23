@@ -21,7 +21,8 @@ test('video lesson player is app-controlled and blocks direct interaction with t
   assert.match(source,/controls:0/);
   assert.match(source,/disablekb:1/);
   assert.match(source,/rel:0/);
-  assert.match(source,/iframe\.style\.pointerEvents='none'/);
+  assert.match(source,/function setLessonIframeInteractive/);
+  assert.match(source,/setLessonIframeInteractive\(false\)/);
   assert.match(source,/cueVideoById/);
   assert.match(source,/getPlaylistIndex/);
   assert.match(source,/expectedVideoId/);
