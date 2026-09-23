@@ -116,3 +116,13 @@ test('portrait expanded video preserves 16:9 instead of stretching the YouTube s
   assert.match(css,/body\.math-player-expanded \.math-player-stage[\s\S]*aspect-ratio:16\/9/);
   assert.match(css,/body\.math-player-expanded \.math-player-dialog[\s\S]*display:flex/);
 });
+
+
+test('active playback unlocks the iframe so skippable YouTube ads can be controlled',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  assert.match(source,/function setLessonIframeInteractive/);
+  assert.match(source,/pointerEvents=enabled\?'auto':'none'/);
+  assert.match(source,/function startLessonPlayback/);
+  assert.match(source,/setLessonIframeInteractive\(true\)/);
+  assert.match(source,/setLessonIframeInteractive\(false\)/);
+});
