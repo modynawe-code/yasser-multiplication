@@ -71,3 +71,15 @@ test('lesson list uses compact collapsible chapter navigation',async()=>{
   assert.match(source,/<summary class="math-chapter-head"/);
   assert.match(css,/math-chapter-head::-webkit-details-marker/);
 });
+
+
+test('math video fullscreen falls back to an in-app viewport mode when element fullscreen is unavailable',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  const css=await read('src/modules/yasser/math/yasser-math-lessons.css');
+  assert.match(source,/document\.fullscreenEnabled/);
+  assert.match(source,/math-player-expanded/);
+  assert.match(source,/toggleMathPlayerFullscreen/);
+  assert.match(source,/fullscreenchange/);
+  assert.match(css,/body\.math-player-expanded/);
+  assert.match(css,/\.math-player-dialog:fullscreen/);
+});
