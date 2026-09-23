@@ -26,6 +26,7 @@
 .subject-choice-copy{display:grid;gap:4px}.subject-choice-copy strong{font-size:20px;line-height:1.3}.subject-choice-copy small{color:var(--muted,#667085);font-size:13px;font-weight:800;line-height:1.45}.subject-choice-action{font-size:13px;font-weight:950}
 .subject-choice-math{border-color:#cbd8ff;background:#f8faff}.subject-choice-math .subject-choice-mark{background:#e8efff;color:#3157d5}.subject-choice-math .subject-choice-action{color:#3157d5}
 .subject-choice-quran{border-color:#cfe3d5;background:#f8fcf9}.subject-choice-quran .subject-choice-mark{background:#e8f5ec;color:#2d6d48}.subject-choice-quran .subject-choice-action{color:#2d6d48}
+.subject-choice-lessons{border-color:#decff5;background:#fbf8ff}.subject-choice-lessons .subject-choice-mark{background:#f0e8ff;color:#7047a8}.subject-choice-lessons .subject-choice-action{color:#7047a8}
 .intro-card.has-subject-gateway,.khaled-intro-card.has-subject-gateway{position:relative;padding-bottom:24px}
 .subject-gateway-back{position:absolute;top:16px;inset-inline-start:16px;z-index:3;min-height:44px;background:rgba(255,255,255,.92);box-shadow:none}
 .intro-card.has-subject-gateway .intro-copy p,.khaled-intro-card.has-subject-gateway .khaled-intro-copy p{margin-bottom:0}
