@@ -228,6 +228,12 @@ function renderCourseProgress(){
     resume.textContent=lastId?'أكمل آخر درس':'ابدأ من الدرس الأول';
   }
 }
+function youtubePlayerVars(extra={}){
+  const vars={controls:0,disablekb:1,playsinline:1,rel:0,fs:0,iv_load_policy:3,...extra};
+  const origin=globalThis.location?.origin||'';
+  if(/^https?:\/\//i.test(origin))vars.origin=origin;
+  return vars;
+}
 function ensureYoutubeApi(){
   if(globalThis.YT?.Player)return Promise.resolve(globalThis.YT);
   if(apiPromise)return apiPromise;
@@ -313,7 +319,7 @@ async function resolveLessonMetaInternal(lesson){
     if(!resolver){
       resolver=new YT.Player(mount,{
         width:'1',height:'1',host:'https://www.youtube-nocookie.com',
-        playerVars:{controls:0,disablekb:1,playsinline:1,rel:0,fs:0,iv_load_policy:3},
+        playerVars:youtubePlayerVars(),
         events:{onReady:()=>{resolver.cuePlaylist({listType:'playlist',list:YASSER_MATH_PLAYLIST_ID,index:lesson.playlistIndex});setTimeout(capture,350);}}
       });
     }else{
@@ -353,6 +359,7 @@ function enforceNonInteractiveIframe(){
   iframe.style.pointerEvents='none';
   iframe.setAttribute('tabindex','-1');
   iframe.setAttribute('aria-hidden','true');
+  iframe.referrerPolicy='strict-origin-when-cross-origin';
 }
 function currentProgress(){
   return currentLesson?progressStore()[currentLesson.id]||{}:{};
@@ -420,7 +427,7 @@ async function ensurePlayer(){
   if(player)return player;
   player=new YT.Player('mathYoutubePlayer',{
     width:'100%',height:'100%',host:'https://www.youtube-nocookie.com',
-    playerVars:{controls:0,disablekb:1,playsinline:1,rel:0,fs:0,iv_load_policy:3,enablejsapi:1},
+    playerVars:youtubePlayerVars({enablejsapi:1}),
     events:{
       onReady:()=>enforceNonInteractiveIframe(),
       onStateChange:onPlayerState,
