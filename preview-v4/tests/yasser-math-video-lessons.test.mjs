@@ -139,3 +139,14 @@ test('iOS embed compatibility preserves referrer identity and recovery controls'
   assert.match(source,/إعادة تشغيل الدرس/);
   assert.match(source,/autoplay; encrypted-media; picture-in-picture/);
 });
+
+
+test('player falls back to a direct native YouTube iframe when API playback stalls',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  const css=await read('src/modules/yasser/math/yasser-math-lessons.css');
+  assert.match(source,/useNativeEmbedFallback/);
+  assert.match(source,/mathYoutubeNativeFallback/);
+  assert.match(source,/setTimeout\(\(\)=>[\s\S]*7000/);
+  assert.match(source,/https:\/\/www\.youtube\.com\/embed\//);
+  assert.match(css,/\.math-native-fallback/);
+});
