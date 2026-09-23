@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import {YASSER_MATH_COURSE,YASSER_MATH_LESSONS,YASSER_MATH_PLAYLIST_ID} from '../src/modules/yasser/math/video-lesson-data.js';
+import {YASSER_MATH_CHAPTERS,YASSER_MATH_COURSE,YASSER_MATH_LESSONS,YASSER_MATH_PLAYLIST_ID,classifyYasserMathLessonTitle} from '../src/modules/yasser/math/video-lesson-data.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -41,4 +41,22 @@ test('offline shell versions the video-course module files',async()=>{
   assert.match(worker,/src\/modules\/yasser\/math\/video-lesson-data\.js/);
   assert.match(worker,/src\/modules\/yasser\/math\/yasser-math-lessons\.js/);
   assert.match(worker,/src\/modules\/yasser\/math\/yasser-math-lessons\.css/);
+});
+
+
+test('curriculum map keeps five current semester chapters and classifies YouTube-style titles',()=>{
+  assert.equal(YASSER_MATH_CHAPTERS.length,5);
+  assert.equal(YASSER_MATH_CHAPTERS.reduce((sum,chapter)=>sum+chapter.lessons.length,0),35);
+  assert.equal(classifyYasserMathLessonTitle('حل تدريبات التمثيل بالنقاط - رياضيات الصف السادس')?.chapterId,'chapter-2');
+  assert.equal(classifyYasserMathLessonTitle('ضرب الكسور العشرية في أعداد كلية - سادس')?.chapterId,'chapter-3');
+  assert.equal(classifyYasserMathLessonTitle('الطول في النظام المتري - رياضيات سادس')?.chapterId,'chapter-5');
+});
+
+test('lesson UI groups resolved playlist videos under curriculum chapters',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  const css=await read('src/modules/yasser/math/yasser-math-lessons.css');
+  assert.match(source,/classifyYasserMathLessonTitle/);
+  assert.match(source,/math-chapter-section/);
+  assert.match(source,/جاري ترتيب عناوين الدروس/);
+  assert.match(css,/\.math-chapter-lessons/);
 });
