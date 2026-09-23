@@ -482,7 +482,23 @@ async function ensurePlayer(){
     events:{
       onReady:()=>enforceNonInteractiveIframe(),
       onStateChange:onPlayerState,
-      onError:()=>{document.getElementById('mathPlayerTap').querySelector('strong').textContent='تعذر تشغيل هذا الدرس';}
+      onAutoplayBlocked:()=>{
+        const tap=document.getElementById('mathPlayerTap');
+        if(tap){
+          tap.hidden=false;
+          tap.querySelector('strong').textContent='اضغط لتشغيل الدرس';
+        }
+        setLessonIframeInteractive(false);
+      },
+      onError:(event)=>{
+        const tap=document.getElementById('mathPlayerTap');
+        setLessonIframeInteractive(false);
+        if(tap){
+          tap.hidden=false;
+          const code=Number(event?.data)||0;
+          tap.querySelector('strong').textContent=code===153?'إعادة المحاولة داخل التطبيق':'إعادة تشغيل الدرس';
+        }
+      }
     }
   });
   return player;
