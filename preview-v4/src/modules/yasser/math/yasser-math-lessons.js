@@ -182,30 +182,36 @@ function renderLessons(){
     return haystack.includes(query);
   });
 
+  const lastId=localStorage.getItem(LAST_KEY);
+  const preferred=items.find(item=>item.lesson.id===lastId)||items.find(item=>!item.state.completed)||items[0];
+  const preferredChapterId=preferred?.curriculum?.chapterId||'';
+
   const sections=YASSER_MATH_CHAPTERS.map(chapter=>{
     const chapterItems=items.filter(item=>item.curriculum?.chapterId===chapter.id);
     if(!chapterItems.length)return '';
     const completed=chapterItems.filter(item=>item.state.completed).length;
+    const open=Boolean(query)||chapter.id===preferredChapterId;
     return `
-      <section class="math-chapter-section" data-chapter-id="${chapter.id}">
-        <header class="math-chapter-head">
+      <details class="math-chapter-section" data-chapter-id="${chapter.id}" ${open?'open':''}>
+        <summary class="math-chapter-head">
           <div><span>الفصل ${chapter.number}</span><h3>${escapeHtml(chapter.title)}</h3></div>
           <small>${completed} من ${chapterItems.length} مكتمل</small>
-        </header>
+        </summary>
         <div class="math-chapter-lessons">${chapterItems.map(item=>lessonCardHtml(item.lesson,item.meta,item.state)).join('')}</div>
-      </section>`;
+      </details>`;
   }).join('');
 
   const unmatched=items.filter(item=>!item.curriculum);
+  const pendingOpen=Boolean(query)||Boolean(unmatched.find(item=>item.lesson.id===lastId))||!preferredChapterId;
   const pending=unmatched.length?`
-    <section class="math-chapter-section math-chapter-pending">
-      <header class="math-chapter-head">
+    <details class="math-chapter-section math-chapter-pending" ${pendingOpen?'open':''}>
+      <summary class="math-chapter-head">
         <div><span>بقية القائمة</span><h3>جاري ترتيب عناوين الدروس</h3></div>
         <small>${unmatched.length} درسًا</small>
-      </header>
+      </summary>
       <p class="math-chapter-note">يتم قراءة عنوان كل فيديو من القائمة نفسها ثم وضعه تحت فصل المنهج الصحيح تلقائيًا.</p>
       <div class="math-chapter-lessons">${unmatched.map(item=>lessonCardHtml(item.lesson,item.meta,item.state)).join('')}</div>
-    </section>`:'';
+    </details>`:'';
 
   grid.innerHTML=(sections+pending)||'<p class="math-lessons-empty">ما لقيت درس بهذا الاسم.</p>';
   grid.querySelectorAll('[data-lesson-id]').forEach(button=>button.addEventListener('click',()=>openLesson(button.dataset.lessonId)));
