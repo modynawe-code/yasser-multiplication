@@ -475,12 +475,46 @@ async function openLesson(id){
   document.getElementById('mathPlayerTitle').textContent=lessonTitle(lesson,updated);
   updatePlayerTime();
 }
+function syncMathFullscreenButton(){
+  const button=document.getElementById('mathFullscreen');
+  if(!button)return;
+  const active=Boolean(document.fullscreenElement)||document.body.classList.contains('math-player-expanded');
+  button.textContent=active?'تصغير':'تكبير';
+  button.setAttribute('aria-pressed',String(active));
+}
+async function toggleMathPlayerFullscreen(){
+  const dialog=document.querySelector('#mathPlayerLayer .math-player-dialog');
+  if(!dialog)return;
+  if(document.fullscreenElement){
+    try{await document.exitFullscreen?.();}catch{}
+    syncMathFullscreenButton();
+    return;
+  }
+  if(document.body.classList.contains('math-player-expanded')){
+    document.body.classList.remove('math-player-expanded');
+    syncMathFullscreenButton();
+    return;
+  }
+  if(document.fullscreenEnabled&&typeof dialog.requestFullscreen==='function'){
+    try{
+      await dialog.requestFullscreen();
+      syncMathFullscreenButton();
+      return;
+    }catch{}
+  }
+  document.body.classList.add('math-player-expanded');
+  syncMathFullscreenButton();
+}
 function closePlayer(){
   saveProgress();
   stopProgressTimer();
   player?.pauseVideo?.();
+  if(document.fullscreenElement){
+    try{document.exitFullscreen?.();}catch{}
+  }
+  document.body.classList.remove('math-player-open','math-player-expanded');
   document.getElementById('mathPlayerLayer').hidden=true;
-  document.body.classList.remove('math-player-open');
+  syncMathFullscreenButton();
   currentLesson=null;
   renderLessons();
 }
@@ -494,7 +528,8 @@ function bindView(view){
   view.querySelector('#mathBack10').addEventListener('click',()=>player?.seekTo?.(Math.max(0,(player.getCurrentTime?.()||0)-10),true));
   view.querySelector('#mathForward10').addEventListener('click',()=>player?.seekTo?.(Math.min(player.getDuration?.()||0,(player.getCurrentTime?.()||0)+10),true));
   view.querySelector('#mathSeek').addEventListener('input',event=>{const duration=player?.getDuration?.()||0;player?.seekTo?.((Number(event.target.value)/1000)*duration,true);updatePlayerTime();});
-  view.querySelector('#mathFullscreen').addEventListener('click',()=>document.getElementById('mathPlayerStage')?.requestFullscreen?.());
+  view.querySelector('#mathFullscreen').addEventListener('click',toggleMathPlayerFullscreen);
+  document.addEventListener('fullscreenchange',syncMathFullscreenButton);
   view.querySelector('#mathMarkComplete').addEventListener('click',markFinished);
   view.querySelector('#mathReplayLesson').addEventListener('click',()=>{document.getElementById('mathPlayerFinish').hidden=true;player?.seekTo?.(0,true);player?.playVideo?.();});
   view.querySelector('#mathNextLesson').addEventListener('click',()=>{const next=YASSER_MATH_LESSONS[currentLesson?.playlistIndex+1];if(next)openLesson(next.id);else closePlayer();});
