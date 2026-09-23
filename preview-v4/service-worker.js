@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-100`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-101`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -40,6 +40,7 @@ const APP_SHELL=[
 
   './src/modules/hub/hub-controller.js','./src/modules/hub/learner-runtime-registry.js','./src/modules/hub/learner-hub-registry.js','./src/modules/hub/learning-shell.js','./src/modules/hub/learning-hub.css','./src/modules/hub/open-family-learner-grid.css',
   './src/modules/yasser/ui/yasser-home-shell.js','./src/modules/yasser/ui/yasser-home.css',
+  './src/modules/yasser/math/video-lesson-data.js','./src/modules/yasser/math/yasser-math-lessons.js','./src/modules/yasser/math/yasser-math-lessons.css',
 
   './src/modules/games/core/game-contract.js','./src/modules/games/core/game-registry.js','./src/modules/games/core/player-context.js','./src/modules/games/core/game-participant-registry.js','./src/modules/games/core/learning-adapter.js','./src/modules/games/game-catalog.js','./src/modules/games/games-controller.js','./src/modules/games/learning/game-learning-providers.js','./src/modules/games/online/game-room-client.js','./src/modules/games/online/game-room-resume-store.js','./src/modules/games/xo/xo-engine.js','./src/modules/games/xo/xo-online-session.js','./src/modules/games/rps/rps-engine.js','./src/modules/games/rps/rps-graphics.js','./src/modules/games/rps/rps-audio.js','./src/modules/games/rps/rps-controller.js','./src/modules/games/rps/rps-shell.js','./src/modules/games/rps/rps.css','./src/modules/games/rps/rps-open-family.css','./src/modules/games/ui/games-shell.js','./src/modules/games/ui/games.css','./src/modules/games/ui/games-open-family.css',
 
