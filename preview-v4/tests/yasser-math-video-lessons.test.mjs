@@ -127,3 +127,15 @@ test('active playback unlocks the iframe so skippable YouTube ads can be control
   assert.match(source,/setLessonIframeInteractive\(true\)/);
   assert.match(source,/setLessonIframeInteractive\(false\)/);
 });
+
+
+test('iOS embed compatibility preserves referrer identity and recovery controls',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  const html=await read('index.html');
+  assert.match(html,/name="referrer" content="strict-origin-when-cross-origin"/);
+  assert.match(source,/widget_referrer/);
+  assert.match(source,/host:'https:\/\/www\.youtube\.com'/);
+  assert.match(source,/onAutoplayBlocked/);
+  assert.match(source,/إعادة تشغيل الدرس/);
+  assert.match(source,/autoplay; encrypted-media; picture-in-picture/);
+});
