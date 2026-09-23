@@ -48,6 +48,11 @@ function ensureYasserSubjectGateway(){
         <span class="subject-choice-copy"><strong>الرياضيات</strong><small>جداول الضرب 1–10 • تدريب واختبار</small></span>
         <span class="subject-choice-action">ابدأ</span>
       </button>
+      <button class="subject-choice subject-choice-lessons" id="introMathLessons" type="button">
+        <span class="subject-choice-mark" aria-hidden="true">د</span>
+        <span class="subject-choice-copy"><strong>دروس الرياضيات</strong><small>34 درسًا • شرح سادس ابتدائي بالفيديو</small></span>
+        <span class="subject-choice-action">شاهد</span>
+      </button>
       <button class="subject-choice subject-choice-quran" id="introQuran" type="button">
         <span class="subject-choice-mark" aria-hidden="true">ق</span>
         <span class="subject-choice-copy"><strong>القرآن الكريم</strong><small>تلاوة وحفظ • سادس ابتدائي</small></span>
@@ -139,6 +144,10 @@ export function ensureYasserHomeShell(){
     document.getElementById('yasserQuranBack')?.addEventListener('click',event=>{
       event.preventDefault();event.stopImmediatePropagation();closeYasserQuran();showYasserIntro();
     },{capture:true,once:true});
+  });
+  document.getElementById('introMathLessons')?.addEventListener('click',async()=>{
+    const {openYasserMathLessons}=await import('../math/yasser-math-lessons.js');
+    openYasserMathLessons({onBack:showYasserIntro});
   });
   document.getElementById('introScience')?.addEventListener('click',async()=>{
     const {openYasserScience}=await import('../science/yasser-science.js');
