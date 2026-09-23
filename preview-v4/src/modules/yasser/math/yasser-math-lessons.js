@@ -386,13 +386,23 @@ async function warmMetadata(){
 function playerIframe(){
   return player?.getIframe?.()||null;
 }
-function enforceNonInteractiveIframe(){
+function setLessonIframeInteractive(enabled){
   const iframe=playerIframe();
   if(!iframe)return;
-  iframe.style.pointerEvents='none';
+  iframe.style.pointerEvents=enabled?'auto':'none';
   iframe.setAttribute('tabindex','-1');
-  iframe.setAttribute('aria-hidden','true');
+  if(enabled)iframe.removeAttribute('aria-hidden');
+  else iframe.setAttribute('aria-hidden','true');
   iframe.referrerPolicy='strict-origin-when-cross-origin';
+}
+function enforceNonInteractiveIframe(){
+  setLessonIframeInteractive(false);
+}
+function startLessonPlayback(){
+  const tap=document.getElementById('mathPlayerTap');
+  if(tap)tap.hidden=true;
+  setLessonIframeInteractive(true);
+  player?.playVideo?.();
 }
 function currentProgress(){
   return currentLesson?progressStore()[currentLesson.id]||{}:{};
@@ -441,9 +451,11 @@ function onPlayerState(event){
   if(event.data===YT.PlayerState.PLAYING){
     if(play)play.textContent='إيقاف';
     if(tap)tap.hidden=true;
+    setLessonIframeInteractive(true);
     startProgressTimer();
   }else if(event.data===YT.PlayerState.PAUSED||event.data===YT.PlayerState.CUED){
     if(play)play.textContent='تشغيل';
+    setLessonIframeInteractive(false);
     if(tap){
       tap.hidden=false;
       const copy=tap.querySelector('strong');
@@ -452,6 +464,7 @@ function onPlayerState(event){
     stopProgressTimer();
     updatePlayerTime();
   }else if(event.data===YT.PlayerState.ENDED){
+    setLessonIframeInteractive(false);
     player.stopVideo?.();
     markFinished();
   }
@@ -554,6 +567,7 @@ function closePlayer(){
   saveProgress();
   stopProgressTimer();
   player?.pauseVideo?.();
+  setLessonIframeInteractive(false);
   if(document.fullscreenElement){
     try{document.exitFullscreen?.();}catch{}
   }
@@ -568,8 +582,12 @@ function bindView(view){
   view.querySelector('#mathLessonSearch').addEventListener('input',renderLessons);
   view.querySelector('#mathResumeLesson').addEventListener('click',event=>openLesson(event.currentTarget.dataset.lessonId));
   view.querySelector('#mathPlayerClose').addEventListener('click',closePlayer);
-  view.querySelector('#mathPlayerTap').addEventListener('click',()=>player?.playVideo?.());
-  view.querySelector('#mathPlayPause').addEventListener('click',()=>{const state=player?.getPlayerState?.();if(state===YT.PlayerState.PLAYING)player.pauseVideo();else player?.playVideo?.();});
+  view.querySelector('#mathPlayerTap').addEventListener('click',startLessonPlayback);
+  view.querySelector('#mathPlayPause').addEventListener('click',()=>{
+    const state=player?.getPlayerState?.();
+    if(state===YT.PlayerState.PLAYING)player.pauseVideo();
+    else startLessonPlayback();
+  });
   view.querySelector('#mathBack10').addEventListener('click',()=>player?.seekTo?.(Math.max(0,(player.getCurrentTime?.()||0)-10),true));
   view.querySelector('#mathForward10').addEventListener('click',()=>player?.seekTo?.(Math.min(player.getDuration?.()||0,(player.getCurrentTime?.()||0)+10),true));
   view.querySelector('#mathPrevLesson').addEventListener('click',()=>{const lesson=adjacentLesson(-1);if(lesson)openLesson(lesson.id);});
