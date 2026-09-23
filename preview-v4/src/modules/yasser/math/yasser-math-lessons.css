@@ -23,3 +23,29 @@
 @media(max-width:520px){.math-chapter-head{display:grid;gap:4px}.math-chapter-head small{white-space:normal}}
 
 .math-chapter-head{list-style:none;cursor:pointer;user-select:none}.math-chapter-head::-webkit-details-marker{display:none}.math-chapter-head::after{content:"+";display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border:1px solid #dbe3f2;border-radius:11px;background:#f8faff;color:#3157d5;font-size:20px;font-weight:900}.math-chapter-section[open] .math-chapter-head::after{content:"−"}.math-chapter-section>.math-chapter-lessons{margin-top:12px}.math-chapter-section>.math-chapter-note{margin-top:10px}
+
+
+/* Fullscreen: use the native API where available, and a viewport-filling fallback on iPhone/WebViews. */
+body.math-player-expanded{overflow:hidden}
+body.math-player-expanded .math-player-layer{padding:0;background:#05070d;backdrop-filter:none}
+body.math-player-expanded .math-player-dialog,
+.math-player-dialog:fullscreen,
+.math-player-dialog:-webkit-full-screen{
+  position:fixed;inset:0;width:100vw;height:100dvh;max-height:none;border-radius:0;
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;overflow:hidden;background:#05070d
+}
+body.math-player-expanded .math-player-head,
+.math-player-dialog:fullscreen .math-player-head,
+.math-player-dialog:-webkit-full-screen .math-player-head{background:#fff;padding-top:max(14px,env(safe-area-inset-top))}
+body.math-player-expanded .math-player-stage,
+.math-player-dialog:fullscreen .math-player-stage,
+.math-player-dialog:-webkit-full-screen .math-player-stage{height:100%;min-height:0;aspect-ratio:auto}
+body.math-player-expanded .math-player-controls,
+body.math-player-expanded .math-player-foot,
+.math-player-dialog:fullscreen .math-player-controls,
+.math-player-dialog:fullscreen .math-player-foot,
+.math-player-dialog:-webkit-full-screen .math-player-controls,
+.math-player-dialog:-webkit-full-screen .math-player-foot{background:#fff}
+body.math-player-expanded .math-player-foot,
+.math-player-dialog:fullscreen .math-player-foot,
+.math-player-dialog:-webkit-full-screen .math-player-foot{padding-bottom:max(12px,env(safe-area-inset-bottom))}
