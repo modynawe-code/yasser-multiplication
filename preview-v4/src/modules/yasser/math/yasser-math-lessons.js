@@ -12,6 +12,7 @@ let progressTimer=null;
 let saveTick=0;
 let apiPromise=null;
 let renderQueued=false;
+let metadataWarmInProgress=false;
 
 function readJson(key,fallback={}){
   try{return JSON.parse(localStorage.getItem(key)||'')||fallback;}catch{return fallback;}
@@ -265,7 +266,23 @@ function saveMeta(lesson,data){
       thumb.prepend(img);
     }
   }
-  queueLessonRender();
+  if(!metadataWarmInProgress)queueLessonRender();
+}
+function seedPlaylistVideoIds(){
+  const ids=resolver?.getPlaylist?.()||[];
+  if(!ids.length)return false;
+  const store=metaStore();
+  let changed=false;
+  YASSER_MATH_LESSONS.forEach(lesson=>{
+    const videoId=ids[lesson.playlistIndex];
+    if(!videoId)return;
+    const current=store[lesson.id]||{};
+    if(current.videoId===videoId)return;
+    store[lesson.id]={...current,videoId,updatedAt:Date.now()};
+    changed=true;
+  });
+  if(changed)writeJson(META_KEY,store);
+  return ids.length>=YASSER_MATH_LESSONS.length;
 }
 function captureResolverLesson(lesson){
   if(!resolver||!lesson)return false;
@@ -276,11 +293,12 @@ function captureResolverLesson(lesson){
   if(activeIndex!==lesson.playlistIndex||!data.video_id)return false;
   if(expectedVideoId&&data.video_id!==expectedVideoId)return false;
   saveMeta(lesson,{videoId:expectedVideoId||data.video_id,title:data.title||lesson.verifiedTitle,duration:resolver.getDuration?.()||0});
+  seedPlaylistVideoIds();
   return true;
 }
 async function resolveLessonMetaInternal(lesson){
   const known=metaStore()[lesson.id];
-  if(known?.videoId)return known;
+  if(known?.videoId&&known?.title)return known;
   await ensureYoutubeApi();
   return new Promise(resolve=>{
     const mount=document.getElementById('mathMetaResolver');
@@ -306,17 +324,24 @@ async function resolveLessonMetaInternal(lesson){
 }
 function resolveLessonMeta(lesson){
   const known=metaStore()[lesson.id];
-  if(known?.videoId)return Promise.resolve(known);
+  if(known?.videoId&&known?.title)return Promise.resolve(known);
   resolverTask=resolverTask.catch(()=>null).then(()=>resolveLessonMetaInternal(lesson));
   return resolverTask;
 }
 async function warmMetadata(){
-  await ensureYoutubeApi().catch(()=>null);
-  for(const lesson of YASSER_MATH_LESSONS){
-    if(!document.getElementById('yasserMathLessonsView')?.classList.contains('active'))break;
-    if(metaStore()[lesson.id]?.videoId)continue;
-    await resolveLessonMeta(lesson);
-    await new Promise(resolve=>setTimeout(resolve,120));
+  metadataWarmInProgress=true;
+  try{
+    await ensureYoutubeApi().catch(()=>null);
+    for(const lesson of YASSER_MATH_LESSONS){
+      if(!document.getElementById('yasserMathLessonsView')?.classList.contains('active'))break;
+      const meta=metaStore()[lesson.id];
+      if(meta?.videoId&&meta?.title)continue;
+      await resolveLessonMeta(lesson);
+      await new Promise(resolve=>setTimeout(resolve,80));
+    }
+  }finally{
+    metadataWarmInProgress=false;
+    renderLessons();
   }
 }
 function playerIframe(){
