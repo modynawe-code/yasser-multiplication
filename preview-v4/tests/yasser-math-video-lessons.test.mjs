@@ -136,7 +136,7 @@ test('iOS embed compatibility preserves referrer identity and recovery controls'
   assert.match(source,/widget_referrer/);
   assert.match(source,/host:'https:\/\/www\.youtube\.com'/);
   assert.match(source,/onAutoplayBlocked/);
-  assert.match(source,/إعادة تشغيل الدرس/);
+  assert.match(source,/useNativeEmbedFallback/);
   assert.match(source,/autoplay; encrypted-media; picture-in-picture/);
 });
 
