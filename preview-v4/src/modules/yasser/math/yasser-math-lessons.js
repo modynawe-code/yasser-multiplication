@@ -1,4 +1,4 @@
-import {YASSER_MATH_COURSE,YASSER_MATH_LESSONS,YASSER_MATH_PLAYLIST_ID} from './video-lesson-data.js';
+import {YASSER_MATH_CHAPTERS,YASSER_MATH_COURSE,YASSER_MATH_LESSONS,YASSER_MATH_PLAYLIST_ID,classifyYasserMathLessonTitle} from './video-lesson-data.js';
 
 const META_KEY='family.yasser.math-video-meta.v1';
 const PROGRESS_KEY='family.yasser.math-video-progress.v1';
@@ -11,6 +11,7 @@ let currentLesson=null;
 let progressTimer=null;
 let saveTick=0;
 let apiPromise=null;
+let renderQueued=false;
 
 function readJson(key,fallback={}){
   try{return JSON.parse(localStorage.getItem(key)||'')||fallback;}catch{return fallback;}
@@ -140,34 +141,72 @@ function clock(seconds){
 function lessonTitle(lesson,meta){
   return meta?.title||lesson.verifiedTitle||`الدرس ${lesson.number}`;
 }
+function queueLessonRender(){
+  if(renderQueued||document.body.classList.contains('math-player-open'))return;
+  const view=document.getElementById('yasserMathLessonsView');
+  if(!view?.classList.contains('active'))return;
+  renderQueued=true;
+  requestAnimationFrame(()=>{renderQueued=false;renderLessons();});
+}
+function lessonCardHtml(lesson,meta,state){
+  const title=lessonTitle(lesson,meta);
+  const pct=state.completed?100:(meta.duration&&state.seconds?Math.min(99,Math.round((state.seconds/meta.duration)*100)):0);
+  const duration=durationText(meta.duration);
+  const thumb=meta.videoId?`https://i.ytimg.com/vi/${meta.videoId}/hqdefault.jpg`:'';
+  return `
+    <button class="math-lesson-card${state.completed?' is-complete':''}" type="button" data-lesson-id="${lesson.id}">
+      <span class="math-lesson-thumb">${thumb?`<img src="${thumb}" alt="" loading="lazy" referrerpolicy="no-referrer" />`:''}<b>${String(lesson.number).padStart(2,'0')}</b></span>
+      <span class="math-lesson-info">
+        <span class="math-lesson-kicker">${state.completed?'مكتمل':pct>0?`شاهدت ${pct}%`:'درس فيديو'}</span>
+        <strong>${escapeHtml(title)}</strong>
+        <small>${duration||'يتم جلب مدة الدرس تلقائيًا'}</small>
+        <span class="math-lesson-mini-track"><i style="width:${pct}%"></i></span>
+      </span>
+      <span class="math-lesson-action">${state.completed?'إعادة':'شاهد'}</span>
+    </button>`;
+}
 function renderLessons(){
   const grid=document.getElementById('mathLessonsGrid');
   if(!grid)return;
   const metas=metaStore(),progress=progressStore();
   const query=(document.getElementById('mathLessonSearch')?.value||'').trim().toLowerCase();
-  const html=YASSER_MATH_LESSONS.filter(lesson=>{
-    const title=lessonTitle(lesson,metas[lesson.id]).toLowerCase();
-    return !query||title.includes(query)||String(lesson.number).includes(query);
-  }).map(lesson=>{
+  const items=YASSER_MATH_LESSONS.map(lesson=>{
     const meta=metas[lesson.id]||{};
-    const state=progress[lesson.id]||{};
     const title=lessonTitle(lesson,meta);
-    const pct=state.completed?100:(meta.duration&&state.seconds?Math.min(99,Math.round((state.seconds/meta.duration)*100)):0);
-    const duration=durationText(meta.duration);
-    const thumb=meta.videoId?`https://i.ytimg.com/vi/${meta.videoId}/hqdefault.jpg`:'';
+    const curriculum=classifyYasserMathLessonTitle(title);
+    return {lesson,meta,state:progress[lesson.id]||{},title,curriculum};
+  }).filter(item=>{
+    if(!query)return true;
+    const haystack=`${item.title} ${item.curriculum?.chapterTitle||''} ${item.lesson.number}`.toLowerCase();
+    return haystack.includes(query);
+  });
+
+  const sections=YASSER_MATH_CHAPTERS.map(chapter=>{
+    const chapterItems=items.filter(item=>item.curriculum?.chapterId===chapter.id);
+    if(!chapterItems.length)return '';
+    const completed=chapterItems.filter(item=>item.state.completed).length;
     return `
-      <button class="math-lesson-card${state.completed?' is-complete':''}" type="button" data-lesson-id="${lesson.id}">
-        <span class="math-lesson-thumb">${thumb?`<img src="${thumb}" alt="" loading="lazy" referrerpolicy="no-referrer" />`:''}<b>${String(lesson.number).padStart(2,'0')}</b></span>
-        <span class="math-lesson-info">
-          <span class="math-lesson-kicker">${state.completed?'مكتمل':pct>0?`شاهدت ${pct}%`:'درس فيديو'}</span>
-          <strong>${title}</strong>
-          <small>${duration||'يتم جلب مدة الدرس تلقائيًا'}</small>
-          <span class="math-lesson-mini-track"><i style="width:${pct}%"></i></span>
-        </span>
-        <span class="math-lesson-action">${state.completed?'إعادة':'شاهد'}</span>
-      </button>`;
+      <section class="math-chapter-section" data-chapter-id="${chapter.id}">
+        <header class="math-chapter-head">
+          <div><span>الفصل ${chapter.number}</span><h3>${escapeHtml(chapter.title)}</h3></div>
+          <small>${completed} من ${chapterItems.length} مكتمل</small>
+        </header>
+        <div class="math-chapter-lessons">${chapterItems.map(item=>lessonCardHtml(item.lesson,item.meta,item.state)).join('')}</div>
+      </section>`;
   }).join('');
-  grid.innerHTML=html||'<p class="math-lessons-empty">ما لقيت درس بهذا الاسم.</p>';
+
+  const unmatched=items.filter(item=>!item.curriculum);
+  const pending=unmatched.length?`
+    <section class="math-chapter-section math-chapter-pending">
+      <header class="math-chapter-head">
+        <div><span>بقية القائمة</span><h3>جاري ترتيب عناوين الدروس</h3></div>
+        <small>${unmatched.length} درسًا</small>
+      </header>
+      <p class="math-chapter-note">يتم قراءة عنوان كل فيديو من القائمة نفسها ثم وضعه تحت فصل المنهج الصحيح تلقائيًا.</p>
+      <div class="math-chapter-lessons">${unmatched.map(item=>lessonCardHtml(item.lesson,item.meta,item.state)).join('')}</div>
+    </section>`:'';
+
+  grid.innerHTML=(sections+pending)||'<p class="math-lessons-empty">ما لقيت درس بهذا الاسم.</p>';
   grid.querySelectorAll('[data-lesson-id]').forEach(button=>button.addEventListener('click',()=>openLesson(button.dataset.lessonId)));
   renderCourseProgress();
 }
@@ -226,6 +265,7 @@ function saveMeta(lesson,data){
       thumb.prepend(img);
     }
   }
+  queueLessonRender();
 }
 function captureResolverLesson(lesson){
   if(!resolver||!lesson)return false;
