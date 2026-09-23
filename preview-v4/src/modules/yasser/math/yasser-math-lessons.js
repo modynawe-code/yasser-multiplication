@@ -230,8 +230,12 @@ function saveMeta(lesson,data){
 function captureResolverLesson(lesson){
   if(!resolver||!lesson)return false;
   const data=resolver.getVideoData?.()||{};
-  if(!data.video_id)return false;
-  saveMeta(lesson,{videoId:data.video_id,title:data.title||lesson.verifiedTitle,duration:resolver.getDuration?.()||0});
+  const playlist=resolver.getPlaylist?.()||[];
+  const expectedVideoId=playlist[lesson.playlistIndex]||'';
+  const activeIndex=resolver.getPlaylistIndex?.();
+  if(activeIndex!==lesson.playlistIndex||!data.video_id)return false;
+  if(expectedVideoId&&data.video_id!==expectedVideoId)return false;
+  saveMeta(lesson,{videoId:expectedVideoId||data.video_id,title:data.title||lesson.verifiedTitle,duration:resolver.getDuration?.()||0});
   return true;
 }
 async function resolveLessonMetaInternal(lesson){
