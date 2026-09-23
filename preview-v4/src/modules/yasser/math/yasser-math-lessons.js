@@ -13,6 +13,8 @@ let saveTick=0;
 let apiPromise=null;
 let renderQueued=false;
 let metadataWarmInProgress=false;
+let playbackWatchdog=null;
+let nativeEmbedFallback=false;
 
 function readJson(key,fallback={}){
   try{return JSON.parse(localStorage.getItem(key)||'')||fallback;}catch{return fallback;}
@@ -402,11 +404,73 @@ function setLessonIframeInteractive(enabled){
 function enforceNonInteractiveIframe(){
   setLessonIframeInteractive(false);
 }
+function clearPlaybackWatchdog(){
+  clearTimeout(playbackWatchdog);
+  playbackWatchdog=null;
+}
+function ensureApiMount(){
+  const stage=document.getElementById('mathPlayerStage');
+  if(!stage)return null;
+  let mount=document.getElementById('mathYoutubePlayer');
+  if(mount)return mount;
+  const native=document.getElementById('mathYoutubeNativeFallback');
+  native?.remove();
+  mount=document.createElement('div');
+  mount.id='mathYoutubePlayer';
+  mount.className='math-youtube-player';
+  mount.setAttribute('aria-label','مشغل فيديو الدرس');
+  stage.prepend(mount);
+  return mount;
+}
+function nativeEmbedUrl(videoId){
+  const url=new URL(`https://www.youtube.com/embed/${encodeURIComponent(videoId)}`);
+  url.searchParams.set('playsinline','1');
+  url.searchParams.set('controls','1');
+  url.searchParams.set('rel','0');
+  url.searchParams.set('fs','1');
+  const origin=globalThis.location?.origin||'';
+  const href=globalThis.location?.href||'';
+  if(/^https?:\/\//i.test(origin))url.searchParams.set('origin',origin);
+  if(/^https?:\/\//i.test(href))url.searchParams.set('widget_referrer',href);
+  return url.toString();
+}
+function useNativeEmbedFallback(){
+  if(nativeEmbedFallback||!currentLesson)return;
+  const meta=metaStore()[currentLesson.id]||{};
+  if(!meta.videoId)return;
+  clearPlaybackWatchdog();
+  nativeEmbedFallback=true;
+  try{player?.destroy?.();}catch{}
+  player=null;
+  const stage=document.getElementById('mathPlayerStage');
+  if(!stage)return;
+  document.getElementById('mathYoutubePlayer')?.remove();
+  const frame=document.createElement('iframe');
+  frame.id='mathYoutubeNativeFallback';
+  frame.className='math-youtube-player math-youtube-native';
+  frame.src=nativeEmbedUrl(meta.videoId);
+  frame.title=lessonTitle(currentLesson,meta);
+  frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
+  frame.setAttribute('allowfullscreen','');
+  frame.referrerPolicy='strict-origin-when-cross-origin';
+  stage.prepend(frame);
+  const tap=document.getElementById('mathPlayerTap');
+  if(tap)tap.hidden=true;
+  document.querySelector('#mathPlayerLayer .math-player-dialog')?.classList.add('math-native-fallback');
+}
 function startLessonPlayback(){
   const tap=document.getElementById('mathPlayerTap');
   if(tap)tap.hidden=true;
+  if(nativeEmbedFallback)return;
   setLessonIframeInteractive(true);
   player?.playVideo?.();
+  clearPlaybackWatchdog();
+  playbackWatchdog=setTimeout(()=>{
+    const state=player?.getPlayerState?.();
+    const current=player?.getCurrentTime?.()||0;
+    const duration=player?.getDuration?.()||0;
+    if(state!==YT.PlayerState.PLAYING&&current<.25&&duration<=0)useNativeEmbedFallback();
+  },7000);
 }
 function currentProgress(){
   return currentLesson?progressStore()[currentLesson.id]||{}:{};
@@ -453,6 +517,7 @@ function onPlayerState(event){
   const play=document.getElementById('mathPlayPause');
   const tap=document.getElementById('mathPlayerTap');
   if(event.data===YT.PlayerState.PLAYING){
+    clearPlaybackWatchdog();
     if(play)play.textContent='إيقاف';
     if(tap)tap.hidden=true;
     setLessonIframeInteractive(true);
@@ -490,20 +555,18 @@ async function ensurePlayer(){
         }
         setLessonIframeInteractive(false);
       },
-      onError:(event)=>{
-        const tap=document.getElementById('mathPlayerTap');
+      onError:()=>{
         setLessonIframeInteractive(false);
-        if(tap){
-          tap.hidden=false;
-          const code=Number(event?.data)||0;
-          tap.querySelector('strong').textContent=code===153?'إعادة المحاولة داخل التطبيق':'إعادة تشغيل الدرس';
-        }
+        useNativeEmbedFallback();
       }
     }
   });
   return player;
 }
 async function prepareCurrentVideo(lesson){
+  nativeEmbedFallback=false;
+  document.querySelector('#mathPlayerLayer .math-player-dialog')?.classList.remove('math-native-fallback');
+  ensureApiMount();
   const p=await ensurePlayer();
   let meta=metaStore()[lesson.id];
   if(!meta?.videoId)meta=await resolveLessonMeta(lesson);
@@ -584,10 +647,17 @@ async function toggleMathPlayerFullscreen(){
   syncMathFullscreenButton();
 }
 function closePlayer(){
+  clearPlaybackWatchdog();
   saveProgress();
   stopProgressTimer();
   player?.pauseVideo?.();
   setLessonIframeInteractive(false);
+  try{player?.destroy?.();}catch{}
+  player=null;
+  nativeEmbedFallback=false;
+  document.getElementById('mathYoutubeNativeFallback')?.remove();
+  ensureApiMount();
+  document.querySelector('#mathPlayerLayer .math-player-dialog')?.classList.remove('math-native-fallback');
   if(document.fullscreenElement){
     try{document.exitFullscreen?.();}catch{}
   }
