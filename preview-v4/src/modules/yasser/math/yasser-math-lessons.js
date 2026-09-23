@@ -55,9 +55,10 @@ function ensureView(){
           </div>
         </div>
         <div class="math-course-progress-card">
-          <span>تقدمي في الشرح</span>
+          <span>الدروس المكتملة</span>
           <strong id="mathCourseProgressText">0 من 34</strong>
-          <div class="math-course-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="34" aria-valuenow="0"><i id="mathCourseProgressBar"></i></div>
+          <div class="math-course-progress-track" role="progressbar" aria-label="الدروس المكتملة" aria-valuemin="0" aria-valuemax="34" aria-valuenow="0"><i id="mathCourseProgressBar"></i></div>
+          <small class="math-last-progress" id="mathLastProgress">ابدأ أول درس، ونحفظ تقدمك تلقائيًا.</small>
           <button class="btn primary math-resume-btn" id="mathResumeLesson" type="button">ابدأ من الدرس الأول</button>
         </div>
       </header>
@@ -101,16 +102,18 @@ function ensureView(){
           </div>
         </div>
         <div class="math-player-controls" aria-label="أدوات الفيديو">
+          <button type="button" id="mathPrevLesson" aria-label="الدرس السابق">السابق</button>
           <button type="button" id="mathBack10" aria-label="رجوع عشر ثوان">−10</button>
-          <button type="button" id="mathPlayPause" aria-label="تشغيل أو إيقاف">تشغيل</button>
+          <button type="button" id="mathPlayPause" class="math-play-control" aria-label="تشغيل أو إيقاف">تشغيل</button>
           <button type="button" id="mathForward10" aria-label="تقديم عشر ثوان">+10</button>
+          <button type="button" id="mathNextControl" aria-label="الدرس التالي">التالي</button>
           <input id="mathSeek" type="range" min="0" max="1000" value="0" aria-label="موضع الفيديو" />
           <span id="mathTime">0:00 / 0:00</span>
-          <button type="button" id="mathFullscreen" aria-label="ملء الشاشة">تكبير</button>
+          <button type="button" id="mathFullscreen" aria-label="ملء الشاشة" aria-pressed="false">تكبير</button>
         </div>
         <footer class="math-player-foot">
-          <span>الفيديو يعمل داخل التطبيق، ولا تحتاج لفتح تطبيق يوتيوب.</span>
-          <button class="btn secondary" id="mathMarkComplete" type="button">تحديد كمكتمل</button>
+          <span>يُسجل الدرس مكتملًا تلقائيًا عند مشاهدة 95%.</span>
+          <button class="math-complete-fallback" id="mathMarkComplete" type="button">تم الدرس</button>
         </footer>
       </div>
     </div>
@@ -139,8 +142,22 @@ function clock(seconds){
   const value=Math.max(0,Math.floor(Number(seconds)||0));
   return `${Math.floor(value/60)}:${String(value%60).padStart(2,'0')}`;
 }
-function lessonTitle(lesson,meta){
+function rawLessonTitle(lesson,meta){
   return meta?.title||lesson.verifiedTitle||`الدرس ${lesson.number}`;
+}
+function cleanYoutubeLessonTitle(value){
+  return String(value||'')
+    .replace(/\s*[|｜]\s*(?:رياضيات|الرياضيات).*$/i,'')
+    .replace(/\s*[-–—]\s*(?:رياضيات|الرياضيات)\s*(?:الصف\s*)?(?:السادس|6).*$/i,'')
+    .replace(/\s*[-–—]\s*(?:الصف\s*)?السادس\s*(?:ابتدائي)?(?:\s*[-–—].*)?$/i,'')
+    .replace(/\s*[-–—]\s*الفصل\s*الدراسي\s*الأول.*$/i,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function lessonTitle(lesson,meta){
+  const raw=rawLessonTitle(lesson,meta);
+  const curriculum=classifyYasserMathLessonTitle(raw);
+  return curriculum?.title||cleanYoutubeLessonTitle(raw)||lesson.verifiedTitle||`الدرس ${lesson.number}`;
 }
 function queueLessonRender(){
   if(renderQueued||document.body.classList.contains('math-player-open'))return;
@@ -173,12 +190,13 @@ function renderLessons(){
   const query=(document.getElementById('mathLessonSearch')?.value||'').trim().toLowerCase();
   const items=YASSER_MATH_LESSONS.map(lesson=>{
     const meta=metas[lesson.id]||{};
+    const rawTitle=rawLessonTitle(lesson,meta);
     const title=lessonTitle(lesson,meta);
-    const curriculum=classifyYasserMathLessonTitle(title);
-    return {lesson,meta,state:progress[lesson.id]||{},title,curriculum};
+    const curriculum=classifyYasserMathLessonTitle(rawTitle);
+    return {lesson,meta,state:progress[lesson.id]||{},rawTitle,title,curriculum};
   }).filter(item=>{
     if(!query)return true;
-    const haystack=`${item.title} ${item.curriculum?.chapterTitle||''} ${item.lesson.number}`.toLowerCase();
+    const haystack=`${item.title} ${item.rawTitle} ${item.curriculum?.chapterTitle||''} ${item.lesson.number}`.toLowerCase();
     return haystack.includes(query);
   });
 
@@ -218,18 +236,27 @@ function renderLessons(){
   renderCourseProgress();
 }
 function renderCourseProgress(){
-  const progress=progressStore();
+  const progress=progressStore(),metas=metaStore();
   const done=YASSER_MATH_LESSONS.filter(item=>progress[item.id]?.completed).length;
   const text=document.getElementById('mathCourseProgressText');
   const bar=document.getElementById('mathCourseProgressBar');
   const track=bar?.parentElement;
+  const lastCopy=document.getElementById('mathLastProgress');
   if(text)text.textContent=`${done} من 34`;
   if(bar)bar.style.width=`${(done/34)*100}%`;
   track?.setAttribute('aria-valuenow',String(done));
   const lastId=localStorage.getItem(LAST_KEY);
+  const lastLesson=YASSER_MATH_LESSONS.find(item=>item.id===lastId);
+  if(lastCopy){
+    if(lastLesson){
+      const meta=metas[lastLesson.id]||{},state=progress[lastLesson.id]||{};
+      const pct=state.completed?100:(meta.duration&&state.seconds?Math.min(99,Math.round((state.seconds/meta.duration)*100)):0);
+      lastCopy.textContent=`آخر درس: ${lessonTitle(lastLesson,meta)} • ${pct}%`;
+    }else lastCopy.textContent='ابدأ أول درس، ونحفظ تقدمك تلقائيًا.';
+  }
   const resume=document.getElementById('mathResumeLesson');
   if(resume){
-    const lesson=YASSER_MATH_LESSONS.find(item=>item.id===lastId)||YASSER_MATH_LESSONS.find(item=>!progress[item.id]?.completed)||YASSER_MATH_LESSONS[0];
+    const lesson=lastLesson||YASSER_MATH_LESSONS.find(item=>!progress[item.id]?.completed)||YASSER_MATH_LESSONS[0];
     resume.dataset.lessonId=lesson.id;
     resume.textContent=lastId?'أكمل آخر درس':'ابدأ من الدرس الأول';
   }
@@ -270,7 +297,7 @@ function saveMeta(lesson,data){
     const title=card.querySelector('.math-lesson-info strong');
     const duration=card.querySelector('.math-lesson-info small');
     const thumb=card.querySelector('.math-lesson-thumb');
-    if(title)title.textContent=data.title||lesson.verifiedTitle||`الدرس ${lesson.number}`;
+    if(title)title.textContent=lessonTitle(lesson,{...(store[lesson.id]||{}),...data});
     if(duration&&data.duration)duration.textContent=durationText(data.duration);
     if(thumb&&data.videoId&&!thumb.querySelector('img')){
       const img=document.createElement('img');
@@ -390,7 +417,8 @@ function updatePlayerTime(){
   const seek=document.getElementById('mathSeek'),time=document.getElementById('mathTime');
   if(seek&&!seek.matches(':active'))seek.value=duration?String(Math.round((current/duration)*1000)):'0';
   if(time)time.textContent=`${clock(current)} / ${clock(duration)}`;
-  if(++saveTick%10===0)saveProgress();
+  if(duration>0&&current/duration>=.95&&!currentProgress().completed)saveProgress({completed:true});
+  else if(++saveTick%10===0)saveProgress();
 }
 function startProgressTimer(){
   clearInterval(progressTimer);
@@ -456,6 +484,22 @@ async function prepareCurrentVideo(lesson){
   enforceNonInteractiveIframe();
   return meta;
 }
+function adjacentLesson(offset){
+  if(!currentLesson)return null;
+  return YASSER_MATH_LESSONS[currentLesson.playlistIndex+offset]||null;
+}
+function syncLessonNavigation(){
+  const prev=document.getElementById('mathPrevLesson');
+  const next=document.getElementById('mathNextControl');
+  const finishNext=document.getElementById('mathNextLesson');
+  const hasPrev=Boolean(adjacentLesson(-1)),hasNext=Boolean(adjacentLesson(1));
+  if(prev)prev.disabled=!hasPrev;
+  if(next)next.disabled=!hasNext;
+  if(finishNext){
+    finishNext.disabled=!hasNext;
+    finishNext.textContent=hasNext?'الدرس التالي':'العودة للدروس';
+  }
+}
 async function openLesson(id){
   const lesson=YASSER_MATH_LESSONS.find(item=>item.id===id);
   if(!lesson)return;
@@ -470,6 +514,7 @@ async function openLesson(id){
   document.getElementById('mathPlayerEyebrow').textContent=`الدرس ${lesson.number} من 34`;
   document.getElementById('mathPlayerTitle').textContent=lessonTitle(lesson,meta);
   document.getElementById('mathPlayerTap').querySelector('strong').textContent='تشغيل الدرس';
+  syncLessonNavigation();
   await prepareCurrentVideo(lesson);
   const updated=metaStore()[lesson.id]||{};
   document.getElementById('mathPlayerTitle').textContent=lessonTitle(lesson,updated);
@@ -527,12 +572,14 @@ function bindView(view){
   view.querySelector('#mathPlayPause').addEventListener('click',()=>{const state=player?.getPlayerState?.();if(state===YT.PlayerState.PLAYING)player.pauseVideo();else player?.playVideo?.();});
   view.querySelector('#mathBack10').addEventListener('click',()=>player?.seekTo?.(Math.max(0,(player.getCurrentTime?.()||0)-10),true));
   view.querySelector('#mathForward10').addEventListener('click',()=>player?.seekTo?.(Math.min(player.getDuration?.()||0,(player.getCurrentTime?.()||0)+10),true));
+  view.querySelector('#mathPrevLesson').addEventListener('click',()=>{const lesson=adjacentLesson(-1);if(lesson)openLesson(lesson.id);});
+  view.querySelector('#mathNextControl').addEventListener('click',()=>{const lesson=adjacentLesson(1);if(lesson)openLesson(lesson.id);});
   view.querySelector('#mathSeek').addEventListener('input',event=>{const duration=player?.getDuration?.()||0;player?.seekTo?.((Number(event.target.value)/1000)*duration,true);updatePlayerTime();});
   view.querySelector('#mathFullscreen').addEventListener('click',toggleMathPlayerFullscreen);
   document.addEventListener('fullscreenchange',syncMathFullscreenButton);
   view.querySelector('#mathMarkComplete').addEventListener('click',markFinished);
   view.querySelector('#mathReplayLesson').addEventListener('click',()=>{document.getElementById('mathPlayerFinish').hidden=true;player?.seekTo?.(0,true);player?.playVideo?.();});
-  view.querySelector('#mathNextLesson').addEventListener('click',()=>{const next=YASSER_MATH_LESSONS[currentLesson?.playlistIndex+1];if(next)openLesson(next.id);else closePlayer();});
+  view.querySelector('#mathNextLesson').addEventListener('click',()=>{const next=adjacentLesson(1);if(next)openLesson(next.id);else closePlayer();});
   view.querySelector('#mathPlayerLayer').addEventListener('click',event=>{if(event.target===event.currentTarget)closePlayer();});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!view.querySelector('#mathPlayerLayer').hidden)closePlayer();});
 }
