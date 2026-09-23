@@ -338,6 +338,11 @@ function onPlayerState(event){
     startProgressTimer();
   }else if(event.data===YT.PlayerState.PAUSED||event.data===YT.PlayerState.CUED){
     if(play)play.textContent='تشغيل';
+    if(tap){
+      tap.hidden=false;
+      const copy=tap.querySelector('strong');
+      if(copy)copy.textContent=event.data===YT.PlayerState.PAUSED?'متابعة الدرس':'تشغيل الدرس';
+    }
     stopProgressTimer();
     updatePlayerTime();
   }else if(event.data===YT.PlayerState.ENDED){
