@@ -2,6 +2,7 @@ import { hashPassword, normalizeEmail, randomId, randomSessionToken, SECURITY_DE
 import { DEFAULT_LEARNERS, normalizeLearnerSlug } from './learners.mjs';
 import { validateAttemptBatch, validateEvidenceBatch, validateSessionPayload } from './validation.mjs';
 import { handleGameRoomRequest } from './game-rooms.mjs';
+import { createLocalGameHistory,gameHistoryStats,listGameHistory } from './game-history.mjs';
 import { handleVoiceRequest } from './voice.mjs';
 
 const JSON_HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
@@ -149,6 +150,9 @@ export default{
       const handled=await handleGameRoomRequest({request,env,readJson,respond:(status,body,extra)=>response(request,env,status,body,extra)});
       if(handled)return handled;
     }
+    if(path==='/v1/games/history'&&request.method==='POST')return createLocalGameHistory(request,env,(status,body,extra)=>response(request,env,status,body,extra),readJson);
+    if(path==='/v1/games/history'&&request.method==='GET')return listGameHistory(request,env,(status,body,extra)=>response(request,env,status,body,extra));
+    if(path==='/v1/games/stats'&&request.method==='GET')return gameHistoryStats(request,env,(status,body,extra)=>response(request,env,status,body,extra));
     if(path==='/v1/voice/synthesize'&&request.method==='POST'){
       const optionalAuth=bearer(request)?await authenticate(request,env):null;
       return handleVoiceRequest({request,env,auth:optionalAuth,readJson,corsHeaders,respond:(status,body,extra)=>response(request,env,status,body,extra)});
