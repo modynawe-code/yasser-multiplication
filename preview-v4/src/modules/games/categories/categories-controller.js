@@ -7,6 +7,7 @@ import {
   cumulativeScore
 } from './categories-engine.js';
 import { applySystemInsets } from '../../../shared/ui/system-insets.js';
+import { gameHistoryService } from '../history/game-history-service.js';
 
 const byId=id=>document.getElementById(id);
 const HISTORY_KEY='family-word-categories-history-v1';
@@ -136,7 +137,7 @@ export function createCategoriesController({showView,onBack}={}){
 
   function startMatch(){
     if(selectedPlayers.length<2)return;
-    match={players:activePlayers(),durationMs:durationSeconds*1000,targetRounds,usedLetters:[],rounds:[],currentRound:null};startRound();
+    match={players:activePlayers(),durationMs:durationSeconds*1000,targetRounds,usedLetters:[],rounds:[],currentRound:null,startedAt:new Date().toISOString()};startRound();
   }
   function startRound(){
     stopTimer();const letter=chooseRoundLetter({usedLetters:match.usedLetters});match.usedLetters.push(letter);
@@ -206,7 +207,12 @@ export function createCategoriesController({showView,onBack}={}){
   function nextRound(){if(match.rounds.length>=match.targetRounds){finishMatch();return;}startRound();}
   function finishMatch(){
     stopTimer();const total=cumulativeScore(match.rounds,match.players),topId=total.ranking[0],topScore=total.totals[topId],topWins=total.wins[topId],winnerIds=total.ranking.filter(id=>total.totals[id]===topScore&&total.wins[id]===topWins),winnerNames=winnerIds.map(id=>playerById(id)?.name||id);
-    const entry={id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}`,day:localDayKey(),createdAt:new Date().toISOString(),winnerIds,winnerNames,rounds:match.rounds.length,totals:total.totals};safeWriteHistory([entry,...safeReadHistory()]);
+    const endedAt=new Date().toISOString();
+    void gameHistoryService.recordGameResult({
+      gameId:'family-word-categories',gameVersion:1,startedAt:match.startedAt,endedAt,winnerIds,
+      players:match.players.map((player,index)=>({learnerId:player.id,displayName:player.name,seat:index,score:Number(total.totals[player.id]||0),outcome:winnerIds.includes(player.id)?'win':'loss'})),
+      details:{rounds:match.rounds.length,roundWins:total.wins}
+    });
     hideStages();byId('fwcResult').hidden=false;byId('fwcResultEyebrow').textContent='النتيجة النهائية';byId('fwcResultTitle').textContent=winnerIds.length>1?`تعادل ${winnerNames.join(' و ')} 🤝`:`${winnerNames[0]} بطل المباراة 🏆`;byId('fwcResultCopy').textContent=`تم حفظ الفوز في سجل اليوم — ${match.rounds.length} جولات.`;byId('fwcScoreboard').innerHTML=scoreboardMarkup(total);byId('fwcNextRound').hidden=true;byId('fwcNewMatch').hidden=false;
   }
 
