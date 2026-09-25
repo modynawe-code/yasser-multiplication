@@ -203,10 +203,10 @@ export function createCategoriesController({showView,onBack}={}){
     const endedAt=new Date().toISOString();
     void gameHistoryService.recordGameResult({
       gameId:'family-word-categories',gameVersion:1,startedAt:match.startedAt,endedAt,winnerIds,
-      players:match.players.map((player,index)=>({learnerId:player.id,displayName:player.name,seat:index,score:Number(total.totals[player.id]||0),outcome:winnerIds.includes(player.id)?'win':'loss'})),
+      players:match.players.map((player,index)=>({learnerId:player.id,displayName:player.name,seat:index,score:Number(total.totals[player.id]||0),outcome:winnerIds.length>1?(winnerIds.includes(player.id)?'draw':'loss'):(winnerIds.includes(player.id)?'win':'loss')})),
       details:{rounds:match.rounds.length,roundWins:total.wins}
     });
-    hideStages();byId('fwcResult').hidden=false;byId('fwcResultEyebrow').textContent='النتيجة النهائية';byId('fwcResultTitle').textContent=winnerIds.length>1?`تعادل ${winnerNames.join(' و ')} 🤝`:`${winnerNames[0]} بطل المباراة 🏆`;byId('fwcResultCopy').textContent=`تم حفظ الفوز في سجل اليوم — ${match.rounds.length} جولات.`;byId('fwcScoreboard').innerHTML=scoreboardMarkup(total);byId('fwcNextRound').hidden=true;byId('fwcNewMatch').hidden=false;
+    hideStages();byId('fwcResult').hidden=false;byId('fwcResultEyebrow').textContent='النتيجة النهائية';byId('fwcResultTitle').textContent=winnerIds.length>1?`تعادل ${winnerNames.join(' و ')} 🤝`:`${winnerNames[0]} بطل المباراة 🏆`;byId('fwcResultCopy').textContent=`تم تسجيل نتيجة المباراة — ${match.rounds.length} جولات.`;byId('fwcScoreboard').innerHTML=scoreboardMarkup(total);byId('fwcNextRound').hidden=true;byId('fwcNewMatch').hidden=false;
   }
 
   async function openOnline(){
