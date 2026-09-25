@@ -46,7 +46,10 @@ function ensureShell(){
         </header>
 
         <section id="fwcSetup" class="fwc-panel">
-          <div class="fwc-mode-switch" role="group" aria-label="طريقة اللعب"><button type="button" class="selected" data-fwc-mode="local">على نفس الجهاز</button><button type="button" data-fwc-mode="online">كل واحد من جهازه</button></div>
+          <div class="fwc-mode-cards" role="group" aria-label="طريقة اللعب">
+            <button type="button" class="selected" data-fwc-mode="local"><strong>📱 على نفس الجهاز</strong><small>تناوب — لكل لاعب مؤقته الخاص</small></button>
+            <button type="button" data-fwc-mode="online"><strong>🌐 أونلاين</strong><small>غرفة — كل لاعب من جهازه بنفس الوقت</small></button>
+          </div>
           <div class="fwc-section-title"><div><span>1</span><strong>مين بيلعب؟</strong></div><small>اختر من 2 إلى 5 لاعبين</small></div>
           <div class="fwc-player-picker" id="fwcPlayerPicker"></div>
 
@@ -54,9 +57,17 @@ function ensureShell(){
             <div><div class="fwc-section-title compact"><div><span>2</span><strong>وقت الجولة</strong></div></div><div class="fwc-choice-row" id="fwcDurationChoices"></div></div>
             <div><div class="fwc-section-title compact"><div><span>3</span><strong>عدد الجولات</strong></div></div><div class="fwc-choice-row" id="fwcRoundChoices"></div></div>
           </div>
-          <p class="fwc-rule-note">زر «خلصت» ما يتفعل إلا بعد تعبئة كل الخانات بالحرف الصحيح. «الـ» في بداية الكلمة ما تُحسب من الحرف. بعد الجولة تحكمون على صحة الكلمات، والسرعة تُحسب فقط للإجابات المقبولة كلها.</p>
+          <p class="fwc-rule-note">في وضع نفس الجهاز: كل لاعب يأخذ دوره لوحده وبنفس المدة، وتختفي ورقته قبل تسليم الجهاز للاعب التالي. زر «خلصت» ما يتفعل إلا بعد تعبئة كل الخانات بالحرف الصحيح.</p>
           <button class="btn primary fwc-start" id="fwcStart">ابدأ المباراة</button>
           <div class="fwc-history" id="fwcHistory"></div>
+        </section>
+
+        <section id="fwcHandoff" class="fwc-panel fwc-handoff" hidden>
+          <div class="fwc-handoff-player" id="fwcHandoffPlayer"></div>
+          <span class="kicker" id="fwcHandoffRound"></span>
+          <h2>سلّم الجهاز للاعب التالي</h2>
+          <p>لا تضغط «ابدأ دوري» إلا والجهاز صار مع اللاعب الظاهر فوق. الإجابات السابقة مخفية بالكامل.</p>
+          <button class="btn primary" id="fwcBeginTurn">ابدأ دوري</button>
         </section>
 
         <section id="fwcPlay" class="fwc-panel" hidden>
@@ -93,7 +104,7 @@ export function createCategoriesController({showView,onBack}={}){
   let bound=false,timer=null,selectedPlayers=['yasser','khaled'],durationSeconds=90,targetRounds=3,match=null,onlineController=null;
 
   function setMode(active){document.body.classList.toggle('categories-game-mode',Boolean(active));}
-  function hideStages(){for(const id of ['fwcSetup','fwcPlay','fwcJudge','fwcResult']){const node=byId(id);if(node)node.hidden=true;}}
+  function hideStages(){for(const id of ['fwcSetup','fwcHandoff','fwcPlay','fwcJudge','fwcResult']){const node=byId(id);if(node)node.hidden=true;}}
   function stopTimer(){if(timer){clearInterval(timer);timer=null;}}
   function currentRound(){return match?.currentRound||null;}
   function activePlayers(){return selectedPlayers.map(playerById).filter(Boolean);}
@@ -130,23 +141,28 @@ export function createCategoriesController({showView,onBack}={}){
   function startRound(){
     stopTimer();const letter=chooseRoundLetter({usedLetters:match.usedLetters});match.usedLetters.push(letter);
     const players=match.players,answersByPlayer={},finishMsByPlayer={},verdictsByPlayer={};players.forEach(player=>{answersByPlayer[player.id]=Object.fromEntries(FAMILY_WORD_CATEGORIES.map(category=>[category.id,'']));verdictsByPlayer[player.id]={};});
-    match.currentRound={number:match.rounds.length+1,letter,startedAt:performance.now(),answersByPlayer,finishMsByPlayer,verdictsByPlayer,activePlayerId:players[0].id};
-    hideStages();byId('fwcPlay').hidden=false;renderPlay();timer=setInterval(tick,250);tick();
+    match.currentRound={number:match.rounds.length+1,letter,answersByPlayer,finishMsByPlayer,verdictsByPlayer,activePlayerId:players[0].id,turnStartedAt:null,awaitingHandoff:true};
+    renderHandoff();
   }
-  function elapsedMs(){const round=currentRound();return round?Math.min(match.durationMs,Math.max(0,performance.now()-round.startedAt)):0;}
+  function elapsedMs(){const round=currentRound();return round?.turnStartedAt?Math.min(match.durationMs,Math.max(0,performance.now()-round.turnStartedAt)):0;}
   function remainingMs(){return Math.max(0,match.durationMs-elapsedMs());}
   function tick(){
-    const round=currentRound();if(!round)return;const remaining=remainingMs(),seconds=Math.ceil(remaining/1000),time=byId('fwcTime');if(time)time.textContent=String(seconds);
-    byId('fwcTimer')?.classList.toggle('urgent',seconds<=10);renderProgress(false);
-    if(remaining<=0){for(const player of match.players){if(!Number.isFinite(round.finishMsByPlayer[player.id]))round.finishMsByPlayer[player.id]=match.durationMs;}beginJudging();}
+    const round=currentRound();if(!round||round.awaitingHandoff)return;const remaining=remainingMs(),seconds=Math.ceil(remaining/1000),time=byId('fwcTime');if(time)time.textContent=String(seconds);
+    byId('fwcTimer')?.classList.toggle('urgent',seconds<=10);renderProgress();
+    if(remaining<=0)finishActiveTurn({expired:true});
   }
-  function renderProgress(rebind=true){
+  function renderProgress(){
     const host=byId('fwcProgressList'),round=currentRound();if(!host||!round)return;
-    host.innerHTML=match.players.map(player=>{const finished=Number.isFinite(round.finishMsByPlayer[player.id]),active=round.activePlayerId===player.id&&!finished;return`<button class="fwc-progress-player ${active?'active':''} ${finished?'done':''}" data-fwc-open-player="${player.id}" ${finished?'disabled':''}><span>${visual(player)}</span><strong>${player.name}</strong><small>${finished?`خلص · ${formatSeconds(round.finishMsByPlayer[player.id])}`:'يكتب الآن'}</small></button>`;}).join('');
-    if(rebind)host.querySelectorAll('[data-fwc-open-player]').forEach(button=>button.addEventListener('click',()=>switchPlayer(button.dataset.fwcOpenPlayer)));
-    else host.querySelectorAll('[data-fwc-open-player]').forEach(button=>button.addEventListener('click',()=>switchPlayer(button.dataset.fwcOpenPlayer),{once:true}));
+    host.innerHTML=match.players.map(player=>{const finished=Number.isFinite(round.finishMsByPlayer[player.id]),active=round.activePlayerId===player.id&&!finished&&!round.awaitingHandoff;return`<div class="fwc-progress-player ${active?'active':''} ${finished?'done':''}"><span>${visual(player)}</span><strong>${player.name}</strong><small>${finished?`خلص · ${formatSeconds(round.finishMsByPlayer[player.id])}`:active?'يلعب الآن':'بانتظار دوره'}</small></div>`;}).join('');
   }
-  function switchPlayer(id){const round=currentRound();if(!round||Number.isFinite(round.finishMsByPlayer[id])||!match.players.some(player=>player.id===id))return;round.activePlayerId=id;renderPlay();}
+  function renderHandoff(){
+    stopTimer();const round=currentRound();if(!round)return;round.awaitingHandoff=true;round.turnStartedAt=null;hideStages();byId('fwcHandoff').hidden=false;
+    const player=playerById(round.activePlayerId),host=byId('fwcHandoffPlayer');if(host)host.innerHTML=`<span>${visual(player)}</span><div><small>الدور الآن</small><strong>${escapeHtml(player?.name||'')}</strong></div>`;
+    if(byId('fwcHandoffRound'))byId('fwcHandoffRound').textContent=`الجولة ${round.number} من ${match.targetRounds}`;
+  }
+  function beginTurn(){
+    const round=currentRound();if(!round||!round.awaitingHandoff)return;round.awaitingHandoff=false;round.turnStartedAt=performance.now();hideStages();byId('fwcPlay').hidden=false;renderPlay();timer=setInterval(tick,250);tick();
+  }
   function renderPlay(){
     const round=currentRound();if(!round)return;byId('fwcLetter').textContent=round.letter;byId('fwcRoundLabel').textContent=`${round.number} / ${match.targetRounds}`;renderProgress();
     const player=playerById(round.activePlayerId),active=byId('fwcActivePlayer');if(active)active.innerHTML=`<span>${visual(player)}</span><div><small>ورقة اللاعب</small><strong>${player?.name||''}</strong></div>`;
@@ -159,9 +175,15 @@ export function createCategoriesController({showView,onBack}={}){
     const status=byId('fwcSubmitStatus');if(!status)return;if(result.ok){status.textContent='كل الخانات جاهزة ✓';status.classList.remove('error');return;}
     const wrong=result.issues.find(issue=>issue.reason==='wrong-letter'),empty=result.issues.find(issue=>issue.reason==='empty');status.textContent=wrong?'في خانة ما تبدأ بالحرف المطلوب.':empty?'كمّل كل الخانات عشان يتفعل «خلصت».':'';status.classList.toggle('error',Boolean(wrong));
   }
+  function finishActiveTurn({expired=false}={}){
+    const round=currentRound(),id=round?.activePlayerId;if(!round||!id||Number.isFinite(round.finishMsByPlayer[id]))return;stopTimer();
+    round.finishMsByPlayer[id]=expired?match.durationMs:elapsedMs();round.turnStartedAt=null;
+    const currentIndex=match.players.findIndex(player=>player.id===id),next=match.players.slice(currentIndex+1).find(player=>!Number.isFinite(round.finishMsByPlayer[player.id]))||match.players.find(player=>!Number.isFinite(round.finishMsByPlayer[player.id]));
+    if(!next){beginJudging();return;}round.activePlayerId=next.id;renderHandoff();
+  }
   function submitActive(){
     const round=currentRound(),id=round?.activePlayerId;if(!round||!id||Number.isFinite(round.finishMsByPlayer[id]))return;const validation=validateAnswerSheet({answers:round.answersByPlayer[id],letter:round.letter});if(!validation.ok){updateSubmitState();return;}
-    round.finishMsByPlayer[id]=elapsedMs();const remaining=match.players.find(player=>!Number.isFinite(round.finishMsByPlayer[player.id]));if(!remaining){beginJudging();return;}round.activePlayerId=remaining.id;renderPlay();
+    finishActiveTurn();
   }
 
   function beginJudging(){
@@ -201,7 +223,7 @@ export function createCategoriesController({showView,onBack}={}){
   function start(){ensureShell();onlineController?.stop?.();setMode(true);showView?.('categoriesGameView');renderSetup();}
   function leave({navigate=true}={}){stopTimer();onlineController?.stop?.();match=null;setMode(false);if(navigate)onBack?.();}
   function bind(){
-    if(bound)return;bound=true;ensureShell();byId('fwcBack')?.addEventListener('click',()=>leave());document.querySelector('[data-fwc-mode="online"]')?.addEventListener('click',openOnline);byId('fwcStart')?.addEventListener('click',startMatch);byId('fwcSubmit')?.addEventListener('click',submitActive);byId('fwcFinishJudge')?.addEventListener('click',finishJudge);byId('fwcNextRound')?.addEventListener('click',nextRound);byId('fwcNewMatch')?.addEventListener('click',renderSetup);
+    if(bound)return;bound=true;ensureShell();byId('fwcBack')?.addEventListener('click',()=>leave());document.querySelector('[data-fwc-mode="online"]')?.addEventListener('click',openOnline);byId('fwcStart')?.addEventListener('click',startMatch);byId('fwcBeginTurn')?.addEventListener('click',beginTurn);byId('fwcSubmit')?.addEventListener('click',submitActive);byId('fwcFinishJudge')?.addEventListener('click',finishJudge);byId('fwcNextRound')?.addEventListener('click',nextRound);byId('fwcNewMatch')?.addEventListener('click',renderSetup);
   }
   bind();
   return Object.freeze({start,leave,getMatch(){return match;},getHistory:()=>Object.freeze([...safeReadHistory()])});
