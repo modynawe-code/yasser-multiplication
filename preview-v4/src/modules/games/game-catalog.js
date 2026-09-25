@@ -15,6 +15,8 @@ const dominoArt=()=>`<span aria-hidden="true" style="display:flex;align-items:ce
   </span>
 </span>`;
 
+const wordCategoriesArt=()=>`<span aria-hidden="true" style="display:grid;place-items:center;width:min(100%,360px);aspect-ratio:4/3;border-radius:18px;margin-inline:auto;background:linear-gradient(145deg,#e9f2ff,#fff6df);padding:16px;box-sizing:border-box"><span style="display:grid;place-items:center;width:94px;height:94px;border-radius:28px;background:#3157d5;color:#fff;font:900 54px/1 system-ui;box-shadow:0 12px 28px #3157d533">م</span><span style="display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:10px;font:800 13px/1.4 system-ui;color:#334155"><b>اسم</b><b>حيوان</b><b>نبات</b><b>جماد</b><b>بلد</b></span></span>`;
+
 export const gameRegistry=createGameRegistry([
   {
     id:'family-pixel-puzzle',
@@ -52,6 +54,19 @@ export const gameRegistry=createGameRegistry([
     version:1,
     load:()=>import('./rps/rps-controller.js'),
     metadata:{accent:'duo',icon:cardArt('assets/games/catalog/rps-card.webp'),availabilityLabel:'محلي + أونلاين',description:'لعبة مرح سريعة. الاختيار سري، وأول واحد يوصل 3 يفوز.'}
+  },
+  {
+    id:'family-word-categories',
+    title:'حيوان جماد بلاد',
+    category:'fun',
+    playModes:['local'],
+    networkMode:'none',
+    learningMode:'none',
+    minPlayers:2,
+    maxPlayers:5,
+    version:1,
+    load:()=>import('./categories/categories-controller.js'),
+    metadata:{accent:'family',icon:wordCategoriesArt(),availabilityLabel:'عائلي — 2 إلى 5',description:'تحدي الحروف للعائلة: اسم، حيوان، نبات، جماد وبلد مع مؤقت وتسليم وتحكيم وسجل فوز يومي.'}
   },
   {
     id:'domino',
