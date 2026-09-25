@@ -2,6 +2,11 @@ name: Backend Production Deploy
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'feature/product-ui-reference-v1'
+    paths:
+      - '.github/backend-production-deploy-trigger'
 
 permissions:
   contents: read
@@ -107,5 +112,19 @@ jobs:
             if(dominoDrawn?.room?.state?.boneyardCount!==13)throw new Error('Domino classic draw failed');
           }
 
-          console.log(`Production games smoke passed: XO ${xoHost.room.code}, RPS ${rpsHost.room.code}, Domino ${dominoHost.room.code}.`);
+          const familyWordHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'family-word-categories',learnerId:'yasser'}});
+          if(!/^\d{6}$/.test(familyWordHost?.room?.code||''))throw new Error('Family word room code contract failed');
+          const familyWordGuest=await request('/v1/games/rooms/join',{method:'POST',body:{code:familyWordHost.room.code,learnerId:'khaled'}});
+          if(familyWordGuest?.room?.status!=='waiting'||familyWordGuest?.room?.players?.length!==2)throw new Error('Family word join contract failed');
+          const configured=await request(`/v1/games/rooms/${familyWordHost.room.code}/actions`,{method:'POST',token:familyWordHost.playerToken,body:{expectedVersion:familyWordGuest.room.version,type:'configure',durationSec:60,roundsTotal:3}});
+          const started=await request(`/v1/games/rooms/${familyWordHost.room.code}/actions`,{method:'POST',token:familyWordHost.playerToken,body:{expectedVersion:configured.room.version,type:'start'}});
+          if(started?.room?.status!=='playing'||!started?.room?.state?.letter)throw new Error('Family word shared round did not start');
+          const letter=started.room.state.letter;
+          const answers={person:`${letter}لف`,animal:`${letter}لف`,plant:`${letter}لف`,object:`${letter}لف`,country:`${letter}لف`};
+          const hostSubmit=await request(`/v1/games/rooms/${familyWordHost.room.code}/actions`,{method:'POST',token:familyWordHost.playerToken,body:{expectedVersion:started.room.version,type:'submit',answers}});
+          const guestPrivate=await request(`/v1/games/rooms/${familyWordHost.room.code}`,{token:familyWordGuest.playerToken});
+          if(guestPrivate?.room?.state?.submissions?.[familyWordHost.room.selfPlayerId])throw new Error('Family word private answers leaked before reveal');
+          if(!(guestPrivate?.room?.state?.submittedPlayers||[]).includes(familyWordHost.room.selfPlayerId))throw new Error('Family word submitted status missing');
+
+          console.log(`Production games smoke passed: XO ${xoHost.room.code}, RPS ${rpsHost.room.code}, Domino ${dominoHost.room.code}, Family Word ${familyWordHost.room.code}.`);
           NODE
