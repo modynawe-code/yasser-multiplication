@@ -1,3 +1,4 @@
+import { addFamilyWordCategoriesRoomPlayer, applyFamilyWordCategoriesRoomAction, createInitialFamilyWordCategoriesRoomState, projectFamilyWordCategoriesRoomState } from './family-word-categories-engine.mjs';
 import {
   CLASSIC_MOVE_STATE,
   classicAbleToPlay,
@@ -255,6 +256,15 @@ const RULES=Object.freeze({
     addPlayer:addRpsRoomGuest,
     applyAction(state,{playerId,type,payload={}}={}){return applyRpsRoomAction(state,{playerId,type,payload});},
     projectState(state,context={}){return projectRpsRoomState(state,context);}
+  }),
+  'family-word-categories':Object.freeze({
+    gameId:'family-word-categories',
+    maxPlayers:5,
+    maxSpectators:8,
+    createInitialState:createInitialFamilyWordCategoriesRoomState,
+    addPlayer:addFamilyWordCategoriesRoomPlayer,
+    applyAction(state,{playerId,type,payload={}}={}){return applyFamilyWordCategoriesRoomAction(state,{playerId,type,payload});},
+    projectState(state,context={}){return projectFamilyWordCategoriesRoomState(state,context);}
   }),
   domino:Object.freeze({
     gameId:'domino',
