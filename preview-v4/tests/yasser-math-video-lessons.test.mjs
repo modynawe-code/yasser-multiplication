@@ -150,3 +150,14 @@ test('player falls back to a direct native YouTube iframe when API playback stal
   assert.match(source,/https:\/\/www\.youtube\.com\/embed\//);
   assert.match(css,/\.math-native-fallback/);
 });
+
+
+test('tablet playback auto-falls back when the YouTube API player never initializes',async()=>{
+  const source=await read('src/modules/yasser/math/yasser-math-lessons.js');
+  assert.match(source,/prepareWatchdog/);
+  assert.match(source,/setTimeout\(\(\)=>[\s\S]*4000/);
+  assert.match(source,/duration<=0/);
+  assert.match(source,/!data\.video_id/);
+  assert.match(source,/useNativeEmbedFallback\(\)/);
+  assert.match(source,/nativeEmbedUrl\(meta\.videoId,currentProgress\(\)\.seconds\|\|0\)/);
+});
