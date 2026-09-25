@@ -20,7 +20,7 @@ function now(){return globalThis.performance?.now?.()??Date.now();}
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null;
+  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null;
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -29,6 +29,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   gameLauncher.register('xo',()=>openXoLobby());
   gameLauncher.register('rock-paper-scissors',({game})=>openRps(game));
   gameLauncher.register('family-pixel-puzzle',()=>openFamilyPixelPuzzle());
+  gameLauncher.register('family-word-categories',({game})=>openCategories(game));
 
   function openFamilyPixelPuzzle(){
     const apkDownload='https://modynawe-code.github.io/yasser-multiplication/downloads/Family_Pixel_Puzzle_0.41.apk?v=compat-20260921-1';
@@ -79,14 +80,16 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode');document.body.classList.add('games-mode');}
 
   function leave(){
-    document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode');
+    document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode','categories-game-mode');
+    categoriesController?.leave?.({navigate:false});
     clearChallenge();onlineSession.forget();xoEvents.reset();
     xoState=null;playMode='local';onlineTurnVersion=-1;onlineCelebrated='';
   }
 
   function enterHome(){
     onBeforeEnter?.();
-    onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode');
+    categoriesController?.leave?.({navigate:false});
+    onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode','categories-game-mode');
     enterGamesChrome();renderCatalog();show('gamesHomeView');
   }
 
@@ -115,6 +118,23 @@ export function createGamesController({learningAdapter,challengePresentations=nu
       if(!rpsController){const module=await game.load();rpsController=module.createRpsController({showView:show,onBack:()=>{document.body.classList.remove('rps-game-mode');renderCatalog();show('gamesHomeView');}});}
       rpsController.start();
     }catch{renderCatalog();show('gamesHomeView');}
+  }
+
+  async function openCategories(game=gameRegistry.get('family-word-categories')){
+    clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode');enterGamesChrome();
+    if(!game?.load)return;
+    try{
+      if(!categoriesController){
+        const module=await game.load();
+        categoriesController=module.createCategoriesController({
+          showView:show,
+          onBack:()=>{document.body.classList.remove('categories-game-mode');renderCatalog();show('gamesHomeView');}
+        });
+      }
+      categoriesController.start();
+    }catch{
+      document.body.classList.remove('categories-game-mode');renderCatalog();show('gamesHomeView');
+    }
   }
 
   function openXoLobby(){
