@@ -14,7 +14,6 @@ test('family word categories exposes local and multi-device online modes',async(
   assert.match(online,/gameId:'family-word-categories'/);
   assert.match(online,/session\.submit\('submit'/);
   assert.match(online,/session\.submit\('judge'/);
-  assert.match(online,/family-word-categories-history-v1/);
 });
 
 
@@ -44,4 +43,13 @@ test('local pass-and-play and online room mode are separate interaction systems'
 test('online controller module imports successfully',async()=>{
   const module=await import('../src/modules/games/categories/categories-online-controller.js');
   assert.equal(typeof module.createCategoriesOnlineController,'function');
+});
+
+
+test('word game does not keep a second permanent device history',async()=>{
+  const local=await read('src/modules/games/categories/categories-controller.js');
+  const online=await read('src/modules/games/categories/categories-online-controller.js');
+  assert.doesNotMatch(local,/family-word-categories-history-v1/);
+  assert.doesNotMatch(online,/family-word-categories-history-v1/);
+  assert.match(local,/gameHistoryService\.recordGameResult/);
 });
