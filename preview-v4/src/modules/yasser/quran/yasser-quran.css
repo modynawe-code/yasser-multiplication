@@ -1,1 +1,186 @@
 .yasser-quran-shell{width:min(1120px,100%);margin:auto;padding:20px;display:grid;gap:18px}.yasser-quran-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:4px 2px}.yasser-quran-head h1{margin:3px 0 4px;font-size:clamp(28px,4vw,42px)}.yasser-quran-head p{margin:0;color:var(--muted,#667085);font-weight:800}.yasser-quran-tabs,.yasser-quran-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.yasser-quran-tabs button,.yasser-quran-modes button{border:2px solid #dfe6ef;background:#fff;border-radius:20px;min-height:58px;padding:12px 16px;font:inherit;font-weight:900;color:var(--text,#14213d);touch-action:manipulation}.yasser-quran-tabs button[aria-pressed="true"],.yasser-quran-modes button[aria-pressed="true"]{border-color:#4d74d6;background:#eef4ff;box-shadow:0 8px 18px rgba(66,99,177,.12)}.yasser-quran-modes button{display:grid;text-align:right;gap:3px}.yasser-quran-modes strong{font-size:20px}.yasser-quran-modes span{font-size:14px;color:#667085}.yasser-quran-last{margin:0;padding:10px 14px;border-radius:16px;background:#f8fafc;color:#475467;font-weight:850}.yasser-quran-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.yasser-quran-surah{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;text-align:right;border:2px solid #e3e8ef;background:#fff;border-radius:20px;padding:14px 15px;min-height:82px;color:var(--text,#14213d);font:inherit;box-shadow:0 6px 14px rgba(16,24,40,.04);touch-action:manipulation}.yasser-quran-surah.selected{border-color:#4d74d6;background:#f7faff}.yasser-quran-number{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:#eef4ff;color:#3454a4;font-weight:950}.yasser-quran-name{display:grid;gap:4px}.yasser-quran-name strong{font-size:20px}.yasser-quran-name small{color:#667085;font-weight:800}.yasser-quran-page,.yasser-quran-level{font-size:13px;font-weight:900;color:#596579;background:#f5f7fa;padding:7px 10px;border-radius:999px}.yasser-quran-stage{scroll-margin-top:14px;border:2px solid #e4e9f1;border-radius:26px;background:#fbfcfe;padding:18px;display:grid;gap:16px}.yasser-quran-stage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.yasser-quran-stage-head h2{margin:2px 0 0;font-size:28px}.yasser-quran-stage-head>div>span{font-size:13px;color:#667085;font-weight:900}.yasser-quran-memory-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:9px}.yasser-quran-memory-tools button,.yasser-quran-memory-tools label{border:1px solid #d7deea;background:#fff;border-radius:14px;min-height:44px;padding:8px 12px;font:inherit;font-weight:850;color:#344054}.yasser-quran-memory-tools label{display:flex;align-items:center;gap:8px}.yasser-quran-memory-tools select{font:inherit;border:0;background:#f3f6fb;border-radius:9px;padding:4px 7px}.yasser-quran-stage.blind .quran-page-frame{display:none}.yasser-quran-memory-hint{margin:0;padding:12px 14px;text-align:center;border-radius:16px;background:#fff6df;color:#755719;font-weight:900}.yasser-quran-source{margin:0;text-align:center;color:#667085;font-size:13px;font-weight:800}@media(max-width:700px){.yasser-quran-shell{padding:14px}.yasser-quran-head,.yasser-quran-stage-head{align-items:stretch;flex-direction:column}.yasser-quran-modes{grid-template-columns:1fr 1fr}.yasser-quran-list{grid-template-columns:1fr}.yasser-quran-memory-tools{justify-content:stretch}.yasser-quran-memory-tools>*{flex:1 1 auto}.yasser-quran-surah{grid-template-columns:42px minmax(0,1fr)}}@media(max-width:480px){.yasser-quran-tabs,.yasser-quran-modes{grid-template-columns:1fr}.yasser-quran-page,.yasser-quran-level{grid-column:2;justify-self:start}}.yasser-quran-video-card{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;border:1px solid #dce4d8;border-radius:24px;background:linear-gradient(135deg,#fbfcf8,#f3f7ee);box-shadow:0 8px 20px rgba(70,91,57,.06)}.yasser-quran-video-copy{display:grid;gap:4px}.yasser-quran-video-copy>span{color:#6c7f5d;font-size:12px;font-weight:950}.yasser-quran-video-copy h2{margin:0;font-size:25px}.yasser-quran-video-copy p{margin:0;color:#667085;font-size:13px;font-weight:750}.yasser-quran-video-card>button{min-height:48px;padding:0 18px;border:1px solid #cfdac9;border-radius:15px;background:#5f7654;color:#fff;font:inherit;font-weight:950;white-space:nowrap;touch-action:manipulation}@media(max-width:700px){.yasser-quran-video-card{align-items:stretch;flex-direction:column;padding:16px}.yasser-quran-video-card>button{width:100%}.yasser-quran-video-copy h2{font-size:22px}}
+
+/* Quran hierarchy polish: compact academic controls + calm Quran identity. */
+.yasser-quran-shell{--q-accent:#687b59;--q-accent-strong:#556748;--q-soft:#f5f7f1;--q-gold:#aa8a4a;--q-border:#dfe5da;gap:14px}
+.yasser-quran-head{padding-bottom:2px}
+.yasser-quran-head .kicker{color:var(--q-accent)}
+.yasser-quran-head h1{font-size:clamp(28px,3.5vw,38px)}
+.yasser-quran-head p{font-size:14px}
+
+.yasser-quran-tabs{
+  width:min(430px,100%);
+  margin-inline:auto;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:4px;
+  padding:4px;
+  border:1px solid var(--q-border);
+  border-radius:16px;
+  background:#eef1eb
+}
+.yasser-quran-tabs button{
+  min-height:44px;
+  padding:7px 12px;
+  border:0;
+  border-radius:12px;
+  background:transparent;
+  box-shadow:none;
+  font-size:14px
+}
+.yasser-quran-tabs button[aria-pressed="true"]{
+  border:0;
+  background:#fff;
+  color:var(--q-accent-strong);
+  box-shadow:0 3px 10px rgba(55,72,45,.08)
+}
+
+.yasser-quran-modes{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px
+}
+.yasser-quran-modes button{
+  min-height:70px;
+  padding:10px 12px;
+  border:1px solid var(--q-border);
+  border-radius:16px;
+  background:#fff;
+  box-shadow:none
+}
+.yasser-quran-modes button[aria-pressed="true"]{
+  border-color:#a9b79e;
+  background:var(--q-soft);
+  box-shadow:inset 0 0 0 1px #cdd8c5
+}
+.yasser-quran-modes strong{font-size:17px;color:#1e2a1b}
+.yasser-quran-modes span{font-size:11px;line-height:1.35}
+
+.yasser-quran-last{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin:0;
+  padding:12px 14px;
+  border:1px solid #e7ebe3;
+  border-radius:16px;
+  background:#fafbf8
+}
+.yasser-quran-last>div{display:grid;gap:2px;min-width:0}
+.yasser-quran-last>div>span{color:var(--q-accent);font-size:11px;font-weight:950}
+.yasser-quran-last strong{color:#445044;font-size:14px;line-height:1.45}
+.yasser-quran-last button{
+  flex:0 0 auto;
+  min-height:40px;
+  padding:0 14px;
+  border:1px solid #cbd5c4;
+  border-radius:12px;
+  background:#fff;
+  color:var(--q-accent-strong);
+  font:inherit;
+  font-size:12px;
+  font-weight:950
+}
+
+.yasser-quran-list{gap:9px}
+.yasser-quran-surah{
+  grid-template-columns:40px minmax(0,1fr) auto;
+  gap:10px;
+  min-height:68px;
+  padding:10px 12px;
+  border:1px solid #e2e7df;
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(16,24,40,.025)
+}
+.yasser-quran-surah.selected{
+  border-color:#a9b79e;
+  background:#fafcf8
+}
+.yasser-quran-number{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  background:#eef2ea;
+  color:var(--q-accent-strong)
+}
+.yasser-quran-name{gap:2px}
+.yasser-quran-name strong{font-size:17px}
+.yasser-quran-name small{font-size:11px;color:#7a8376}
+.yasser-quran-page,.yasser-quran-level{
+  padding:5px 9px;
+  background:#f4f6f2;
+  color:#667061;
+  font-size:11px
+}
+
+.yasser-quran-interpretation{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  border:1px solid #d9e1d3;
+  border-radius:18px;
+  background:linear-gradient(135deg,#fbfcf8,#f3f6ef)
+}
+.yasser-quran-interpretation-mark{
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  background:#e9efe3;
+  color:var(--q-accent-strong);
+  font-weight:950
+}
+.yasser-quran-interpretation>div:nth-child(2){display:grid;gap:2px}
+.yasser-quran-interpretation span{color:var(--q-accent);font-size:11px;font-weight:950}
+.yasser-quran-interpretation strong{font-size:19px}
+.yasser-quran-interpretation small{color:#6e776a;font-size:11px;font-weight:750}
+.yasser-quran-interpretation button{
+  min-height:44px;
+  padding:0 15px;
+  border:1px solid #bdcab4;
+  border-radius:13px;
+  background:var(--q-accent);
+  color:#fff;
+  font:inherit;
+  font-size:12px;
+  font-weight:950
+}
+
+.yasser-quran-stage{border-color:var(--q-border);background:#fcfdfa}
+.yasser-quran-stage-head>div>span{color:var(--q-accent)}
+.yasser-quran-memory-tools button,.yasser-quran-memory-tools label{border-color:#d9e1d4}
+.yasser-quran-source{color:#7a8376}
+.yasser-quran-video-card{display:none!important}
+
+@media (min-width:760px){
+  .yasser-quran-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:700px){
+  .yasser-quran-shell{padding:12px;gap:12px}
+  .yasser-quran-head{flex-direction:row;align-items:center}
+  .yasser-quran-head h1{font-size:30px}
+  .yasser-quran-modes{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .yasser-quran-modes button{min-height:64px;padding:8px 6px}
+  .yasser-quran-modes strong{font-size:15px}
+  .yasser-quran-modes span{font-size:10px}
+  .yasser-quran-list{grid-template-columns:1fr}
+  .yasser-quran-surah{grid-template-columns:38px minmax(0,1fr) auto;min-height:66px}
+  .yasser-quran-interpretation{grid-template-columns:42px minmax(0,1fr);padding:12px}
+  .yasser-quran-interpretation button{grid-column:1/-1;width:100%}
+}
+
+@media(max-width:430px){
+  .yasser-quran-head h1{font-size:27px}
+  .yasser-quran-head p{font-size:12px}
+  .yasser-quran-modes{gap:6px}
+  .yasser-quran-modes button{min-height:60px;border-radius:14px}
+  .yasser-quran-modes strong{font-size:14px}
+  .yasser-quran-last{padding:10px 11px}
+  .yasser-quran-last strong{font-size:12px}
+  .yasser-quran-surah{grid-template-columns:36px minmax(0,1fr) auto;padding:9px 10px}
+  .yasser-quran-number{width:36px;height:36px}
+  .yasser-quran-name strong{font-size:16px}
+}
