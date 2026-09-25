@@ -27,8 +27,13 @@ export function normalizeArabicAnswer(value){
     .toLowerCase();
 }
 
+function comparableArabicAnswer(value){
+  const normalized=normalizeArabicAnswer(value);
+  return normalized.startsWith('ال')&&normalized.length>2?normalized.slice(2):normalized;
+}
+
 export function answerStartsWithLetter(answer,letter){
-  const normalized=normalizeArabicAnswer(answer),target=normalizeArabicAnswer(letter);
+  const normalized=comparableArabicAnswer(answer),target=normalizeArabicAnswer(letter);
   return Boolean(normalized&&target&&normalized.startsWith(target));
 }
 
@@ -64,7 +69,7 @@ export function scoreWordRound({players=[],answersByPlayer={},verdictsByPlayer={
     for(const id of ids){
       const answer=String(answersByPlayer?.[id]?.[category.id]||'').trim();
       const valid=Boolean(answer&&answerStartsWithLetter(answer,letter)&&verdictAccepted(verdictsByPlayer,id,category.id));
-      const normalized=valid?normalizeArabicAnswer(answer):'';
+      const normalized=valid?comparableArabicAnswer(answer):'';
       result[id].categories[category.id]={answer,valid,normalized,score:0};
       if(valid)accepted.push({id,normalized});
     }
