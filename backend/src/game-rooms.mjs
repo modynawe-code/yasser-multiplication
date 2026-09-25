@@ -1,7 +1,7 @@
 import { randomId, randomSessionToken, sha256Base64Url } from './security.mjs';
 import { normalizeLearnerSlug } from './learners.mjs';
 import { getGameRoomRules } from './game-room-rules.mjs';
-import { recordOnlineRoomMatch } from './game-history.mjs';
+import { historyFamilyForDeviceToken,recordOnlineRoomMatch } from './game-history.mjs';
 export { addXoRoomGuest, applyXoRoomAction, createInitialXoRoomState } from './game-room-rules.mjs';
 
 const ROOM_TTL_MINUTES=30;
@@ -30,7 +30,7 @@ export function generateRoomCode(){
 }
 
 async function roomByCode(env,code){
-  return env.DB.prepare('SELECT id,code,game_id,status,state_json,version,expires_at,created_at,updated_at FROM game_rooms WHERE code=?').bind(code).first();
+  return env.DB.prepare('SELECT id,code,game_id,status,state_json,version,history_family_id,expires_at,created_at,updated_at FROM game_rooms WHERE code=?').bind(code).first();
 }
 async function playersForRoom(env,roomId){
   const rows=await env.DB.prepare('SELECT player_id,learner_id,display_name,seat,participation_role,authority_role FROM game_room_players WHERE room_id=? ORDER BY CASE WHEN seat IS NULL THEN 1 ELSE 0 END,seat,joined_at').bind(roomId).all();return rows.results||[];
@@ -74,13 +74,14 @@ async function createRoom(request,env,respond,readJson){
   const body=await readJson(request),gameId=String(body?.gameId||''),learnerId=normalizeLearnerSlug(body?.learnerId),displayName=normalizeDisplayName(body?.displayName,learnerId),rules=getGameRoomRules(gameId);
   if(!rules||!validLearner(learnerId))return respond(400,{error:'invalid_game_room'});
   const throttle=await allowCreate(request,env);if(!throttle.ok)return respond(429,{error:'too_many_rooms'});
+  const historyFamilyId=await historyFamilyForDeviceToken(request,env);
   const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),state=rules.createInitialState(playerId);
   let code=null;
   for(let attempt=0;attempt<12;attempt++){
     const candidate=generateRoomCode();
     try{
       await env.DB.batch([
-        env.DB.prepare('INSERT INTO game_rooms(id,code,game_id,status,state_json,version,creator_key,expires_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(roomId,candidate,gameId,state.status,JSON.stringify(state),0,throttle.key,expiresAt,createdAt,createdAt),
+        env.DB.prepare('INSERT INTO game_rooms(id,code,game_id,status,state_json,version,creator_key,history_family_id,expires_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(roomId,candidate,gameId,state.status,JSON.stringify(state),0,throttle.key,historyFamilyId,expiresAt,createdAt,createdAt),
         env.DB.prepare('INSERT INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,participation_role,authority_role,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(roomId,playerId,learnerId,displayName,tokenHash,0,'player','host',createdAt,createdAt)
       ]);
       code=candidate;break;
@@ -96,6 +97,7 @@ async function joinRoom(request,env,respond,readJson){
   const throttleKey=await joinThrottleKey(request),throttle=await joinThrottleStatus(env,throttleKey);if(throttle.blocked)return respond(429,{error:'too_many_join_attempts'});
   const fail=async(status,error,extra={})=>{await recordJoinFailure(env,throttleKey);return respond(status,{error,...extra});};
   const row=await roomByCode(env,code);if(!row||Date.parse(row.expires_at)<=Date.now())return fail(404,'room_not_found');
+  const joinHistoryFamilyId=row.history_family_id?null:await historyFamilyForDeviceToken(request,env);
   const rules=getGameRoomRules(row.game_id);if(!rules)return fail(409,'unsupported_game_room');
   if(participationRole==='player'&&row.status!=='waiting')return fail(409,'room_not_waiting',{room:await roomPayload(env,row)});
   if(participationRole==='spectator'&&row.status==='closed')return fail(409,'room_closed',{room:await roomPayload(env,row)});
@@ -121,6 +123,7 @@ async function joinRoom(request,env,respond,readJson){
     return fail(409,'room_changed');
   }
   await clearJoinThrottle(env,throttleKey);
+  if(!row.history_family_id&&joinHistoryFamilyId)await env.DB.prepare('UPDATE game_rooms SET history_family_id=? WHERE id=? AND history_family_id IS NULL').bind(joinHistoryFamilyId,row.id).run().catch(()=>null);
   const fresh=await roomByCode(env,code);return respond(200,{playerToken,room:await roomPayload(env,fresh,playerId)});
 }
 
