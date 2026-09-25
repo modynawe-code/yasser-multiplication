@@ -51,10 +51,10 @@ jobs:
           const health=await request('/health');
           if(health?.ok!==true)throw new Error('Production health payload is not ok');
 
-          const history=await request('/v1/games/history?limit=1');
-          if(!Array.isArray(history?.matches))throw new Error('Game history read contract failed');
-          const stats=await request('/v1/games/stats?days=7');
-          if(!Array.isArray(stats?.players)||stats?.days!==7)throw new Error('Game stats contract failed');
+          const historyUnauthed=await fetch(base+'/v1/games/history?limit=1',{headers:{accept:'application/json',origin:'capacitor://localhost'}});
+          if(historyUnauthed.status!==401)throw new Error('Game history must require a paired family device');
+          const statsUnauthed=await fetch(base+'/v1/games/stats?days=7',{headers:{accept:'application/json',origin:'capacitor://localhost'}});
+          if(statsUnauthed.status!==401)throw new Error('Game stats must require a paired family device');
 
           const xoHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'xo',learnerId:'yasser'}});
           if(!/^\d{6}$/.test(xoHost?.room?.code||''))throw new Error('XO room code contract failed');
