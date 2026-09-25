@@ -59,14 +59,14 @@ export const gameRegistry=createGameRegistry([
     id:'family-word-categories',
     title:'حيوان جماد بلاد',
     category:'fun',
-    playModes:['local'],
-    networkMode:'none',
+    playModes:['local','online'],
+    networkMode:'simultaneous',
     learningMode:'none',
     minPlayers:2,
     maxPlayers:5,
     version:1,
     load:()=>import('./categories/categories-controller.js'),
-    metadata:{accent:'family',icon:wordCategoriesArt(),availabilityLabel:'عائلي — 2 إلى 5',description:'تحدي الحروف للعائلة: اسم، حيوان، نبات، جماد وبلد مع مؤقت وتسليم وتحكيم وسجل فوز يومي.'}
+    metadata:{accent:'family',icon:wordCategoriesArt(),availabilityLabel:'محلي + أونلاين — 2 إلى 5',description:'تحدي الحروف للعائلة: نفس الجهاز أو كل واحد من جهازه، مع مؤقت وتسليم وتحكيم وسجل فوز يومي.'}
   },
   {
     id:'domino',
