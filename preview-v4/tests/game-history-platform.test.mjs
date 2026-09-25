@@ -27,7 +27,7 @@ test('games area exposes one server-backed family history UI',async()=>{
   assert.match(shell,/id="gamesHistoryList"/);
   assert.match(controller,/gameHistoryService\.getHistory/);
   assert.match(controller,/gameHistoryService\.getStats/);
-  assert.match(controller,/الفوز 3/);
+  assert.match(shell,/الفوز 3/);
 });
 
 test('PWA caches the shared history client',async()=>{
