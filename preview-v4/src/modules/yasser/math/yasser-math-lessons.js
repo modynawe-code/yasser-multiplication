@@ -14,6 +14,7 @@ let apiPromise=null;
 let renderQueued=false;
 let metadataWarmInProgress=false;
 let playbackWatchdog=null;
+let prepareWatchdog=null;
 let nativeEmbedFallback=false;
 
 function readJson(key,fallback={}){
@@ -408,6 +409,10 @@ function clearPlaybackWatchdog(){
   clearTimeout(playbackWatchdog);
   playbackWatchdog=null;
 }
+function clearPrepareWatchdog(){
+  clearTimeout(prepareWatchdog);
+  prepareWatchdog=null;
+}
 function ensureApiMount(){
   const stage=document.getElementById('mathPlayerStage');
   if(!stage)return null;
@@ -422,12 +427,13 @@ function ensureApiMount(){
   stage.prepend(mount);
   return mount;
 }
-function nativeEmbedUrl(videoId){
+function nativeEmbedUrl(videoId,startSeconds=0){
   const url=new URL(`https://www.youtube.com/embed/${encodeURIComponent(videoId)}`);
   url.searchParams.set('playsinline','1');
   url.searchParams.set('controls','1');
   url.searchParams.set('rel','0');
   url.searchParams.set('fs','1');
+  if(startSeconds>0)url.searchParams.set('start',String(Math.floor(startSeconds)));
   const origin=globalThis.location?.origin||'';
   const href=globalThis.location?.href||'';
   if(/^https?:\/\//i.test(origin))url.searchParams.set('origin',origin);
@@ -439,6 +445,7 @@ function useNativeEmbedFallback(){
   const meta=metaStore()[currentLesson.id]||{};
   if(!meta.videoId)return;
   clearPlaybackWatchdog();
+  clearPrepareWatchdog();
   nativeEmbedFallback=true;
   try{player?.destroy?.();}catch{}
   player=null;
@@ -448,7 +455,7 @@ function useNativeEmbedFallback(){
   const frame=document.createElement('iframe');
   frame.id='mathYoutubeNativeFallback';
   frame.className='math-youtube-player math-youtube-native';
-  frame.src=nativeEmbedUrl(meta.videoId);
+  frame.src=nativeEmbedUrl(meta.videoId,currentProgress().seconds||0);
   frame.title=lessonTitle(currentLesson,meta);
   frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
   frame.setAttribute('allowfullscreen','');
@@ -518,6 +525,7 @@ function onPlayerState(event){
   const tap=document.getElementById('mathPlayerTap');
   if(event.data===YT.PlayerState.PLAYING){
     clearPlaybackWatchdog();
+    clearPrepareWatchdog();
     if(play)play.textContent='إيقاف';
     if(tap)tap.hidden=true;
     setLessonIframeInteractive(true);
@@ -578,6 +586,16 @@ async function prepareCurrentVideo(lesson){
   p.cueVideoById({videoId:meta.videoId,startSeconds:Math.max(0,currentProgress().seconds||0)});
   saveMeta(lesson,{...meta,duration:meta.duration||p.getDuration?.()||0});
   enforceNonInteractiveIframe();
+  clearPrepareWatchdog();
+  prepareWatchdog=setTimeout(()=>{
+    if(nativeEmbedFallback||currentLesson?.id!==lesson.id)return;
+    const state=p.getPlayerState?.();
+    const duration=p.getDuration?.()||0;
+    const data=p.getVideoData?.()||{};
+    if(duration<=0&&!data.video_id&&(state===YT.PlayerState.UNSTARTED||state===YT.PlayerState.CUED||typeof state!=='number')){
+      useNativeEmbedFallback();
+    }
+  },4000);
   return meta;
 }
 function adjacentLesson(offset){
@@ -648,6 +666,7 @@ async function toggleMathPlayerFullscreen(){
 }
 function closePlayer(){
   clearPlaybackWatchdog();
+  clearPrepareWatchdog();
   saveProgress();
   stopProgressTimer();
   player?.pauseVideo?.();
