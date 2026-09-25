@@ -1,6 +1,21 @@
+ALTER TABLE game_rooms ADD COLUMN history_family_id TEXT REFERENCES parents(id) ON DELETE SET NULL;
+
+CREATE TABLE IF NOT EXISTS game_history_devices (
+  id TEXT PRIMARY KEY,
+  parent_id TEXT NOT NULL REFERENCES parents(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL DEFAULT 'family-device',
+  created_at TEXT NOT NULL,
+  last_seen_at TEXT NOT NULL,
+  revoked_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_game_history_devices_parent ON game_history_devices(parent_id);
+CREATE INDEX IF NOT EXISTS idx_game_history_devices_token ON game_history_devices(token_hash);
+
 CREATE TABLE IF NOT EXISTS game_matches (
   match_id TEXT PRIMARY KEY,
-  family_scope TEXT NOT NULL DEFAULT 'default-family',
+  family_id TEXT NOT NULL REFERENCES parents(id) ON DELETE RESTRICT,
   game_id TEXT NOT NULL CHECK (
     length(game_id) BETWEEN 1 AND 64
     AND game_id NOT GLOB '*[^a-z0-9-]*'
@@ -31,7 +46,7 @@ CREATE TABLE IF NOT EXISTS game_match_players (
   PRIMARY KEY (match_id, learner_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_game_matches_scope_time ON game_matches(family_scope, ended_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_matches_family_time ON game_matches(family_id, ended_at DESC);
 CREATE INDEX IF NOT EXISTS idx_game_matches_game_time ON game_matches(game_id, ended_at DESC);
 CREATE INDEX IF NOT EXISTS idx_game_match_players_learner ON game_match_players(learner_id, match_id);
 
