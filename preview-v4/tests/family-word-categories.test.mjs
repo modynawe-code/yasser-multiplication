@@ -11,6 +11,17 @@ test('normalizes Arabic variants for fair letter matching',()=>{
   assert.equal(answerStartsWithLetter('خالد','م'),false);
 });
 
+test('ignores the Arabic definite article when matching and comparing answers',()=>{
+  assert.equal(answerStartsWithLetter('السعودية','س'),true);
+  assert.equal(answerStartsWithLetter('الأردن','ا'),true);
+  const players=[{id:'a'},{id:'b'}];
+  const a={person:'سالم',animal:'سمكة',plant:'سدر',object:'ساعة',country:'السعودية'};
+  const b={person:'سامي',animal:'سمكة',plant:'سمسم',object:'سيف',country:'سعودية'};
+  const round=scoreWordRound({players,answersByPlayer:{a,b},finishMsByPlayer:{a:1000,b:2000},letter:'س'});
+  assert.equal(round.scores.a.categories.country.score,5);
+  assert.equal(round.scores.b.categories.country.score,5);
+});
+
 test('sheet cannot be submitted until every answer exists and starts with round letter',()=>{
   const answers={person:'محمد',animal:'ماعز',plant:'موز',object:'مفتاح',country:'مصر'};
   assert.equal(validateAnswerSheet({answers,letter:'م'}).ok,true);
