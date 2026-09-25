@@ -11,7 +11,7 @@ test('generic local history contract supports current and future games',()=>{
       {learnerId:'khaled',displayName:'خالد',score:6,outcome:'loss'}
     ],
     details:{rounds:3}
-  },{recordedAt:'2026-09-25T18:05:01Z'});
+  },{recordedAt:'2026-09-25T18:05:01Z',familyId:'par-family-1'});
   assert.equal(parsed.ok,true);
   assert.equal(parsed.value.gameId,'future-game');
   assert.equal(parsed.value.players.length,2);
@@ -23,13 +23,13 @@ test('history contract rejects winners that are not participants',()=>{
   const parsed=normalizeGameMatch({
     matchId:'bad-1',gameId:'xo',playMode:'local',winnerIds:['mashaal'],
     players:[{learnerId:'yasser',displayName:'ياسر'},{learnerId:'khaled',displayName:'خالد'}]
-  });
+  },{familyId:'par-family-1'});
   assert.equal(parsed.ok,false);
   assert.equal(parsed.error,'invalid_winners');
 });
 
 test('online XO terminal room becomes a server-timestamped history match',()=>{
-  const roomRow={id:'room-1',code:'123456',game_id:'xo',created_at:'2026-09-25T18:00:00Z'};
+  const roomRow={id:'room-1',code:'123456',game_id:'xo',history_family_id:'par-family-1',created_at:'2026-09-25T18:00:00Z'};
   const players=[
     {player_id:'pa',learner_id:'yasser',display_name:'ياسر',seat:0,participation_role:'player'},
     {player_id:'pb',learner_id:'khaled',display_name:'خالد',seat:1,participation_role:'player'}
@@ -48,7 +48,7 @@ test('online XO terminal room becomes a server-timestamped history match',()=>{
 
 test('non-terminal online state does not create history',()=>{
   const built=buildOnlineRoomMatch({
-    roomRow:{id:'room-2',code:'123456',game_id:'rock-paper-scissors',created_at:'2026-09-25T18:00:00Z'},
+    roomRow:{id:'room-2',code:'123456',game_id:'rock-paper-scissors',history_family_id:'par-family-1',created_at:'2026-09-25T18:00:00Z'},
     players:[],version:2,state:{status:'playing',phase:'choosing'}
   });
   assert.equal(built,null);
@@ -56,7 +56,7 @@ test('non-terminal online state does not create history',()=>{
 
 test('family word online result maps player ids to learner ids and scores',()=>{
   const built=buildOnlineRoomMatch({
-    roomRow:{id:'room-3',code:'654321',game_id:'family-word-categories',created_at:'2026-09-25T18:00:00Z'},
+    roomRow:{id:'room-3',code:'654321',game_id:'family-word-categories',history_family_id:'par-family-1',created_at:'2026-09-25T18:00:00Z'},
     players:[
       {player_id:'pa',learner_id:'father',display_name:'الأب',seat:0,participation_role:'player'},
       {player_id:'pb',learner_id:'yasser',display_name:'ياسر',seat:1,participation_role:'player'}
@@ -67,4 +67,17 @@ test('family word online result maps player ids to learner ids and scores',()=>{
   assert.equal(built.ok,true);
   assert.deepEqual(built.value.winnerIds,['yasser']);
   assert.equal(built.value.players.find(p=>p.learnerId==='yasser').score,125);
+});
+
+
+test('online room without a family identity is not written to family history',()=>{
+  const built=buildOnlineRoomMatch({
+    roomRow:{id:'room-public',code:'111111',game_id:'xo',created_at:'2026-09-25T18:00:00Z'},
+    players:[
+      {player_id:'pa',learner_id:'yasser',display_name:'ياسر',seat:0,participation_role:'player'},
+      {player_id:'pb',learner_id:'khaled',display_name:'خالد',seat:1,participation_role:'player'}
+    ],
+    version:4,state:{status:'won',winner:'pa',round:1}
+  });
+  assert.equal(built,null);
 });
