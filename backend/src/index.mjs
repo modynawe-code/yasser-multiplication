@@ -2,7 +2,7 @@ import { hashPassword, normalizeEmail, randomId, randomSessionToken, SECURITY_DE
 import { DEFAULT_LEARNERS, normalizeLearnerSlug } from './learners.mjs';
 import { validateAttemptBatch, validateEvidenceBatch, validateSessionPayload } from './validation.mjs';
 import { handleGameRoomRequest } from './game-rooms.mjs';
-import { createLocalGameHistory,gameHistoryStats,listGameHistory } from './game-history.mjs';
+import { createGameHistoryDevice,createLocalGameHistory,gameHistoryStats,listGameHistory } from './game-history.mjs';
 import { handleVoiceRequest } from './voice.mjs';
 
 const JSON_HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store'};
@@ -141,7 +141,7 @@ async function snapshot(request,env,auth){
 
 export default{
   async fetch(request,env){
-    if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...corsHeaders(request,env),'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type,authorization,x-game-token','access-control-max-age':'86400'}});
+    if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...corsHeaders(request,env),'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type,authorization,x-game-token,x-family-game-token','access-control-max-age':'86400'}});
     const url=new URL(request.url),path=url.pathname;
     if(path==='/health'&&request.method==='GET')return response(request,env,200,{ok:true,service:'family-learning-api'});
     if(path==='/v1/auth/register'&&request.method==='POST')return register(request,env);
@@ -150,9 +150,22 @@ export default{
       const handled=await handleGameRoomRequest({request,env,readJson,respond:(status,body,extra)=>response(request,env,status,body,extra)});
       if(handled)return handled;
     }
-    if(path==='/v1/games/history'&&request.method==='POST')return createLocalGameHistory(request,env,(status,body,extra)=>response(request,env,status,body,extra),readJson);
-    if(path==='/v1/games/history'&&request.method==='GET')return listGameHistory(request,env,(status,body,extra)=>response(request,env,status,body,extra));
-    if(path==='/v1/games/stats'&&request.method==='GET')return gameHistoryStats(request,env,(status,body,extra)=>response(request,env,status,body,extra));
+    if(path==='/v1/games/history/device'&&request.method==='POST'){
+      const auth=await authenticate(request,env);
+      return createGameHistoryDevice(request,env,(status,body,extra)=>response(request,env,status,body,extra),auth,readJson);
+    }
+    if(path==='/v1/games/history'&&request.method==='POST'){
+      const auth=bearer(request)?await authenticate(request,env):null;
+      return createLocalGameHistory(request,env,(status,body,extra)=>response(request,env,status,body,extra),readJson,auth);
+    }
+    if(path==='/v1/games/history'&&request.method==='GET'){
+      const auth=bearer(request)?await authenticate(request,env):null;
+      return listGameHistory(request,env,(status,body,extra)=>response(request,env,status,body,extra),auth);
+    }
+    if(path==='/v1/games/stats'&&request.method==='GET'){
+      const auth=bearer(request)?await authenticate(request,env):null;
+      return gameHistoryStats(request,env,(status,body,extra)=>response(request,env,status,body,extra),auth);
+    }
     if(path==='/v1/voice/synthesize'&&request.method==='POST'){
       const optionalAuth=bearer(request)?await authenticate(request,env):null;
       return handleVoiceRequest({request,env,auth:optionalAuth,readJson,corsHeaders,respond:(status,body,extra)=>response(request,env,status,body,extra)});
