@@ -39,3 +39,9 @@ test('local pass-and-play and online room mode are separate interaction systems'
   assert.match(online,/رمز الغرفة/);
   assert.match(online,/pollIntervalMs:800/);
 });
+
+
+test('online controller module imports successfully',async()=>{
+  const module=await import('../src/modules/games/categories/categories-online-controller.js');
+  assert.equal(typeof module.createCategoriesOnlineController,'function');
+});
