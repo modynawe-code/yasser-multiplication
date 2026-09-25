@@ -53,7 +53,7 @@ function ensureShell(){
             <div><div class="fwc-section-title compact"><div><span>2</span><strong>وقت الجولة</strong></div></div><div class="fwc-choice-row" id="fwcDurationChoices"></div></div>
             <div><div class="fwc-section-title compact"><div><span>3</span><strong>عدد الجولات</strong></div></div><div class="fwc-choice-row" id="fwcRoundChoices"></div></div>
           </div>
-          <p class="fwc-rule-note">زر «خلصت» ما يتفعل إلا بعد تعبئة كل الخانات بالحرف الصحيح. بعد الجولة تحكمون على صحة الكلمات، والسرعة تُحسب فقط للإجابات المقبولة كلها.</p>
+          <p class="fwc-rule-note">زر «خلصت» ما يتفعل إلا بعد تعبئة كل الخانات بالحرف الصحيح. «الـ» في بداية الكلمة ما تُحسب من الحرف. بعد الجولة تحكمون على صحة الكلمات، والسرعة تُحسب فقط للإجابات المقبولة كلها.</p>
           <button class="btn primary fwc-start" id="fwcStart">ابدأ المباراة</button>
           <div class="fwc-history" id="fwcHistory"></div>
         </section>
