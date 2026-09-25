@@ -74,13 +74,13 @@ function levelFor(item,pageNumber=selectedPageNumber||firstPage(item)){
 }
 function saveLast(item,pageNumber,level=levelFor(item,pageNumber)){
   const current=loadProgress();
-  saveProgress({...current,last:{surahNumber:item.surahNumber,surahNameAr:item.surahNameAr,pageNumber,level,term,updatedAt:new Date().toISOString()}});
+  saveProgress({...current,last:{surahNumber:item.surahNumber,surahNameAr:item.surahNameAr,pageNumber,level,term,mode,updatedAt:new Date().toISOString()}});
   renderLast();
 }
 function setLevel(item,pageNumber,level){
   const current=loadProgress();
   const pageLevels={...(current.pageLevels||{}),[pageKey(item,pageNumber)]:level};
-  saveProgress({...current,pageLevels,last:{surahNumber:item.surahNumber,surahNameAr:item.surahNameAr,pageNumber,level,term,updatedAt:new Date().toISOString()}});
+  saveProgress({...current,pageLevels,last:{surahNumber:item.surahNumber,surahNameAr:item.surahNameAr,pageNumber,level,term,mode,updatedAt:new Date().toISOString()}});
   renderLast();
 }
 function completedPages(item){return item.mushafPages.filter(page=>levelFor(item,page.pageNumber)==='محفوظ').length;}
@@ -99,26 +99,22 @@ function ensureShell(){
   const view=document.createElement('section');view.id='yasserQuranView';view.className='view';
   view.innerHTML=`<div class="yasser-quran-shell">
     <header class="yasser-quran-head">
-      <div><div class="kicker">قرآن ياسر</div><h1>التلاوة والحفظ الغيب</h1><p>سادس ابتدائي • التعليم العام</p></div>
+      <div><div class="kicker">قرآن ياسر</div><h1>القرآن الكريم</h1><p>سادس ابتدائي • تلاوة وحفظ وتفسير</p></div>
       <button class="icon-btn" id="yasserQuranBack" type="button">رجوع</button>
     </header>
-    <section class="yasser-quran-video-card" aria-labelledby="yasserQalamVideoTitle">
-      <div class="yasser-quran-video-copy">
-        <span>تفسير بالفيديو</span>
-        <h2 id="yasserQalamVideoTitle">تفسير سورة القلم</h2>
-        <p>6 دروس قصيرة مرتبة من قائمة YouTube • الشيخ محمد العريفي</p>
-      </div>
-      <button type="button" id="yasserQuranQalamVideos">فتح الدروس</button>
-    </section>
     <div class="yasser-quran-tabs" role="group" aria-label="الفصل الدراسي">
       <button type="button" data-yq-term="1" aria-pressed="true">الفصل الأول</button>
       <button type="button" data-yq-term="2" aria-pressed="false">الفصل الثاني</button>
     </div>
-    <div class="yasser-quran-modes" role="group" aria-label="نوع الدراسة">
-      <button type="button" data-yq-mode="recitation" aria-pressed="true"><strong>التلاوة</strong><span>أقرأ من المصحف وأستمع</span></button>
-      <button type="button" data-yq-mode="memorization" aria-pressed="false"><strong>الحفظ غيب</strong><span>أتدرّب صفحة صفحة ثم أخفي المصحف</span></button>
+    <div class="yasser-quran-modes" role="group" aria-label="مسار الدراسة">
+      <button type="button" data-yq-mode="recitation" aria-pressed="true"><strong>التلاوة</strong><span>أقرأ وأستمع</span></button>
+      <button type="button" data-yq-mode="memorization" aria-pressed="false"><strong>الحفظ غيب</strong><span>أتدرّب صفحة صفحة</span></button>
+      <button type="button" data-yq-mode="interpretation" aria-pressed="false"><strong>التفسير</strong><span>دروس فيديو قصيرة</span></button>
     </div>
-    <p class="yasser-quran-last" id="yasserQuranLast">ابدأ أول سورة وسنحفظ آخر موضع لك.</p>
+    <section class="yasser-quran-last" id="yasserQuranLast">
+      <div><span>آخر نشاط</span><strong id="yasserQuranLastText">ابدأ أول سورة وسنحفظ آخر موضع لك.</strong></div>
+      <button type="button" id="yasserQuranContinue" hidden>متابعة</button>
+    </section>
     <div class="yasser-quran-list" id="yasserQuranList"></div>
     <section class="yasser-quran-stage" id="yasserQuranStage" hidden>
       <div class="yasser-quran-stage-head">
@@ -138,9 +134,15 @@ function ensureShell(){
 }
 
 function renderLast(){
-  const host=document.getElementById('yasserQuranLast');if(!host)return;
+  const host=document.getElementById('yasserQuranLastText');const button=document.getElementById('yasserQuranContinue');if(!host||!button)return;
   const last=loadProgress().last;
-  host.textContent=last?.surahNameAr?`آخر موضع: سورة ${last.surahNameAr}${last.pageNumber?` • صفحة ${last.pageNumber}`:''} • ${last.level}`:'ابدأ أول سورة وسنحفظ آخر موضع لك.';
+  if(last?.surahNameAr){
+    host.textContent=`سورة ${last.surahNameAr}${last.pageNumber?` • صفحة ${last.pageNumber}`:''} • ${last.level}`;
+    button.hidden=false;
+  }else{
+    host.textContent='ابدأ أول سورة وسنحفظ آخر موضع لك.';
+    button.hidden=true;
+  }
 }
 function renderTabs(){
   document.querySelectorAll('[data-yq-term]').forEach(button=>{const active=Number(button.dataset.yqTerm)===term;button.setAttribute('aria-pressed',String(active));button.classList.toggle('active',active);});
@@ -148,6 +150,14 @@ function renderTabs(){
 }
 function renderList(){
   const host=document.getElementById('yasserQuranList');if(!host)return;host.innerHTML='';
+  if(mode==='interpretation'){
+    const card=document.createElement('article');
+    card.className='yasser-quran-interpretation';
+    card.innerHTML=`<div class="yasser-quran-interpretation-mark" aria-hidden="true">ق</div><div><span>تفسير سورة القلم</span><strong>6 دروس فيديو</strong><small>الشيخ محمد العريفي • مرتبة من قائمة الدروس</small></div><button type="button" id="yasserQuranQalamVideos">فتح الدروس</button>`;
+    card.querySelector('#yasserQuranQalamVideos')?.addEventListener('click',openQalamVideos);
+    host.appendChild(card);
+    return;
+  }
   const items=YASSER_QURAN_TERMS[term][mode];
   items.forEach(item=>{
     const button=document.createElement('button');button.type='button';button.className='yasser-quran-surah';button.dataset.surah=String(item.surahNumber);
@@ -156,7 +166,7 @@ function renderList(){
       const done=completedPages(item),count=item.mushafPages.length;
       badge=`<span class="yasser-quran-level">${done?`${done}/${count} محفوظ`:pageCountLabel(item)}</span>`;
     }else badge=`<span class="yasser-quran-page">${pageCountLabel(item)}</span>`;
-    button.innerHTML=`<span class="yasser-quran-number">${item.surahNumber}</span><span class="yasser-quran-name"><strong>سورة ${item.surahNameAr}</strong><small>${mode==='memorization'?'حفظ غيب • صفحة صفحة':'تلاوة'}</small></span>${badge}`;
+    button.innerHTML=`<span class="yasser-quran-number">${item.surahNumber}</span><span class="yasser-quran-name"><strong>سورة ${item.surahNameAr}</strong><small>${mode==='memorization'?'صفحة صفحة':'من المصحف'}</small></span>${badge}`;
     button.addEventListener('click',()=>openSurah(item,button));host.appendChild(button);
   });
 }
@@ -165,7 +175,7 @@ function resetStage(){
   const stage=document.getElementById('yasserQuranStage');if(stage){stage.hidden=true;stage.classList.remove('blind');}
 }
 function setTerm(next){const value=Number(next);if(!YASSER_QURAN_TERMS[value]||value===term)return;term=value;resetStage();renderTabs();renderList();}
-function setMode(next){if(!['recitation','memorization'].includes(next)||next===mode)return;mode=next;resetStage();renderTabs();renderList();}
+function setMode(next){if(!['recitation','memorization','interpretation'].includes(next)||next===mode)return;mode=next;resetStage();renderTabs();renderList();}
 
 function updateLevelButton(){
   const button=document.getElementById('yasserQuranLevel');if(!button||!selected||!selectedPageNumber)return;
@@ -201,16 +211,28 @@ function openSurah(item,button){
   stage.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
 }
 
+async function openQalamVideos(){
+  destroyPlayer();
+  const {openYasserQalamVideoCourse}=await import('./yasser-quran-videos.js');
+  openYasserQalamVideoCourse({onBack:openYasserQuran});
+}
+function continueLast(){
+  const last=loadProgress().last;if(!last?.surahNumber)return;
+  const nextTerm=Number(last.term)||1;
+  const nextMode=['recitation','memorization'].includes(last.mode)?last.mode:'recitation';
+  const item=YASSER_QURAN_TERMS[nextTerm]?.[nextMode]?.find(entry=>entry.surahNumber===Number(last.surahNumber));
+  if(!item)return;
+  term=nextTerm;mode=nextMode;resetStage();renderTabs();renderList();
+  const button=document.querySelector(`.yasser-quran-surah[data-surah="${item.surahNumber}"]`);
+  if(button)openSurah(item,button);
+}
+
 function bind(){
   if(mounted)return;mounted=true;
   document.querySelectorAll('[data-yq-term]').forEach(button=>button.addEventListener('click',()=>setTerm(button.dataset.yqTerm)));
   document.querySelectorAll('[data-yq-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.yqMode)));
   document.getElementById('yasserQuranBack')?.addEventListener('click',()=>{destroyPlayer();document.body.classList.remove('yasser-quran-mode');show('homeView');});
-  document.getElementById('yasserQuranQalamVideos')?.addEventListener('click',async()=>{
-    destroyPlayer();
-    const {openYasserQalamVideoCourse}=await import('./yasser-quran-videos.js');
-    openYasserQalamVideoCourse({onBack:openYasserQuran});
-  });
+  document.getElementById('yasserQuranContinue')?.addEventListener('click',continueLast);
   document.getElementById('yasserQuranBlind')?.addEventListener('click',toggleBlind);
   document.getElementById('yasserQuranLevel')?.addEventListener('click',cycleLevel);
   document.getElementById('yasserQuranRepeat')?.addEventListener('change',event=>{repeatTarget=Number(event.target.value)||1;repeatCount=0;});
