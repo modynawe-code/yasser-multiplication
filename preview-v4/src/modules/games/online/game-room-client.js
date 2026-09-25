@@ -1,4 +1,5 @@
 import { FAMILY_API_PRODUCTION_BASE,getFamilyApiBase } from '../../../shared/config/family-api-config.js';
+import { getGameHistoryDeviceToken } from '../history/game-history-device-token.js';
 
 async function parseResponse(response){
   let body=null;try{body=await response.json();}catch{}
@@ -14,7 +15,7 @@ export function createGameRoomClient({baseUrl=getGameRoomApiBase(),fetchImpl=glo
   if(typeof fetchImpl!=='function')throw new TypeError('fetch implementation required');
   const base=String(baseUrl||'').replace(/\/$/,'');
   async function request(path,{method='GET',body,token}={}){
-    const headers={'content-type':'application/json'};if(token)headers['x-game-token']=token;
+    const headers={'content-type':'application/json'};if(token)headers['x-game-token']=token;const familyToken=getGameHistoryDeviceToken();if(familyToken)headers['x-family-game-token']=familyToken;
     const response=await fetchImpl(`${base}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
     return parseResponse(response);
   }
