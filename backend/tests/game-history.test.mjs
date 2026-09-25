@@ -43,7 +43,7 @@ test('online XO terminal room becomes a server-timestamped history match',()=>{
   assert.deepEqual(built.value.winnerIds,['yasser']);
   assert.equal(built.value.players.find(p=>p.learnerId==='yasser').outcome,'win');
   assert.equal(built.value.players.find(p=>p.learnerId==='khaled').outcome,'loss');
-  assert.equal(built.value.endedAt,'2026-09-25T18:04:00Z');
+  assert.equal(built.value.endedAt,'2026-09-25T18:04:00.000Z');
 });
 
 test('non-terminal online state does not create history',()=>{
