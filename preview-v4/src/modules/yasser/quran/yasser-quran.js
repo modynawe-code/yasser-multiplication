@@ -102,6 +102,14 @@ function ensureShell(){
       <div><div class="kicker">قرآن ياسر</div><h1>التلاوة والحفظ الغيب</h1><p>سادس ابتدائي • التعليم العام</p></div>
       <button class="icon-btn" id="yasserQuranBack" type="button">رجوع</button>
     </header>
+    <section class="yasser-quran-video-card" aria-labelledby="yasserQalamVideoTitle">
+      <div class="yasser-quran-video-copy">
+        <span>تفسير بالفيديو</span>
+        <h2 id="yasserQalamVideoTitle">تفسير سورة القلم</h2>
+        <p>6 دروس قصيرة مرتبة من قائمة YouTube • الشيخ محمد العريفي</p>
+      </div>
+      <button type="button" id="yasserQuranQalamVideos">فتح الدروس</button>
+    </section>
     <div class="yasser-quran-tabs" role="group" aria-label="الفصل الدراسي">
       <button type="button" data-yq-term="1" aria-pressed="true">الفصل الأول</button>
       <button type="button" data-yq-term="2" aria-pressed="false">الفصل الثاني</button>
@@ -198,6 +206,11 @@ function bind(){
   document.querySelectorAll('[data-yq-term]').forEach(button=>button.addEventListener('click',()=>setTerm(button.dataset.yqTerm)));
   document.querySelectorAll('[data-yq-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.yqMode)));
   document.getElementById('yasserQuranBack')?.addEventListener('click',()=>{destroyPlayer();document.body.classList.remove('yasser-quran-mode');show('homeView');});
+  document.getElementById('yasserQuranQalamVideos')?.addEventListener('click',async()=>{
+    destroyPlayer();
+    const {openYasserQalamVideoCourse}=await import('./yasser-quran-videos.js');
+    openYasserQalamVideoCourse({onBack:openYasserQuran});
+  });
   document.getElementById('yasserQuranBlind')?.addEventListener('click',toggleBlind);
   document.getElementById('yasserQuranLevel')?.addEventListener('click',cycleLevel);
   document.getElementById('yasserQuranRepeat')?.addEventListener('change',event=>{repeatTarget=Number(event.target.value)||1;repeatCount=0;});
