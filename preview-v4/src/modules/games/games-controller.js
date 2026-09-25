@@ -10,6 +10,7 @@ import { createGamePlayerService } from './core/game-player-service.js';
 import { createGameLauncher } from './core/game-launcher.js';
 import { createSpeechService } from '../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../ui/audio/feedback-audio.js';
+import { gameHistoryService } from './history/game-history-service.js';
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -20,7 +21,7 @@ function now(){return globalThis.performance?.now?.()??Date.now();}
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null;
+  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,localXoStartedAt=null,localXoRecordedKey='';
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -145,7 +146,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   function startLocalXo(){
     ensureLocalPair();if(localXoPlayers.length!==2){lobbyStatus('اختر لاعبين أولًا.',true);return;}
     onlineSession.forget();playMode='local';const startingPlayer=localXoPlayers[nextStarterIndex%2];nextStarterIndex=(nextStarterIndex+1)%2;
-    xoState=createXoState({players:[...localXoPlayers],startingPlayer});xoEvents.begin(xoState.players);
+    xoState=createXoState({players:[...localXoPlayers],startingPlayer});localXoStartedAt=new Date().toISOString();localXoRecordedKey='';xoEvents.begin(xoState.players);
     clearChallenge();setXoMode(true);if(byId('xoModeLabel'))byId('xoModeLabel').textContent='نسخة محلية — جهاز واحد';
     show('xoGameView');renderXo();beginTurnChallenge();
   }
@@ -224,7 +225,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
       return;
     }
     if(!xoState?.players?.length)return;const players=[...xoState.players],startingPlayer=players[nextStarterIndex%2];nextStarterIndex=(nextStarterIndex+1)%2;
-    xoState=createXoState({players,startingPlayer});xoEvents.begin(players);clearChallenge();setXoMode(true);renderXo();beginTurnChallenge();
+    xoState=createXoState({players,startingPlayer});localXoStartedAt=new Date().toISOString();localXoRecordedKey='';xoEvents.begin(players);clearChallenge();setXoMode(true);renderXo();beginTurnChallenge();
   }
 
   function participantVisualMarkup(player,{celebration=false}={}){
@@ -324,6 +325,16 @@ export function createGamesController({learningAdapter,challengePresentations=nu
     if(xoState.status==='playing')beginTurnChallenge();
     else{
       xoEvents.complete({players:xoState.players,winner:xoState.winner,status:xoState.status});
+      const historyKey=`${localXoStartedAt}:${xoState.status}:${xoState.winner||'draw'}:${xoState.moveCount||0}`;
+      if(localXoRecordedKey!==historyKey){
+        localXoRecordedKey=historyKey;
+        const winnerIds=xoState.status==='won'&&xoState.winner?[xoState.winner]:[];
+        void gameHistoryService.recordGameResult({
+          gameId:'xo',gameVersion:1,startedAt:localXoStartedAt,endedAt:new Date().toISOString(),winnerIds,
+          players:xoState.players.map((id,index)=>({learnerId:id,displayName:participant(id).displayName,seat:index,score:null,outcome:xoState.status==='draw'?'draw':winnerIds.includes(id)?'win':'loss'})),
+          details:{moveCount:xoState.moveCount||0}
+        });
+      }
       audio.achievement();speech.speak(xoState.status==='won'?`${participant(xoState.winner).displayName} فاز بالجولة. أحسنتم.`:'تعادل جميل. أحسنتم.');
     }
   }
