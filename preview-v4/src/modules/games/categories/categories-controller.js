@@ -10,7 +10,6 @@ import { applySystemInsets } from '../../../shared/ui/system-insets.js';
 import { gameHistoryService } from '../history/game-history-service.js';
 
 const byId=id=>document.getElementById(id);
-const HISTORY_KEY='family-word-categories-history-v1';
 const PLAYERS=Object.freeze([
   Object.freeze({id:'yasser',name:'ياسر',symbol:'🧑',avatar:'assets/visual/original/yasser/welcome.png'}),
   Object.freeze({id:'khaled',name:'خالد',symbol:'🧒',avatar:'assets/visual/original/khaled/khaled-point-thumbsup.png'}),
@@ -29,8 +28,6 @@ function playerById(id){return PLAYERS.find(player=>player.id===id)||null;}
 function localDayKey(date=new Date()){
   const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,'0'),d=String(date.getDate()).padStart(2,'0');return`${y}-${m}-${d}`;
 }
-function safeReadHistory(){try{const value=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
-function safeWriteHistory(history){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,60)));return true;}catch{return false;}}
 function formatSeconds(ms){return`${Math.max(0,Math.round(Number(ms||0)/1000))}ث`;}
 function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));}
 function visual(player){return player?.avatar?`<img src="${player.avatar}" alt="" decoding="async">`:`<span aria-hidden="true">${player?.symbol||'🎮'}</span>`;}
@@ -225,5 +222,5 @@ export function createCategoriesController({showView,onBack}={}){
     if(bound)return;bound=true;ensureShell();byId('fwcBack')?.addEventListener('click',()=>leave());document.querySelector('[data-fwc-mode="online"]')?.addEventListener('click',openOnline);byId('fwcStart')?.addEventListener('click',startMatch);byId('fwcBeginTurn')?.addEventListener('click',beginTurn);byId('fwcSubmit')?.addEventListener('click',submitActive);byId('fwcFinishJudge')?.addEventListener('click',finishJudge);byId('fwcNextRound')?.addEventListener('click',nextRound);byId('fwcNewMatch')?.addEventListener('click',renderSetup);
   }
   bind();
-  return Object.freeze({start,leave,getMatch(){return match;},getHistory:()=>Object.freeze([...safeReadHistory()])});
+  return Object.freeze({start,leave,getMatch(){return match;}});
 }
