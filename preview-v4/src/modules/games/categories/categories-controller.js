@@ -125,14 +125,7 @@ export function createCategoriesController({showView,onBack}={}){
     if(durations){durations.innerHTML=DURATIONS.map(value=>`<button type="button" data-fwc-duration="${value}" class="${durationSeconds===value?'selected':''}">${value} ثانية</button>`).join('');durations.querySelectorAll('[data-fwc-duration]').forEach(button=>button.addEventListener('click',()=>{durationSeconds=Number(button.dataset.fwcDuration);renderOptions();}));}
     if(rounds){rounds.innerHTML=ROUND_COUNTS.map(value=>`<button type="button" data-fwc-rounds="${value}" class="${targetRounds===value?'selected':''}">${value} جولات</button>`).join('');rounds.querySelectorAll('[data-fwc-rounds]').forEach(button=>button.addEventListener('click',()=>{targetRounds=Number(button.dataset.fwcRounds);renderOptions();}));}
   }
-  function renderHistory(){
-    const host=byId('fwcHistory');if(!host)return;const history=safeReadHistory(),today=localDayKey(),todayMatches=history.filter(item=>item.day===today);
-    const wins={};for(const item of todayMatches){for(const winnerId of item.winnerIds||[])wins[winnerId]=(wins[winnerId]||0)+1;}
-    const leaders=Object.entries(wins).sort((a,b)=>b[1]-a[1]);
-    if(!history.length){host.innerHTML='<strong>سجل الفوز</strong><p>أول مباراة بتفتح سجل أبطال العائلة 🏆</p>';return;}
-    const top=leaders[0],champion=top?playerById(top[0])?.name||top[0]:null;
-    host.innerHTML=`<strong>سجل اليوم</strong><p>${champion?`الأكثر فوزًا اليوم: <b>${escapeHtml(champion)}</b> — ${top[1]} فوز`:'ما فيه مباراة مكتملة اليوم.'}</p><div class="fwc-history-mini">${history.slice(0,5).map(item=>`<span><b>${escapeHtml((item.winnerNames||[]).join(' + ')||'تعادل')}</b><small>${escapeHtml(item.day)} · ${item.rounds} جولات</small></span>`).join('')}</div>`;
-  }
+  function renderHistory(){const host=byId('fwcHistory');if(host)host.innerHTML='<strong>سجل العائلة</strong><p>النتائج الرسمية تحفظ على السيرفر وتظهر من صفحة سجل العائلة في منطقة الألعاب.</p>';}
   function renderSetup(){stopTimer();match=null;hideStages();byId('fwcSetup').hidden=false;renderPicker();renderOptions();renderHistory();}
 
   function startMatch(){
