@@ -76,6 +76,22 @@ export function ensureGamesShell(){
           <button type="button" data-history-days="30">هذا الشهر</button>
         </div>
         <p class="games-history-status" id="gamesHistoryStatus" role="status"></p>
+        <section class="games-history-pair" id="gamesHistoryPair" hidden>
+          <div>
+            <strong>ربط هذا الجهاز بسجل العائلة</strong>
+            <p>مرة واحدة فقط. بعدها كل الألعاب تحفظ نتائجها على السيرفر تلقائيًا.</p>
+          </div>
+          <div class="games-history-auth">
+            <input id="gamesHistoryEmail" type="email" autocomplete="username" placeholder="بريد ولي الأمر">
+            <input id="gamesHistoryPassword" type="password" autocomplete="current-password" placeholder="كلمة المرور (10 أحرف أو أكثر)">
+            <div>
+              <button class="btn primary" id="gamesHistoryPairLogin">ربط بحساب موجود</button>
+              <button class="btn secondary" id="gamesHistoryPairRegister">إنشاء حساب وربط</button>
+            </div>
+          </div>
+          <p class="games-history-pair-status" id="gamesHistoryPairStatus" role="status"></p>
+        </section>
+        <div id="gamesHistoryContent">
         <section class="games-history-leaders">
           <div class="games-history-title"><strong>كأس العائلة</strong><small>الفوز 3 • التعادل 1</small></div>
           <div class="games-history-stats" id="gamesHistoryStats"></div>
@@ -84,6 +100,7 @@ export function ensureGamesShell(){
           <div class="games-history-title"><strong>المباريات</strong><small>التاريخ والوقت من السجل</small></div>
           <div class="games-history-list" id="gamesHistoryList"></div>
         </section>
+        </div>
       </div>
     </section>
 
