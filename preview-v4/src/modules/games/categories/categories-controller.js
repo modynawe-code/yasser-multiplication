@@ -46,6 +46,7 @@ function ensureShell(){
         </header>
 
         <section id="fwcSetup" class="fwc-panel">
+          <div class="fwc-mode-switch" role="group" aria-label="طريقة اللعب"><button type="button" class="selected" data-fwc-mode="local">على نفس الجهاز</button><button type="button" data-fwc-mode="online">كل واحد من جهازه</button></div>
           <div class="fwc-section-title"><div><span>1</span><strong>مين بيلعب؟</strong></div><small>اختر من 2 إلى 5 لاعبين</small></div>
           <div class="fwc-player-picker" id="fwcPlayerPicker"></div>
 
@@ -89,7 +90,7 @@ function ensureShell(){
 }
 
 export function createCategoriesController({showView,onBack}={}){
-  let bound=false,timer=null,selectedPlayers=['yasser','khaled'],durationSeconds=90,targetRounds=3,match=null;
+  let bound=false,timer=null,selectedPlayers=['yasser','khaled'],durationSeconds=90,targetRounds=3,match=null,onlineController=null;
 
   function setMode(active){document.body.classList.toggle('categories-game-mode',Boolean(active));}
   function hideStages(){for(const id of ['fwcSetup','fwcPlay','fwcJudge','fwcResult']){const node=byId(id);if(node)node.hidden=true;}}
@@ -187,10 +188,20 @@ export function createCategoriesController({showView,onBack}={}){
     hideStages();byId('fwcResult').hidden=false;byId('fwcResultEyebrow').textContent='النتيجة النهائية';byId('fwcResultTitle').textContent=winnerIds.length>1?`تعادل ${winnerNames.join(' و ')} 🤝`:`${winnerNames[0]} بطل المباراة 🏆`;byId('fwcResultCopy').textContent=`تم حفظ الفوز في سجل اليوم — ${match.rounds.length} جولات.`;byId('fwcScoreboard').innerHTML=scoreboardMarkup(total);byId('fwcNextRound').hidden=true;byId('fwcNewMatch').hidden=false;
   }
 
-  function start(){ensureShell();setMode(true);showView?.('categoriesGameView');renderSetup();}
-  function leave({navigate=true}={}){stopTimer();match=null;setMode(false);if(navigate)onBack?.();}
+  async function openOnline(){
+    stopTimer();
+    try{
+      if(!onlineController){
+        const module=await import('./categories-online-controller.js');
+        onlineController=module.createCategoriesOnlineController({showView,onBack:()=>{showView?.('categoriesGameView');renderSetup();}});
+      }
+      onlineController.start();
+    }catch{showView?.('categoriesGameView');renderSetup();}
+  }
+  function start(){ensureShell();onlineController?.stop?.();setMode(true);showView?.('categoriesGameView');renderSetup();}
+  function leave({navigate=true}={}){stopTimer();onlineController?.stop?.();match=null;setMode(false);if(navigate)onBack?.();}
   function bind(){
-    if(bound)return;bound=true;ensureShell();byId('fwcBack')?.addEventListener('click',()=>leave());byId('fwcStart')?.addEventListener('click',startMatch);byId('fwcSubmit')?.addEventListener('click',submitActive);byId('fwcFinishJudge')?.addEventListener('click',finishJudge);byId('fwcNextRound')?.addEventListener('click',nextRound);byId('fwcNewMatch')?.addEventListener('click',renderSetup);
+    if(bound)return;bound=true;ensureShell();byId('fwcBack')?.addEventListener('click',()=>leave());document.querySelector('[data-fwc-mode="online"]')?.addEventListener('click',openOnline);byId('fwcStart')?.addEventListener('click',startMatch);byId('fwcSubmit')?.addEventListener('click',submitActive);byId('fwcFinishJudge')?.addEventListener('click',finishJudge);byId('fwcNextRound')?.addEventListener('click',nextRound);byId('fwcNewMatch')?.addEventListener('click',renderSetup);
   }
   bind();
   return Object.freeze({start,leave,getMatch(){return match;},getHistory:()=>Object.freeze([...safeReadHistory()])});
