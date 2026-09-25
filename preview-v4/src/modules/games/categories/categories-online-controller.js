@@ -4,7 +4,6 @@ import { createGameRoomClient } from '../online/game-room-client.js';
 import { applySystemInsets } from '../../../shared/ui/system-insets.js';
 
 const byId=id=>document.getElementById(id);
-const HISTORY_KEY='family-word-categories-history-v1';
 const IDENTITY_KEY='family-word-categories-online-player-v1';
 const PLAYERS=Object.freeze([
   Object.freeze({id:'yasser',name:'ياسر',symbol:'🧑',avatar:'assets/visual/original/yasser/welcome.png'}),
@@ -18,8 +17,6 @@ const visual=player=>player?.avatar?`<img src="${player.avatar}" alt="" decoding
 const playerByLearner=id=>PLAYERS.find(player=>player.id===id)||null;
 const comparableAnswer=value=>{const normalized=normalizeArabicAnswer(value);return normalized.startsWith('ال')&&normalized.length>2?normalized.slice(2):normalized;};
 const localDayKey=(date=new Date())=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-function safeReadHistory(){try{const value=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
-function safeWriteHistory(history){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,60)));return true;}catch{return false;}}
 function loadIdentity(){try{return String(localStorage.getItem(IDENTITY_KEY)||'');}catch{return'';}}
 function saveIdentity(id){try{localStorage.setItem(IDENTITY_KEY,id);}catch{}return id;}
 function ensureStyle(){if(document.querySelector('link[data-module-style="family-word-categories-online"]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/games/categories/categories-online.css';link.dataset.moduleStyle='family-word-categories-online';document.head.appendChild(link);}
