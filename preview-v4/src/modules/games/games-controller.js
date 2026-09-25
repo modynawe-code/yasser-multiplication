@@ -18,11 +18,12 @@ function byId(id){return document.getElementById(id);}
 function categoryLabel(category){return category==='educational'?'تعليمية':category==='fun'?'مرح':'تعليم + مرح';}
 function learningLabel(mode){return mode==='required'?'تعلم أساسي':mode==='optional'?'تعلم اختياري':mode==='adaptive'?'تعلم متكيف':'مرح فقط';}
 function now(){return globalThis.performance?.now?.()??Date.now();}
+function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
   let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,localXoStartedAt=null,localXoRecordedKey='';
-  let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
+  let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false,historyDays=7;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
   const gamePlayers=createGamePlayerService({learningAdapter});
@@ -91,7 +92,39 @@ export function createGamesController({learningAdapter,challengePresentations=nu
     onBeforeEnter?.();
     categoriesController?.leave?.({navigate:false});
     onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode','categories-game-mode');
-    enterGamesChrome();renderCatalog();show('gamesHomeView');
+    enterGamesChrome();void gameHistoryService.flushPending();renderCatalog();show('gamesHomeView');
+  }
+
+  function gameTitle(gameId){return gameRegistry.get(gameId)?.title||gameId||'لعبة';}
+  function historyDate(value){
+    try{return new Intl.DateTimeFormat('ar-SA',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));}catch{return String(value||'');}
+  }
+  function historyWinnerText(match){
+    const winners=(match.players||[]).filter(player=>player.outcome==='win').map(player=>player.displayName);
+    if(winners.length)return `الفائز: ${winners.join(' و ')}`;
+    if((match.players||[]).some(player=>player.outcome==='draw'))return'تعادل';
+    return'مباراة مكتملة';
+  }
+  async function openGameHistory(days=historyDays){
+    historyDays=Number(days)||7;show('gamesHistoryView');
+    document.querySelectorAll('[data-history-days]').forEach(button=>button.classList.toggle('selected',Number(button.dataset.historyDays)===historyDays));
+    const status=byId('gamesHistoryStatus'),statsHost=byId('gamesHistoryStats'),list=byId('gamesHistoryList');
+    if(status){status.textContent='جاري تحميل سجل السيرفر…';status.classList.remove('error');}
+    if(statsHost)statsHost.innerHTML='';if(list)list.innerHTML='';
+    try{
+      await gameHistoryService.flushPending();
+      const [history,stats]=await Promise.all([gameHistoryService.getHistory({limit:100}),gameHistoryService.getStats({days:historyDays})]);
+      const since=Date.now()-historyDays*86400000,matches=(history.matches||[]).filter(item=>Date.parse(item.endedAt||item.recordedAt)>=since);
+      if(statsHost)statsHost.innerHTML=(stats.players||[]).length?(stats.players||[]).map((player,index)=>`<article class="games-history-stat"><strong>${index===0?'🏆 ':''}${escapeHtml(player.displayName)}</strong><span>${Number(player.cupPoints||0)}</span><small>${Number(player.wins||0)} فوز • ${Number(player.draws||0)} تعادل • ${Number(player.matches||0)} مباراة</small></article>`).join(''):'<div class="games-history-empty">ما فيه نتائج في هذه الفترة.</div>';
+      if(list)list.innerHTML=matches.length?matches.map(match=>{
+        const scores=(match.players||[]).filter(p=>p.score!==null&&p.score!==undefined).map(p=>`${escapeHtml(p.displayName)} ${Number(p.score)}`).join(' • ');
+        return `<article class="games-history-match"><div><strong>${escapeHtml(gameTitle(match.gameId))} — ${match.playMode==='online'?'أونلاين':'نفس الجهاز'}</strong><p>${escapeHtml(historyWinnerText(match))}${scores?` • ${scores}`:''}</p></div><time>${escapeHtml(historyDate(match.endedAt||match.recordedAt))}</time></article>`;
+      }).join(''):'<div class="games-history-empty">ما فيه مباريات محفوظة في هذه الفترة.</div>';
+      const pending=gameHistoryService.pendingCount();if(status)status.textContent=pending?`فيه ${pending} نتيجة تنتظر رجوع الإنترنت للرفع.`:'السجل متزامن مع السيرفر ✓';
+    }catch{
+      if(status){status.textContent='تعذر تحميل سجل السيرفر الآن.';status.classList.add('error');}
+      if(list)list.innerHTML='<div class="games-history-empty">تحقق من الاتصال ثم جرّب مرة ثانية.</div>';
+    }
   }
 
   function renderCatalog(){
@@ -348,7 +381,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
 
   function bind(){
     if(bound)return;bound=true;ensureGamesShell();renderLobbyParticipants();
-    byId('gamesOpenBtn')?.addEventListener('click',enterHome);byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});
+    byId('gamesOpenBtn')?.addEventListener('click',enterHome);byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});byId('gamesHistoryBtn')?.addEventListener('click',()=>openGameHistory(historyDays));byId('gamesHistoryBack')?.addEventListener('click',()=>{renderCatalog();show('gamesHomeView');});document.querySelectorAll('[data-history-days]').forEach(button=>button.addEventListener('click',()=>openGameHistory(Number(button.dataset.historyDays))));
     byId('xoLobbyBack')?.addEventListener('click',backToGames);byId('xoLocalStart')?.addEventListener('click',startLocalXo);byId('xoOnlineCreate')?.addEventListener('click',createOnlineRoom);byId('xoOnlineJoin')?.addEventListener('click',joinOnlineRoom);
     byId('xoRoomCodeInput')?.addEventListener('input',event=>{event.target.value=String(event.target.value||'').replace(/\D/g,'').slice(0,6);});
     byId('xoBackToGames')?.addEventListener('click',backToGames);byId('xoReset')?.addEventListener('click',resetXo);byId('xoHearChallenge')?.addEventListener('click',()=>{const challenge=challengeState?.challenge;if(challenge)speech.speak(challenge.spokenPrompt||challenge.prompt||'');});
