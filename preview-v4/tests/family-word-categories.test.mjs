@@ -14,6 +14,7 @@ test('normalizes Arabic variants for fair letter matching',()=>{
 test('ignores the Arabic definite article when matching and comparing answers',()=>{
   assert.equal(answerStartsWithLetter('السعودية','س'),true);
   assert.equal(answerStartsWithLetter('الأردن','ا'),true);
+  assert.equal(answerStartsWithLetter('ألمانيا','ا'),true);
   const players=[{id:'a'},{id:'b'}];
   const a={person:'سالم',animal:'سمكة',plant:'سدر',object:'ساعة',country:'السعودية'};
   const b={person:'سامي',animal:'سمكة',plant:'سمسم',object:'سيف',country:'سعودية'};
