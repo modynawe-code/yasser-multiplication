@@ -108,7 +108,13 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   async function openGameHistory(days=historyDays){
     historyDays=Number(days)||7;show('gamesHistoryView');
     document.querySelectorAll('[data-history-days]').forEach(button=>button.classList.toggle('selected',Number(button.dataset.historyDays)===historyDays));
-    const status=byId('gamesHistoryStatus'),statsHost=byId('gamesHistoryStats'),list=byId('gamesHistoryList');
+    const status=byId('gamesHistoryStatus'),statsHost=byId('gamesHistoryStats'),list=byId('gamesHistoryList'),pair=byId('gamesHistoryPair'),content=byId('gamesHistoryContent');
+    const paired=gameHistoryService.isPaired();
+    if(pair)pair.hidden=paired;if(content)content.hidden=!paired;
+    if(!paired){
+      if(status){status.textContent='اربط الجهاز مرة واحدة عشان ينحفظ سجل الألعاب على السيرفر.';status.classList.remove('error');}
+      return;
+    }
     if(status){status.textContent='جاري تحميل سجل السيرفر…';status.classList.remove('error');}
     if(statsHost)statsHost.innerHTML='';if(list)list.innerHTML='';
     try{
@@ -124,6 +130,17 @@ export function createGamesController({learningAdapter,challengePresentations=nu
     }catch{
       if(status){status.textContent='تعذر تحميل سجل السيرفر الآن.';status.classList.add('error');}
       if(list)list.innerHTML='<div class="games-history-empty">تحقق من الاتصال ثم جرّب مرة ثانية.</div>';
+    }
+  }
+  async function pairGameHistory(createAccount=false){
+    const email=byId('gamesHistoryEmail')?.value||'',password=byId('gamesHistoryPassword')?.value||'',status=byId('gamesHistoryPairStatus');
+    if(status)status.textContent='جاري الربط…';
+    try{
+      await gameHistoryService.pairDevice({email,password,createAccount});
+      if(status)status.textContent='تم الربط ✓';
+      await openGameHistory(historyDays);
+    }catch(error){
+      if(status)status.textContent=error?.status===409?'الحساب موجود، استخدم «ربط بحساب موجود».':'تعذر الربط. تحقق من البريد وكلمة المرور.';
     }
   }
 
@@ -381,7 +398,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
 
   function bind(){
     if(bound)return;bound=true;ensureGamesShell();renderLobbyParticipants();
-    byId('gamesOpenBtn')?.addEventListener('click',enterHome);byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});byId('gamesHistoryBtn')?.addEventListener('click',()=>openGameHistory(historyDays));byId('gamesHistoryBack')?.addEventListener('click',()=>{renderCatalog();show('gamesHomeView');});document.querySelectorAll('[data-history-days]').forEach(button=>button.addEventListener('click',()=>openGameHistory(Number(button.dataset.historyDays))));
+    byId('gamesOpenBtn')?.addEventListener('click',enterHome);byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});byId('gamesHistoryBtn')?.addEventListener('click',()=>openGameHistory(historyDays));byId('gamesHistoryBack')?.addEventListener('click',()=>{renderCatalog();show('gamesHomeView');});byId('gamesHistoryPairLogin')?.addEventListener('click',()=>pairGameHistory(false));byId('gamesHistoryPairRegister')?.addEventListener('click',()=>pairGameHistory(true));document.querySelectorAll('[data-history-days]').forEach(button=>button.addEventListener('click',()=>openGameHistory(Number(button.dataset.historyDays))));
     byId('xoLobbyBack')?.addEventListener('click',backToGames);byId('xoLocalStart')?.addEventListener('click',startLocalXo);byId('xoOnlineCreate')?.addEventListener('click',createOnlineRoom);byId('xoOnlineJoin')?.addEventListener('click',joinOnlineRoom);
     byId('xoRoomCodeInput')?.addEventListener('input',event=>{event.target.value=String(event.target.value||'').replace(/\D/g,'').slice(0,6);});
     byId('xoBackToGames')?.addEventListener('click',backToGames);byId('xoReset')?.addEventListener('click',resetXo);byId('xoHearChallenge')?.addEventListener('click',()=>{const challenge=challengeState?.challenge;if(challenge)speech.speak(challenge.spokenPrompt||challenge.prompt||'');});
