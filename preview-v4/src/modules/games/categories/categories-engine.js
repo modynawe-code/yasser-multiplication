@@ -33,8 +33,8 @@ function comparableArabicAnswer(value){
 }
 
 export function answerStartsWithLetter(answer,letter){
-  const normalized=comparableArabicAnswer(answer),target=normalizeArabicAnswer(letter);
-  return Boolean(normalized&&target&&normalized.startsWith(target));
+  const normalized=normalizeArabicAnswer(answer),comparable=comparableArabicAnswer(answer),target=normalizeArabicAnswer(letter);
+  return Boolean(normalized&&target&&(normalized.startsWith(target)||comparable.startsWith(target)));
 }
 
 export function validateAnswerSheet({answers={},letter,categories=FAMILY_WORD_CATEGORIES}={}){
