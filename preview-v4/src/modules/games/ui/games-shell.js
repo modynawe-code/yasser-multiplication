@@ -59,8 +59,31 @@ export function ensureGamesShell(){
           <button class="icon-btn" id="gamesBackToHub" data-nav="back">اختيار الطفل</button>
           <div><div class="kicker">منطقة الألعاب</div><h1>نلعب ونتعلم معًا</h1><p>ألعاب فردية ومشتركة، تعليمية وللمرح.</p></div>
         </header>
-        <div class="games-filter-note">اختر اللعبة اللي تبغاها وابدأ التحدي ⭐</div>
+        <div class="games-filter-row"><div class="games-filter-note">اختر اللعبة اللي تبغاها وابدأ التحدي ⭐</div><button class="btn secondary games-history-open" id="gamesHistoryBtn">🏆 سجل العائلة</button></div>
         <div class="games-grid" id="gamesCatalog"></div>
+      </div>
+    </section>
+
+    <section id="gamesHistoryView" class="view">
+      <div class="games-shell games-history-shell">
+        <header class="games-header">
+          <button class="icon-btn" id="gamesHistoryBack" data-nav="back">الألعاب</button>
+          <div><div class="kicker">سجل العائلة</div><h1>النتائج وكأس العائلة</h1><p>السجل الرسمي محفوظ على السيرفر لكل الألعاب.</p></div>
+        </header>
+        <div class="games-history-periods" role="group" aria-label="فترة السجل">
+          <button type="button" data-history-days="1">اليوم</button>
+          <button type="button" class="selected" data-history-days="7">هذا الأسبوع</button>
+          <button type="button" data-history-days="30">هذا الشهر</button>
+        </div>
+        <p class="games-history-status" id="gamesHistoryStatus" role="status"></p>
+        <section class="games-history-leaders">
+          <div class="games-history-title"><strong>كأس العائلة</strong><small>الفوز 3 • التعادل 1</small></div>
+          <div class="games-history-stats" id="gamesHistoryStats"></div>
+        </section>
+        <section class="games-history-matches">
+          <div class="games-history-title"><strong>المباريات</strong><small>التاريخ والوقت من السجل</small></div>
+          <div class="games-history-list" id="gamesHistoryList"></div>
+        </section>
       </div>
     </section>
 
