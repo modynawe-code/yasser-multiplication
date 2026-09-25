@@ -6,6 +6,7 @@ import { createRpsOnlineSession,normalizeOnlineRpsRoom } from './rps-online-sess
 import { createGameRoomClient } from '../online/game-room-client.js';
 import { ensureRpsShell } from './rps-shell.js';
 import { getGameParticipant,listGameParticipants,gameParticipantMarkup } from '../core/game-participant-registry.js';
+import { gameHistoryService } from '../history/game-history-service.js';
 
 const CHOICES=RPS_CHOICE_META;
 const RPS_INTRO_DURATION_MS=2200;
@@ -13,7 +14,7 @@ const RPS_INTRO_REDUCED_MOTION_DURATION_MS=1800;
 const byId=id=>document.getElementById(id);
 
 export function createRpsController({showView,onBack,onGameEvent,roomClient=createGameRoomClient()}={}){
-  let bound=false,state=null,introTimer=null,transitionTimer=null,interactionLocked=false,selectedPlayers=[];
+  let bound=false,state=null,introTimer=null,transitionTimer=null,interactionLocked=false,selectedPlayers=[],localMatchStartedAt=null,localRecordedKey='';
   let playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineLastStatus='',onlineMatchSequence=0,onlineCompletionKey='',onlineFinishShownKey='';
   const gameAudio=createRpsAudio(),gameEvents=createRpsEventBridge({onEvent:onGameEvent});
   const onlineSession=createRpsOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -121,7 +122,7 @@ export function createRpsController({showView,onBack,onGameEvent,roomClient=crea
   }
   function beginMatch(){
     if(playMode!=='local')return;ensureSelectedPair();if(selectedPlayers.length!==2)return;
-    state=createRpsState({players:[...selectedPlayers],targetScore:3});gameEvents.begin(state.players);syncScore();renderIntro();
+    state=createRpsState({players:[...selectedPlayers],targetScore:3});localMatchStartedAt=new Date().toISOString();localRecordedKey='';gameEvents.begin(state.players);syncScore();renderIntro();
   }
 
   function renderIntro(){
@@ -214,6 +215,16 @@ export function createRpsController({showView,onBack,onGameEvent,roomClient=crea
     }else{
       if(playAgain){playAgain.disabled=false;playAgain.textContent='العبوا مرة ثانية';}if(change)change.hidden=false;
       gameEvents.complete({players:state?.players||[],winner:winnerId,scores:state?.scores||{},round:state?.round||null});
+      const historyKey=`${localMatchStartedAt}:${winnerId||''}:${JSON.stringify(state?.scores||{})}`;
+      if(localRecordedKey!==historyKey){
+        localRecordedKey=historyKey;
+        const winnerIds=winnerId?[winnerId]:[];
+        void gameHistoryService.recordGameResult({
+          gameId:'rock-paper-scissors',gameVersion:1,startedAt:localMatchStartedAt,endedAt:new Date().toISOString(),winnerIds,
+          players:(state?.players||[]).map((id,index)=>({learnerId:id,displayName:participant(id)?.displayName||id,seat:index,score:Number(state?.scores?.[id]||0),outcome:winnerIds.includes(id)?'win':'loss'})),
+          details:{round:state?.round||null,targetScore:state?.targetScore||3}
+        });
+      }
     }
     const reset=byId('rpsResetMatch');if(reset)reset.disabled=false;
     if(winner)gameAudio.win(winner);
@@ -257,7 +268,7 @@ export function createRpsController({showView,onBack,onGameEvent,roomClient=crea
       onlineBusy=true;try{await onlineSession.reset();}catch(error){handleOnlineError(error);}finally{onlineBusy=false;}return;
     }
     if(!state){renderSetup();return;}
-    const result=resetRpsMatch(state);if(!result.ok)return;state=result.state;gameEvents.begin(state.players);renderIntro();
+    const result=resetRpsMatch(state);if(!result.ok)return;state=result.state;localMatchStartedAt=new Date().toISOString();localRecordedKey='';gameEvents.begin(state.players);renderIntro();
   }
 
   function onlineFinishKey(next=state){return `${onlineSession.snapshot.code}:${next?.round||0}:${next?.matchWinner||''}`;}
