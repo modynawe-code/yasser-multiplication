@@ -124,8 +124,24 @@ export function mountQuranSurahPlayer(host,{
   root.append(figure,transport,progressWrap,status);
   host.appendChild(root);
 
-  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0;
-  const finiteDuration=()=>Number.isFinite(audio.duration)&&audio.duration>0?audio.duration:0;
+  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=0;
+  const rangeEnd=range=>{
+    try{
+      const length=Number(range?.length)||0;
+      if(!length)return 0;
+      const end=Number(range.end(length-1));
+      return Number.isFinite(end)&&end>0?end:0;
+    }catch{return 0;}
+  };
+  const finiteDuration=()=>{
+    const direct=Number(audio.duration);
+    if(Number.isFinite(direct)&&direct>0)knownDuration=Math.max(knownDuration,direct);
+    else{
+      const seekableEnd=rangeEnd(audio.seekable);
+      if(seekableEnd>0)knownDuration=Math.max(knownDuration,seekableEnd);
+    }
+    return knownDuration;
+  };
   const seekValue=()=>{const duration=finiteDuration();if(!duration)return 0;return Math.max(0,Math.min(duration,Number(progress.value)||0));};
   const paintSeek=(value,duration)=>{
     const safeDuration=Number.isFinite(duration)&&duration>0?duration:0;
@@ -163,10 +179,11 @@ export function mountQuranSurahPlayer(host,{
     if(destroyed||seeking)return;
     const duration=finiteDuration(),current=Number(audio.currentTime)||0;
     if(duration){progress.disabled=false;progress.max=String(duration);progress.value=String(Math.min(duration,current));}
-    paintSeek(current,duration);time.textContent=`${formatTime(current)} / ${formatTime(audio.duration)}`;
+    if(!duration)progress.disabled=true;
+    paintSeek(current,duration);time.textContent=`${formatTime(current)} / ${duration?formatTime(duration):'--:--'}`;
   };
   const beginSeek=()=>{if(seeking||!finiteDuration())return;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
-  const previewSeek=()=>{const duration=finiteDuration();if(!duration)return;if(!seeking)beginSeek();const target=seekValue();try{audio.currentTime=target;}catch{}paintSeek(target,duration);time.textContent=`${formatTime(target)} / ${formatTime(audio.duration)}`;};
+  const previewSeek=()=>{const duration=finiteDuration();if(!duration)return;if(!seeking)beginSeek();const target=seekValue();try{audio.currentTime=target;}catch{}paintSeek(target,duration);time.textContent=`${formatTime(target)} / ${formatTime(duration)}`;};
   const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;const shouldResume=resumeAfterSeek,target=seekValue();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
   const markCompleted=()=>{completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();};
   const playAudio=async()=>{try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';return true;}catch{status.textContent=retryPlayText;return false;}};
@@ -179,7 +196,13 @@ export function mountQuranSurahPlayer(host,{
   viewport.addEventListener('touchstart',event=>{const touch=event.changedTouches?.[0];if(!touch)return;touchStartX=touch.clientX;touchStartY=touch.clientY;},{passive:true});
   viewport.addEventListener('touchend',event=>{const touch=event.changedTouches?.[0];if(!touch)return;const dx=touch.clientX-touchStartX,dy=touch.clientY-touchStartY;if(Math.abs(dx)<45||Math.abs(dx)<=Math.abs(dy)*1.2)return;if(dx<0)changePage(pageIndex+1);else changePage(pageIndex-1);},{passive:true});
   progress.addEventListener('pointerdown',beginSeek);progress.addEventListener('input',previewSeek);progress.addEventListener('change',commitSeek);progress.addEventListener('pointerup',commitSeek);progress.addEventListener('pointercancel',commitSeek);
-  audio.addEventListener('timeupdate',updateProgress);audio.addEventListener('loadedmetadata',()=>{const duration=finiteDuration();if(duration){progress.disabled=false;progress.max=String(duration);}updateProgress();});audio.addEventListener('durationchange',updateProgress);audio.addEventListener('ended',markCompleted);audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
+  audio.addEventListener('timeupdate',updateProgress);
+  audio.addEventListener('loadedmetadata',updateProgress);
+  audio.addEventListener('durationchange',updateProgress);
+  audio.addEventListener('progress',updateProgress);
+  audio.addEventListener('canplay',updateProgress);
+  audio.addEventListener('ended',markCompleted);
+  audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
   image.addEventListener('load',()=>{figure.removeAttribute('data-image-error');});
   image.addEventListener('error',()=>{const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
 
