@@ -29,3 +29,9 @@ test('shared family video course keeps progress, navigation, fullscreen and YouT
   assert.match(source,/nativeFallback/);
   assert.match(source,/youtube\.com\/embed/);
 });
+
+
+test('shared video course module parses and exports its factory',async()=>{
+  const module=await import('../src/shared/video-course/video-course.js');
+  assert.equal(typeof module.createVideoCourse,'function');
+});
