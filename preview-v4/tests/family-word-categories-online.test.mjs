@@ -16,3 +16,11 @@ test('family word categories exposes local and multi-device online modes',async(
   assert.match(online,/session\.submit\('judge'/);
   assert.match(online,/family-word-categories-history-v1/);
 });
+
+
+test('multi-device countdown corrects local device time against the server clock',async()=>{
+  const online=await read('src/modules/games/categories/categories-online-controller.js');
+  assert.match(online,/serverNow/);
+  assert.match(online,/clockOffset/);
+  assert.match(online,/Date\.now\(\)\+clockOffset/);
+});

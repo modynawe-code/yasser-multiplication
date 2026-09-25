@@ -21,3 +21,14 @@ test('shared timer starts server-side and early finish requires a complete valid
   assert.equal(s.submissions.a.elapsedMs,4000);
   assert.deepEqual(projectFamilyWordCategoriesRoomState(s,{viewerPlayerId:'b'}).submissions,{});
 });
+
+
+test('room projection exposes the authoritative server clock without leaking live answers',()=>{
+  let s=applyFamilyWordCategoriesRoomAction(room(),{playerId:'a',type:'start'},{nowMs:1000}).state;
+  const answers=Object.fromEntries(s.categories.map(k=>[k,`${s.letter}لف`]));
+  s=applyFamilyWordCategoriesRoomAction(s,{playerId:'a',type:'submit',payload:{answers}},{nowMs:5000}).state;
+  const projected=projectFamilyWordCategoriesRoomState(s,{viewerPlayerId:'b'});
+  assert.equal(Number.isFinite(projected.serverNow),true);
+  assert.deepEqual(projected.submittedPlayers,['a']);
+  assert.deepEqual(projected.submissions,{});
+});

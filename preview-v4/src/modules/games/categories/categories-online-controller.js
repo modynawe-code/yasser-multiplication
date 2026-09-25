@@ -48,8 +48,8 @@ function ensureShell(){
 }
 
 export function createCategoriesOnlineController({showView,onBack,roomClient=createGameRoomClient()}={}){
-  let bound=false,room=null,selectedLearnerId=loadIdentity(),busy=false,timer=null,timeoutKey='',draftRound=0,draft={},historyKey='';
-  const session=createOnlineGameSession({gameId:'family-word-categories',roomClient,onRoom:next=>{room=next;busy=false;render();},onError:handleError,pollIntervalMs:800});
+  let bound=false,room=null,selectedLearnerId=loadIdentity(),busy=false,timer=null,timeoutKey='',draftRound=0,draft={},historyKey='',clockOffset=0;
+  const session=createOnlineGameSession({gameId:'family-word-categories',roomClient,onRoom:next=>{room=next;const serverNow=Number(next?.state?.serverNow);if(Number.isFinite(serverNow))clockOffset=serverNow-Date.now();busy=false;render();},onError:handleError,pollIntervalMs:800});
   const s=()=>room?.state||null,self=()=>session.snapshot.selfPlayerId,isHost=()=>s()?.players?.[0]===self();
   const roomPlayer=pid=>(room?.players||[]).find(p=>p.playerId===pid)||null;
   const name=pid=>roomPlayer(pid)?.name||roomPlayer(pid)?.learnerId||'لاعب';
@@ -69,7 +69,7 @@ export function createCategoriesOnlineController({showView,onBack,roomClient=cre
   function renderProgress(){const state=s(),done=new Set(state.submittedPlayers||Object.keys(state.submissions||{}));byId('fwcoProgress').innerHTML=state.players.map(pid=>`<span class="${done.has(pid)?'done':''}">${done.has(pid)?'✓':'…'} <strong>${escapeHtml(name(pid))}</strong></span>`).join('');}
   function renderFields(){ensureDraft();const state=s(),own=state.submissions?.[self()];byId('fwcoFields').innerHTML=FAMILY_WORD_CATEGORIES.map(c=>`<label><span>${c.icon} ${c.label}</span><input data-fwco-answer="${c.id}" value="${escapeHtml(own?.answers?.[c.id]??draft[c.id]??'')}" ${own?'disabled':''} maxlength="40" autocomplete="off" placeholder="كلمة بحرف ${state.letter}"></label>`).join('');byId('fwcoFields').querySelectorAll('[data-fwco-answer]').forEach(input=>input.addEventListener('input',()=>{draft[input.dataset.fwcoAnswer]=input.value;input.classList.toggle('bad',Boolean(input.value.trim())&&!answerStartsWithLetter(input.value,state.letter));updateSubmit();}));}
   function updateSubmit(){const button=byId('fwcoSubmit'),state=s();if(button)button.disabled=busy||Boolean(state?.submissions?.[self()])||!ready();}
-  function remaining(){const end=Date.parse(s()?.deadlineAt||'');return Number.isFinite(end)?end-Date.now():0;}
+  function remaining(){const end=Date.parse(s()?.deadlineAt||'');return Number.isFinite(end)?end-(Date.now()+clockOffset):0;}
   function tick(){const ms=remaining();byId('fwcoTime').textContent=clock(ms);byId('fwcoTimer').classList.toggle('urgent',ms<=10000&&ms>0);if(ms<=0){stopTimer();void timeoutSubmit();}}
   function startTimer(){stopTimer();tick();timer=setInterval(tick,250);}
   async function timeoutSubmit(){const state=s(),key=`${room?.code}:${state?.round}`;if(!state||state.status!=='playing'||timeoutKey===key)return;timeoutKey=key;try{if(!state.submissions?.[self()])await session.submit('submit',{answers:currentAnswers()});}catch(error){if((error?.body?.error||error?.message)==='round-not-playing')return;timeoutKey='';setTimeout(()=>timeoutSubmit(),600);return;}try{await session.submit('expire');}catch(error){if((error?.body?.error||error?.message)==='round-still-active'){timeoutKey='';setTimeout(()=>timeoutSubmit(),600);}}}
