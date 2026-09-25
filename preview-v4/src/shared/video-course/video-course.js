@@ -39,7 +39,7 @@ function playerVars(extra={}){
 export function createVideoCourse(config){
   const lessons=Array.from({length:config.lessonCount},(_,index)=>({id:`${config.id}-${String(index+1).padStart(2,'0')}`,number:index+1,index}));
   const metaKey=`${config.storageKey}:meta`,progressKey=`${config.storageKey}:progress`,lastKey=`${config.storageKey}:last`;
-  let player=null,resolver=null,resolverTask=Promise.resolve(),current=null,timer=null,prepareWatchdog=null,playWatchdog=null,nativeFallback=false,onBack=null;
+  let player=null,resolver=null,resolverTask=Promise.resolve(),current=null,timer=null,prepareWatchdog=null,playWatchdog=null,nativeMode=false,onBack=null;
 
   const readMeta=()=>safeJson(localStorage.getItem(metaKey),{});
   const readProgress=()=>safeJson(localStorage.getItem(progressKey),{});
@@ -149,7 +149,7 @@ export function createVideoCourse(config){
     const origin=location.origin;if(/^https?:\/\//i.test(origin))url.searchParams.set('origin',origin);url.searchParams.set('widget_referrer',location.href);return url.toString();
   }
   function nativeFallback(){
-    if(nativeFallback||!current)return;const meta=readMeta()[current.id]||{};if(!meta.videoId)return;clearWatches();nativeFallback=true;try{player?.destroy?.();}catch{}player=null;
+    if(nativeMode||!current)return;const meta=readMeta()[current.id]||{};if(!meta.videoId)return;clearWatches();nativeMode=true;try{player?.destroy?.();}catch{}player=null;
     document.getElementById('fvcYoutubePlayer')?.remove();const frame=document.createElement('iframe');frame.id='fvcNative';frame.className='fvc-youtube';frame.src=nativeUrl(meta.videoId);frame.title=titleFor(current,meta);frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.setAttribute('allowfullscreen','');frame.referrerPolicy='strict-origin-when-cross-origin';document.getElementById('fvcStage')?.prepend(frame);
     document.getElementById('fvcTap').hidden=true;document.querySelector('.fvc-dialog')?.classList.add('native');
   }
@@ -164,18 +164,18 @@ export function createVideoCourse(config){
     },onError:()=>nativeFallback()}});
     return player;
   }
-  function startPlayback(){const tap=document.getElementById('fvcTap');tap.hidden=true;if(nativeFallback)return;setInteractive(true);player?.playVideo?.();clearTimeout(playWatchdog);playWatchdog=setTimeout(()=>{if((player?.getPlayerState?.()!==YT.PlayerState.PLAYING)&&(player?.getDuration?.()||0)<=0)nativeFallback();},7000);}
+  function startPlayback(){const tap=document.getElementById('fvcTap');tap.hidden=true;if(nativeMode)return;setInteractive(true);player?.playVideo?.();clearTimeout(playWatchdog);playWatchdog=setTimeout(()=>{if((player?.getPlayerState?.()!==YT.PlayerState.PLAYING)&&(player?.getDuration?.()||0)<=0)nativeFallback();},7000);}
   async function openLesson(id){
-    current=lessons.find(l=>l.id===id);if(!current)return;localStorage.setItem(lastKey,current.id);nativeFallback=false;document.querySelector('.fvc-dialog')?.classList.remove('native');ensurePlayerMount();
+    current=lessons.find(l=>l.id===id);if(!current)return;localStorage.setItem(lastKey,current.id);nativeMode=false;document.querySelector('.fvc-dialog')?.classList.remove('native');ensurePlayerMount();
     document.getElementById('fvcLayer').hidden=false;document.body.classList.add('family-video-player-open');document.getElementById('fvcFinish').hidden=true;document.getElementById('fvcTap').hidden=false;document.getElementById('fvcEyebrow').textContent=`الدرس ${current.number} من ${lessons.length}`;
     const initial=readMeta()[current.id]||{};document.getElementById('fvcPlayerTitle').textContent=titleFor(current,initial);syncNav();
     let meta=initial;if(!meta.videoId)meta=await resolveMeta(current)||{};const p=await ensurePlayer();if(!meta.videoId){nativeFallback();return;}p.cueVideoById({videoId:meta.videoId,startSeconds:Math.max(0,progressState().seconds||0)});document.getElementById('fvcPlayerTitle').textContent=titleFor(current,meta);setInteractive(false);
-    clearTimeout(prepareWatchdog);prepareWatchdog=setTimeout(()=>{if(!nativeFallback&&(p.getDuration?.()||0)<=0)nativeFallback();},4000);tick();
+    clearTimeout(prepareWatchdog);prepareWatchdog=setTimeout(()=>{if(!nativeMode&&(p.getDuration?.()||0)<=0)nativeFallback();},4000);tick();
   }
   function adjacent(offset){return current?lessons[current.index+offset]||null:null;}
   function syncNav(){document.getElementById('fvcPrev').disabled=!adjacent(-1);document.getElementById('fvcNext').disabled=!adjacent(1);document.getElementById('fvcFinishNext').textContent=adjacent(1)?'التالي':'العودة للدروس';}
   async function toggleFullscreen(){const dialog=document.querySelector('.fvc-dialog');if(!dialog)return;if(document.fullscreenElement){await document.exitFullscreen?.();return;}if(document.body.classList.contains('fvc-expanded')){document.body.classList.remove('fvc-expanded');return;}if(document.fullscreenEnabled&&dialog.requestFullscreen){try{await dialog.requestFullscreen();return;}catch{}}document.body.classList.add('fvc-expanded');}
-  function closePlayer(){clearWatches();saveProgress(false);stopTimer();try{player?.destroy?.();}catch{}player=null;nativeFallback=false;document.getElementById('fvcNative')?.remove();ensurePlayerMount();document.querySelector('.fvc-dialog')?.classList.remove('native');document.getElementById('fvcLayer').hidden=true;document.body.classList.remove('family-video-player-open','fvc-expanded');current=null;render();}
+  function closePlayer(){clearWatches();saveProgress(false);stopTimer();try{player?.destroy?.();}catch{}player=null;nativeMode=false;document.getElementById('fvcNative')?.remove();ensurePlayerMount();document.querySelector('.fvc-dialog')?.classList.remove('native');document.getElementById('fvcLayer').hidden=true;document.body.classList.remove('family-video-player-open','fvc-expanded');current=null;render();}
   function bind(view){
     view.querySelector('#fvcBack').addEventListener('click',()=>{closePlayer();view.classList.remove('active');document.body.classList.remove('family-video-course-mode');onBack?.();});
     view.querySelector('#fvcResume').addEventListener('click',e=>openLesson(e.currentTarget.dataset.lessonId));
