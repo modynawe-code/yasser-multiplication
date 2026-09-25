@@ -24,3 +24,18 @@ test('multi-device countdown corrects local device time against the server clock
   assert.match(online,/clockOffset/);
   assert.match(online,/Date\.now\(\)\+clockOffset/);
 });
+
+
+test('local pass-and-play and online room mode are separate interaction systems',async()=>{
+  const local=await read('src/modules/games/categories/categories-controller.js');
+  const online=await read('src/modules/games/categories/categories-online-controller.js');
+  assert.match(local,/id="fwcHandoff"/);
+  assert.match(local,/turnStartedAt/);
+  assert.match(local,/function beginTurn/);
+  assert.match(local,/function finishActiveTurn/);
+  assert.doesNotMatch(local,/function switchPlayer/);
+  assert.match(local,/سلّم الجهاز للاعب التالي/);
+  assert.match(online,/إنشاء غرفة/);
+  assert.match(online,/رمز الغرفة/);
+  assert.match(online,/pollIntervalMs:800/);
+});
