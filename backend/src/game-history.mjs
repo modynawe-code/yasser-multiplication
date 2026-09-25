@@ -50,9 +50,9 @@ export async function historyFamilyForDeviceToken(request,env){
   const token=String(request.headers.get('x-family-game-token')||'').trim();
   if(!token)return null;
   const hash=await sha256Base64Url(token);
-  const row=await env.DB.prepare('SELECT id,parent_id FROM game_history_devices WHERE token_hash=? AND revoked_at IS NULL').bind(hash).first();
+  const row=await env.DB.prepare('SELECT id,parent_id FROM family_game_devices WHERE token_hash=? AND revoked_at IS NULL').bind(hash).first();
   if(!row)return null;
-  env.DB.prepare('UPDATE game_history_devices SET last_seen_at=? WHERE id=?').bind(new Date().toISOString(),row.id).run().catch(()=>null);
+  env.DB.prepare('UPDATE family_game_devices SET last_seen_at=? WHERE id=?').bind(new Date().toISOString(),row.id).run().catch(()=>null);
   return row.parent_id||null;
 }
 
@@ -65,7 +65,7 @@ export async function createGameHistoryDevice(request,env,respond,auth,readJson)
   if(!auth?.parent_id)return respond(401,{error:'family_auth_required'});
   const body=await readJson(request),label=cleanText(body?.label||'family-device',80)||'family-device';
   const token=randomSessionToken(),hash=await sha256Base64Url(token),createdAt=new Date().toISOString(),id=randomId('ghd');
-  await env.DB.prepare('INSERT INTO game_history_devices(id,parent_id,token_hash,label,created_at,last_seen_at,revoked_at) VALUES(?,?,?,?,?,?,NULL)')
+  await env.DB.prepare('INSERT INTO family_game_devices(id,parent_id,token_hash,label,created_at,last_seen_at,revoked_at) VALUES(?,?,?,?,?,?,NULL)')
     .bind(id,auth.parent_id,hash,label,createdAt,createdAt).run();
   return respond(201,{deviceToken:token,deviceId:id,label,createdAt});
 }
@@ -129,12 +129,12 @@ export function buildOnlineRoomMatch({roomRow,players,state,version,recordedAt=n
 export async function persistGameMatch(env,match){
   const m=match;
   if(!m?.matchId||!m?.familyId)return{ok:false,error:'invalid_match'};
-  const existing=await env.DB.prepare('SELECT match_id,recorded_at FROM game_matches WHERE match_id=? AND family_id=?').bind(m.matchId,m.familyId).first();
+  const existing=await env.DB.prepare('SELECT match_id,recorded_at FROM family_game_matches WHERE match_id=? AND family_id=?').bind(m.matchId,m.familyId).first();
   if(existing)return{ok:true,duplicate:true,matchId:existing.match_id,recordedAt:existing.recorded_at};
   const statements=[
-    env.DB.prepare('INSERT INTO game_matches(match_id,family_id,game_id,game_version,play_mode,source_room_id,source_room_version,started_at,ended_at,recorded_at,winner_ids_json,details_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')
+    env.DB.prepare('INSERT INTO family_game_matches(match_id,family_id,game_id,game_version,play_mode,source_room_id,source_room_version,started_at,ended_at,recorded_at,winner_ids_json,details_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')
       .bind(m.matchId,m.familyId,m.gameId,m.gameVersion,m.playMode,m.sourceRoomId,m.sourceRoomVersion,m.startedAt,m.endedAt,m.recordedAt,JSON.stringify(m.winnerIds),m.detailsJson),
-    ...m.players.map(p=>env.DB.prepare('INSERT INTO game_match_players(match_id,learner_id,display_name,seat,score,outcome,details_json) VALUES(?,?,?,?,?,?,?)')
+    ...m.players.map(p=>env.DB.prepare('INSERT INTO family_game_match_players(match_id,learner_id,display_name,seat,score,outcome,details_json) VALUES(?,?,?,?,?,?,?)')
       .bind(m.matchId,p.learnerId,p.displayName,p.seat,p.score,p.outcome,p.detailsJson))
   ];
   await env.DB.batch(statements);
@@ -161,10 +161,10 @@ export async function listGameHistory(request,env,respond,auth=null){
   const familyId=await historyFamily(request,env,auth);
   if(!familyId)return respond(401,{error:'history_device_required'});
   const url=new URL(request.url),limit=Math.max(1,Math.min(100,Number(url.searchParams.get('limit')||30)||30));
-  const rows=await env.DB.prepare('SELECT match_id,game_id,game_version,play_mode,started_at,ended_at,recorded_at,winner_ids_json FROM game_matches WHERE family_id=? ORDER BY ended_at DESC LIMIT ?').bind(familyId,limit).all();
+  const rows=await env.DB.prepare('SELECT match_id,game_id,game_version,play_mode,started_at,ended_at,recorded_at,winner_ids_json FROM family_game_matches WHERE family_id=? ORDER BY ended_at DESC LIMIT ?').bind(familyId,limit).all();
   const matches=[];
   for(const row of rows.results||[]){
-    const playerRows=await env.DB.prepare('SELECT learner_id,display_name,seat,score,outcome FROM game_match_players WHERE match_id=? ORDER BY seat,learner_id').bind(row.match_id).all();
+    const playerRows=await env.DB.prepare('SELECT learner_id,display_name,seat,score,outcome FROM family_game_match_players WHERE match_id=? ORDER BY seat,learner_id').bind(row.match_id).all();
     let winnerIds=[];try{winnerIds=JSON.parse(row.winner_ids_json||'[]');}catch{}
     matches.push({matchId:row.match_id,gameId:row.game_id,gameVersion:Number(row.game_version||1),playMode:row.play_mode,startedAt:row.started_at,endedAt:row.ended_at,recordedAt:row.recorded_at,winnerIds,players:(playerRows.results||[]).map(p=>({learnerId:p.learner_id,displayName:p.display_name,seat:p.seat,score:p.score,outcome:p.outcome}))});
   }
@@ -181,7 +181,7 @@ export async function gameHistoryStats(request,env,respond,auth=null){
     SUM(CASE WHEN p.outcome='draw' THEN 1 ELSE 0 END) AS draws,
     SUM(CASE WHEN p.outcome='loss' THEN 1 ELSE 0 END) AS losses,
     SUM(CASE WHEN p.outcome='win' THEN 3 WHEN p.outcome='draw' THEN 1 ELSE 0 END) AS cup_points
-    FROM game_match_players p JOIN game_matches m ON m.match_id=p.match_id
+    FROM family_game_match_players p JOIN family_game_matches m ON m.match_id=p.match_id
     WHERE m.family_id=? AND m.ended_at>=?
     GROUP BY p.learner_id,p.display_name
     ORDER BY cup_points DESC,wins DESC,matches DESC,p.display_name`).bind(familyId,since).all();
