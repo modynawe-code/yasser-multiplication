@@ -55,5 +55,5 @@ test('Quran hierarchy uses compact term tabs, three primary paths and a resumabl
 test('Quran list cards remain touch-friendly while reducing vertical density',async()=>{
   const css=await read('src/modules/yasser/quran/yasser-quran.css');
   assert.match(css,/\.yasser-quran-surah[\s\S]*min-height:68px/);
-  assert.match(css,/@media \(max-width:700px\)[\s\S]*min-height:66px/);
+  assert.match(css,/@media\s*\(max-width:700px\)[\s\S]*min-height:66px/);
 });
