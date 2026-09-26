@@ -132,21 +132,26 @@ export function createPuzzleController({showView,onBack}={}){
     event.preventDefault();
     const rect=button.getBoundingClientRect(),pieceId=Number(button.dataset.pieceId),offsetX=event.clientX-rect.left,offsetY=event.clientY-rect.top;
     sequence++;
-    const drag={pieceId,button,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,offsetX,offsetY,moved:false,sequence};
-    button.style.position='fixed';button.style.left=`${rect.left}px`;button.style.top=`${rect.top}px`;button.style.width=`${rect.width}px`;button.style.height=`${rect.height}px`;button.style.margin='0';button.classList.add('fp-piece-floater');
+    const tray=byId('fpTray'),drag={pieceId,button,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,offsetX,offsetY,moved:false,mode:null,floating:false,sequence};
     try{button.setPointerCapture(event.pointerId);}catch{}
+    const floatPiece=()=>{
+      if(drag.floating)return;
+      drag.floating=true;button.style.position='fixed';button.style.left=`${rect.left}px`;button.style.top=`${rect.top}px`;button.style.width=`${rect.width}px`;button.style.height=`${rect.height}px`;button.style.margin='0';button.classList.add('fp-piece-floater');
+    };
     const onMove=moveEvent=>{
       if(moveEvent.pointerId!==drag.pointerId)return;
-      if(Math.hypot(moveEvent.clientX-drag.startX,moveEvent.clientY-drag.startY)>8)drag.moved=true;
-      button.style.left=`${moveEvent.clientX-drag.offsetX}px`;button.style.top=`${moveEvent.clientY-drag.offsetY}px`;
+      const dx=moveEvent.clientX-drag.startX,dy=moveEvent.clientY-drag.startY;
+      if(!drag.mode&&Math.hypot(dx,dy)>8){drag.moved=true;drag.mode=event.pointerType==='touch'&&Math.abs(dx)>Math.abs(dy)*1.15?'scroll':'drag';if(drag.mode==='drag')floatPiece();}
+      if(drag.mode==='scroll'&&tray){tray.scrollLeft-=moveEvent.clientX-drag.lastX;drag.lastX=moveEvent.clientX;}
+      if(drag.mode==='drag'){floatPiece();button.style.left=`${moveEvent.clientX-drag.offsetX}px`;button.style.top=`${moveEvent.clientY-drag.offsetY}px`;}
     };
     const onEnd=endEvent=>{
       if(endEvent.pointerId!==drag.pointerId)return;
       button.removeEventListener('pointermove',onMove);button.removeEventListener('pointerup',onEnd);button.removeEventListener('pointercancel',onCancel);
-      let target=null;if(drag.moved){const under=document.elementFromPoint(endEvent.clientX,endEvent.clientY);target=under?.closest?.('[data-target-index]')||null;}
+      let target=null;if(drag.mode==='drag'){const under=document.elementFromPoint(endEvent.clientX,endEvent.clientY);target=under?.closest?.('[data-target-index]')||null;}
       if(target)setPiecePlaced(button,Number(target.dataset.targetIndex));
       if(button.classList.contains('fp-piece-floater'))resetDrag(button);
-      if(!drag.moved){resetDrag(button);selectPiece(pieceId,button);}
+      if(!drag.moved){selectPiece(pieceId,button);}
     };
     const onCancel=()=>{button.removeEventListener('pointermove',onMove);button.removeEventListener('pointerup',onEnd);button.removeEventListener('pointercancel',onCancel);resetDrag(button);};
     button.addEventListener('pointermove',onMove);button.addEventListener('pointerup',onEnd);button.addEventListener('pointercancel',onCancel);

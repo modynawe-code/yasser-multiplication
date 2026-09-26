@@ -45,6 +45,14 @@ test('mobile board fits its grid column and placed pieces do not get scaled twic
   assert.match(css,/aspect-ratio:var\(--fp-board-aspect\)/);
 });
 
+test('mobile puzzle pieces keep touch input for drag while the tray scrolls horizontally',async()=>{
+  const css=await readFile(new URL('../src/modules/games/puzzle/puzzle.css',import.meta.url),'utf8');
+  const controller=await readFile(new URL('../src/modules/games/puzzle/puzzle-controller.js',import.meta.url),'utf8');
+  assert.match(css,/\.fp-tray \.fp-piece\{[^}]*touch-action:none/);
+  assert.match(controller,/drag\.mode==='scroll'&&tray\)\{tray\.scrollLeft/);
+  assert.match(controller,/drag\.mode==='drag'\)\{floatPiece\(\)/);
+});
+
 test('puzzle setup has no empty board before start and displays an unambiguous progress counter',async()=>{
   const shell=await readFile(new URL('../src/modules/games/puzzle/puzzle-shell.js',import.meta.url),'utf8');
   assert.match(shell,/id="fpPlayArea" hidden/);
