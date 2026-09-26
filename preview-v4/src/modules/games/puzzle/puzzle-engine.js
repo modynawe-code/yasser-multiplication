@@ -1,5 +1,10 @@
 const clampSize=value=>Math.max(2,Math.min(6,Math.trunc(Number(value)||3)));
 
+export function puzzleBoardAspect(width,height){
+  const imageWidth=Number(width),imageHeight=Number(height);
+  return Number.isFinite(imageWidth)&&Number.isFinite(imageHeight)&&imageWidth>0&&imageHeight>0?imageWidth/imageHeight:1;
+}
+
 export function createPuzzleDefinition(size=3,{random=Math.random}={}){
   const rows=clampSize(size),columns=rows,pieces=[];
   const horizontal=Array.from({length:rows-1},()=>Array.from({length:columns},()=>random()<.5?1:-1));

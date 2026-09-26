@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createPuzzleDefinition,isPuzzleSolved,puzzlePiecePath} from '../src/modules/games/puzzle/puzzle-engine.js';
+import {access,readFile} from 'node:fs/promises';
+import {createPuzzleDefinition,isPuzzleSolved,puzzleBoardAspect,puzzlePiecePath} from '../src/modules/games/puzzle/puzzle-engine.js';
 
 test('family photo puzzle creates matching interlocking edges for every neighboring piece',()=>{
   const puzzle=createPuzzleDefinition(4,{random:()=>0.3});
@@ -27,4 +28,43 @@ test('piece SVG path includes all four interlocking sides and closes cleanly',()
   assert.match(path,/M0 0/);
   assert.match(path,/C/);
   assert.match(path,/Z$/);
+});
+
+test('photo board keeps each selected image aspect ratio instead of cropping portraits into squares',()=>{
+  assert.equal(puzzleBoardAspect(1049,1499),1049/1499);
+  assert.equal(puzzleBoardAspect(1448,1086),4/3);
+  assert.equal(puzzleBoardAspect(1024,1024),1);
+  assert.equal(puzzleBoardAspect(0,1024),1);
+});
+
+test('mobile board fits its grid column and placed pieces do not get scaled twice',async()=>{
+  const css=await readFile(new URL('../src/modules/games/puzzle/puzzle.css',import.meta.url),'utf8');
+  assert.match(css,/\.fp-board \.fp-piece svg\{width:100%;height:100%/);
+  assert.doesNotMatch(css,/\.fp-board \.fp-piece svg\{width:136%;height:136%/);
+  assert.match(css,/\.fp-board\{width:min\(100%,86vw\)/);
+  assert.match(css,/aspect-ratio:var\(--fp-board-aspect\)/);
+});
+
+test('puzzle setup has no empty board before start and displays an unambiguous progress counter',async()=>{
+  const shell=await readFile(new URL('../src/modules/games/puzzle/puzzle-shell.js',import.meta.url),'utf8');
+  assert.match(shell,/id="fpPlayArea" hidden/);
+  assert.match(shell,/id="fpPictureChoices"/);
+  assert.match(shell,/id="fpProgress" dir="ltr"/);
+});
+
+test('all eight supplied Yasser poses are bundled and selectable',async()=>{
+  const controller=await readFile(new URL('../src/modules/games/puzzle/puzzle-controller.js',import.meta.url),'utf8');
+  const thumbnails=await readFile(new URL('../assets/games/puzzle/thumbnails/yasser-pose-01.webp',import.meta.url));
+  assert.ok(thumbnails.byteLength<20000,'selector thumbnail should stay small');
+  for(let index=1;index<=8;index++){
+    const name=`pose-${String(index).padStart(2,'0')}.png`;
+    assert.ok(controller.includes(`assets/games/puzzle/yasser/${name}`),`missing gallery entry for ${name}`);
+    await access(new URL(`../assets/games/puzzle/yasser/${name}`,import.meta.url));
+    const thumbnail=`assets/games/puzzle/thumbnails/yasser-pose-${String(index).padStart(2,'0')}.webp`;
+    assert.ok(controller.includes(thumbnail),`missing lightweight selector preview for pose ${index}`);
+    await access(new URL(`../${thumbnail}`,import.meta.url));
+  }
+  assert.match(controller,/yasser-welcome/);
+  assert.match(controller,/khaled-default/);
+  assert.match(controller,/mashaal-default/);
 });
