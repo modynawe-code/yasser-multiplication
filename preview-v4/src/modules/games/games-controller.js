@@ -22,7 +22,7 @@ function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,localXoStartedAt=null,localXoRecordedKey='';
+  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,marioController=null,localXoStartedAt=null,localXoRecordedKey='';
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false,historyDays=7;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -32,6 +32,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   gameLauncher.register('rock-paper-scissors',({game})=>openRps(game));
   gameLauncher.register('family-pixel-puzzle',()=>openFamilyPixelPuzzle());
   gameLauncher.register('family-word-categories',({game})=>openCategories(game));
+  gameLauncher.register('super-mario-bros',({game})=>openMario(game));
 
   function openFamilyPixelPuzzle(){
     const apkDownload='https://modynawe-code.github.io/yasser-multiplication/downloads/Family_Pixel_Puzzle_0.41.apk?v=compat-20260921-1';
@@ -83,15 +84,15 @@ export function createGamesController({learningAdapter,challengePresentations=nu
 
   function leave(){
     document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode','categories-game-mode');
-    categoriesController?.leave?.({navigate:false});
+    categoriesController?.leave?.({navigate:false});marioController?.leave();
     clearChallenge();onlineSession.forget();xoEvents.reset();
     xoState=null;playMode='local';onlineTurnVersion=-1;onlineCelebrated='';
   }
 
   function enterHome(){
     onBeforeEnter?.();
-    categoriesController?.leave?.({navigate:false});
-    onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode','categories-game-mode');
+    categoriesController?.leave?.({navigate:false});marioController?.leave();
+    onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode','categories-game-mode','mario-game-mode');
     enterGamesChrome();void gameHistoryService.flushPending();renderCatalog();show('gamesHomeView');
   }
 
@@ -169,6 +170,15 @@ export function createGamesController({learningAdapter,challengePresentations=nu
       if(!rpsController){const module=await game.load();rpsController=module.createRpsController({showView:show,onBack:()=>{document.body.classList.remove('rps-game-mode');renderCatalog();show('gamesHomeView');}});}
       rpsController.start();
     }catch{renderCatalog();show('gamesHomeView');}
+  }
+
+  async function openMario(game=gameRegistry.get('super-mario-bros')){
+    clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);categoriesController?.leave?.({navigate:false});document.body.classList.remove('rps-game-mode','categories-game-mode');enterGamesChrome();
+    if(!game?.load)return;
+    try{
+      if(!marioController){const module=await game.load();marioController=module.createMarioController({showView:show,onBack:()=>{marioController?.leave();renderCatalog();show('gamesHomeView');}});}
+      marioController.start();
+    }catch{marioController?.leave();renderCatalog();show('gamesHomeView');}
   }
 
   async function openCategories(game=gameRegistry.get('family-word-categories')){

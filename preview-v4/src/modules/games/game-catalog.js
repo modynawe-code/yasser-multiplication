@@ -56,6 +56,19 @@ export const gameRegistry=createGameRegistry([
     metadata:{accent:'duo',icon:cardArt('assets/games/catalog/rps-card.webp'),availabilityLabel:'محلي + أونلاين',description:'لعبة مرح سريعة. الاختيار سري، وأول واحد يوصل 3 يفوز.'}
   },
   {
+    id:'super-mario-bros',
+    title:'سوبر ماريو بروس',
+    category:'fun',
+    playModes:['solo'],
+    networkMode:'none',
+    learningMode:'none',
+    minPlayers:1,
+    maxPlayers:1,
+    version:1,
+    load:()=>import('./mario/mario-controller.js'),
+    metadata:{accent:'family',icon:'🕹️',availabilityLabel:'محلي — لاعب واحد',description:'ماريو الكلاسيكية، تلعبونها مباشرة بأزرار اللمس أو لوحة المفاتيح.'}
+  },
+  {
     id:'family-word-categories',
     title:'حيوان جماد بلاد',
     category:'fun',
