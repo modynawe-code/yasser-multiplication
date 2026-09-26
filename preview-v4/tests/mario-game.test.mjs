@@ -30,6 +30,7 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(controller,/pointercancel/);
   assert.match(shell,/id="marioFullscreen"/);
   assert.match(shell,/class="mario-layout mario-stage"/);
+  assert.match(shell,/class="mario-header-actions"[^>]*>[\s\S]*id="marioBackToGames"/);
   assert.match(controller,/document\.addEventListener\('keydown',onKeyDown\)/);
   assert.match(controller,/ArrowRight:'RIGHT'/);
   assert.match(controller,/requestFullscreen/);
@@ -39,10 +40,13 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(css,/user-select:none/);
   assert.match(css,/-webkit-touch-callout:none/);
   const worker=await read('service-worker.js');
-  assert.ok(worker.includes('mario.css?v=tablet-stage-1'));
+  assert.ok(worker.includes('mario.css?v=tablet-stage-2'));
+  assert.match(worker,/shell-126/);
   assert.match(controller,/\.destroy\(\)/);
   assert.match(css,/touch-action:none/);
   assert.match(css,/@media\(orientation:portrait\)/);
+  assert.match(css,/grid-template-rows:minmax\(0,1fr\) clamp\(190px,22vh,230px\)/);
+  assert.match(css,/\.mario-controls\{position:relative;inset:auto/);
   assert.match(controller,/pointer: coarse/);
 });
 
