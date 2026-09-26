@@ -3,11 +3,44 @@ import { ensurePs1Shell } from './ps1-shell.js';
 const DATA_PATH='https://cdn.emulatorjs.org/4.2.3/data/';
 const byId=id=>document.getElementById(id);
 const supportedExtensions=new Set(['chd','pbp','iso','bin','cue','zip']);
+const BIOS_DB='family-learning-ps1';
+const BIOS_STORE='firmware';
+const BIOS_KEY='selected';
+
+function openBiosDb(){
+  return new Promise((resolve,reject)=>{
+    const request=indexedDB.open(BIOS_DB,1);
+    request.onupgradeneeded=()=>request.result.createObjectStore(BIOS_STORE);
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error);
+  });
+}
+async function saveBios(file){
+  const db=await openBiosDb();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(BIOS_STORE,'readwrite');
+    tx.objectStore(BIOS_STORE).put({blob:file.slice(0,file.size,file.type||'application/octet-stream'),name:file.name,type:file.type},BIOS_KEY);
+    tx.oncomplete=()=>{db.close();resolve();};
+    tx.onerror=()=>{db.close();reject(tx.error);};
+    tx.onabort=()=>{db.close();reject(tx.error||new Error('BIOS save aborted'));};
+  });
+}
+async function getSavedBios(){
+  const db=await openBiosDb();
+  return new Promise((resolve,reject)=>{
+    const request=db.transaction(BIOS_STORE,'readonly').objectStore(BIOS_STORE).get(BIOS_KEY);
+    request.onsuccess=()=>{
+      const saved=request.result;db.close();
+      resolve(saved?new File([saved.blob],saved.name||'scph5501.bin',{type:saved.type||'application/octet-stream'}):null);
+    };
+    request.onerror=()=>{db.close();reject(request.error);};
+  });
+}
 
 function fileExtension(file){return String(file?.name||'').split('.').pop().toLowerCase();}
 
 export function createPs1Controller({showView,onBack}={}){
-  let bound=false,started=false,loaderScript=null,fullscreenFallback=false;
+  let bound=false,started=false,loaderScript=null,fullscreenFallback=false,biosObjectUrl=null;
 
   function status(message,error=false,stage=false){
     const node=byId(stage?'ps1StageStatus':'ps1Status');
@@ -43,6 +76,7 @@ export function createPs1Controller({showView,onBack}={}){
   function stopEmulator(){
     try{globalThis.EJS_terminate?.();}catch{}
     loaderScript?.remove();loaderScript=null;started=false;
+    if(biosObjectUrl){URL.revokeObjectURL(biosObjectUrl);biosObjectUrl=null;}
     if(globalThis.EJS_emulator)globalThis.EJS_emulator=null;
     const player=byId('ps1Player');if(player)player.replaceChildren();
   }
@@ -52,6 +86,13 @@ export function createPs1Controller({showView,onBack}={}){
     byId('ps1Back')?.addEventListener('click',()=>{leave();onBack?.();});
     byId('ps1Fullscreen')?.addEventListener('click',toggleFullscreen);
     byId('ps1Start')?.addEventListener('click',startGame);
+    byId('ps1BiosFile')?.addEventListener('change',async event=>{
+      const file=event.currentTarget.files?.[0];
+      if(!file)return;
+      if(fileExtension(file)!=='bin'){status('اختر ملف BIOS بصيغة BIN.',true);return;}
+      try{await saveBios(file);status('تم حفظ BIOS ('+file.name+') على هذا الجهاز.',false);}
+      catch{status('تعذر حفظ BIOS على هذا الجهاز؛ سيعمل للّعبة الحالية فقط.',true);}
+    });
     document.addEventListener('fullscreenchange',()=>{
       const shell=document.querySelector('#ps1GameView .ps1-shell');
       if(document.fullscreenElement===shell)return;
@@ -59,19 +100,23 @@ export function createPs1Controller({showView,onBack}={}){
     });
   }
 
-  function startGame(){
+  async function startGame(){
     if(started)return;
-    const rom=byId('ps1RomFile')?.files?.[0],bios=byId('ps1BiosFile')?.files?.[0],start=byId('ps1Start');
+    const rom=byId('ps1RomFile')?.files?.[0],biosInput=byId('ps1BiosFile'),start=byId('ps1Start');
     if(!rom){status('اختر ملف اللعبة أولًا.',true);return;}
     if(!supportedExtensions.has(fileExtension(rom))){status('صيغة ملف اللعبة غير مدعومة. جرّب CHD أو PBP.',true);return;}
-    if(bios&&fileExtension(bios)!=='bin'){status('ملف BIOS يجب أن يكون بصيغة BIN، أو اتركه فارغًا لتجربة BIOS المدمج بالمحاكي.',true);return;}
     started=true;if(start)start.disabled=true;
+    let bios=biosInput?.files?.[0]||null;
+    if(!bios){try{bios=await getSavedBios();}catch{}}
+    if(!bios){started=false;if(start)start.disabled=false;status('اختر ملف BIOS المتوافق مرة واحدة على هذا الجهاز.',true);return;}
+    if(fileExtension(bios)!=='bin'){started=false;if(start)start.disabled=false;status('ملف BIOS يجب أن يكون بصيغة BIN.',true);return;}
+    biosObjectUrl=URL.createObjectURL(bios);
     byId('ps1Setup').hidden=true;byId('ps1Stage').hidden=false;
     status('نحمّل ملفات المحاكي ثم نبدأ اللعبة…',false,true);
     Object.assign(globalThis,{
       // EmulatorJS identifies uploaded games using the File object's original name/extension.
       // A blob URL drops the .PBP suffix and can leave RetroArch at its empty main menu.
-      EJS_player:'#ps1Player',EJS_core:'pcsx_rearmed',EJS_gameUrl:rom,EJS_biosUrl:bios||'',
+      EJS_player:'#ps1Player',EJS_core:'pcsx_rearmed',EJS_gameUrl:rom,EJS_biosUrl:biosObjectUrl,
       EJS_gameName:rom.name.replace(/\.[^.]+$/,''),EJS_pathtodata:DATA_PATH,
       EJS_language:'ar-SA',EJS_startOnLoaded:true,EJS_threads:false,
       EJS_askBeforeExit:false,EJS_disableLocalStorage:false,
@@ -92,7 +137,7 @@ export function createPs1Controller({showView,onBack}={}){
     byId('ps1Setup').hidden=false;byId('ps1Stage').hidden=true;
     const button=byId('ps1Start');if(button)button.disabled=false;
     showView?.('ps1GameView');
-    status('اختر لعبة PS1 وBIOS من ملفات جهازك.');
+    status('اختر ملف اللعبة؛ ملف BIOS يُحفظ محليًا بعد اختياره مرة واحدة.');
   }
 
   function leave(){

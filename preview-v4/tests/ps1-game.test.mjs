@@ -21,11 +21,17 @@ test('PS1 player loads a pinned EmulatorJS release using device-selected files',
   const css=await read('src/modules/games/ps1/ps1.css');
   assert.match(controller,/cdn\.emulatorjs\.org\/4\.2\.3\/data\//);
   assert.match(controller,/EJS_core:'pcsx_rearmed'/);
-  assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:bios/);
+  assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:biosObjectUrl/);
+  assert.match(controller,/URL\.createObjectURL\(bios\)/);
+  assert.match(controller,/URL\.revokeObjectURL\(biosObjectUrl\)/);
+  assert.match(controller,/indexedDB\.open\(BIOS_DB,1\)/);
+  assert.match(controller,/getSavedBios\(\)/);
   assert.match(controller,/new Set\(\['chd','pbp','iso','bin','cue','zip'\]\)/);
   assert.match(shell,/id="ps1RomFile" type="file"/);
   assert.match(shell,/EBOOT\.PBP يعمل عبر محاكي PS1/);
+  assert.match(shell,/scph5501\.bin/);
   assert.match(shell,/id="ps1BiosFile" type="file"/);
+  assert.match(shell,/يُحفظ داخل متصفح هذا الجهاز فقط/);
   assert.match(shell,/id="ps1Fullscreen"/);
   assert.match(css,/height:100dvh/);
   assert.match(css,/aspect-ratio:4\/3/);
@@ -48,5 +54,5 @@ test('PS1 player files are included in the app shell cache',async()=>{
     assert.ok(worker.includes(path),`${path} must be available from the app shell cache`);
     await read(path.split('?')[0]);
   }
-  assert.match(worker,/shell-134/);
+  assert.match(worker,/shell-135/);
 });
