@@ -6,7 +6,7 @@ function ensureStyle(href,key){
 export function ensureMarioShell(){
   if(document.getElementById('marioGameView'))return;
   const main=document.querySelector('main');if(!main)return;
-  ensureStyle('src/modules/games/mario/mario.css','mario-game');
+  ensureStyle('src/modules/games/mario/mario.css?v=touch-layout-3','mario-game');
   const host=document.createElement('div');
   host.innerHTML=`
     <section id="marioGameView" class="view">

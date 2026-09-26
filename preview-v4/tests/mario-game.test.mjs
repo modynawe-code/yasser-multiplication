@@ -34,6 +34,10 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(controller,/requestFullscreen/);
   assert.match(css,/mario-immersive/);
   assert.match(css,/pointer-events:auto/);
+  assert.ok(css.includes('#marioGameView.mario-fullscreen .mario-controls{position:fixed!important'));
+  assert.ok(css.includes('.mario-dpad{position:absolute!important'));
+  const worker=await read('service-worker.js');
+  assert.ok(worker.includes('mario.css?v=touch-layout-3'));
   assert.match(controller,/\.destroy\(\)/);
   assert.match(css,/touch-action:none/);
   assert.match(css,/max-width:760px/);
