@@ -6,6 +6,9 @@ const SVG_BASE=`https://cdn.jsdelivr.net/gh/quranpedia/quran-svg@${QURAN_SVG_COM
 const RAW_SVG_BASE=`https://raw.githubusercontent.com/quranpedia/quran-svg/${QURAN_SVG_COMMIT}/mushafs/hafs/kfqc/svg`;
 const STORAGE_KEY='family-learning:yasser:quran:v1';
 const LEVELS=['جديد','أتدرب','شبه محفوظ','محفوظ'];
+// The audio host can omit finite duration metadata on some tablet browsers.
+// These durations were measured from the exact MP3 files used by this course.
+const AUDIO_DURATION_SECONDS=Object.freeze({32:613.4888,33:1995.7808,34:1337.9168,35:1248.2768,36:1262.9648,37:1669.6568,38:1293.7088,67:511.8968,68:537.0968});
 
 function pageRange(start,end){return Array.from({length:end-start+1},(_,index)=>start+index);}
 
@@ -52,6 +55,7 @@ function mediaFor([surahNumber,surahNameAr,pageNumber,pageNumbers=null]){
   return Object.freeze({
     surahNumber,surahNameAr,pageNumber,
     audioPath:`${AUDIO_BASE}/10-${code}D00-A02.mp3`,
+    durationSeconds:AUDIO_DURATION_SECONDS[surahNumber]||0,
     mushafPage:mushafPages[0],mushafPages
   });
 }
@@ -201,7 +205,7 @@ function openSurah(item,button){
   const blind=document.getElementById('yasserQuranBlind');if(blind)blind.textContent='اختبرني غيب';
   updateLevelButton();saveLast(item,selectedPageNumber);
   player=mountQuranSurahPlayer(document.getElementById('yasserQuranPlayerHost'),{
-    surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,mushafPages:item.mushafPages,retryPlayText:'اضغط تشغيل مرة ثانية',
+    surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,mushafPages:item.mushafPages,durationSeconds:item.durationSeconds,retryPlayText:'اضغط تشغيل مرة ثانية',
     onPageChange:({pageNumber})=>{if(!pageNumber)return;selectedPageNumber=pageNumber;updateLevelButton();saveLast(item,pageNumber);},
     onCompleted:()=>{
       if(mode!=='memorization'||repeatTarget<=1)return;

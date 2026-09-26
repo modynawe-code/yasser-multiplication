@@ -42,6 +42,7 @@ export function mountQuranSurahPlayer(host,{
   audioPath='',
   mushafPage=null,
   mushafPages=null,
+  durationSeconds=0,
   retryPlayText='اضغطي تشغيل مرة ثانية',
   onCompleted=()=>{},
   onPageChange=()=>{}
@@ -124,7 +125,7 @@ export function mountQuranSurahPlayer(host,{
   root.append(figure,transport,progressWrap,status);
   host.appendChild(root);
 
-  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=0;
+  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
   const rangeEnd=range=>{
     try{
       const length=Number(range?.length)||0;
