@@ -6,7 +6,7 @@ function ensureStyle(href,key){
 export function ensureMarioShell(){
   if(document.getElementById('marioGameView'))return;
   const main=document.querySelector('main');if(!main)return;
-  ensureStyle('src/modules/games/mario/mario.css?v=tablet-stage-2','mario-game');
+  ensureStyle('src/modules/games/mario/mario.css?v=tablet-stage-3','mario-game');
   const host=document.createElement('div');
   host.innerHTML=`
     <section id="marioGameView" class="view">
@@ -29,10 +29,10 @@ export function ensureMarioShell(){
           </section>
           <section class="mario-controls" aria-label="أزرار التحكم باللمس">
             <div class="mario-dpad" aria-label="الاتجاهات">
-              <button data-mario-button="UP" aria-label="أعلى">↑</button>
-              <button data-mario-button="LEFT" aria-label="يسار">←</button>
-              <button data-mario-button="DOWN" aria-label="أسفل">↓</button>
-              <button data-mario-button="RIGHT" aria-label="يمين">→</button>
+              <button data-mario-button="UP" aria-label="أعلى"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+              <button data-mario-button="LEFT" aria-label="يسار"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5m6-6-6 6 6 6"/></svg></button>
+              <button data-mario-button="DOWN" aria-label="أسفل"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14m-7-7 7 7 7-7"/></svg></button>
+              <button data-mario-button="RIGHT" aria-label="يمين"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
             </div>
             <div class="mario-face-buttons">
               <button data-mario-button="B" aria-label="زر B">B</button>

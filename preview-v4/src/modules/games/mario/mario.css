@@ -32,6 +32,10 @@ body.mario-game-mode{margin:0;overflow:hidden;overscroll-behavior:none}
 .mario-dpad button:nth-child(2){grid-area:2/1}
 .mario-dpad button:nth-child(3){grid-area:2/2}
 .mario-dpad button:nth-child(4){grid-area:2/3}
+.mario-dpad{direction:ltr}
+.mario-dpad button{direction:ltr;unicode-bidi:isolate}
+.mario-dpad svg{display:block;width:52%;height:52%;max-width:40px;max-height:40px;pointer-events:none}
+.mario-dpad svg path{fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
 .mario-face-buttons{position:absolute;right:max(22px,env(safe-area-inset-right));bottom:max(32px,env(safe-area-inset-bottom));display:flex;gap:clamp(13px,2vw,23px);direction:ltr;pointer-events:none}
 .mario-face-buttons button{width:clamp(78px,8vw,100px);height:clamp(78px,8vw,100px);border:2px solid #ffffff55;border-radius:50%;background:#d8444fd9;color:#fff;font-size:clamp(25px,3vw,34px);box-shadow:0 5px 0 #82222bc9,0 7px 16px #0005}
 .mario-face-buttons button:first-child{transform:translateY(-12px)}
