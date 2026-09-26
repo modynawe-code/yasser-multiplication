@@ -28,6 +28,12 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(controller,/0x4e.*0x45.*0x53.*0x1a/);
   assert.match(controller,/pointerdown/);
   assert.match(controller,/pointercancel/);
+  assert.match(shell,/id="marioFullscreen"/);
+  assert.match(controller,/document\.addEventListener\('keydown',onKeyDown\)/);
+  assert.match(controller,/ArrowRight:'RIGHT'/);
+  assert.match(controller,/requestFullscreen/);
+  assert.match(css,/mario-immersive/);
+  assert.match(css,/pointer-events:auto/);
   assert.match(controller,/\.destroy\(\)/);
   assert.match(css,/touch-action:none/);
   assert.match(css,/max-width:760px/);

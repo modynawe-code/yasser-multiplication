@@ -15,6 +15,7 @@ export function ensureMarioShell(){
           <button class="mario-back" id="marioBackToGames">رجوع للألعاب</button>
           <div><span>نسخة نينتندو الكلاسيكية · لعبة فردية</span><h1>سوبر ماريو بروس</h1></div>
           <button class="mario-action" id="marioPause" disabled>إيقاف مؤقت</button>
+          <button class="mario-action mario-fullscreen-toggle" id="marioFullscreen" type="button" aria-pressed="false">ملء الشاشة</button>
         </header>
         <div class="mario-layout">
           <section class="mario-screen-panel" aria-label="شاشة اللعبة">
