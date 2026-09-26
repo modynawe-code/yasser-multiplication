@@ -71,12 +71,12 @@ export function createPs1Controller({showView,onBack}={}){
     Object.assign(globalThis,{
       // EmulatorJS identifies uploaded games using the File object's original name/extension.
       // A blob URL drops the .PBP suffix and can leave RetroArch at its empty main menu.
-      EJS_player:'#ps1Player',EJS_core:'psx',EJS_gameUrl:rom,EJS_biosUrl:bios||'',
+      EJS_player:'#ps1Player',EJS_core:'mednafen_psx_hw',EJS_gameUrl:rom,EJS_biosUrl:bios||'',
       EJS_gameName:rom.name.replace(/\.[^.]+$/,''),EJS_pathtodata:DATA_PATH,
       EJS_language:'ar-SA',EJS_startOnLoaded:true,EJS_threads:false,
       EJS_askBeforeExit:false,EJS_disableLocalStorage:false,
       EJS_ready:()=>status('المحاكي جاهز. استخدم يد التحكم أو أزرار اللمس الظاهرة.',false,true),
-      EJS_onGameStart:()=>status('بدأ المحاكي. إذا ظهرت قائمة RetroArch بدل اللعبة، أعد اختيار ملف اللعبة وحاول مجددًا.',false,true),
+      EJS_onGameStart:()=>status('بدأت اللعبة. إذا استمر الصوت مع شاشة سوداء، اختر BIOS متوافقًا مستخرجًا من جهاز PS1 أو PSP تملكه.',false,true),
       EJS_onExit:()=>status('انتهى تشغيل المحاكي.',false,true)
     });
     loaderScript?.remove();loaderScript=document.createElement('script');loaderScript.async=true;loaderScript.src=`${DATA_PATH}loader.js`;
