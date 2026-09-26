@@ -64,13 +64,12 @@ export function createPs1Controller({showView,onBack}={}){
     const rom=byId('ps1RomFile')?.files?.[0],bios=byId('ps1BiosFile')?.files?.[0],start=byId('ps1Start');
     if(!rom){status('اختر ملف اللعبة أولًا.',true);return;}
     if(!supportedExtensions.has(fileExtension(rom))){status('صيغة ملف اللعبة غير مدعومة. جرّب CHD أو PBP.',true);return;}
-    if(!bios){status('اختر ملف BIOS تملكه ومتوافقًا مع منطقة اللعبة.',true);return;}
-    if(fileExtension(bios)!=='bin'){status('ملف BIOS المعتاد امتداده BIN.',true);return;}
+    if(bios&&fileExtension(bios)!=='bin'){status('ملف BIOS يجب أن يكون بصيغة BIN، أو اتركه فارغًا لتجربة BIOS المدمج بالمحاكي.',true);return;}
     started=true;if(start)start.disabled=true;
     byId('ps1Setup').hidden=true;byId('ps1Stage').hidden=false;
     status('نحمّل ملفات المحاكي ثم نبدأ اللعبة…',false,true);
     Object.assign(globalThis,{
-      EJS_player:'#ps1Player',EJS_core:'psx',EJS_gameUrl:rom,EJS_biosUrl:bios,
+      EJS_player:'#ps1Player',EJS_core:'psx',EJS_gameUrl:rom,EJS_biosUrl:bios||'',
       EJS_gameName:rom.name.replace(/\.[^.]+$/,''),EJS_pathtodata:DATA_PATH,
       EJS_language:'ar-SA',EJS_startOnLoaded:true,EJS_threads:false,
       EJS_askBeforeExit:false,EJS_disableLocalStorage:false,

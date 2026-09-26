@@ -21,11 +21,12 @@ test('PS1 player loads a pinned EmulatorJS release using device-selected files',
   const css=await read('src/modules/games/ps1/ps1.css');
   assert.match(controller,/cdn\.emulatorjs\.org\/4\.2\.3\/data\//);
   assert.match(controller,/EJS_core:'psx'/);
-  assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:bios/);
+  assert.match(controller,/if\(bios&&fileExtension\(bios\)!=='bin'\)/);
+  assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:bios\|\|''/);
   assert.match(controller,/new Set\(\['chd','pbp','iso','bin','cue','zip'\]\)/);
   assert.match(shell,/id="ps1RomFile" type="file"/);
   assert.match(shell,/EBOOT\.PBP يعمل عبر محاكي PS1/);
-  assert.match(shell,/PSXONPSP660\.bin المستخرج من PSP/);
+  assert.match(shell,/ملف BIOS \(اختياري\)/);
   assert.match(shell,/id="ps1BiosFile" type="file"/);
   assert.match(shell,/id="ps1Fullscreen"/);
   assert.match(css,/height:100dvh/);
@@ -49,5 +50,5 @@ test('PS1 player files are included in the app shell cache',async()=>{
     assert.ok(worker.includes(path),`${path} must be available from the app shell cache`);
     await read(path.split('?')[0]);
   }
-  assert.match(worker,/shell-131/);
+  assert.match(worker,/shell-130/);
 });
