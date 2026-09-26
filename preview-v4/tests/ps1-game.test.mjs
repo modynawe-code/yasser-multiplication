@@ -25,7 +25,7 @@ test('PS1 player loads a pinned EmulatorJS release using device-selected files',
   assert.match(controller,/new Set\(\['chd','pbp','iso','bin','cue','zip'\]\)/);
   assert.match(shell,/id="ps1RomFile" type="file"/);
   assert.match(shell,/EBOOT\.PBP يعمل عبر محاكي PS1/);
-  assert.match(shell,/PSXONPSP660\.bin المستخرج من PSP/);
+  assert.match(shell,/BIOS متوافق بصيغة BIN/);
   assert.match(shell,/id="ps1BiosFile" type="file"/);
   assert.match(shell,/id="ps1Fullscreen"/);
   assert.match(css,/height:100dvh/);
