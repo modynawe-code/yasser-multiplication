@@ -88,5 +88,16 @@ body.mario-game-mode{margin:0;overflow:hidden;overscroll-behavior:none}
   .mario-header-actions{gap:4px}
   .mario-header-actions>.mario-back,.mario-header-actions>.mario-action{font-size:clamp(9px,2.45vw,11px);padding-inline:2px}
   .mario-screen{top:4px;max-height:calc(100% - 8px)}
-  .mario-layout.mario-stage{grid-template-rows:minmax(0,1fr) clamp(180px,21vh,200px)}
+  .mario-layout.mario-stage{grid-template-rows:minmax(0,1fr) clamp(190px,21vh,208px)}
+}
+
+/* Keep the game canvas unchanged; separate the touch zones inside the control deck. */
+@media(orientation:portrait){
+  .mario-center-buttons{top:8px;bottom:auto}
+  .mario-dpad{bottom:max(10px,env(safe-area-inset-bottom))}
+  .mario-face-buttons{bottom:max(10px,env(safe-area-inset-bottom));gap:clamp(18px,3vw,26px)}
+}
+@media(orientation:landscape){
+  .mario-face-buttons{bottom:max(72px,env(safe-area-inset-bottom));gap:clamp(18px,2vw,26px)}
+  .mario-center-buttons{bottom:max(8px,env(safe-area-inset-bottom))}
 }
