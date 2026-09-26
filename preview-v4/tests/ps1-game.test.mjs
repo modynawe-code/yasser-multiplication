@@ -20,7 +20,7 @@ test('PS1 player loads a pinned EmulatorJS release using device-selected files',
   const shell=await read('src/modules/games/ps1/ps1-shell.js');
   const css=await read('src/modules/games/ps1/ps1.css');
   assert.match(controller,/cdn\.emulatorjs\.org\/4\.2\.3\/data\//);
-  assert.match(controller,/EJS_core:'psx'/);
+  assert.match(controller,/EJS_core:'mednafen_psx_hw'/);
   assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:bios/);
   assert.match(controller,/new Set\(\['chd','pbp','iso','bin','cue','zip'\]\)/);
   assert.match(shell,/id="ps1RomFile" type="file"/);
