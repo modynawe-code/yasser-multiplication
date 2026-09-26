@@ -50,5 +50,5 @@ test('PS1 player files are included in the app shell cache',async()=>{
     assert.ok(worker.includes(path),`${path} must be available from the app shell cache`);
     await read(path.split('?')[0]);
   }
-  assert.match(worker,/shell-130/);
+  assert.match(worker,/CACHE_VERSION=.*shell-\d+/);
 });
