@@ -40,7 +40,7 @@ async function getSavedBios(){
 function fileExtension(file){return String(file?.name||'').split('.').pop().toLowerCase();}
 
 export function createPs1Controller({showView,onBack}={}){
-  let bound=false,started=false,loaderScript=null,fullscreenFallback=false,biosObjectUrl=null;
+  let bound=false,started=false,loaderScript=null,fullscreenFallback=false;
 
   function status(message,error=false,stage=false){
     const node=byId(stage?'ps1StageStatus':'ps1Status');
@@ -76,7 +76,6 @@ export function createPs1Controller({showView,onBack}={}){
   function stopEmulator(){
     try{globalThis.EJS_terminate?.();}catch{}
     loaderScript?.remove();loaderScript=null;started=false;
-    if(biosObjectUrl){URL.revokeObjectURL(biosObjectUrl);biosObjectUrl=null;}
     if(globalThis.EJS_emulator)globalThis.EJS_emulator=null;
     const player=byId('ps1Player');if(player)player.replaceChildren();
   }
@@ -110,18 +109,17 @@ export function createPs1Controller({showView,onBack}={}){
     if(!bios){try{bios=await getSavedBios();}catch{}}
     if(!bios){started=false;if(start)start.disabled=false;status('اختر ملف BIOS المتوافق مرة واحدة على هذا الجهاز.',true);return;}
     if(fileExtension(bios)!=='bin'){started=false;if(start)start.disabled=false;status('ملف BIOS يجب أن يكون بصيغة BIN.',true);return;}
-    biosObjectUrl=URL.createObjectURL(bios);
     byId('ps1Setup').hidden=true;byId('ps1Stage').hidden=false;
     status('نحمّل ملفات المحاكي ثم نبدأ اللعبة…',false,true);
     Object.assign(globalThis,{
       // EmulatorJS identifies uploaded games using the File object's original name/extension.
       // A blob URL drops the .PBP suffix and can leave RetroArch at its empty main menu.
-      EJS_player:'#ps1Player',EJS_core:'pcsx_rearmed',EJS_gameUrl:rom,EJS_biosUrl:biosObjectUrl,
+      EJS_player:'#ps1Player',EJS_core:'pcsx_rearmed',EJS_gameUrl:rom,EJS_biosUrl:bios,
       EJS_gameName:rom.name.replace(/\.[^.]+$/,''),EJS_pathtodata:DATA_PATH,
       EJS_language:'ar-SA',EJS_startOnLoaded:true,EJS_threads:false,
       EJS_askBeforeExit:false,EJS_disableLocalStorage:false,
       EJS_ready:()=>status('المحاكي جاهز. استخدم يد التحكم أو أزرار اللمس الظاهرة.',false,true),
-      EJS_onGameStart:()=>status('بدأت اللعبة. إذا كان الصوت يعمل والصورة سوداء، فملف BIOS المتوافق مطلوب لهذه اللعبة.',false,true),
+      EJS_onGameStart:()=>status('بدأ تشغيل اللعبة.',false,true),
       EJS_onExit:()=>status('انتهى تشغيل المحاكي.',false,true)
     });
     loaderScript?.remove();loaderScript=document.createElement('script');loaderScript.async=true;loaderScript.src=`${DATA_PATH}loader.js`;
