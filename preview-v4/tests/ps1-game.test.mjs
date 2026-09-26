@@ -20,12 +20,14 @@ test('PS1 player loads a pinned EmulatorJS release using device-selected files',
   const shell=await read('src/modules/games/ps1/ps1-shell.js');
   const css=await read('src/modules/games/ps1/ps1.css');
   assert.match(controller,/cdn\.emulatorjs\.org\/4\.2\.3\/data\//);
-  assert.match(controller,/EJS_core:'pcsx_rearmed'/);
+  assert.match(controller,/const selectedCore=byId\('ps1Core'\)\?\.value==='mednafen_psx_hw'\?'mednafen_psx_hw':'pcsx_rearmed'/);
   assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:bios/);
   assert.match(controller,/indexedDB\.open\(BIOS_DB,1\)/);
   assert.match(controller,/getSavedBios\(\)/);
   assert.match(controller,/new Set\(\['chd','pbp','iso','bin','cue','zip'\]\)/);
   assert.match(shell,/id="ps1RomFile" type="file"/);
+  assert.match(shell,/id="ps1Core"/);
+  assert.match(shell,/value="mednafen_psx_hw"/);
   assert.match(shell,/EBOOT\.PBP يعمل عبر محاكي PS1/);
   assert.match(shell,/scph5501\.bin/);
   assert.match(shell,/id="ps1BiosFile" type="file"/);
@@ -48,9 +50,9 @@ test('PS1 gamepad profile maps standard PlayStation controls and sticks',()=>{
 
 test('PS1 player files are included in the app shell cache',async()=>{
   const worker=await read('service-worker.js');
-  for(const path of ['src/modules/games/ps1/ps1-controller.js','src/modules/games/ps1/ps1-shell.js','src/modules/games/ps1/ps1.css?v=psx-bios-local-1','src/modules/games/ps1/ps1-gamepad.js']){
+  for(const path of ['src/modules/games/ps1/ps1-controller.js','src/modules/games/ps1/ps1-shell.js','src/modules/games/ps1/ps1.css?v=psx-core-choice-1','src/modules/games/ps1/ps1-gamepad.js']){
     assert.ok(worker.includes(path),`${path} must be available from the app shell cache`);
     await read(path.split('?')[0]);
   }
-  assert.match(worker,/shell-136/);
+  assert.match(worker,/shell-137/);
 });

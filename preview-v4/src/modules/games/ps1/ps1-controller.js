@@ -111,10 +111,11 @@ export function createPs1Controller({showView,onBack}={}){
     if(fileExtension(bios)!=='bin'){started=false;if(start)start.disabled=false;status('ملف BIOS يجب أن يكون بصيغة BIN.',true);return;}
     byId('ps1Setup').hidden=true;byId('ps1Stage').hidden=false;
     status('نحمّل ملفات المحاكي ثم نبدأ اللعبة…',false,true);
+    const selectedCore=byId('ps1Core')?.value==='mednafen_psx_hw'?'mednafen_psx_hw':'pcsx_rearmed';
     Object.assign(globalThis,{
       // EmulatorJS identifies uploaded games using the File object's original name/extension.
       // A blob URL drops the .PBP suffix and can leave RetroArch at its empty main menu.
-      EJS_player:'#ps1Player',EJS_core:'pcsx_rearmed',EJS_gameUrl:rom,EJS_biosUrl:bios,
+      EJS_player:'#ps1Player',EJS_core:selectedCore,EJS_gameUrl:rom,EJS_biosUrl:bios,
       EJS_gameName:rom.name.replace(/\.[^.]+$/,''),EJS_pathtodata:DATA_PATH,
       EJS_language:'ar-SA',EJS_startOnLoaded:true,EJS_threads:false,
       EJS_askBeforeExit:false,EJS_disableLocalStorage:false,
