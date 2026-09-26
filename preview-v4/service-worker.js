@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-130`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-131`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -44,7 +44,7 @@ const APP_SHELL=[
   './src/shared/video-course/video-course.js','./src/shared/video-course/video-course.css',
   './src/modules/yasser/quran/yasser-quran.js','./src/modules/yasser/quran/yasser-quran.css','./src/modules/yasser/quran/yasser-quran-videos.js',
 
-  './src/modules/games/core/game-contract.js','./src/modules/games/core/game-registry.js','./src/modules/games/core/player-context.js','./src/modules/games/core/game-participant-registry.js','./src/modules/games/core/learning-adapter.js','./src/modules/games/game-catalog.js','./src/modules/games/games-controller.js','./src/modules/games/learning/game-learning-providers.js','./src/modules/games/online/game-room-client.js','./src/modules/games/online/game-room-resume-store.js','./src/modules/games/history/game-history-service.js','./src/modules/games/history/game-history-device-token.js','./src/modules/games/xo/xo-engine.js','./src/modules/games/xo/xo-online-session.js','./src/modules/games/rps/rps-engine.js','./src/modules/games/rps/rps-graphics.js','./src/modules/games/rps/rps-audio.js','./src/modules/games/rps/rps-controller.js','./src/modules/games/rps/rps-shell.js','./src/modules/games/rps/rps.css','./src/modules/games/rps/rps-open-family.css','./src/modules/games/categories/categories-engine.js','./src/modules/games/categories/categories-controller.js','./src/modules/games/categories/categories-online-controller.js','./src/modules/games/categories/categories-online.css','./src/modules/games/categories/categories.css','./src/modules/games/mario/mario-controller.js','./src/modules/games/mario/mario-shell.js','./src/modules/games/mario/mario.css','./src/modules/games/mario/mario.css?v=tablet-gamepad-support-5','./src/modules/games/ps1/ps1-controller.js','./src/modules/games/ps1/ps1-shell.js','./src/modules/games/ps1/ps1.css?v=psx-pbp-2','./src/modules/games/ps1/ps1-gamepad.js','./src/vendor/jsnes.min.js','./src/vendor/JSNES-LICENSE.txt','./assets/games/super-mario-bros.nes','./src/modules/games/ui/games-shell.js','./src/modules/games/ui/games.css','./src/modules/games/ui/games-open-family.css',
+  './src/modules/games/core/game-contract.js','./src/modules/games/core/game-registry.js','./src/modules/games/core/player-context.js','./src/modules/games/core/game-participant-registry.js','./src/modules/games/core/learning-adapter.js','./src/modules/games/game-catalog.js','./src/modules/games/games-controller.js','./src/modules/games/learning/game-learning-providers.js','./src/modules/games/online/game-room-client.js','./src/modules/games/online/game-room-resume-store.js','./src/modules/games/history/game-history-service.js','./src/modules/games/history/game-history-device-token.js','./src/modules/games/xo/xo-engine.js','./src/modules/games/xo/xo-online-session.js','./src/modules/games/rps/rps-engine.js','./src/modules/games/rps/rps-graphics.js','./src/modules/games/rps/rps-audio.js','./src/modules/games/rps/rps-controller.js','./src/modules/games/rps/rps-shell.js','./src/modules/games/rps/rps.css','./src/modules/games/rps/rps-open-family.css','./src/modules/games/categories/categories-engine.js','./src/modules/games/categories/categories-controller.js','./src/modules/games/categories/categories-online-controller.js','./src/modules/games/categories/categories-online.css','./src/modules/games/categories/categories.css','./src/modules/games/mario/mario-controller.js','./src/modules/games/mario/mario-shell.js','./src/modules/games/mario/mario.css','./src/modules/games/mario/mario.css?v=tablet-gamepad-support-5','./src/modules/games/ps1/ps1-controller.js','./src/modules/games/ps1/ps1-shell.js','./src/modules/games/ps1/ps1.css?v=psx-pbp-2','./src/modules/games/ps1/ps1-gamepad.js','./src/modules/games/puzzle/puzzle-engine.js','./src/modules/games/puzzle/puzzle-controller.js','./src/modules/games/puzzle/puzzle-shell.js','./src/modules/games/puzzle/puzzle.css','./src/vendor/jsnes.min.js','./src/vendor/JSNES-LICENSE.txt','./assets/games/super-mario-bros.nes','./src/modules/games/ui/games-shell.js','./src/modules/games/ui/games.css','./src/modules/games/ui/games-open-family.css',
 
   './src/modules/khaled/domain/curriculum.js','./src/modules/khaled/domain/question-bank.js','./src/modules/khaled/domain/advanced-question-bank.js','./src/modules/khaled/domain/addition-question-bank.js','./src/modules/khaled/domain/subtraction-question-bank.js','./src/modules/khaled/domain/add-sub-strategies-question-bank.js','./src/modules/khaled/domain/place-value-question-bank.js','./src/modules/khaled/domain/measurement-question-bank.js','./src/modules/khaled/domain/number-patterns-question-bank.js','./src/modules/khaled/domain/geometry-fractions-question-bank.js','./src/modules/khaled/domain/money-question-bank.js','./src/modules/khaled/domain/state-model.js',
   './src/modules/khaled/infrastructure/storage/local-storage-repository.js','./src/modules/khaled/ui/khaled-home-shell.js','./src/modules/khaled/ui/khaled-controller.js','./src/modules/khaled/ui/khaled-scene-controller.js','./src/modules/khaled/ui/khaled-character-system.css','./src/modules/khaled/ui/khaled-home.css','./src/modules/khaled/ui/khaled-device-hardening.css','./src/modules/khaled/ui/khaled-activity-types.css','./src/modules/khaled/ui/khaled-number-relations.css','./src/modules/khaled/ui/khaled-addition-renderer.js','./src/modules/khaled/ui/khaled-addition.css','./src/modules/khaled/ui/khaled-subtraction-renderer.js','./src/modules/khaled/ui/khaled-subtraction.css','./src/modules/khaled/ui/khaled-strategies-renderer.js','./src/modules/khaled/ui/khaled-strategies.css','./src/modules/khaled/ui/khaled-place-value-renderer.js','./src/modules/khaled/ui/khaled-place-value.css','./src/modules/khaled/ui/khaled-advanced-renderer.js','./src/modules/khaled/ui/khaled-measurement-renderer.js','./src/modules/khaled/ui/khaled-measurement.css','./src/modules/khaled/ui/khaled-number-patterns-renderer.js','./src/modules/khaled/ui/khaled-number-patterns.css','./src/modules/khaled/ui/khaled-geometry-fractions-renderer.js','./src/modules/khaled/ui/khaled-geometry-fractions.css','./src/modules/khaled/ui/khaled-money-renderer.js','./src/modules/khaled/ui/saudi-money-assets.js','./src/modules/khaled/ui/khaled-money.css',
@@ -82,12 +82,6 @@ function isVerifiedQuranPageImage(request){
     const rawPinned=url.hostname==='raw.githubusercontent.com'&&/^\/quranpedia\/quran-svg\/[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/i.test(url.pathname);
     const jsdelivrPinned=url.hostname==='cdn.jsdelivr.net'&&/^\/gh\/quranpedia\/quran-svg@[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/i.test(url.pathname);
     return rawPinned||jsdelivrPinned;
-  }catch{return false;}
-}
-function isDirectApkDownload(request){
-  try{
-    const url=new URL(request.url);
-    return url.pathname.toLowerCase().endsWith('.apk');
   }catch{return false;}
 }
 function isTajawalFontAsset(request){
@@ -129,10 +123,6 @@ self.addEventListener('activate',event=>{event.waitUntil((async()=>{
 
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
-  if(isDirectApkDownload(event.request)){
-    event.respondWith(fetch(event.request,{cache:'no-store'}));
-    return;
-  }
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE_VERSION);
     if(isSaudiCurrencyImage(event.request)||isVerifiedQuranPageImage(event.request)||isTajawalFontAsset(event.request))return runtimeCacheAsset(event.request,cache);

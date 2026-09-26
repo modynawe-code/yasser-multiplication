@@ -91,18 +91,21 @@ test('XO controller uses shared player eligibility, online room and learning bou
   assert.doesNotMatch(controller,/local-storage-repository/);
 });
 
-test('family pixel puzzle uses one uncached direct APK download',async()=>{
+test('family picture puzzle is launched in the browser and no longer links to an APK',async()=>{
   const catalog=await read('src/modules/games/game-catalog.js');
   const controller=await read('src/modules/games/games-controller.js');
   const serviceWorker=await read('service-worker.js');
+  const puzzle=await read('src/modules/games/puzzle/puzzle-controller.js');
   assert.match(catalog,/family-pixel-puzzle/);
-  assert.match(catalog,/تحميل مباشر/);
-  assert.match(controller,/downloads\/Family_Pixel_Puzzle_0\.41\.apk/);
-  assert.match(controller,/mode:'direct-download'/);
-  assert.doesNotMatch(controller,/browser_fallback_url/);
-  assert.match(serviceWorker,/isDirectApkDownload/);
-  assert.match(serviceWorker,/endsWith\('\.apk'\)/);
-  assert.match(serviceWorker,/fetch\(event\.request,\{cache:'no-store'\}\)/);
+  assert.match(catalog,/تركيب الصور/);
+  assert.match(catalog,/داخل الموقع/);
+  assert.match(catalog,/puzzle-controller\.js/);
+  assert.match(controller,/puzzleController\.start\(\)/);
+  assert.match(puzzle,/pointerdown/);
+  assert.match(puzzle,/family-pixel-puzzle/);
+  assert.doesNotMatch(catalog,/تحميل مباشر/);
+  assert.doesNotMatch(controller,/Family_Pixel_Puzzle_0\.41\.apk/);
+  assert.doesNotMatch(serviceWorker,/isDirectApkDownload/);
 });
 
 test('RPS is lazy-loaded as an independent fun-game module',async()=>{
@@ -188,6 +191,10 @@ test('PWA shell includes resumable games, registry participants and the shared n
     'src/modules/games/rps/rps-audio.js',
     'src/modules/games/rps/rps-controller.js',
     'src/modules/games/rps/rps-shell.js',
-    'src/modules/games/rps/rps.css'
+    'src/modules/games/rps/rps.css',
+    'src/modules/games/puzzle/puzzle-engine.js',
+    'src/modules/games/puzzle/puzzle-controller.js',
+    'src/modules/games/puzzle/puzzle-shell.js',
+    'src/modules/games/puzzle/puzzle.css'
   ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
 });
