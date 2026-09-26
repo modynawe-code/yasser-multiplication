@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { gameRegistry } from '../src/modules/games/game-catalog.js';
+import { readMarioGamepadInputs } from '../src/modules/games/mario/mario-controller.js';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -43,8 +44,8 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(css,/user-select:none/);
   assert.match(css,/-webkit-touch-callout:none/);
   const worker=await read('service-worker.js');
-  assert.ok(worker.includes('mario.css?v=tablet-stage-3'));
-  assert.match(worker,/shell-127/);
+  assert.ok(worker.includes('mario.css?v=tablet-gamepad-support-5'));
+  assert.match(worker,/shell-128/);
   assert.match(controller,/\.destroy\(\)/);
   assert.match(css,/touch-action:none/);
   assert.match(css,/@media\(orientation:portrait\)/);
@@ -53,6 +54,21 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(css,/\.mario-dpad\{direction:ltr\}/);
   assert.match(css,/stroke-linejoin:round/);
   assert.match(controller,/pointer: coarse/);
+  assert.match(controller,/gamepadconnected/);
+  assert.match(controller,/navigator\.getGamepads/);
+});
+
+test('Mario maps standard gamepad buttons and sticks to NES controls',()=>{
+  const buttons=Array.from({length:16},()=>({pressed:false,value:0}));
+  buttons[0]={pressed:true,value:1};
+  buttons[1]={pressed:true,value:1};
+  buttons[8]={pressed:true,value:1};
+  buttons[9]={pressed:true,value:1};
+  buttons[12]={pressed:true,value:1};
+  const pad={connected:true,mapping:'standard',buttons,axes:[0.8,-0.7]};
+  assert.deepEqual(readMarioGamepadInputs(pad),['A','B','SELECT','START','UP','RIGHT']);
+  assert.deepEqual(readMarioGamepadInputs({...pad,mapping:''}),[],'unknown layouts must not trigger incorrect NES inputs');
+  assert.deepEqual(readMarioGamepadInputs({...pad,connected:false}),[],'disconnected pads must release their controls');
 });
 
 test('offline app shell precaches the Mario game and its local emulator',async()=>{
