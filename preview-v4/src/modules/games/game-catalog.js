@@ -69,6 +69,19 @@ export const gameRegistry=createGameRegistry([
     metadata:{accent:'family',icon:'🕹️',availabilityLabel:'محلي — لاعب واحد',description:'ماريو الكلاسيكية، تلعبونها مباشرة بأزرار اللمس أو لوحة المفاتيح.'}
   },
   {
+    id:'playstation-ps1',
+    title:'ألعاب PlayStation 1',
+    category:'fun',
+    playModes:['solo'],
+    networkMode:'none',
+    learningMode:'none',
+    minPlayers:1,
+    maxPlayers:1,
+    version:1,
+    load:()=>import('./ps1/ps1-controller.js'),
+    metadata:{accent:'family',icon:'🎮',availabilityLabel:'تجريبي — اختر ملفاتك',description:'شغّل ألعابك من ملفات جهازك مع يد تحكم أو أزرار اللمس.'}
+  },
+  {
     id:'family-word-categories',
     title:'حيوان جماد بلاد',
     category:'fun',
