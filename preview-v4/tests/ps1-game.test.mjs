@@ -21,7 +21,9 @@ test('PS1 player loads a pinned EmulatorJS release using device-selected files',
   const css=await read('src/modules/games/ps1/ps1.css');
   assert.match(controller,/cdn\.emulatorjs\.org\/4\.2\.3\/data\//);
   assert.match(controller,/const selectedCore=byId\('ps1Core'\)\?\.value==='mednafen_psx_hw'\?'mednafen_psx_hw':'pcsx_rearmed'/);
-  assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:bios/);
+  assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:biosObjectUrl/);
+  assert.match(controller,/URL\.createObjectURL\(bios\)/);
+  assert.match(controller,/URL\.revokeObjectURL\(biosObjectUrl\)/);
   assert.match(controller,/indexedDB\.open\(BIOS_DB,1\)/);
   assert.match(controller,/getSavedBios\(\)/);
   assert.match(controller,/new Set\(\['chd','pbp','iso','bin','cue','zip'\]\)/);

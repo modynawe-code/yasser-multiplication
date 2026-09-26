@@ -40,7 +40,7 @@ async function getSavedBios(){
 function fileExtension(file){return String(file?.name||'').split('.').pop().toLowerCase();}
 
 export function createPs1Controller({showView,onBack}={}){
-  let bound=false,started=false,loaderScript=null,fullscreenFallback=false;
+  let bound=false,started=false,loaderScript=null,fullscreenFallback=false,biosObjectUrl=null;
 
   function status(message,error=false,stage=false){
     const node=byId(stage?'ps1StageStatus':'ps1Status');
@@ -73,9 +73,15 @@ export function createPs1Controller({showView,onBack}={}){
     fullscreenFallback=true;shell.classList.add('ps1-css-fullscreen');button.textContent='إنهاء ملء الشاشة';button.setAttribute('aria-pressed','true');
   }
 
+  function releaseBiosUrl(){
+    if(!biosObjectUrl)return;
+    try{URL.revokeObjectURL(biosObjectUrl);}catch{}
+    biosObjectUrl=null;
+  }
+
   function stopEmulator(){
     try{globalThis.EJS_terminate?.();}catch{}
-    loaderScript?.remove();loaderScript=null;started=false;
+    releaseBiosUrl();loaderScript?.remove();loaderScript=null;started=false;
     if(globalThis.EJS_emulator)globalThis.EJS_emulator=null;
     const player=byId('ps1Player');if(player)player.replaceChildren();
   }
@@ -112,20 +118,23 @@ export function createPs1Controller({showView,onBack}={}){
     byId('ps1Setup').hidden=true;byId('ps1Stage').hidden=false;
     status('نحمّل ملفات المحاكي ثم نبدأ اللعبة…',false,true);
     const selectedCore=byId('ps1Core')?.value==='mednafen_psx_hw'?'mednafen_psx_hw':'pcsx_rearmed';
+    releaseBiosUrl();
+    try{biosObjectUrl=URL.createObjectURL(bios);}
+    catch{started=false;if(start)start.disabled=false;status('تعذر تجهيز ملف BIOS لهذا المتصفح.',true);return;}
     Object.assign(globalThis,{
       // EmulatorJS identifies uploaded games using the File object's original name/extension.
       // A blob URL drops the .PBP suffix and can leave RetroArch at its empty main menu.
-      EJS_player:'#ps1Player',EJS_core:selectedCore,EJS_gameUrl:rom,EJS_biosUrl:bios,
+      EJS_player:'#ps1Player',EJS_core:selectedCore,EJS_gameUrl:rom,EJS_biosUrl:biosObjectUrl,
       EJS_gameName:rom.name.replace(/\.[^.]+$/,''),EJS_pathtodata:DATA_PATH,
       EJS_language:'ar-SA',EJS_startOnLoaded:true,EJS_threads:false,
       EJS_askBeforeExit:false,EJS_disableLocalStorage:false,
       EJS_ready:()=>status('المحاكي جاهز. استخدم يد التحكم أو أزرار اللمس الظاهرة.',false,true),
       EJS_onGameStart:()=>status('بدأ تشغيل اللعبة.',false,true),
-      EJS_onExit:()=>status('انتهى تشغيل المحاكي.',false,true)
+      EJS_onExit:()=>{status('انتهى تشغيل المحاكي.',false,true);releaseBiosUrl();}
     });
     loaderScript?.remove();loaderScript=document.createElement('script');loaderScript.async=true;loaderScript.src=`${DATA_PATH}loader.js`;
     loaderScript.onerror=()=>{
-      started=false;if(start)start.disabled=false;
+      started=false;if(start)start.disabled=false;releaseBiosUrl();
       status('تعذر تحميل المحاكي. تحقق من الاتصال ثم أعد المحاولة.',true,true);
     };
     document.head.appendChild(loaderScript);
