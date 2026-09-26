@@ -6,7 +6,7 @@ function ensureStyle(href,key){
 export function ensureMarioShell(){
   if(document.getElementById('marioGameView'))return;
   const main=document.querySelector('main');if(!main)return;
-  ensureStyle('src/modules/games/mario/mario.css?v=touch-layout-3','mario-game');
+  ensureStyle('src/modules/games/mario/mario.css?v=tablet-stage-1','mario-game');
   const host=document.createElement('div');
   host.innerHTML=`
     <section id="marioGameView" class="view">
@@ -14,15 +14,17 @@ export function ensureMarioShell(){
         <header class="mario-header">
           <button class="mario-back" id="marioBackToGames">رجوع للألعاب</button>
           <div><span>نسخة نينتندو الكلاسيكية · لعبة فردية</span><h1>سوبر ماريو بروس</h1></div>
-          <button class="mario-action" id="marioPause" disabled>إيقاف مؤقت</button>
-          <button class="mario-action mario-fullscreen-toggle" id="marioFullscreen" type="button" aria-pressed="false">ملء الشاشة</button>
+          <nav class="mario-header-actions" aria-label="خيارات اللعبة">
+            <button class="mario-action" id="marioPause" disabled>إيقاف مؤقت</button>
+            <button class="mario-action mario-fullscreen-toggle" id="marioFullscreen" type="button" aria-pressed="false">ملء الشاشة</button>
+            <button class="mario-action" id="marioReset" disabled>إعادة البداية</button>
+          </nav>
         </header>
-        <div class="mario-layout">
+        <div class="mario-layout mario-stage" aria-label="مساحة اللعب">
           <section class="mario-screen-panel" aria-label="شاشة اللعبة">
             <div class="mario-screen" id="marioScreen"><div class="mario-welcome"><strong>لحظة ونبدأ</strong><span>نجهّز اللعبة…</span></div></div>
-            <div class="mario-toolbar">
-              <button class="mario-action" id="marioReset" disabled>إعادة البداية</button>
-              <span class="mario-status" id="marioStatus" role="status" aria-live="polite">نجهّز اللعبة…</span>
+            <div class="mario-toolbar" aria-live="polite">
+              <span class="mario-status" id="marioStatus" role="status">نجهّز اللعبة…</span>
             </div>
           </section>
           <section class="mario-controls" aria-label="أزرار التحكم باللمس">

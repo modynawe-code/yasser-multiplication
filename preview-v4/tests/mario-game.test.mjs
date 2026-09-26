@@ -29,18 +29,21 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(controller,/pointerdown/);
   assert.match(controller,/pointercancel/);
   assert.match(shell,/id="marioFullscreen"/);
+  assert.match(shell,/class="mario-layout mario-stage"/);
   assert.match(controller,/document\.addEventListener\('keydown',onKeyDown\)/);
   assert.match(controller,/ArrowRight:'RIGHT'/);
   assert.match(controller,/requestFullscreen/);
-  assert.match(css,/mario-immersive/);
+  assert.match(css,/\.mario-stage\{position:relative/);
+  assert.match(css,/\.mario-controls\{position:absolute;inset:0;/);
   assert.match(css,/pointer-events:auto/);
-  assert.ok(css.includes('#marioGameView.mario-fullscreen .mario-controls{position:fixed!important'));
-  assert.ok(css.includes('.mario-dpad{position:absolute!important'));
+  assert.match(css,/user-select:none/);
+  assert.match(css,/-webkit-touch-callout:none/);
   const worker=await read('service-worker.js');
-  assert.ok(worker.includes('mario.css?v=touch-layout-3'));
+  assert.ok(worker.includes('mario.css?v=tablet-stage-1'));
   assert.match(controller,/\.destroy\(\)/);
   assert.match(css,/touch-action:none/);
-  assert.match(css,/max-width:760px/);
+  assert.match(css,/@media\(orientation:portrait\)/);
+  assert.match(controller,/pointer: coarse/);
 });
 
 test('offline app shell precaches the Mario game and its local emulator',async()=>{

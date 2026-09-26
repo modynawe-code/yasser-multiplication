@@ -85,17 +85,17 @@ export function createMarioController({showView,onBack}={}){
   }
   function reset(){if(!browser||!loaded)return;releaseAll();browser.nes.reset();if(paused){browser.start();paused=false;byId('marioPause').textContent='إيقاف مؤقت';}status('رجعنا لبداية اللعبة.');}
   function clearImmersive(exitNative=false){
-    const view=byId('marioGameView'),shell=view?.querySelector('.mario-shell'),button=byId('marioFullscreen');
-    view?.classList.remove('mario-fullscreen');shell?.classList.remove('mario-immersive');
+    const view=byId('marioGameView'),button=byId('marioFullscreen');
+    view?.classList.remove('mario-fullscreen');
     if(button){button.textContent='ملء الشاشة';button.setAttribute('aria-pressed','false');}
     try{globalThis.screen?.orientation?.unlock?.();}catch{}
     if(exitNative&&document.fullscreenElement)Promise.resolve(document.exitFullscreen?.()).catch(()=>{});
   }
   async function toggleFullscreen(){
-    const view=byId('marioGameView'),shell=view?.querySelector('.mario-shell');
-    if(!view||!shell)return;
+    const view=byId('marioGameView');
+    if(!view)return;
     if(view.classList.contains('mario-fullscreen')){clearImmersive(true);status('رجعنا لوضع الصفحة.');return;}
-    view.classList.add('mario-fullscreen');shell.classList.add('mario-immersive');
+    view.classList.add('mario-fullscreen');
     const button=byId('marioFullscreen');if(button){button.textContent='تصغير الشاشة';button.setAttribute('aria-pressed','true');}
     try{if(view.requestFullscreen)await view.requestFullscreen({navigationUI:'hide'});}catch{}
     try{await globalThis.screen?.orientation?.lock?.('landscape');}catch{}
@@ -119,7 +119,7 @@ export function createMarioController({showView,onBack}={}){
     setControlsEnabled(false);
   }
   return Object.freeze({
-    start(){ensureMarioShell();document.body.classList.add('mario-game-mode');bind();showView?.('marioGameView');if(globalThis.matchMedia?.('(max-width: 900px)').matches)void toggleFullscreen().catch(()=>{});void loadRom();},
+    start(){ensureMarioShell();document.body.classList.add('mario-game-mode');bind();showView?.('marioGameView');if(globalThis.matchMedia?.('(pointer: coarse) and (max-width: 1600px)').matches)void toggleFullscreen().catch(()=>{});void loadRom();},
     leave:cleanup
   });
 }
