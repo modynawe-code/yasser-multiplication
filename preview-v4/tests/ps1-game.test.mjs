@@ -50,7 +50,7 @@ test('PS1 gamepad profile maps standard PlayStation controls and sticks',()=>{
 
 test('PS1 player files are included in the app shell cache',async()=>{
   const worker=await read('service-worker.js');
-  for(const path of ['src/modules/games/ps1/ps1-controller.js','src/modules/games/ps1/ps1-shell.js','src/modules/games/ps1/ps1.css?v=psx-pbp-2','src/modules/games/ps1/ps1-gamepad.js']){
+  for(const path of ['src/modules/games/ps1/ps1-controller.js','src/modules/games/ps1/ps1-shell.js','src/modules/games/ps1/ps1.css?v=psx-bios-local-1','src/modules/games/ps1/ps1-gamepad.js']){
     assert.ok(worker.includes(path),`${path} must be available from the app shell cache`);
     await read(path.split('?')[0]);
   }
