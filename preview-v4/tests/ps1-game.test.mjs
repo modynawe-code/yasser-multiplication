@@ -22,7 +22,9 @@ test('PS1 player loads a pinned EmulatorJS release using device-selected files',
   assert.match(controller,/cdn\.emulatorjs\.org\/4\.2\.3\/data\//);
   assert.match(controller,/EJS_core:'psx'/);
   assert.match(controller,/if\(bios&&fileExtension\(bios\)!=='bin'\)/);
-  assert.match(controller,/EJS_gameUrl:rom,EJS_biosUrl:bios\|\|''/);
+  assert.match(controller,/romUrl=URL\.createObjectURL\(rom\)/);
+  assert.match(controller,/EJS_gameUrl:romUrl,EJS_biosUrl:biosUrl/);
+  assert.match(controller,/URL\.revokeObjectURL\(url\)/);
   assert.match(controller,/new Set\(\['chd','pbp','iso','bin','cue','zip'\]\)/);
   assert.match(shell,/id="ps1RomFile" type="file"/);
   assert.match(shell,/EBOOT\.PBP يعمل عبر محاكي PS1/);

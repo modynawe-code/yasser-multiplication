@@ -7,7 +7,12 @@ const supportedExtensions=new Set(['chd','pbp','iso','bin','cue','zip']);
 function fileExtension(file){return String(file?.name||'').split('.').pop().toLowerCase();}
 
 export function createPs1Controller({showView,onBack}={}){
-  let bound=false,started=false,loaderScript=null,fullscreenFallback=false;
+  let bound=false,started=false,loaderScript=null,fullscreenFallback=false,fileUrls=[];
+
+  function releaseFileUrls(){
+    for(const url of fileUrls)URL.revokeObjectURL(url);
+    fileUrls=[];
+  }
 
   function status(message,error=false,stage=false){
     const node=byId(stage?'ps1StageStatus':'ps1Status');
@@ -43,6 +48,7 @@ export function createPs1Controller({showView,onBack}={}){
   function stopEmulator(){
     try{globalThis.EJS_terminate?.();}catch{}
     loaderScript?.remove();loaderScript=null;started=false;
+    releaseFileUrls();
     if(globalThis.EJS_emulator)globalThis.EJS_emulator=null;
     const player=byId('ps1Player');if(player)player.replaceChildren();
   }
@@ -65,21 +71,33 @@ export function createPs1Controller({showView,onBack}={}){
     if(!rom){status('اختر ملف اللعبة أولًا.',true);return;}
     if(!supportedExtensions.has(fileExtension(rom))){status('صيغة ملف اللعبة غير مدعومة. جرّب CHD أو PBP.',true);return;}
     if(bios&&fileExtension(bios)!=='bin'){status('ملف BIOS يجب أن يكون بصيغة BIN، أو اتركه فارغًا لتجربة BIOS المدمج بالمحاكي.',true);return;}
+    releaseFileUrls();
+    let romUrl,biosUrl='';
+    try{
+      romUrl=URL.createObjectURL(rom);
+      fileUrls.push(romUrl);
+      if(bios){biosUrl=URL.createObjectURL(bios);fileUrls.push(biosUrl);}
+    }catch{
+      releaseFileUrls();
+      status('تعذّر تجهيز الملف في المتصفح. أعد اختيار ملف اللعبة وحاول مجددًا.',true);
+      return;
+    }
     started=true;if(start)start.disabled=true;
     byId('ps1Setup').hidden=true;byId('ps1Stage').hidden=false;
     status('نحمّل ملفات المحاكي ثم نبدأ اللعبة…',false,true);
     Object.assign(globalThis,{
-      EJS_player:'#ps1Player',EJS_core:'psx',EJS_gameUrl:rom,EJS_biosUrl:bios||'',
+      EJS_player:'#ps1Player',EJS_core:'psx',EJS_gameUrl:romUrl,EJS_biosUrl:biosUrl,
       EJS_gameName:rom.name.replace(/\.[^.]+$/,''),EJS_pathtodata:DATA_PATH,
       EJS_language:'ar-SA',EJS_startOnLoaded:true,EJS_threads:false,
       EJS_askBeforeExit:false,EJS_disableLocalStorage:false,
       EJS_ready:()=>status('المحاكي جاهز. استخدم يد التحكم أو أزرار اللمس الظاهرة.',false,true),
-      EJS_onGameStart:()=>status('اللعبة تعمل.',false,true),
+      EJS_onGameStart:()=>status('بدأ المحاكي. إذا بقيت الصورة سوداء، فغالبًا يحتاج ملف BIOS متوافقًا.',false,true),
       EJS_onExit:()=>status('انتهى تشغيل المحاكي.',false,true)
     });
     loaderScript?.remove();loaderScript=document.createElement('script');loaderScript.async=true;loaderScript.src=`${DATA_PATH}loader.js`;
     loaderScript.onerror=()=>{
       started=false;if(start)start.disabled=false;
+      releaseFileUrls();
       status('تعذر تحميل المحاكي. تحقق من الاتصال ثم أعد المحاولة.',true,true);
     };
     document.head.appendChild(loaderScript);
