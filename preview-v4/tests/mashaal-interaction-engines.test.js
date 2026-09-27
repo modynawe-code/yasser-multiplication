@@ -72,10 +72,10 @@ test('named play experiences keep curriculum binding and dedicated renderers',()
 
 
 test('animal habitat matching accepts only the configured home',()=>{
-  const pairs={duck:'pond',bird:'nest',cat:'home'};
+  const pairs={duck:'pond',parrot:'nest',dog:'home'};
   assert.equal(isMashaalHabitatMatch('duck','pond',pairs),true);
   assert.equal(isMashaalHabitatMatch('duck','nest',pairs),false);
-  assert.equal(isMashaalHabitatMatch('cat','home',pairs),true);
+  assert.equal(isMashaalHabitatMatch('dog','home',pairs),true);
 });
 
 test('color lab treats the correct pair as order-independent',()=>{
@@ -88,7 +88,7 @@ test('animal and color lab activities keep named child-facing experiences',()=>{
   const animals=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-animal-habitat-01'));
   const colors=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-color-mix-orange-01'));
   assert.equal(animals.experienceTitleAr,'حديقة الحيوانات');
-  assert.deepEqual(animals.stimulus.pairs,{duck:'pond',bird:'nest',cat:'home'});
+  assert.deepEqual(animals.stimulus.pairs,{duck:'pond',parrot:'nest',dog:'home'});
   assert.equal(colors.experienceTitleAr,'مختبر مشاعل');
   assert.deepEqual(colors.stimulus.correctPair,['red','yellow']);
   assert.equal(getActivityRendererContract('animal-habitat').renderer,'animal-habitat');

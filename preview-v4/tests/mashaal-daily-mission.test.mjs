@@ -16,6 +16,9 @@ test('daily mission selects three unique playable experiences deterministically'
   assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-interactive-story-morning-01'));
   assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-animal-maze-duck-01'));
   assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-picture-puzzle-01'));
+  assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-open-animal-memory-01'));
+  assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-open-animal-count-01'));
+  assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-open-animal-puzzle-01'));
   for(const task of first.tasks)assert.ok(listMashaalDailyMissionActivityIds().includes(task.activityId));
   assert.equal(first.done,false);
 });

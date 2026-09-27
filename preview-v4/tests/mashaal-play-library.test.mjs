@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { listMashaalPlayExperiences,getMashaalPlayExperience } from '../src/modules/mashaal/application/play-experiences.js';
 
-test('Mashaal home play library exposes all nine interactive experiences directly',()=>{
+test('Mashaal home play library exposes all twelve interactive experiences directly',()=>{
   const items=listMashaalPlayExperiences();
-  assert.equal(items.length,9);
-  assert.equal(new Set(items.map(item=>item.activityId)).size,9);
+  assert.equal(items.length,12);
+  assert.equal(new Set(items.map(item=>item.activityId)).size,12);
   assert.ok(items.every(item=>item.available));
-  for(const title of ['مدينة الحروف','مطبخ مشاعل','لعبة الذاكرة','حديقة مشاعل','حديقة الحيوانات','متاهة الحيوانات','مختبر مشاعل','قصة مشاعل','بزل الصور']){
+  for(const title of ['مدينة الحروف','مطبخ مشاعل','عدّي الحيوانات','لعبة الذاكرة','ذاكرة الحيوانات','حديقة مشاعل','حديقة الحيوانات','متاهة الحيوانات','مختبر مشاعل','قصة مشاعل','بزل الصور','بزل الحيوان']){
     assert.ok(items.some(item=>item.title===title),title);
   }
 });
