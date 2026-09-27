@@ -16,6 +16,7 @@ export function ensureMashaalShell(){
   ensureStyle('src/modules/mashaal/ui/mashaal-activity-layout.css','mashaal-activity-layout');
   ensureStyle('src/modules/mashaal/ui/mashaal-interaction-engines.css','mashaal-interaction-engines');
   ensureStyle('src/modules/mashaal/ui/mashaal-daily-mission.css','mashaal-daily-mission');
+  ensureStyle('src/modules/mashaal/ui/mashaal-play-library.css','mashaal-play-library');
 
   const wrapper=document.createElement('div');
   wrapper.innerHTML=`
@@ -34,6 +35,10 @@ export function ensureMashaalShell(){
           <div class="mashaal-daily-copy"><small>مهمة اليوم</small><strong>3 ألعاب قصيرة</strong><span class="mashaal-daily-progress" id="mashaalDailyProgress" aria-live="polite">0 / 3</span></div>
           <div class="mashaal-daily-tasks" id="mashaalDailyTasks"></div>
           <button class="mashaal-daily-start" id="mashaalDailyStart" type="button">ابدئي المهمة</button>
+        </section>
+        <section class="mashaal-play-library" id="mashaalPlayLibrary" aria-labelledby="mashaalPlayTitle">
+          <div class="mashaal-play-heading"><strong id="mashaalPlayTitle">ألعابي</strong><span>اختاري اللعبة وابدئي مباشرة</span></div>
+          <div class="mashaal-play-grid" id="mashaalPlayGrid" aria-label="ألعاب مشاعل التفاعلية"></div>
         </section>
         <div class="mashaal-world-prompt" aria-hidden="true"><strong>اختاري عالمك</strong><span>المسي الصورة الكبيرة</span></div>
         <div class="mashaal-domain-grid" id="mashaalDomainGrid" aria-label="عوالم تعلم مشاعل"></div>
