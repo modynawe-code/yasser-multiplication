@@ -16,9 +16,11 @@ const DEFINITIONS=Object.freeze([
   Object.freeze({activityId:'kg3-open-colors-nature-01',title:'ألوان الطبيعة',subtitle:'اختاري اللون من الرسمة الأصلية',previewKey:'pratham-color-orange'}),
   Object.freeze({activityId:'kg3-interactive-story-morning-01',title:'قصة مشاعل',subtitle:'اختاري وكَمّلي القصة',previewKey:'wake'}),
   Object.freeze({activityId:'kg3-open-seed-journey-01',title:'مغامرة جمع البذور',subtitle:'رتبي مشاهد الرحلة',previewKey:'pratham-seed-walk'}),
+  Object.freeze({activityId:'kg3-open-tinku-night-01',title:'قصة تينكو الليلية',subtitle:'رتبي لقاءات تينكو',previewKey:'pratham-tinku-firefly'}),
   Object.freeze({activityId:'kg3-picture-puzzle-01',title:'بزل الصور',subtitle:'ركّبي الصورة من القطع',imagePath:'assets/mashaal/domains/thinking.webp'}),
   Object.freeze({activityId:'kg3-open-animal-puzzle-01',title:'بزل الحيوان',subtitle:'ركّبي صورة الكلب',imagePath:'assets/oer/kenney/animals/dog.png'}),
-  Object.freeze({activityId:'kg3-open-nature-puzzle-01',title:'بزل ألوان الطبيعة',subtitle:'ركّبي الرسمة الأصلية',imagePath:'assets/oer/pratham/0071/06.jpg'})
+  Object.freeze({activityId:'kg3-open-nature-puzzle-01',title:'بزل ألوان الطبيعة',subtitle:'ركّبي الرسمة الأصلية',imagePath:'assets/oer/pratham/0071/06.jpg'}),
+  Object.freeze({activityId:'kg3-open-moru-puzzle-01',title:'بزل الأرقام مع مورو',subtitle:'ركّبي الرسمة الأصلية',imagePath:'assets/oer/pratham/0006/24.jpg'})
 ]);
 
 export function listMashaalPlayExperiences(){

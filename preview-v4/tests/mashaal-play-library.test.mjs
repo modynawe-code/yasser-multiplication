@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { listMashaalPlayExperiences,getMashaalPlayExperience } from '../src/modules/mashaal/application/play-experiences.js';
 
-test('Mashaal home play library exposes all eighteen interactive experiences directly',()=>{
+test('Mashaal home play library exposes all twenty interactive experiences directly',()=>{
   const items=listMashaalPlayExperiences();
-  assert.equal(items.length,18);
-  assert.equal(new Set(items.map(item=>item.activityId)).size,18);
+  assert.equal(items.length,20);
+  assert.equal(new Set(items.map(item=>item.activityId)).size,20);
   assert.ok(items.every(item=>item.available));
-  for(const title of ['مدينة الحروف','مطبخ مشاعل','عدّي الحيوانات','لعبة الذاكرة','ذاكرة الحيوانات','ذاكرة الطبيعة','مزرعة أو برية؟','حديقة مشاعل','رحلة الشجرة','حديقة الحيوانات','متاهة الحيوانات','مختبر مشاعل','ألوان الطبيعة','قصة مشاعل','مغامرة جمع البذور','بزل الصور','بزل الحيوان','بزل ألوان الطبيعة']){
+  for(const title of ['مدينة الحروف','مطبخ مشاعل','عدّي الحيوانات','لعبة الذاكرة','ذاكرة الحيوانات','ذاكرة الطبيعة','مزرعة أو برية؟','حديقة مشاعل','رحلة الشجرة','حديقة الحيوانات','متاهة الحيوانات','مختبر مشاعل','ألوان الطبيعة','قصة مشاعل','مغامرة جمع البذور','قصة تينكو الليلية','بزل الصور','بزل الحيوان','بزل ألوان الطبيعة','بزل الأرقام مع مورو']){
     assert.ok(items.some(item=>item.title===title),title);
   }
 });
