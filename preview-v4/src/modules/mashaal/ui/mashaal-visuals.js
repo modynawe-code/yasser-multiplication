@@ -40,7 +40,7 @@ const SIMPLE_VISUALS=new Set([
   'wake','brush-teeth','breakfast','umbrella','sunglasses','happy','sad','angry','wait-turn','grab-ball','walk-away-angry','ask-help','throw-blocks','kick-blocks',
   'wet-hands','soap','rub-hands','rinse-hands','stay-away','touch-hot','play-near-hot','return-book','leave-book-floor','damage-book','help-tidy','leave-mess','scatter-toys',
   'saudi-flag','japan-flag','brazil-flag','doctor','teacher','baker','hospital','school','bakery','car','airplane','boat',
-  'ball-above-box','ball-inside-box','ball-below-box','done','balance','fine-motor','seed','sprout','plant'
+  'ball-above-box','ball-inside-box','ball-below-box','done','balance','fine-motor','seed','sprout','plant','bird','cat','pond','nest','home','red','yellow','blue','orange'
 ]);
 
 export function getMashaalDomainArt(domainId){return DOMAIN_ART[domainId]||DOMAIN_ART['cognitive-operations-general-knowledge'];}

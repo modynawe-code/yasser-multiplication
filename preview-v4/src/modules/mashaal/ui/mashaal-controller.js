@@ -11,7 +11,7 @@ import { mountQuranSurahPlayer } from '../quran/quran-surah-player.js';
 import { createMashaalChoiceVisual,createMashaalDomainArt,createMashaalStimulusVisual } from './mashaal-visuals.js';
 import { getMashaalWebMedia } from './mashaal-web-media.js';
 import { getMashaalActivityLayout } from './activity-layout.js';
-import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing,mountMashaalLetterHunt,mountMashaalKitchenCount } from './mashaal-interaction-engines.js';
+import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing,mountMashaalLetterHunt,mountMashaalKitchenCount,mountMashaalAnimalHabitat,mountMashaalColorMixLab } from './mashaal-interaction-engines.js';
 
 function byId(id){return document.getElementById(id);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -129,6 +129,16 @@ export function createMashaalController({repository,onExitToHub}={}){
     if(currentViewModel.activityType==='kitchen-count'){
       if(check)check.hidden=true;
       currentInteraction=mountMashaalKitchenCount(host,currentViewModel,{onComplete:completeCurrentActivity});
+      return;
+    }
+    if(currentViewModel.activityType==='animal-habitat'){
+      if(check)check.hidden=true;
+      currentInteraction=mountMashaalAnimalHabitat(host,currentViewModel,{onComplete:completeCurrentActivity});
+      return;
+    }
+    if(currentViewModel.activityType==='color-mix-lab'){
+      if(check)check.hidden=true;
+      currentInteraction=mountMashaalColorMixLab(host,currentViewModel,{onComplete:completeCurrentActivity});
       return;
     }
     for(const choice of currentViewModel.choices){
