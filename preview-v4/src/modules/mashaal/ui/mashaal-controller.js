@@ -12,7 +12,7 @@ import { mountQuranSurahPlayer } from '../quran/quran-surah-player.js';
 import { createMashaalChoiceVisual,createMashaalDomainArt,createMashaalStimulusVisual } from './mashaal-visuals.js';
 import { getMashaalWebMedia } from './mashaal-web-media.js';
 import { getMashaalActivityLayout } from './activity-layout.js';
-import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing,mountMashaalLetterHunt,mountMashaalKitchenCount,mountMashaalAnimalHabitat,mountMashaalColorMixLab,mountMashaalInteractiveStory } from './mashaal-interaction-engines.js';
+import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing,mountMashaalLetterHunt,mountMashaalKitchenCount,mountMashaalAnimalHabitat,mountMashaalColorMixLab,mountMashaalInteractiveStory,mountMashaalAnimalMaze } from './mashaal-interaction-engines.js';
 
 function byId(id){return document.getElementById(id);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -152,6 +152,11 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     if(currentViewModel.activityType==='interactive-story'){
       if(check)check.hidden=true;
       currentInteraction=mountMashaalInteractiveStory(host,currentViewModel,{onComplete:completeCurrentActivity,onSpeak:text=>speech.speak(text,{interrupt:true})});
+      return;
+    }
+    if(currentViewModel.activityType==='animal-maze'){
+      if(check)check.hidden=true;
+      currentInteraction=mountMashaalAnimalMaze(host,currentViewModel,{onComplete:completeCurrentActivity});
       return;
     }
     for(const choice of currentViewModel.choices){
