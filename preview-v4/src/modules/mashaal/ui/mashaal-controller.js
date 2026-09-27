@@ -12,7 +12,7 @@ import { mountQuranSurahPlayer } from '../quran/quran-surah-player.js';
 import { createMashaalChoiceVisual,createMashaalDomainArt,createMashaalStimulusVisual } from './mashaal-visuals.js';
 import { getMashaalWebMedia } from './mashaal-web-media.js';
 import { getMashaalActivityLayout } from './activity-layout.js';
-import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing,mountMashaalLetterHunt,mountMashaalKitchenCount,mountMashaalAnimalHabitat,mountMashaalColorMixLab } from './mashaal-interaction-engines.js';
+import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing,mountMashaalLetterHunt,mountMashaalKitchenCount,mountMashaalAnimalHabitat,mountMashaalColorMixLab,mountMashaalPicturePuzzle,mountMashaalInteractiveStory } from './mashaal-interaction-engines.js';
 
 function byId(id){return document.getElementById(id);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -147,6 +147,16 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     if(currentViewModel.activityType==='color-mix-lab'){
       if(check)check.hidden=true;
       currentInteraction=mountMashaalColorMixLab(host,currentViewModel,{onComplete:completeCurrentActivity});
+      return;
+    }
+    if(currentViewModel.activityType==='picture-puzzle'){
+      if(check)check.hidden=true;
+      currentInteraction=mountMashaalPicturePuzzle(host,currentViewModel,{onComplete:completeCurrentActivity});
+      return;
+    }
+    if(currentViewModel.activityType==='interactive-story'){
+      if(check)check.hidden=true;
+      currentInteraction=mountMashaalInteractiveStory(host,currentViewModel,{onComplete:completeCurrentActivity,onPrompt:prompt=>speech.speak(prompt,{interrupt:true})});
       return;
     }
     for(const choice of currentViewModel.choices){
