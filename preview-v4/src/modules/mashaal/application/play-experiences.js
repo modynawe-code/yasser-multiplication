@@ -23,7 +23,10 @@ const DEFINITIONS=Object.freeze([
   Object.freeze({activityId:'kg3-open-animal-puzzle-01',title:'بزل الحيوان',subtitle:'ركّبي صورة الكلب',imagePath:'assets/oer/kenney/animals/dog.png'}),
   Object.freeze({activityId:'kg3-open-nature-puzzle-01',title:'بزل ألوان الطبيعة',subtitle:'ركّبي الرسمة الأصلية',imagePath:'assets/oer/pratham/0071/06.jpg'}),
   Object.freeze({activityId:'kg3-open-moru-puzzle-01',title:'بزل الأرقام مع مورو',subtitle:'ركّبي الرسمة الأصلية',imagePath:'assets/oer/pratham/0006/24.jpg'}),
-  Object.freeze({activityId:'kg3-open-zoo-puzzle-01',title:'بزل حديقة الحيوان',subtitle:'ركّبي الرسمة الأصلية',imagePath:'assets/oer/pratham/0120/03.jpg'})
+  Object.freeze({activityId:'kg3-open-zoo-puzzle-01',title:'بزل حديقة الحيوان',subtitle:'ركّبي الرسمة الأصلية',imagePath:'assets/oer/pratham/0120/03.jpg'}),
+  Object.freeze({activityId:'kg3-open-tree-puzzle-bank-01',title:'بزل رحلة الشجرة',subtitle:'13 رسمة أصلية للاختيار',imagePath:'assets/oer/pratham/0433/08.jpg'}),
+  Object.freeze({activityId:'kg3-open-seed-puzzle-bank-01',title:'بزل مغامرة البذور',subtitle:'19 رسمة أصلية للاختيار',imagePath:'assets/oer/pratham/0352/12.jpg'}),
+  Object.freeze({activityId:'kg3-open-tinku-puzzle-bank-01',title:'بزل تينكو',subtitle:'12 رسمة أصلية للاختيار',imagePath:'assets/oer/pratham/0056/08.jpg'}),
 ]);
 
 export function listMashaalPlayExperiences(){

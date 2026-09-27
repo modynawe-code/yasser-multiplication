@@ -24,11 +24,7 @@ export const MASHAAL_PRATHAM_OPEN_PACKS=Object.freeze({
     storyUrl:'https://storyweaver.org.in/stories/38-counting-on-moru',
     basePath:'assets/oer/pratham/0006',imageCount:24
   }),
-  '0120':Object.freeze({
-    title:"Anaya's Thumb",author:'Natasha Sharma',illustrator:'Ruchi Shah',license:'CC BY 4.0',
-    storyUrl:'https://storyweaver.org.in/stories/1002-anaya-s-thumb',
-    basePath:'assets/oer/pratham/0120',imageCount:3,selectedFiles:Object.freeze(['03.jpg','05.jpg','09.jpg'])
-  }),
+
   '0120':Object.freeze({
     title:"Anaya's Thumb",author:'Natasha Sharma',illustrator:'Ruchi Shah',license:'CC BY 4.0',
     storyUrl:'https://storyweaver.org.in/stories/1002-anaya-s-thumb',
@@ -37,3 +33,9 @@ export const MASHAAL_PRATHAM_OPEN_PACKS=Object.freeze({
 });
 
 export function getMashaalPrathamOpenPack(id){return MASHAAL_PRATHAM_OPEN_PACKS[String(id||'')]||null;}
+
+export function listMashaalPrathamPackImagePaths(id){
+  const pack=getMashaalPrathamOpenPack(id);if(!pack)return Object.freeze([]);
+  const files=Array.isArray(pack.selectedFiles)?[...pack.selectedFiles]:Array.from({length:Number(pack.imageCount)||0},(_,index)=>String(index+1).padStart(2,'0')+'.jpg');
+  return Object.freeze(files.map(file=>`${pack.basePath}/${file}`));
+}

@@ -429,14 +429,15 @@ export function mountMashaalAnimalMaze(host,viewModel,{onComplete}={}){
 export function mountMashaalPicturePuzzle(host,viewModel,{onComplete}={}){
   host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-picture-puzzle-host');
   const rows=Math.max(2,Number(viewModel.stimulus?.rows)||2),cols=Math.max(2,Number(viewModel.stimulus?.cols)||2),total=rows*cols;
-  const imagePath=String(viewModel.stimulus?.imagePath||'');
-  let order=createMashaalPuzzleOrder(total),selected=null,completed=false,destroyed=false,moves=0;
+  const imagePaths=[...(viewModel.stimulus?.imagePaths||[])].map(String).filter(Boolean);if(!imagePaths.length&&viewModel.stimulus?.imagePath)imagePaths.push(String(viewModel.stimulus.imagePath));
+  let imageIndex=0,imagePath=imagePaths[0]||'',order=createMashaalPuzzleOrder(total),selected=null,completed=false,destroyed=false,moves=0;
   const preview=document.createElement('div');preview.className='mashaal-puzzle-preview';
   const previewImg=document.createElement('img');previewImg.src=imagePath;previewImg.alt='الصورة الكاملة';previewImg.decoding='async';preview.appendChild(previewImg);
+  const controls=document.createElement('div');controls.className='mashaal-puzzle-image-controls';
+  if(imagePaths.length>1){const next=document.createElement('button');next.type='button';next.className='btn secondary mashaal-puzzle-next-image';next.textContent='صورة ثانية';next.setAttribute('aria-label','اختاري صورة ثانية من القصة');next.addEventListener('click',()=>{if(destroyed)return;imageIndex=(imageIndex+1)%imagePaths.length;imagePath=imagePaths[imageIndex];previewImg.src=imagePath;order=createMashaalPuzzleOrder(total);selected=null;completed=false;moves=0;render();});controls.appendChild(next);}
   const board=document.createElement('div');board.className='mashaal-picture-puzzle-board';board.style.setProperty('--puzzle-cols',String(cols));board.style.setProperty('--puzzle-rows',String(rows));
   const status=document.createElement('p');status.className='mashaal-picture-puzzle-status';status.setAttribute('aria-live','polite');
-  host.append(preview,board,status);
-
+  host.append(preview,controls,board,status);
   function render(){
     board.innerHTML='';
     order.forEach((tileId,position)=>{
@@ -448,7 +449,8 @@ export function mountMashaalPicturePuzzle(host,viewModel,{onComplete}={}){
       if(selected===position)button.dataset.selected='true';
       button.addEventListener('click',()=>select(position));board.appendChild(button);
     });
-    status.textContent=completed?'اكتملت الصورة!':'الحركات: '+moves;
+    const imageStatus=imagePaths.length>1?'الصورة '+(imageIndex+1)+' من '+imagePaths.length+' · ':'';
+    status.textContent=completed?'اكتملت الصورة!':imageStatus+'الحركات: '+moves;
   }
   function select(position){
     if(destroyed||completed)return;
