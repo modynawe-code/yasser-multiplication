@@ -2,7 +2,7 @@
 #mashaalHomeView .mashaal-daily-copy{grid-area:copy;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 #mashaalHomeView .mashaal-daily-copy small{font-size:13px;font-weight:950;color:#765276}
 #mashaalHomeView .mashaal-daily-copy strong{font-size:22px}
-#mashaalHomeView .mashaal-daily-progress{font-size:16px;font-weight:950;color:#5d6c86}
+#mashaalHomeView .mashaal-daily-progress{font-size:16px;font-weight:950;color:#5d6c86;direction:ltr;unicode-bidi:isolate}
 #mashaalHomeView .mashaal-daily-tasks{grid-area:tasks;display:flex;gap:8px;flex-wrap:wrap}
 #mashaalHomeView .mashaal-daily-task{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:6px 10px;border:1px solid #ddd0db;border-radius:14px;background:#fff;font-size:14px;font-weight:900}
 #mashaalHomeView .mashaal-daily-task::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid #a88aa3;background:#fff}
