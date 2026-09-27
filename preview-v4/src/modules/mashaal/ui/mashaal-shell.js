@@ -14,6 +14,7 @@ export function ensureMashaalShell(){
   ensureStyle('src/modules/mashaal/ui/mashaal-home.css','mashaal-home');
   ensureStyle('src/modules/mashaal/ui/mashaal-visuals.css','mashaal-visuals');
   ensureStyle('src/modules/mashaal/ui/mashaal-activity-layout.css','mashaal-activity-layout');
+  ensureStyle('src/modules/mashaal/ui/mashaal-interaction-engines.css','mashaal-interaction-engines');
 
   const wrapper=document.createElement('div');
   wrapper.innerHTML=`
