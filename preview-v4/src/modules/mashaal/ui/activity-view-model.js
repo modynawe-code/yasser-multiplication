@@ -1,3 +1,5 @@
+import { listMashaalPrathamPackImagePaths } from '../curriculum/pratham-open-packs.js';
+
 const LABELS=Object.freeze({
   star:'نجمة',ball:'كرة',heart:'قلب',door:'باب',duck:'بطة',apple:'تفاحة',moon:'قمر',circle:'دائرة',square:'مربع',box:'صندوق',
   'red-circle':'دائرة حمراء','blue-circle':'دائرة زرقاء','red-square':'مربع أحمر','yellow-square':'مربع أصفر',wake:'استيقاظ','brush-teeth':'تنظيف الأسنان',breakfast:'فطور',umbrella:'مظلة',sunglasses:'نظارة شمسية',done:'تم',
@@ -30,7 +32,8 @@ function stimulusModel(stimulus={}){
     case 'color-mix':return {kind:'color-mix',colors:[...(stimulus.colors||[])],target:stimulus.target||'',correctPair:[...(stimulus.correctPair||[])]};
     case 'interactive-story':return {kind:'interactive-story',steps:(stimulus.steps||[]).map(step=>Object.freeze({scene:String(step.scene||''),promptAr:String(step.promptAr||''),audioPromptAr:String(step.audioPromptAr||step.promptAr||''),choices:[...(step.choices||[])],correctChoice:String(step.correctChoice||'')}))};
     case 'grid-maze':return {kind:'grid-maze',animal:String(stimulus.animal||'duck'),goal:String(stimulus.goal||'pond'),size:Number(stimulus.size)||5,start:[...(stimulus.start||[0,0])],finish:[...(stimulus.finish||[4,4])],walls:[...(stimulus.walls||[])]};
-    case 'picture-puzzle':return {kind:'picture-puzzle',imagePath:String(stimulus.imagePath||''),rows:Math.max(2,Number(stimulus.rows)||2),cols:Math.max(2,Number(stimulus.cols)||2)};
+    case 'picture-puzzle':return {kind:'picture-puzzle',imagePath:String(stimulus.imagePath||''),imagePaths:Object.freeze([String(stimulus.imagePath||'')].filter(Boolean)),rows:Math.max(2,Number(stimulus.rows)||2),cols:Math.max(2,Number(stimulus.cols)||2)};
+    case 'picture-puzzle-bank':{const imagePaths=listMashaalPrathamPackImagePaths(stimulus.packId);return {kind:'picture-puzzle',imagePath:imagePaths[0]||'',imagePaths,packId:String(stimulus.packId||''),rows:Math.max(2,Number(stimulus.rows)||2),cols:Math.max(2,Number(stimulus.cols)||2)};}
     case 'emotion-prompt':return {kind:'emotion-prompt'};
     case 'movement':return {kind:'movement',movement:stimulus.movement||''};
     case 'fine-motor':return {kind:'fine-motor',task:stimulus.task||''};
