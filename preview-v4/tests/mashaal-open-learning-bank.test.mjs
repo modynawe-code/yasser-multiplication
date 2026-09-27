@@ -30,3 +30,12 @@ test('Kenney animal media is local, offline-ready and uniformly licensed',()=>{
     assert.equal(media.source,'Kenney Animal Pack Remastered');
   }
 });
+
+test('first imported CC0 activities are playable and explicitly source-tagged',async()=>{
+  const { getMashaalKg3Activity }=await import('../src/modules/mashaal/curriculum/kg3-activity-catalog.js');
+  for(const id of ['kg3-open-animal-memory-01','kg3-open-animal-count-01','kg3-open-animal-puzzle-01']){
+    const activity=getMashaalKg3Activity(id);
+    assert.ok(activity,id);
+    assert.equal(activity.assetSourceId,'kenney-cc0');
+  }
+});
