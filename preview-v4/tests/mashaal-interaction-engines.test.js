@@ -147,6 +147,17 @@ test('picture puzzle stays curriculum-bound and uses local Mashaal art',()=>{
 });
 
 
+test('story puzzle bank exposes the complete local source pack to the existing renderer',()=>{
+  const nature=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-open-nature-puzzle-01'));
+  const tree=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-open-tree-puzzle-bank-01'));
+  assert.equal(nature.activityType,'picture-puzzle');
+  assert.equal(nature.stimulus.imagePaths.length,17);
+  assert.equal(tree.stimulus.imagePaths.length,13);
+  assert.ok(nature.stimulus.imagePaths.every(path=>/^assets\/oer\/pratham\/0071\/\d{2}\.jpg$/.test(path)));
+  assert.ok(tree.stimulus.imagePaths.every(path=>/^assets\/oer\/pratham\/0433\/\d{2}\.jpg$/.test(path)));
+  assert.equal(getActivityRendererContract('picture-puzzle').renderer,'picture-puzzle');
+});
+
 test('farm-or-wild sorting accepts only the configured animal group',()=>{
   const pairs={cow:'farm',chicken:'farm',rabbit:'farm',giraffe:'wild',monkey:'wild',penguin:'wild'};
   assert.equal(isMashaalAnimalSortMatch('cow','farm',pairs),true);
