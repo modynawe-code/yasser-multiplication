@@ -32,7 +32,7 @@ function renderSkillPreview(skill,domainId){
   return preview;
 }
 
-export function createMashaalController({repository,onExitToHub}={}){
+export function createMashaalController({repository,onExitToHub,onActivityCompleted}={}){
   if(!repository)throw new Error('Mashaal repository is required');
   const speech=createSpeechService();
   let bound=false,currentDomain=null,currentSkill=null,currentPlan=null,currentActivityIndex=0,currentActivity=null,currentViewModel=null,currentInteraction=null,state=repository.load(),startedAt=0,activityComplete=false,recitationPlayer=null,recitationPlayed=false;
@@ -177,6 +177,7 @@ export function createMashaalController({repository,onExitToHub}={}){
   }
   function hearCurrentActivity(){if(!currentViewModel)return;speech.speak(currentViewModel.audioPromptAr,{interrupt:true});}
   function saveEvidence(evidence,skillId){if(recordMashaalEvidence(state,{skillId,evidence}))repository.save(state);}
+  function notifyActivityCompleted(evidence){if(typeof onActivityCompleted!=='function'||!currentActivity||!evidence)return;try{onActivityCompleted(Object.freeze({activityId:currentActivity.id,skillId:currentViewModel?.skillId||currentActivity.skillId,evidenceId:evidence.evidenceId,at:evidence.createdAt||new Date().toISOString()}));}catch{}}
   function finishActivity(praise){
     activityComplete=true;recitationPlayer?.pause?.();lockActivityControls();const transfer=getMashaalTransferPrompt(currentViewModel?.skillId);const feedback=byId('mashaalActivityFeedback');
     if(feedback)feedback.textContent=transfer?`${praise}\nالحين جربي بعيد عن الشاشة: ${transfer}`:praise;
@@ -190,13 +191,14 @@ export function createMashaalController({repository,onExitToHub}={}){
     if(activityComplete||!currentViewModel||!currentActivity)return;
     if(currentViewModel.requiresHumanRecitation&&!recitationPlayed){const feedback=byId('mashaalActivityFeedback');if(feedback)feedback.textContent='اسمعي التلاوة كاملة أولًا.';speech.speak('اسمعي التلاوة كاملة أولًا');return;}
     const evidence=createMashaalActivityCompletion({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,activityType:currentViewModel.interaction,createdAt:new Date().toISOString()});
-    saveEvidence(evidence,currentViewModel.skillId);finishActivity('رائع يا مشاعل');
+    saveEvidence(evidence,currentViewModel.skillId);notifyActivityCompleted(evidence);finishActivity('رائع يا مشاعل');
   }
   function submitAnswer(answer,sourceButton=null){
     if(activityComplete||!currentViewModel||!currentActivity)return;const isCorrect=isMashaalActivityAnswerCorrect(currentViewModel,answer);
     const evidence=createMashaalDigitalAttempt({evidenceId:evidenceId(currentActivity.id),skillId:currentViewModel.skillId,isCorrect,responseMs:Date.now()-startedAt});
     saveEvidence(evidence,currentViewModel.skillId);
     if(isCorrect){
+      notifyActivityCompleted(evidence);
       const selected=sourceButton?[sourceButton]:[...byId('mashaalActivityChoices').querySelectorAll('.selected')];selected.forEach(button=>button.dataset.outcome='correct');finishActivity('أحسنتِ يا مشاعل');
     }else{
       const attempted=sourceButton?[sourceButton]:[...byId('mashaalActivityChoices').querySelectorAll('.selected')];attempted.forEach(button=>button.dataset.outcome='wrong');if(currentViewModel.orderedSequence){clearSelections();currentInteraction?.reset?.();}
