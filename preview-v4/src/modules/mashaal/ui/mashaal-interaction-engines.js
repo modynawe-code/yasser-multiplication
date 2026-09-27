@@ -44,6 +44,27 @@ export function isMashaalColorMixCorrect(selection,correctPair=[]){
   return selected.length===correct.length&&selected.every((value,index)=>value===correct[index]);
 }
 
+export function createMashaalPuzzleOrder(total){
+  const count=Math.max(1,Number(total)||1),order=Array.from({length:count},(_,index)=>index);
+  if(count>1)order.push(order.shift());
+  return order;
+}
+
+export function swapMashaalPuzzlePieces(order,firstIndex,secondIndex){
+  const next=[...(order||[])],a=Number(firstIndex),b=Number(secondIndex);
+  if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>=next.length||b>=next.length||a===b)return next;
+  [next[a],next[b]]=[next[b],next[a]];
+  return next;
+}
+
+export function isMashaalPuzzleSolved(order){
+  return (order||[]).every((piece,index)=>Number(piece)===index);
+}
+
+export function isMashaalStoryChoiceCorrect(step,value){
+  return String(step?.correctChoice||'')===String(value||'');
+}
+
 function visualCard(choice,viewModel,className){
   const button=document.createElement('button');button.type='button';button.className=className;button.dataset.value=choice.value;button.setAttribute('aria-label',choice.label);
   const visual=document.createElement('span');visual.className='mashaal-interaction-card-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,viewModel));
@@ -311,6 +332,76 @@ export function mountMashaalColorMixLab(host,viewModel,{onComplete}={}){
   return Object.freeze({
     reset(){if(timer)clearTimeout(timer);resetSelection();status.textContent='اختاري لونين.';},
     destroy(){destroyed=true;if(timer)clearTimeout(timer);host.classList.remove('mashaal-interaction-host','mashaal-color-lab-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalPicturePuzzle(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-picture-puzzle-host');
+  const rows=Math.max(1,Number(viewModel.stimulus?.rows)||2),cols=Math.max(1,Number(viewModel.stimulus?.cols)||3),total=rows*cols;
+  const imagePath=String(viewModel.stimulus?.imagePath||'');
+  let order=createMashaalPuzzleOrder(total),selectedIndex=null,destroyed=false;
+  const preview=document.createElement('div');preview.className='mashaal-puzzle-preview';
+  const previewImg=document.createElement('img');previewImg.src=imagePath;previewImg.alt='الصورة الأصلية';previewImg.draggable=false;preview.appendChild(previewImg);
+  const grid=document.createElement('div');grid.className='mashaal-puzzle-grid';grid.style.gridTemplateColumns='repeat('+cols+',minmax(0,1fr))';grid.style.aspectRatio=String(cols)+' / '+String(rows);
+  const status=document.createElement('p');status.className='mashaal-puzzle-status';status.setAttribute('aria-live','polite');status.textContent='المسي قطعتين لتبدلين مكانهما.';
+  host.append(preview,grid,status);
+
+  function render(){
+    grid.innerHTML='';
+    for(let slot=0;slot<order.length;slot++){
+      const piece=order[slot],button=document.createElement('button');button.type='button';button.className='mashaal-puzzle-piece';button.dataset.slot=String(slot);button.dataset.piece=String(piece);button.setAttribute('aria-label','قطعة الصورة '+(piece+1));
+      const col=piece%cols,row=Math.floor(piece/cols),x=cols===1?0:(col/(cols-1))*100,y=rows===1?0:(row/(rows-1))*100;
+      button.style.backgroundImage='url("'+imagePath.replace(/"/g,'')+'")';button.style.backgroundSize=(cols*100)+'% '+(rows*100)+'%';button.style.backgroundPosition=x+'% '+y+'%';
+      if(slot===selectedIndex)button.setAttribute('aria-pressed','true');else button.setAttribute('aria-pressed','false');
+      button.addEventListener('click',()=>{
+        if(destroyed)return;
+        if(selectedIndex===null){selectedIndex=slot;status.textContent='الحين اختاري القطعة الثانية.';render();return;}
+        if(selectedIndex===slot){selectedIndex=null;status.textContent='اختاري قطعتين.';render();return;}
+        order=swapMashaalPuzzlePieces(order,selectedIndex,slot);selectedIndex=null;render();
+        if(isMashaalPuzzleSolved(order)){status.textContent='ركبتي الصورة!';grid.dataset.solved='true';onComplete?.();}else status.textContent='كملي، قربتي!';
+      });grid.appendChild(button);
+    }
+  }
+  render();
+  return Object.freeze({
+    reset(){order=createMashaalPuzzleOrder(total);selectedIndex=null;delete grid.dataset.solved;status.textContent='المسي قطعتين لتبدلين مكانهما.';render();},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-picture-puzzle-host');host.innerHTML='';}
+  });
+}
+
+const STORY_LABELS=Object.freeze({'brush-teeth':'أنظف أسناني',ball:'ألعب بالكرة',breakfast:'آكل الفطور',candy:'آكل حلوى','help-tidy':'أرتب ألعابي','leave-mess':'أتركها مبعثرة'});
+
+export function mountMashaalInteractiveStory(host,viewModel,{onComplete,onPrompt}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-story-host');
+  const steps=[...(viewModel.stimulus?.steps||[])];let stepIndex=0,destroyed=false;
+  const progress=document.createElement('div');progress.className='mashaal-story-progress';
+  const scene=document.createElement('div');scene.className='mashaal-story-scene';
+  const prompt=document.createElement('h3');prompt.className='mashaal-story-prompt';
+  const choices=document.createElement('div');choices.className='mashaal-story-choices';
+  const status=document.createElement('p');status.className='mashaal-story-status';status.setAttribute('aria-live','polite');
+  scene.append(prompt,choices);host.append(progress,scene,status);
+
+  function render(){
+    const step=steps[stepIndex];if(!step){onComplete?.();return;}
+    progress.innerHTML='';for(let index=0;index<steps.length;index++){const dot=document.createElement('span');dot.dataset.state=index<stepIndex?'done':index===stepIndex?'current':'next';dot.textContent=String(index+1);progress.appendChild(dot);}
+    prompt.textContent=step.promptAr;choices.innerHTML='';status.textContent='';onPrompt?.(step.promptAr);
+    for(const value of step.choices||[]){
+      const button=document.createElement('button');button.type='button';button.className='mashaal-story-choice';button.dataset.value=value;
+      const visual=document.createElement('span');visual.className='mashaal-story-choice-visual';visual.appendChild(createMashaalChoiceVisual(value,viewModel));
+      const label=document.createElement('strong');label.textContent=STORY_LABELS[value]||value;button.append(visual,label);
+      button.addEventListener('click',()=>{
+        if(destroyed)return;
+        if(!isMashaalStoryChoiceCorrect(step,value)){button.dataset.outcome='wrong';status.textContent='جرّبي اختيار ثاني.';setTimeout(()=>{if(!destroyed)delete button.dataset.outcome;},420);return;}
+        button.dataset.outcome='correct';status.textContent='اختيار ممتاز!';
+        if(stepIndex>=steps.length-1){progress.querySelectorAll('span').forEach(dot=>dot.dataset.state='done');onComplete?.();return;}
+        stepIndex+=1;render();
+      });choices.appendChild(button);
+    }
+  }
+  render();
+  return Object.freeze({
+    reset(){stepIndex=0;render();},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-story-host');host.innerHTML='';}
   });
 }
 
