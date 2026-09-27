@@ -6,6 +6,7 @@ const DEFINITIONS=Object.freeze([
   Object.freeze({activityId:'kg3-open-animal-count-01',title:'عدّي الحيوانات',subtitle:'عدّي واختاري الرقم',previewKey:'dog'}),
   Object.freeze({activityId:'kg3-memory-match-01',title:'لعبة الذاكرة',subtitle:'طابقي الصور المتشابهة',previewKey:'moon'}),
   Object.freeze({activityId:'kg3-open-animal-memory-01',title:'ذاكرة الحيوانات',subtitle:'بطة وكلب وببغاء',previewKey:'parrot'}),
+  Object.freeze({activityId:'kg3-open-animal-sort-01',title:'مزرعة أو برية؟',subtitle:'صنفي الحيوانات',previewKey:'cow'}),
   Object.freeze({activityId:'kg3-plant-growth-sequence-01',title:'حديقة مشاعل',subtitle:'رتبي نمو النبتة',previewKey:'plant'}),
   Object.freeze({activityId:'kg3-animal-habitat-01',title:'حديقة الحيوانات',subtitle:'وصّلي الحيوان لمكانه',previewKey:'duck'}),
   Object.freeze({activityId:'kg3-animal-maze-duck-01',title:'متاهة الحيوانات',subtitle:'وصّلي البطة للبركة',previewKey:'pond'}),
