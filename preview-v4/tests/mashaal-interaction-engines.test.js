@@ -94,3 +94,14 @@ test('animal and color lab activities keep named child-facing experiences',()=>{
   assert.equal(getActivityRendererContract('animal-habitat').renderer,'animal-habitat');
   assert.equal(getActivityRendererContract('color-mix-lab').renderer,'color-mix-lab');
 });
+
+
+test('interactive story is curriculum-bound and uses a dedicated renderer',()=>{
+  const story=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-interactive-story-morning-01'));
+  assert.equal(story.experienceTitleAr,'قصة مشاعل');
+  assert.equal(story.activityType,'interactive-story');
+  assert.equal(story.stimulus.steps.length,2);
+  assert.deepEqual(story.stimulus.steps[0].choices,['brush-teeth','ball']);
+  assert.equal(story.stimulus.steps[0].correctChoice,'brush-teeth');
+  assert.equal(getActivityRendererContract('interactive-story').renderer,'interactive-story');
+});
