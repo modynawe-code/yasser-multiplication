@@ -20,7 +20,10 @@ const DAILY_MISSION_POOL=Object.freeze([
   'kg3-open-seed-journey-01',
   'kg3-open-nature-puzzle-01',
   'kg3-open-tinku-night-01',
-  'kg3-open-moru-puzzle-01'
+  'kg3-open-moru-puzzle-01',
+  'kg3-open-zoo-find-01',
+  'kg3-open-zoo-memory-01',
+  'kg3-open-zoo-puzzle-01'
 ]);
 
 export function mashaalLocalDayKey(value=new Date()){
