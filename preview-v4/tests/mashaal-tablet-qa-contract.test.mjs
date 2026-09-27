@@ -30,7 +30,7 @@ test('Mashaal child controls keep large touch targets and visible non-color-only
 
 test('Mashaal shell exposes the three visual QA surfaces and accessible live feedback',async()=>{
   const shell=await readPreview('src/modules/mashaal/ui/mashaal-shell.js');
-  for(const id of ['mashaalHomeView','mashaalDomainView','mashaalActivityView','mashaalDomainGrid','mashaalSkillGrid','mashaalActivityChoices'])assert.match(shell,new RegExp(`id=\\"${id}\\"`));
+  for(const id of ['mashaalHomeView','mashaalDomainView','mashaalActivityView','mashaalDomainGrid','mashaalPlayLibrary','mashaalPlayGrid','mashaalSkillGrid','mashaalActivityChoices'])assert.match(shell,new RegExp(`id=\\"${id}\\"`));
   assert.match(shell,/id="mashaalHomeStatus"[^>]*aria-live="polite"|aria-live="polite"[^>]*id="mashaalHomeStatus"/);
   assert.match(shell,/id="mashaalActivityFeedback"[^>]*aria-live="polite"|aria-live="polite"[^>]*id="mashaalActivityFeedback"/);
   assert.match(shell,/aria-label="اسمعي التعليمات"/);
