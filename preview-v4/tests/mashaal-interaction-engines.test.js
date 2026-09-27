@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getMashaalKg3Activity } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
 import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activity-view-model.js';
 import { getActivityRendererContract } from '../src/shared/activities/activity-renderer-contracts.js';
-import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
+import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
 
 test('memory deck creates exactly two cards per visual without losing pair identity',()=>{
   const deck=buildMashaalMemoryDeck(['apple','moon','ball'],{random:()=>0});
@@ -68,4 +68,29 @@ test('named play experiences keep curriculum binding and dedicated renderers',()
   assert.deepEqual(garden.correctValues,['seed','sprout','plant']);
   assert.equal(getActivityRendererContract('letter-hunt').renderer,'letter-hunt');
   assert.equal(getActivityRendererContract('kitchen-count').renderer,'kitchen-count');
+});
+
+
+test('animal habitat matching accepts only the configured home',()=>{
+  const pairs={duck:'pond',bird:'nest',cat:'home'};
+  assert.equal(isMashaalHabitatMatch('duck','pond',pairs),true);
+  assert.equal(isMashaalHabitatMatch('duck','nest',pairs),false);
+  assert.equal(isMashaalHabitatMatch('cat','home',pairs),true);
+});
+
+test('color lab treats the correct pair as order-independent',()=>{
+  assert.equal(isMashaalColorMixCorrect(['red','yellow'],['red','yellow']),true);
+  assert.equal(isMashaalColorMixCorrect(['yellow','red'],['red','yellow']),true);
+  assert.equal(isMashaalColorMixCorrect(['blue','yellow'],['red','yellow']),false);
+});
+
+test('animal and color lab activities keep named child-facing experiences',()=>{
+  const animals=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-animal-habitat-01'));
+  const colors=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-color-mix-orange-01'));
+  assert.equal(animals.experienceTitleAr,'حديقة الحيوانات');
+  assert.deepEqual(animals.stimulus.pairs,{duck:'pond',bird:'nest',cat:'home'});
+  assert.equal(colors.experienceTitleAr,'مختبر مشاعل');
+  assert.deepEqual(colors.stimulus.correctPair,['red','yellow']);
+  assert.equal(getActivityRendererContract('animal-habitat').renderer,'animal-habitat');
+  assert.equal(getActivityRendererContract('color-mix-lab').renderer,'color-mix-lab');
 });
