@@ -44,6 +44,16 @@ export function isMashaalColorMixCorrect(selection,correctPair=[]){
   return selected.length===correct.length&&selected.every((value,index)=>value===correct[index]);
 }
 
+export function moveMashaalMaze(position,direction,{size=5,walls=[]}={}){
+  const safeSize=Math.max(2,Number(size)||5),[row,col]=Array.isArray(position)?position:[0,0];
+  const deltas={up:[-1,0],down:[1,0],left:[0,-1],right:[0,1]},delta=deltas[String(direction)]||[0,0];
+  const next=[row+delta[0],col+delta[1]];
+  if(next[0]<0||next[1]<0||next[0]>=safeSize||next[1]>=safeSize)return [row,col];
+  const blocked=new Set((walls||[]).map(String));
+  if(blocked.has(next[0]+','+next[1]))return [row,col];
+  return next;
+}
+
 function visualCard(choice,viewModel,className){
   const button=document.createElement('button');button.type='button';button.className=className;button.dataset.value=choice.value;button.setAttribute('aria-label',choice.label);
   const visual=document.createElement('span');visual.className='mashaal-interaction-card-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,viewModel));
@@ -349,6 +359,49 @@ export function mountMashaalInteractiveStory(host,viewModel,{onComplete,onSpeak}
   return Object.freeze({
     reset(){index=0;completed=false;renderStep();},
     destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-story-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalAnimalMaze(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-maze-host');
+  const size=Math.max(2,Number(viewModel.stimulus?.size)||5),walls=[...(viewModel.stimulus?.walls||[])];
+  const finish=[...(viewModel.stimulus?.finish||[size-1,size-1])];
+  const start=[...(viewModel.stimulus?.start||[0,0])];
+  const animal=String(viewModel.stimulus?.animal||'duck'),goal=String(viewModel.stimulus?.goal||'pond');
+  let position=[...start],completed=false,destroyed=false,moves=0;
+  const board=document.createElement('div');board.className='mashaal-maze-board';board.style.setProperty('--maze-size',String(size));
+  const controls=document.createElement('div');controls.className='mashaal-maze-controls';
+  const status=document.createElement('p');status.className='mashaal-maze-status';status.setAttribute('aria-live','polite');
+  host.append(board,controls,status);
+
+  function key(row,col){return row+','+col;}
+  function same(a,b){return Number(a?.[0])===Number(b?.[0])&&Number(a?.[1])===Number(b?.[1]);}
+  function renderBoard(){
+    board.innerHTML='';
+    for(let row=0;row<size;row++)for(let col=0;col<size;col++){
+      const cell=document.createElement('div');cell.className='mashaal-maze-cell';cell.dataset.row=String(row);cell.dataset.col=String(col);
+      if(walls.includes(key(row,col))){cell.dataset.wall='true';cell.setAttribute('aria-hidden','true');}
+      if(same([row,col],finish)){cell.dataset.goal='true';cell.appendChild(createMashaalChoiceVisual(goal,viewModel,{compact:true}));}
+      if(same([row,col],position)){cell.dataset.player='true';cell.appendChild(createMashaalChoiceVisual(animal,viewModel,{compact:true}));}
+      board.appendChild(cell);
+    }
+    status.textContent=completed?'وصلت البطة للبركة!':'الحركات: '+moves;
+  }
+  function move(direction){
+    if(destroyed||completed)return;
+    const next=moveMashaalMaze(position,direction,{size,walls});
+    if(same(next,position)){status.textContent='الطريق مقفل من هنا.';return;}
+    position=next;moves+=1;
+    if(same(position,finish)){completed=true;renderBoard();onComplete?.();return;}
+    renderBoard();
+  }
+  for(const [direction,label] of [['up','↑'],['left','←'],['down','↓'],['right','→']]){
+    const button=document.createElement('button');button.type='button';button.className='mashaal-maze-move';button.dataset.direction=direction;button.textContent=label;button.setAttribute('aria-label',direction==='up'?'فوق':direction==='down'?'تحت':direction==='left'?'يسار':'يمين');button.addEventListener('click',()=>move(direction));controls.appendChild(button);
+  }
+  renderBoard();
+  return Object.freeze({
+    reset(){position=[...start];moves=0;completed=false;renderBoard();},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-maze-host');host.innerHTML='';}
   });
 }
 
