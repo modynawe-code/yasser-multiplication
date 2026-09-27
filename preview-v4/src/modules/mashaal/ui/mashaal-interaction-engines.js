@@ -38,6 +38,10 @@ export function isMashaalHabitatMatch(animal,habitat,pairs={}){
   return String(pairs?.[String(animal)]||'')===String(habitat||'');
 }
 
+export function isMashaalAnimalSortMatch(animal,bin,pairs={}){
+  return String(pairs?.[String(animal)]||'')===String(bin||'');
+}
+
 export function isMashaalColorMixCorrect(selection,correctPair=[]){
   const selected=[...(selection||[])].map(String).sort();
   const correct=[...(correctPair||[])].map(String).sort();
@@ -458,6 +462,50 @@ export function mountMashaalPicturePuzzle(host,viewModel,{onComplete}={}){
   return Object.freeze({
     reset(){order=createMashaalPuzzleOrder(total);selected=null;moves=0;completed=false;render();},
     destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-picture-puzzle-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalAnimalSort(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-animal-sort-host');
+  const animals=[...(viewModel.stimulus?.animals||[])],bins=[...(viewModel.stimulus?.bins||[])],pairs={...(viewModel.stimulus?.pairs||{})};
+  let selectedAnimal=null,placed=new Map(),destroyed=false;
+  const tray=document.createElement('div');tray.className='mashaal-animal-sort-tray';
+  const binGrid=document.createElement('div');binGrid.className='mashaal-animal-sort-bins';
+  const status=document.createElement('p');status.className='mashaal-animal-sort-status';status.setAttribute('aria-live','polite');status.textContent='اختاري الحيوان ثم مكانه.';
+  host.append(tray,binGrid,status);
+
+  function choiceFor(value){return viewModel.choices.find(choice=>choice.value===value)||{value,label:value,visualKey:value};}
+  function binLabel(bin){return bin==='farm'?'المزرعة':'البرية';}
+  function clearSelection(){selectedAnimal=null;tray.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed','false'));}
+  function place(animal,bin){
+    if(destroyed||placed.has(animal))return;
+    if(!isMashaalAnimalSortMatch(animal,bin,pairs)){status.textContent='جرّبي المكان الثاني.';return;}
+    placed.set(animal,bin);
+    const animalButton=tray.querySelector('[data-sort-animal="'+animal+'"]');if(animalButton){animalButton.disabled=true;animalButton.dataset.placed='true';}
+    const target=binGrid.querySelector('[data-sort-bin="'+bin+'"] .mashaal-animal-sort-bin-items');
+    if(target){const item=document.createElement('span');item.className='mashaal-animal-sort-placed';item.appendChild(createMashaalChoiceVisual(animal,viewModel,{compact:true}));target.appendChild(item);}
+    clearSelection();status.textContent='صح!';if(placed.size===animals.length)onComplete?.();
+  }
+
+  for(const animal of animals){
+    const button=visualCard(choiceFor(animal),viewModel,'mashaal-animal-sort-card');button.dataset.sortAnimal=animal;button.setAttribute('aria-pressed','false');
+    let dragging=false,moved=false,startX=0,startY=0;
+    button.addEventListener('pointerdown',event=>{if(button.disabled)return;dragging=true;moved=false;startX=event.clientX;startY=event.clientY;button.setPointerCapture?.(event.pointerId);button.classList.add('dragging');});
+    button.addEventListener('pointermove',event=>{if(!dragging)return;const dx=event.clientX-startX,dy=event.clientY-startY;if(Math.hypot(dx,dy)>8)moved=true;button.style.transform='translate('+dx+'px,'+dy+'px) scale(1.04)';});
+    const end=event=>{if(!dragging)return;dragging=false;button.classList.remove('dragging');button.style.transform='';try{button.releasePointerCapture?.(event.pointerId);}catch{}if(moved){const binNode=document.elementFromPoint?.(event.clientX,event.clientY)?.closest?.('[data-sort-bin]');if(binNode)place(animal,binNode.dataset.sortBin);}};
+    button.addEventListener('pointerup',end);button.addEventListener('pointercancel',end);
+    button.addEventListener('click',()=>{if(moved){moved=false;return;}if(button.disabled)return;clearSelection();selectedAnimal=animal;button.setAttribute('aria-pressed','true');status.textContent='الحين اختاري المزرعة أو البرية.';});
+    tray.appendChild(button);
+  }
+  for(const bin of bins){
+    const button=document.createElement('button');button.type='button';button.className='mashaal-animal-sort-bin';button.dataset.sortBin=bin;button.setAttribute('aria-label',binLabel(bin));
+    const title=document.createElement('strong');title.textContent=binLabel(bin);
+    const items=document.createElement('span');items.className='mashaal-animal-sort-bin-items';button.append(title,items);
+    button.addEventListener('click',()=>{if(selectedAnimal)place(selectedAnimal,bin);else status.textContent='اختاري الحيوان أول.';});binGrid.appendChild(button);
+  }
+  return Object.freeze({
+    reset(){placed.clear();clearSelection();tray.querySelectorAll('button').forEach(button=>{button.disabled=false;delete button.dataset.placed;button.style.transform='';});binGrid.querySelectorAll('.mashaal-animal-sort-bin-items').forEach(node=>node.innerHTML='');status.textContent='اختاري الحيوان ثم مكانه.';},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-animal-sort-host');host.innerHTML='';}
   });
 }
 
