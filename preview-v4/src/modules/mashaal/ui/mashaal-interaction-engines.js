@@ -54,6 +54,23 @@ export function moveMashaalMaze(position,direction,{size=5,walls=[]}={}){
   return next;
 }
 
+export function createMashaalPuzzleOrder(total){
+  const count=Math.max(4,Number(total)||4),order=Array.from({length:count},(_,index)=>index);
+  if(count===4)return [2,0,3,1];
+  return [...order.slice(1),order[0]];
+}
+
+export function swapMashaalPuzzleTiles(order,first,second){
+  const next=[...(order||[])],a=Number(first),b=Number(second);
+  if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>=next.length||b>=next.length||a===b)return next;
+  [next[a],next[b]]=[next[b],next[a]];
+  return next;
+}
+
+export function isMashaalPuzzleSolved(order){
+  return (order||[]).every((value,index)=>Number(value)===index);
+}
+
 function visualCard(choice,viewModel,className){
   const button=document.createElement('button');button.type='button';button.className=className;button.dataset.value=choice.value;button.setAttribute('aria-label',choice.label);
   const visual=document.createElement('span');visual.className='mashaal-interaction-card-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,viewModel));
@@ -402,6 +419,45 @@ export function mountMashaalAnimalMaze(host,viewModel,{onComplete}={}){
   return Object.freeze({
     reset(){position=[...start];moves=0;completed=false;renderBoard();},
     destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-maze-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalPicturePuzzle(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-picture-puzzle-host');
+  const rows=Math.max(2,Number(viewModel.stimulus?.rows)||2),cols=Math.max(2,Number(viewModel.stimulus?.cols)||2),total=rows*cols;
+  const imagePath=String(viewModel.stimulus?.imagePath||'');
+  let order=createMashaalPuzzleOrder(total),selected=null,completed=false,destroyed=false,moves=0;
+  const preview=document.createElement('div');preview.className='mashaal-puzzle-preview';
+  const previewImg=document.createElement('img');previewImg.src=imagePath;previewImg.alt='الصورة الكاملة';previewImg.decoding='async';preview.appendChild(previewImg);
+  const board=document.createElement('div');board.className='mashaal-picture-puzzle-board';board.style.setProperty('--puzzle-cols',String(cols));board.style.setProperty('--puzzle-rows',String(rows));
+  const status=document.createElement('p');status.className='mashaal-picture-puzzle-status';status.setAttribute('aria-live','polite');
+  host.append(preview,board,status);
+
+  function render(){
+    board.innerHTML='';
+    order.forEach((tileId,position)=>{
+      const button=document.createElement('button');button.type='button';button.className='mashaal-picture-puzzle-tile';button.dataset.position=String(position);button.dataset.tile=String(tileId);button.setAttribute('aria-label','قطعة '+(position+1));
+      const sourceRow=Math.floor(tileId/cols),sourceCol=tileId%cols;
+      button.style.backgroundImage='url("'+imagePath.replace(/"/g,'')+'")';
+      button.style.backgroundSize=(cols*100)+'% '+(rows*100)+'%';
+      button.style.backgroundPosition=(cols===1?0:(sourceCol/(cols-1))*100)+'% '+(rows===1?0:(sourceRow/(rows-1))*100)+'%';
+      if(selected===position)button.dataset.selected='true';
+      button.addEventListener('click',()=>select(position));board.appendChild(button);
+    });
+    status.textContent=completed?'اكتملت الصورة!':'الحركات: '+moves;
+  }
+  function select(position){
+    if(destroyed||completed)return;
+    if(selected===null){selected=position;render();return;}
+    if(selected===position){selected=null;render();return;}
+    order=swapMashaalPuzzleTiles(order,selected,position);selected=null;moves+=1;
+    if(isMashaalPuzzleSolved(order)){completed=true;render();onComplete?.();return;}
+    render();
+  }
+  render();
+  return Object.freeze({
+    reset(){order=createMashaalPuzzleOrder(total);selected=null;moves=0;completed=false;render();},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-picture-puzzle-host');host.innerHTML='';}
   });
 }
 
