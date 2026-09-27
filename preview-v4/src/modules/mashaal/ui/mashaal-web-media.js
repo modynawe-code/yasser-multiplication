@@ -19,7 +19,7 @@ export const MASHAAL_WEB_MEDIA=Object.freeze({
   'brazil-flag':Object.freeze({url:`${FLAG_BASE}/br.svg`,altAr:'علم البرازيل',source:'lipis/flag-icons 7.3.2',license:'MIT'}),
   doctor:local('doctor','طبيب'),teacher:local('teacher','معلمة'),baker:local('baker','خباز'),
   'return-book':local('return-book','أرجع الكتاب'),'leave-book-floor':local('leave-book-floor','أترك الكتاب على الأرض'),'damage-book':local('damage-book','أتلف الكتاب'),
-  duck:kenneyAnimal('duck','بطة'),dog:kenneyAnimal('dog','كلب'),parrot:kenneyAnimal('parrot','ببغاء'),cow:kenneyAnimal('cow','بقرة'),frog:kenneyAnimal('frog','ضفدع'),owl:kenneyAnimal('owl','بومة'),apple:local('apple','تفاحة'),moon:local('moon','قمر'),
+  duck:kenneyAnimal('duck','بطة'),dog:kenneyAnimal('dog','كلب'),parrot:kenneyAnimal('parrot','ببغاء'),cow:kenneyAnimal('cow','بقرة'),frog:kenneyAnimal('frog','ضفدع'),owl:kenneyAnimal('owl','بومة'),pig:kenneyAnimal('pig','خنزير'),chicken:kenneyAnimal('chicken','دجاجة'),giraffe:kenneyAnimal('giraffe','زرافة'),monkey:kenneyAnimal('monkey','قرد'),penguin:kenneyAnimal('penguin','بطريق'),rabbit:kenneyAnimal('rabbit','أرنب'),apple:local('apple','تفاحة'),moon:local('moon','قمر'),
   'compare-three-apples':local('compare-three-apples','ثلاث تفاحات'),'compare-four-apples':local('compare-four-apples','أربع تفاحات'),'compare-five-apples':local('compare-five-apples','خمس تفاحات'),
   'healthy-apple':local('healthy-apple','تفاحة'),candy:local('candy','حلوى'),fries:local('fries','بطاطس مقلية'),
   'two-children-one-ball':local('wait-turn','طفلتان ولعبة واحدة'),'wait-turn':local('wait-turn','أنتظر دوري'),'grab-ball':local('grab-ball','آخذ الكرة'),'ask-help':local('ask-help','أطلب المساعدة'),
