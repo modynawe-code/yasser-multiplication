@@ -81,6 +81,18 @@
 #mashaalActivityView .mashaal-story-choice[data-miss="true"]{border-color:#d98181;background:#fff2f2;animation:mashaalHuntMiss .32s ease}
 #mashaalActivityView .mashaal-story-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:8px 0 0}
 
+#mashaalActivityView .mashaal-maze-host{width:min(100%,640px)}
+#mashaalActivityView .mashaal-maze-board{--maze-size:5;display:grid;grid-template-columns:repeat(var(--maze-size),minmax(0,1fr));gap:5px;width:min(92vw,430px);aspect-ratio:1;margin:0 auto 12px;padding:7px;border:3px solid #d8c9d5;border-radius:24px;background:#f8f4f8}
+#mashaalActivityView .mashaal-maze-cell{position:relative;border-radius:10px;background:#fff;display:grid;place-items:center;min-width:0;min-height:0;overflow:hidden}
+#mashaalActivityView .mashaal-maze-cell[data-wall="true"]{background:repeating-linear-gradient(45deg,#9a7892 0 8px,#87647f 8px 16px)}
+#mashaalActivityView .mashaal-maze-cell[data-goal="true"]{background:#eef9fb;box-shadow:inset 0 0 0 2px #78b8c9}
+#mashaalActivityView .mashaal-maze-cell[data-player="true"]{box-shadow:inset 0 0 0 3px #765276;background:#fff8fc}
+#mashaalActivityView .mashaal-maze-cell .mashaal-visual{width:70%;height:70%;min-width:0;min-height:0;border-radius:12px}
+#mashaalActivityView .mashaal-maze-controls{direction:ltr;display:grid;grid-template-columns:repeat(4,64px);justify-content:center;gap:9px}
+#mashaalActivityView .mashaal-maze-move{width:64px;height:58px;border:2px solid #d7c8d3;border-radius:17px;background:#fff;font-size:28px;font-weight:950;color:#5b4860;touch-action:manipulation}
+#mashaalActivityView .mashaal-maze-move:active{transform:scale(.95);background:#f4edf4}
+#mashaalActivityView .mashaal-maze-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:8px 0 0}
+
 @media(max-width:760px){
   #mashaalActivityView .mashaal-drop-zone,#mashaalActivityView .mashaal-drag-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
   #mashaalActivityView .mashaal-letter-hunt-field,#mashaalActivityView .mashaal-kitchen-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
