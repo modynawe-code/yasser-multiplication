@@ -31,9 +31,33 @@
 #mashaalActivityView .mashaal-trace-dot{width:46px;height:46px;border-radius:50%;border:2px solid #ccb8c8;background:#fff;font-weight:950}
 #mashaalActivityView .mashaal-trace-dot[data-done="true"]{background:#effaf5;border-color:#71b993;color:#126b4d}
 
+#mashaalActivityView .mashaal-letter-hunt-banner{width:min(100%,720px);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px;border-radius:20px;background:linear-gradient(145deg,#fff8fc,#f4f7ff);border:2px solid #eadbe8}
+#mashaalActivityView .mashaal-letter-hunt-banner strong{display:grid;place-items:center;width:72px;height:72px;border-radius:22px;background:#fff;border:2px solid #d9c7d5;font-size:42px;color:#765276}
+#mashaalActivityView .mashaal-letter-hunt-banner span{font-size:18px;font-weight:950}
+#mashaalActivityView .mashaal-letter-hunt-field{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,880px);margin-inline:auto}
+#mashaalActivityView .mashaal-hunt-card{position:relative;min-height:126px;padding:7px;border:2px solid #dfd2dd;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center}
+#mashaalActivityView .mashaal-hunt-card[data-found="true"]{border-color:#71b993;background:#effaf5}
+#mashaalActivityView .mashaal-hunt-card[data-found="true"]::after{content:"✓";position:absolute;top:7px;left:7px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#16815b;color:#fff;font-weight:950}
+#mashaalActivityView .mashaal-hunt-card[data-miss="true"]{animation:mashaalHuntMiss .32s ease;border-color:#d98181;background:#fff2f2}
+#mashaalActivityView .mashaal-hunt-status{text-align:center;font-size:18px;font-weight:950;margin:8px 0 0;min-height:26px}
+
+#mashaalActivityView .mashaal-kitchen-counter{width:max-content;min-width:112px;margin:0 auto 8px;padding:7px 14px;border-radius:999px;background:#fff7fd;border:2px solid #e3d3df;font-size:20px;font-weight:950}
+#mashaalActivityView .mashaal-kitchen-bowl{position:relative;width:min(100%,480px);height:150px;margin:0 auto 12px;border-radius:20px 20px 100px 100px;background:linear-gradient(#fff,#eef3fb);border:4px solid #b7c6dc;border-top-width:7px;overflow:hidden}
+#mashaalActivityView .mashaal-kitchen-bowl::after{content:"";position:absolute;left:12%;right:12%;bottom:8px;height:18px;border-radius:50%;background:rgba(96,119,153,.12)}
+#mashaalActivityView .mashaal-kitchen-bowl-items{position:absolute;inset:18px 22px 24px;display:flex;align-items:flex-end;justify-content:center;gap:8px;flex-wrap:wrap;z-index:2}
+#mashaalActivityView .mashaal-kitchen-placed-item{transform:scale(.9)}
+#mashaalActivityView .mashaal-kitchen-tray{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,800px);margin-inline:auto}
+#mashaalActivityView .mashaal-kitchen-item{min-height:116px;border:2px solid #dfd2dd;border-radius:20px;background:#fff;display:grid;place-items:center;touch-action:none}
+#mashaalActivityView .mashaal-kitchen-item.dragging{z-index:4;border-color:#765276}
+#mashaalActivityView .mashaal-kitchen-item[data-used="true"]{opacity:.28}
+
+@keyframes mashaalHuntMiss{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
 @media(max-width:760px){
   #mashaalActivityView .mashaal-drop-zone,#mashaalActivityView .mashaal-drag-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-letter-hunt-field,#mashaalActivityView .mashaal-kitchen-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
   #mashaalActivityView .mashaal-memory-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-letter-hunt-field,#mashaalActivityView .mashaal-kitchen-tray{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:430px){
   #mashaalActivityView .mashaal-memory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -41,4 +65,5 @@
 }
 @media(prefers-reduced-motion:reduce){
   #mashaalActivityView .mashaal-memory-face,#mashaalActivityView .mashaal-drag-card{transition:none!important}
+  #mashaalActivityView .mashaal-hunt-card[data-miss="true"]{animation:none!important}
 }
