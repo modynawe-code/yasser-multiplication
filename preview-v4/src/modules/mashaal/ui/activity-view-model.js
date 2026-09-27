@@ -5,7 +5,7 @@ const LABELS=Object.freeze({
   'ask-help':'أطلب المساعدة','throw-blocks':'أرمي المكعبات','kick-blocks':'أركل المكعبات','wet-hands':'أبلل يدي','soap':'أستخدم الصابون','rub-hands':'أفرك يدي','rinse-hands':'أشطف يدي',
   'stay-away':'أبتعد','touch-hot':'ألمس','play-near-hot':'ألعب قربه','return-book':'أرجع الكتاب','leave-book-floor':'أتركه على الأرض','damage-book':'أتلفه',
   'help-tidy':'أساعد في الترتيب','leave-mess':'أترك المكان','scatter-toys':'أنثر الألعاب','saudi-flag':'علم السعودية','japan-flag':'علم اليابان','brazil-flag':'علم البرازيل',
-  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق',seed:'بذرة',sprout:'نبتة صغيرة',plant:'نبتة كبيرة',bird:'عصفور',cat:'قطة',dog:'كلب',parrot:'ببغاء',cow:'بقرة',frog:'ضفدع',owl:'بومة',pond:'بركة',nest:'عش',home:'بيت',red:'أحمر',yellow:'أصفر',blue:'أزرق',orange:'برتقالي'
+  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق',seed:'بذرة',sprout:'نبتة صغيرة',plant:'نبتة كبيرة',bird:'عصفور',cat:'قطة',dog:'كلب',parrot:'ببغاء',cow:'بقرة',frog:'ضفدع',owl:'بومة',pig:'خنزير',chicken:'دجاجة',giraffe:'زرافة',monkey:'قرد',penguin:'بطريق',rabbit:'أرنب',pond:'بركة',nest:'عش',home:'بيت',red:'أحمر',yellow:'أصفر',blue:'أزرق',orange:'برتقالي'
 });
 
 const tokenLabel=(token)=>LABELS[token]||String(token);
@@ -26,6 +26,7 @@ function stimulusModel(stimulus={}){
     case 'letter-hunt':return {kind:'letter-hunt',sound:stimulus.sound||'',items:[...(stimulus.items||[])],targets:[...(stimulus.targets||[])]};
     case 'kitchen-count':return {kind:'kitchen-count',item:stimulus.item||'apple',count:Number(stimulus.count)||0,available:Number(stimulus.available)||0};
     case 'animal-habitat':return {kind:'animal-habitat',animals:[...(stimulus.animals||[])],habitats:[...(stimulus.habitats||[])],pairs:{...(stimulus.pairs||{})}};
+    case 'animal-sort':return {kind:'animal-sort',animals:[...(stimulus.animals||[])],bins:[...(stimulus.bins||[])],pairs:{...(stimulus.pairs||{})}};
     case 'color-mix':return {kind:'color-mix',colors:[...(stimulus.colors||[])],target:stimulus.target||'',correctPair:[...(stimulus.correctPair||[])]};
     case 'interactive-story':return {kind:'interactive-story',steps:(stimulus.steps||[]).map(step=>Object.freeze({scene:String(step.scene||''),promptAr:String(step.promptAr||''),audioPromptAr:String(step.audioPromptAr||step.promptAr||''),choices:[...(step.choices||[])],correctChoice:String(step.correctChoice||'')}))};
     case 'grid-maze':return {kind:'grid-maze',animal:String(stimulus.animal||'duck'),goal:String(stimulus.goal||'pond'),size:Number(stimulus.size)||5,start:[...(stimulus.start||[0,0])],finish:[...(stimulus.finish||[4,4])],walls:[...(stimulus.walls||[])]};
