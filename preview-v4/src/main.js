@@ -38,6 +38,7 @@ import { createRewardCapabilityRegistry } from './shared/rewards/reward-capabili
 import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
 import { createRewardCabinetController } from './shared/ui/reward-cabinet.js';
 import { createFamilyGameRewardRuntime } from './composition/game-reward-runtime.js';
+import { createGameEvent } from './modules/games/core/game-event-contract.js';
 
 document.title='تعلم العائلة';
 const localBackup=createLocalBackupService();
@@ -100,8 +101,9 @@ const cloudAuth=createFamilyAuthClient();
 const cloudSync=createFamilySyncService({authClient:cloudAuth,capabilityRegistry:syncCapabilities});
 const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
-const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show()});
-const gameRewardRuntime=createFamilyGameRewardRuntime({repository:rewardRepository,onReward:announcement=>{if(announcement?.event?.learnerId==='mashaal')cabinet?.refresh('mashaal',announcement.result);}});
+let gameRewardRuntime=null;
+const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show(),onActivityCompleted:event=>gameRewardRuntime?.handle(createGameEvent({type:'game.completed',gameId:event.activityId,learnerId:'mashaal',sessionId:event.evidenceId,at:event.at,payload:{skillId:event.skillId,source:'mashaal-learning'}}))});
+gameRewardRuntime=createFamilyGameRewardRuntime({repository:rewardRepository,onReward:announcement=>{if(announcement?.event?.learnerId==='mashaal')cabinet?.refresh('mashaal',announcement.result);}});
 const resetTargets=Object.freeze({
   yasser:Object.freeze({repository:yasserBaseRepository,initialState:createInitialState}),
   khaled:Object.freeze({repository:khaledBaseRepository,initialState:createInitialKhaledState}),
