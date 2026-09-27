@@ -13,6 +13,16 @@ export const MASHAAL_PRATHAM_OPEN_PACKS=Object.freeze({
     title:'Colours of Nature',author:'Bulbul Sharma',illustrator:'Bulbul Sharma',license:'CC BY 4.0',
     storyUrl:'https://storyweaver.org.in/stories/409-colours-of-nature',
     basePath:'assets/oer/pratham/0071',imageCount:17
+  }),
+  '0056':Object.freeze({
+    title:'Goodnight, Tinku!',author:'Preethi Nambiar',illustrator:'Sonal Goyal, Sumit Sakhuja',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/258-goodnight-tinku',
+    basePath:'assets/oer/pratham/0056',imageCount:12
+  }),
+  '0006':Object.freeze({
+    title:'Counting on Moru',author:'Rukmini Banerji',illustrator:'Nina Sabnani',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/38-counting-on-moru',
+    basePath:'assets/oer/pratham/0006',imageCount:24
   })
 });
 
