@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getMashaalKg3Activity } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
 import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activity-view-model.js';
 import { getActivityRendererContract } from '../src/shared/activities/activity-renderer-contracts.js';
-import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
+import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect,createMashaalPuzzleOrder,swapMashaalPuzzlePieces,isMashaalPuzzleSolved,isMashaalStoryChoiceCorrect } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
 
 test('memory deck creates exactly two cards per visual without losing pair identity',()=>{
   const deck=buildMashaalMemoryDeck(['apple','moon','ball'],{random:()=>0});
@@ -93,4 +93,34 @@ test('animal and color lab activities keep named child-facing experiences',()=>{
   assert.deepEqual(colors.stimulus.correctPair,['red','yellow']);
   assert.equal(getActivityRendererContract('animal-habitat').renderer,'animal-habitat');
   assert.equal(getActivityRendererContract('color-mix-lab').renderer,'color-mix-lab');
+});
+
+
+test('picture puzzle starts shuffled and solves only in target order',()=>{
+  const order=createMashaalPuzzleOrder(6);
+  assert.deepEqual(order,[1,2,3,4,5,0]);
+  assert.equal(isMashaalPuzzleSolved(order),false);
+  let next=order;
+  next=swapMashaalPuzzlePieces(next,0,5);
+  assert.equal(next.length,6);
+  assert.deepEqual([...next].sort((a,b)=>a-b),[0,1,2,3,4,5]);
+  assert.equal(isMashaalPuzzleSolved([0,1,2,3,4,5]),true);
+});
+
+test('interactive story validates each step choice independently',()=>{
+  const story=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-interactive-morning-story-01'));
+  assert.equal(story.experienceTitleAr,'قصة مشاعل');
+  assert.equal(story.stimulus.steps.length,3);
+  assert.equal(isMashaalStoryChoiceCorrect(story.stimulus.steps[0],'brush-teeth'),true);
+  assert.equal(isMashaalStoryChoiceCorrect(story.stimulus.steps[0],'ball'),false);
+  assert.equal(getActivityRendererContract('interactive-story').renderer,'interactive-story');
+});
+
+test('picture puzzle uses a bundled Mashaal image and dedicated renderer',()=>{
+  const puzzle=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-picture-puzzle-01'));
+  assert.equal(puzzle.experienceTitleAr,'بزل مشاعل');
+  assert.equal(puzzle.stimulus.rows,2);
+  assert.equal(puzzle.stimulus.cols,3);
+  assert.match(puzzle.stimulus.imagePath,/^assets\/mashaal\/domains\/thinking\.webp$/);
+  assert.equal(getActivityRendererContract('picture-puzzle').renderer,'picture-puzzle');
 });
