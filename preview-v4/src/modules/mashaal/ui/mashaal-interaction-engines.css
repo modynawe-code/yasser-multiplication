@@ -1,0 +1,44 @@
+/* Reusable Mashaal interaction engines: touch-first, tablet-safe, with tap alternatives. */
+#mashaalActivityView .mashaal-interaction-host{display:block;width:min(100%,920px);margin:4px auto 8px}
+#mashaalActivityView .mashaal-drop-zone{min-height:128px;padding:10px;border:3px dashed #c9a9c4;border-radius:22px;background:#fff9fd;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;align-items:stretch}
+#mashaalActivityView .mashaal-sequence-slot{position:relative;min-height:102px;border:2px solid #e3d6e0;border-radius:17px;background:#fff;display:grid;place-items:center;padding:5px}
+#mashaalActivityView .mashaal-sequence-slot>span:first-child{font-size:27px;font-weight:950;color:#8c7587}
+#mashaalActivityView .mashaal-sequence-slot>b{position:absolute;top:5px;right:5px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#765276;color:#fff}
+#mashaalActivityView .mashaal-drag-tray{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:10px}
+#mashaalActivityView .mashaal-drag-card{min-width:0;min-height:112px;padding:6px;border:2px solid #dccddd;border-radius:18px;background:#fff;display:grid;gap:4px;place-items:center;touch-action:pan-y;transition:opacity .15s ease,border-color .15s ease}
+#mashaalActivityView .mashaal-drag-card.dragging{z-index:4;border-color:#765276;touch-action:none}
+#mashaalActivityView .mashaal-drag-card:disabled{opacity:.36}
+#mashaalActivityView .mashaal-interaction-card-visual{display:grid;place-items:center;width:100%;height:76px;pointer-events:none}
+#mashaalActivityView .mashaal-interaction-card-visual>*{max-width:100%;max-height:100%}
+#mashaalActivityView .mashaal-interaction-card-label{font-size:16px;font-weight:900;line-height:1.15}
+
+#mashaalActivityView .mashaal-memory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;width:min(100%,660px);margin-inline:auto}
+#mashaalActivityView .mashaal-memory-card{position:relative;min-height:126px;border:2px solid #d9c8d6;border-radius:20px;background:#fff;overflow:hidden}
+#mashaalActivityView .mashaal-memory-back,#mashaalActivityView .mashaal-memory-face{position:absolute;inset:0;display:grid;place-items:center}
+#mashaalActivityView .mashaal-memory-back{font-size:42px;font-weight:950;background:linear-gradient(145deg,#f7eaf4,#eef4ff);color:#765276}
+#mashaalActivityView .mashaal-memory-face{opacity:0;transform:scale(.9);padding:8px}
+#mashaalActivityView .mashaal-memory-card[data-open="true"] .mashaal-memory-back,#mashaalActivityView .mashaal-memory-card[data-matched="true"] .mashaal-memory-back{opacity:0}
+#mashaalActivityView .mashaal-memory-card[data-open="true"] .mashaal-memory-face,#mashaalActivityView .mashaal-memory-card[data-matched="true"] .mashaal-memory-face{opacity:1;transform:none}
+#mashaalActivityView .mashaal-memory-card[data-matched="true"]{border-color:#7bbd9c;background:#effaf5}
+
+#mashaalActivityView .mashaal-trace-board{width:min(100%,700px);margin-inline:auto;border:2px solid #dfd0dc;border-radius:24px;background:#fff;overflow:hidden;touch-action:none}
+#mashaalActivityView .mashaal-trace-svg{display:block;width:100%;height:auto;aspect-ratio:5/3}
+#mashaalActivityView .mashaal-trace-guide{fill:none;stroke:#d6c0d1;stroke-width:26;stroke-linecap:round;stroke-dasharray:4 7}
+#mashaalActivityView .mashaal-trace-trail{fill:none;stroke:#765276;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+#mashaalActivityView .mashaal-trace-status{text-align:center;font-size:17px;font-weight:900;margin:7px 0}
+#mashaalActivityView .mashaal-trace-fallback{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-weight:850}
+#mashaalActivityView .mashaal-trace-dots{display:flex;gap:7px;direction:ltr}
+#mashaalActivityView .mashaal-trace-dot{width:46px;height:46px;border-radius:50%;border:2px solid #ccb8c8;background:#fff;font-weight:950}
+#mashaalActivityView .mashaal-trace-dot[data-done="true"]{background:#effaf5;border-color:#71b993;color:#126b4d}
+
+@media(max-width:760px){
+  #mashaalActivityView .mashaal-drop-zone,#mashaalActivityView .mashaal-drag-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-memory-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:430px){
+  #mashaalActivityView .mashaal-memory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-drop-zone,#mashaalActivityView .mashaal-drag-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  #mashaalActivityView .mashaal-memory-face,#mashaalActivityView .mashaal-drag-card{transition:none!important}
+}
