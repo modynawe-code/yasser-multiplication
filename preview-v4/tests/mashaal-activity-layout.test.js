@@ -63,3 +63,12 @@ test('guided KG3 visuals have explicit large tablet presentation rules',async()=
   assert.match(css,/data-layout="guided-fine-motor"/);
   assert.match(css,/width:min\(470px,70vw\)/);
 });
+
+
+test('Mashaal interaction CSS keeps phone grids intentionally narrow',async()=>{
+  const css=await readFile(new URL('../src/modules/mashaal/ui/mashaal-interaction-engines.css',import.meta.url),'utf8');
+  assert.match(css,/@media\(max-width:430px\)[\s\S]*mashaal-letter-hunt-field[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css,/@media\(max-width:430px\)[\s\S]*mashaal-animal-grid[^}]*grid-template-columns:1fr/);
+  assert.match(css,/mashaal-story-choices\{grid-template-columns:1fr\}/);
+  assert.match(css,/mashaal-puzzle-piece\{min-height:62px\}/);
+});
