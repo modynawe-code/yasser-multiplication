@@ -202,7 +202,7 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     if(feedback)feedback.className='mashaal-activity-feedback good';
     const activityView=byId('mashaalActivityView');if(activityView)activityView.dataset.state='complete';
     const completion=byId('mashaalActivityCompletion');if(completion){completion.hidden=false;completion.querySelector('span').textContent=praise;}
-    const check=byId('mashaalActivityCheck');if(check){const missionNext=dailyMissionActive?createMashaalDailyMission(state).tasks.find(task=>!task.complete):null;const hasNext=!dailyMissionActive&&Boolean(currentPlan?.activities?.[currentActivityIndex+1]);check.hidden=false;check.disabled=false;check.textContent=dailyMissionActive?(missionNext?'المهمة التالية':'أنهيتِ مهمة اليوم'):(hasNext?'النشاط التالي':'اختاري نشاطًا آخر');}
+    const check=byId('mashaalActivityCheck');if(check){const missionNext=dailyMissionActive?createMashaalDailyMission(state).tasks.find(task=>!task.complete):null;const hasNext=!dailyMissionActive&&Boolean(currentPlan?.activities?.[currentActivityIndex+1]);check.hidden=false;check.disabled=false;check.textContent='اختاري نشاطًا آخر';if(dailyMissionActive)check.textContent=missionNext?'المهمة التالية':'أنهيتِ مهمة اليوم';else if(hasNext)check.textContent='النشاط التالي';}
     speech.speak(transfer?`${praise} الحين جربي بعيد عن الشاشة. ${transfer}`:praise);
   }
   function completeCurrentActivity(){
