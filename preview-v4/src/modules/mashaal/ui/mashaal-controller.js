@@ -163,7 +163,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     if(feedback)feedback.className='mashaal-activity-feedback good';
     const activityView=byId('mashaalActivityView');if(activityView)activityView.dataset.state='complete';
     const completion=byId('mashaalActivityCompletion');if(completion){completion.hidden=false;completion.querySelector('span').textContent=praise;}
-    const check=byId('mashaalActivityCheck');if(check){const hasNext=Boolean(currentPlan?.activities?.[currentActivityIndex+1]);check.hidden=false;check.disabled=false;check.textContent=hasNext?'النشاط التالي':'اختاري نشاطًا آخر';}
+    const check=byId('mashaalActivityCheck');if(check){const hasNext=Boolean(currentPlan?.activities?.[currentActivityIndex+1]);check.hidden=false;check.disabled=false;check.textContent='اختاري نشاطًا آخر';if(hasNext)check.textContent='النشاط التالي';}
     speech.speak(transfer?`${praise} الحين جربي بعيد عن الشاشة. ${transfer}`:praise);
   }
   function completeCurrentActivity(){
