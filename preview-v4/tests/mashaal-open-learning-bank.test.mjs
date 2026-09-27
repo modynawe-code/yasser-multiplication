@@ -42,7 +42,7 @@ test('first imported CC0 activities are playable and explicitly source-tagged',a
 });
 
 
-test('imported Pratham packs keep source metadata and 85 original illustrations',()=>{
+test('imported Pratham packs keep source metadata and 88 original illustrations',()=>{
   assert.equal(Object.keys(MASHAAL_PRATHAM_OPEN_PACKS).length,6);
   assert.equal(Object.values(MASHAAL_PRATHAM_OPEN_PACKS).reduce((sum,pack)=>sum+pack.imageCount,0),88);
   for(const pack of Object.values(MASHAAL_PRATHAM_OPEN_PACKS))assert.equal(pack.license,'CC BY 4.0');
@@ -50,7 +50,7 @@ test('imported Pratham packs keep source metadata and 85 original illustrations'
 });
 
 test('Pratham illustration media is local and source-backed',()=>{
-  for(const key of ['pratham-tree-leaves','pratham-tree-flowers','pratham-tree-fruits','pratham-tree-seeds','pratham-color-blue','pratham-color-yellow','pratham-color-orange','pratham-seed-walk','pratham-seed-tree','pratham-seed-fruit','pratham-tinku-farm','pratham-tinku-firefly','pratham-tinku-bat','pratham-tinku-fox','pratham-tinku-owl','pratham-tinku-sleep','pratham-moru-numbers']){
+  for(const key of ['pratham-tree-leaves','pratham-tree-flowers','pratham-tree-fruits','pratham-tree-seeds','pratham-color-blue','pratham-color-yellow','pratham-color-orange','pratham-seed-walk','pratham-seed-tree','pratham-seed-fruit','pratham-tinku-farm','pratham-tinku-firefly','pratham-tinku-bat','pratham-tinku-fox','pratham-tinku-owl','pratham-tinku-sleep','pratham-moru-numbers','pratham-zoo-visit','pratham-zoo-monkeys','pratham-zoo-family']){
     const media=getMashaalWebMedia(key);
     assert.ok(media,key);
     assert.match(media.url,/^assets\/oer\/pratham\/\d{4}\/\d{2}\.jpg$/);
@@ -58,12 +58,12 @@ test('Pratham illustration media is local and source-backed',()=>{
   }
 });
 
-test('seven Pratham-backed games are source tagged',async()=>{
+test('ten Pratham-backed games are source tagged',async()=>{
   const { getMashaalKg3Activity }=await import('../src/modules/mashaal/curriculum/kg3-activity-catalog.js');
-  for(const id of ['kg3-open-nature-memory-01','kg3-open-tree-cycle-01','kg3-open-colors-nature-01','kg3-open-seed-journey-01','kg3-open-nature-puzzle-01','kg3-open-tinku-night-01','kg3-open-moru-puzzle-01']){
+  for(const id of ['kg3-open-nature-memory-01','kg3-open-tree-cycle-01','kg3-open-colors-nature-01','kg3-open-seed-journey-01','kg3-open-nature-puzzle-01','kg3-open-tinku-night-01','kg3-open-moru-puzzle-01','kg3-open-zoo-find-01','kg3-open-zoo-memory-01','kg3-open-zoo-puzzle-01']){
     const activity=getMashaalKg3Activity(id);
     assert.ok(activity,id);
     assert.equal(activity.assetSourceId,'storyweaver-ccby');
-    assert.ok(['0433','0352','0071','0056','0006'].includes(activity.assetPackId));
+    assert.ok(['0433','0352','0071','0056','0006','0120'].includes(activity.assetPackId));
   }
 });
