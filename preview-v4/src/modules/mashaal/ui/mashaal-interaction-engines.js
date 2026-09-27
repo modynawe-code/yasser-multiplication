@@ -25,6 +25,15 @@ export function mashaalTraceIsComplete(reached,total,{minimumRatio=.75}={}){
   return safeReached>=safeTotal-1&&safeReached/safeTotal>=minimumRatio;
 }
 
+export function isMashaalLetterHuntTarget(value,targets=[]){
+  return new Set((targets||[]).map(String)).has(String(value));
+}
+
+export function canAddMashaalKitchenItem(current,target){
+  const safeCurrent=Math.max(0,Number(current)||0),safeTarget=Math.max(0,Number(target)||0);
+  return safeCurrent<safeTarget;
+}
+
 function visualCard(choice,viewModel,className){
   const button=document.createElement('button');button.type='button';button.className=className;button.dataset.value=choice.value;button.setAttribute('aria-label',choice.label);
   const visual=document.createElement('span');visual.className='mashaal-interaction-card-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,viewModel));
@@ -144,6 +153,81 @@ export function mountMashaalMemoryMatch(host,viewModel,{onComplete,random=Math.r
   return Object.freeze({
     reset(){if(timer)clearTimeout(timer);open=[];matched.clear();locked=false;grid.querySelectorAll('.mashaal-memory-card').forEach(button=>{button.dataset.open='false';delete button.dataset.matched;button.setAttribute('aria-pressed','false');});},
     destroy(){destroyed=true;if(timer)clearTimeout(timer);host.classList.remove('mashaal-interaction-host','mashaal-memory-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalLetterHunt(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-letter-hunt-host');
+  const targets=new Set((viewModel.stimulus?.targets||[]).map(String));
+  let found=new Set(),destroyed=false;
+  const banner=document.createElement('div');banner.className='mashaal-letter-hunt-banner';
+  const letter=document.createElement('strong');letter.textContent=viewModel.stimulus?.sound||'';
+  const copy=document.createElement('span');copy.textContent='اصيدي الأشياء اللي تبدأ بهذا الصوت';
+  banner.append(letter,copy);
+  const field=document.createElement('div');field.className='mashaal-letter-hunt-field';
+  const status=document.createElement('p');status.className='mashaal-hunt-status';status.setAttribute('aria-live','polite');
+  host.append(banner,field,status);
+
+  function updateStatus(message=''){
+    const left=Math.max(0,targets.size-found.size);
+    status.textContent=message||(left?'باقي '+left:'لقيتيها كلها!');
+  }
+  for(const choice of viewModel.choices){
+    const button=visualCard(choice,viewModel,'mashaal-hunt-card');button.dataset.huntValue=choice.value;
+    button.addEventListener('click',()=>{
+      if(destroyed||found.has(choice.value))return;
+      if(isMashaalLetterHuntTarget(choice.value,targets)){
+        found.add(choice.value);button.dataset.found='true';button.disabled=true;updateStatus('ممتاز!');
+        if(found.size===targets.size)onComplete?.();
+      }else{
+        button.dataset.miss='true';updateStatus('مو هذا، دوري على صوت '+(viewModel.stimulus?.sound||''));
+        setTimeout(()=>{if(!destroyed)delete button.dataset.miss;},420);
+      }
+    });
+    field.appendChild(button);
+  }
+  updateStatus();
+  return Object.freeze({
+    reset(){found.clear();field.querySelectorAll('button').forEach(button=>{button.disabled=false;delete button.dataset.found;delete button.dataset.miss;});updateStatus();},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-letter-hunt-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalKitchenCount(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-kitchen-count-host');
+  const target=Math.max(1,Number(viewModel.stimulus?.count)||1);
+  const available=Math.max(target,Number(viewModel.stimulus?.available)||target);
+  const item=String(viewModel.stimulus?.item||'apple');
+  let placed=0,destroyed=false,suppressClick=false;
+  const counter=document.createElement('div');counter.className='mashaal-kitchen-counter';counter.setAttribute('aria-live','polite');
+  const bowl=document.createElement('div');bowl.className='mashaal-kitchen-bowl';bowl.setAttribute('aria-label','الطبق');
+  const bowlItems=document.createElement('div');bowlItems.className='mashaal-kitchen-bowl-items';bowl.appendChild(bowlItems);
+  const tray=document.createElement('div');tray.className='mashaal-kitchen-tray';
+  host.append(counter,bowl,tray);
+
+  function updateCounter(){counter.textContent=placed+' من '+target;}
+  function finishIfReady(){if(placed===target)onComplete?.();}
+  function add(button){
+    if(destroyed||button.disabled||!canAddMashaalKitchenItem(placed,target))return;
+    placed+=1;button.disabled=true;button.dataset.used='true';
+    const mini=createMashaalChoiceVisual(item,viewModel,{compact:true});mini.classList?.add?.('mashaal-kitchen-placed-item');bowlItems.appendChild(mini);
+    updateCounter();finishIfReady();
+  }
+  function bindIngredient(button){
+    let dragging=false,startX=0,startY=0;
+    button.addEventListener('pointerdown',event=>{if(button.disabled)return;dragging=true;suppressClick=false;startX=event.clientX;startY=event.clientY;button.setPointerCapture?.(event.pointerId);button.classList.add('dragging');});
+    button.addEventListener('pointermove',event=>{if(!dragging)return;const dx=event.clientX-startX,dy=event.clientY-startY;if(Math.hypot(dx,dy)>8)suppressClick=true;button.style.transform='translate('+dx+'px,'+dy+'px) scale(1.05)';});
+    const end=event=>{if(!dragging)return;dragging=false;button.classList.remove('dragging');button.style.transform='';try{button.releasePointerCapture?.(event.pointerId);}catch{}const targetNode=document.elementFromPoint?.(event.clientX,event.clientY);if(suppressClick&&targetNode?.closest?.('.mashaal-kitchen-bowl'))add(button);};
+    button.addEventListener('pointerup',end);button.addEventListener('pointercancel',end);
+    button.addEventListener('click',()=>{if(suppressClick){suppressClick=false;return;}add(button);});
+  }
+  for(let index=0;index<available;index++){
+    const button=document.createElement('button');button.type='button';button.className='mashaal-kitchen-item';button.setAttribute('aria-label','تفاحة '+(index+1));button.appendChild(createMashaalChoiceVisual(item,viewModel));bindIngredient(button);tray.appendChild(button);
+  }
+  updateCounter();
+  return Object.freeze({
+    reset(){placed=0;bowlItems.innerHTML='';tray.querySelectorAll('button').forEach(button=>{button.disabled=false;delete button.dataset.used;button.style.transform='';});updateCounter();},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-kitchen-count-host');host.innerHTML='';}
   });
 }
 

@@ -11,7 +11,7 @@ import { mountQuranSurahPlayer } from '../quran/quran-surah-player.js';
 import { createMashaalChoiceVisual,createMashaalDomainArt,createMashaalStimulusVisual } from './mashaal-visuals.js';
 import { getMashaalWebMedia } from './mashaal-web-media.js';
 import { getMashaalActivityLayout } from './activity-layout.js';
-import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing } from './mashaal-interaction-engines.js';
+import { mountMashaalDragSequence,mountMashaalMemoryMatch,mountMashaalTracing,mountMashaalLetterHunt,mountMashaalKitchenCount } from './mashaal-interaction-engines.js';
 
 function byId(id){return document.getElementById(id);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -62,7 +62,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     for(const skill of getMashaalDomainSkills(domainId)){
       const button=document.createElement('button');button.type='button';button.className='mashaal-skill-card';button.dataset.skillId=skill.id;
       button.appendChild(renderSkillPreview(skill,domainId));
-      const copy=document.createElement('span');copy.className='mashaal-skill-copy';const title=document.createElement('strong');title.textContent=skill.title;const helper=document.createElement('span');helper.textContent=skill.contentReady?'المسي الصورة وابدئي':'قريبًا';copy.append(title,helper);
+      const copy=document.createElement('span');copy.className='mashaal-skill-copy';const title=document.createElement('strong');title.textContent=skill.title;const helper=document.createElement('span');helper.textContent=skill.contentReady?(skill.activityCount>1?`${skill.activityCount} ألعاب`:'المسي الصورة وابدئي'):'قريبًا';copy.append(title,helper);
       const start=document.createElement('span');start.className='mashaal-skill-start';start.textContent=skill.contentReady?'ابدئي':'قريبًا';button.append(copy,start);
       button.setAttribute('aria-label',`${skill.title}، ${skill.contentReady?'ابدئي':'قريبًا'}`);
       if(!skill.contentReady){button.disabled=true;button.setAttribute('aria-disabled','true');}grid.appendChild(button);
@@ -121,6 +121,16 @@ export function createMashaalController({repository,onExitToHub}={}){
       currentInteraction=mountMashaalTracing(host,currentViewModel,{onComplete:completeCurrentActivity});
       return;
     }
+    if(currentViewModel.activityType==='letter-hunt'){
+      if(check)check.hidden=true;
+      currentInteraction=mountMashaalLetterHunt(host,currentViewModel,{onComplete:completeCurrentActivity});
+      return;
+    }
+    if(currentViewModel.activityType==='kitchen-count'){
+      if(check)check.hidden=true;
+      currentInteraction=mountMashaalKitchenCount(host,currentViewModel,{onComplete:completeCurrentActivity});
+      return;
+    }
     for(const choice of currentViewModel.choices){
       const button=document.createElement('button');button.type='button';button.className='mashaal-choice';button.dataset.choice=choice.value;button.setAttribute('aria-label',choice.label);
       const visual=document.createElement('span');visual.className='mashaal-choice-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,currentViewModel));
@@ -145,7 +155,7 @@ export function createMashaalController({repository,onExitToHub}={}){
     destroyRecitation();destroyInteraction();currentActivity=currentPlan.activities[currentActivityIndex]||currentPlan.activities[0]||null;currentViewModel=createMashaalActivityViewModel(currentActivity);if(!currentViewModel)return;activityComplete=false;recitationPlayed=false;clearSelections();
     const layout=getMashaalActivityLayout(currentViewModel);
     const activityView=byId('mashaalActivityView');if(activityView){activityView.dataset.domainId=currentPlan.domainId;activityView.dataset.activityKind=currentViewModel.requiresHumanRecitation?'quran-recitation':'standard';activityView.dataset.layout=layout.mode;activityView.dataset.choiceCount=String(layout.choiceCount);}
-    byId('mashaalActivitySkill').textContent=currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;
+    byId('mashaalActivitySkill').textContent=currentViewModel.experienceTitleAr||currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;
     const guide=byId('mashaalActivityGuide');if(guide)guide.replaceChildren(createMashaalDomainArt(currentPlan.domainId,{className:'mashaal-activity-guide-image'}));
     const feedback=byId('mashaalActivityFeedback');if(feedback){feedback.textContent='';feedback.className='mashaal-activity-feedback';}
     const completion=byId('mashaalActivityCompletion');if(completion)completion.hidden=true;

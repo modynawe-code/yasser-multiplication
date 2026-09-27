@@ -5,7 +5,7 @@ const LABELS=Object.freeze({
   'ask-help':'أطلب المساعدة','throw-blocks':'أرمي المكعبات','kick-blocks':'أركل المكعبات','wet-hands':'أبلل يدي','soap':'أستخدم الصابون','rub-hands':'أفرك يدي','rinse-hands':'أشطف يدي',
   'stay-away':'أبتعد','touch-hot':'ألمس','play-near-hot':'ألعب قربه','return-book':'أرجع الكتاب','leave-book-floor':'أتركه على الأرض','damage-book':'أتلفه',
   'help-tidy':'أساعد في الترتيب','leave-mess':'أترك المكان','scatter-toys':'أنثر الألعاب','saudi-flag':'علم السعودية','japan-flag':'علم اليابان','brazil-flag':'علم البرازيل',
-  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق'
+  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق',seed:'بذرة',sprout:'نبتة صغيرة',plant:'نبتة كبيرة'
 });
 
 const tokenLabel=(token)=>LABELS[token]||String(token);
@@ -23,6 +23,8 @@ function stimulusModel(stimulus={}){
     case 'picture-scene':return {kind:'picture',scene:stimulus.scene||''};
     case 'trace-path':return {kind:'trace',path:stimulus.path||'wave'};
     case 'memory':return {kind:'memory',items:[...(stimulus.items||[])]};
+    case 'letter-hunt':return {kind:'letter-hunt',sound:stimulus.sound||'',items:[...(stimulus.items||[])],targets:[...(stimulus.targets||[])]};
+    case 'kitchen-count':return {kind:'kitchen-count',item:stimulus.item||'apple',count:Number(stimulus.count)||0,available:Number(stimulus.available)||0};
     case 'emotion-prompt':return {kind:'emotion-prompt'};
     case 'movement':return {kind:'movement',movement:stimulus.movement||''};
     case 'fine-motor':return {kind:'fine-motor',task:stimulus.task||''};
@@ -42,6 +44,7 @@ export function createMashaalActivityViewModel(activity){
     evidenceType:activity.evidenceType,
     promptAr:activity.promptAr,
     audioPromptAr:activity.audioPromptAr,
+    experienceTitleAr:activity.experienceTitleAr||'',
     stimulus:Object.freeze(stimulusModel(activity.stimulus)),
     choices:Object.freeze((activity.choices||[]).map(value=>Object.freeze({value,label:tokenLabel(value),visualKey:String(value)}))),
     multiSelect,
