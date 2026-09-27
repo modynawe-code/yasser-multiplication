@@ -26,6 +26,7 @@ function completedActivityIdsForDay(state,dayKey){
   const completed=new Set();
   for(const evidence of state?.evidenceLog||[]){
     if(!evidence?.createdAt||mashaalLocalDayKey(evidence.createdAt)!==dayKey)continue;
+    const completed=evidence.type==='activity-completion'||(evidence.type==='digital-attempt'&&evidence?.payload?.isCorrect===true);if(!completed)continue;
     const activityId=String(evidence?.payload?.activityId||'');
     if(activityId)completed.add(activityId);
   }
