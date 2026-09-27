@@ -5,7 +5,7 @@ const LABELS=Object.freeze({
   'ask-help':'أطلب المساعدة','throw-blocks':'أرمي المكعبات','kick-blocks':'أركل المكعبات','wet-hands':'أبلل يدي','soap':'أستخدم الصابون','rub-hands':'أفرك يدي','rinse-hands':'أشطف يدي',
   'stay-away':'أبتعد','touch-hot':'ألمس','play-near-hot':'ألعب قربه','return-book':'أرجع الكتاب','leave-book-floor':'أتركه على الأرض','damage-book':'أتلفه',
   'help-tidy':'أساعد في الترتيب','leave-mess':'أترك المكان','scatter-toys':'أنثر الألعاب','saudi-flag':'علم السعودية','japan-flag':'علم اليابان','brazil-flag':'علم البرازيل',
-  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق',seed:'بذرة',sprout:'نبتة صغيرة',plant:'نبتة كبيرة',bird:'عصفور',cat:'قطة',pond:'بركة',nest:'عش',home:'بيت',red:'أحمر',yellow:'أصفر',blue:'أزرق',orange:'برتقالي'
+  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق',seed:'بذرة',sprout:'نبتة صغيرة',plant:'نبتة كبيرة',bird:'عصفور',cat:'قطة',dog:'كلب',parrot:'ببغاء',cow:'بقرة',frog:'ضفدع',owl:'بومة',pond:'بركة',nest:'عش',home:'بيت',red:'أحمر',yellow:'أصفر',blue:'أزرق',orange:'برتقالي'
 });
 
 const tokenLabel=(token)=>LABELS[token]||String(token);
