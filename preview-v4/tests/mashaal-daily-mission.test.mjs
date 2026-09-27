@@ -14,6 +14,8 @@ test('daily mission selects three unique playable experiences deterministically'
   assert.deepEqual(first.tasks,second.tasks);
   assert.equal(new Set(first.tasks.map(task=>task.activityId)).size,3);
   for(const task of first.tasks)assert.ok(listMashaalDailyMissionActivityIds().includes(task.activityId));
+  assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-picture-puzzle-01'));
+  assert.ok(listMashaalDailyMissionActivityIds().includes('kg3-interactive-morning-story-01'));
   assert.equal(first.done,false);
 });
 
