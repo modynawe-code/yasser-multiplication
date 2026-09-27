@@ -43,9 +43,10 @@ test('first imported CC0 activities are playable and explicitly source-tagged',a
 
 
 test('imported Pratham packs keep source metadata and 85 original illustrations',()=>{
-  assert.equal(Object.keys(MASHAAL_PRATHAM_OPEN_PACKS).length,5);
-  assert.equal(Object.values(MASHAAL_PRATHAM_OPEN_PACKS).reduce((sum,pack)=>sum+pack.imageCount,0),85);
+  assert.equal(Object.keys(MASHAAL_PRATHAM_OPEN_PACKS).length,6);
+  assert.equal(Object.values(MASHAAL_PRATHAM_OPEN_PACKS).reduce((sum,pack)=>sum+pack.imageCount,0),88);
   for(const pack of Object.values(MASHAAL_PRATHAM_OPEN_PACKS))assert.equal(pack.license,'CC BY 4.0');
+  assert.deepEqual(MASHAAL_PRATHAM_OPEN_PACKS['0120'].selectedFiles,['03.jpg','05.jpg','09.jpg']);
 });
 
 test('Pratham illustration media is local and source-backed',()=>{
