@@ -48,6 +48,7 @@ test('controller exposes layout metadata and routes touch-first interaction engi
   assert.match(controller,/mountMashaalInteractiveStory/);
   assert.match(controller,/mountMashaalAnimalMaze/);
   assert.match(controller,/mountMashaalPicturePuzzle/);
+  assert.match(controller,/mountMashaalAnimalSort/);
 });
 test('offline shell versions and caches the activity layout modules',async()=>{
   const sw=await readFile(new URL('../service-worker.js',import.meta.url),'utf8');
