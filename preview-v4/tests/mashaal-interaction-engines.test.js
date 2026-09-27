@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getMashaalKg3Activity } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
 import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activity-view-model.js';
 import { getActivityRendererContract } from '../src/shared/activities/activity-renderer-contracts.js';
-import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
+import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
 
 test('memory deck creates exactly two cards per visual without losing pair identity',()=>{
   const deck=buildMashaalMemoryDeck(['apple','moon','ball'],{random:()=>0});
@@ -39,4 +39,33 @@ test('ordered sequence and tracing are routed to interactive renderers',()=>{
   assert.equal(getActivityRendererContract('ordered-sequence').renderer,'drag-sequence');
   assert.equal(getActivityRendererContract('guided-tracing').renderer,'tracing-pad');
   assert.equal(getActivityRendererContract('guided-tracing').hideStimulus,true);
+});
+
+
+test('letter hunt recognizes only configured sound targets',()=>{
+  assert.equal(isMashaalLetterHuntTarget('duck',['duck','door']),true);
+  assert.equal(isMashaalLetterHuntTarget('door',['duck','door']),true);
+  assert.equal(isMashaalLetterHuntTarget('apple',['duck','door']),false);
+});
+
+test('kitchen counter stops exactly at the requested quantity',()=>{
+  assert.equal(canAddMashaalKitchenItem(0,3),true);
+  assert.equal(canAddMashaalKitchenItem(2,3),true);
+  assert.equal(canAddMashaalKitchenItem(3,3),false);
+  assert.equal(canAddMashaalKitchenItem(4,3),false);
+});
+
+test('named play experiences keep curriculum binding and dedicated renderers',()=>{
+  const hunt=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-letter-hunt-ba-01'));
+  const kitchen=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-kitchen-count-01'));
+  const garden=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-plant-growth-sequence-01'));
+  assert.equal(hunt.experienceTitleAr,'مدينة الحروف');
+  assert.equal(hunt.activityType,'letter-hunt');
+  assert.deepEqual(hunt.stimulus.targets,['duck','door']);
+  assert.equal(kitchen.experienceTitleAr,'مطبخ مشاعل');
+  assert.equal(kitchen.stimulus.count,3);
+  assert.equal(garden.experienceTitleAr,'حديقة مشاعل');
+  assert.deepEqual(garden.correctValues,['seed','sprout','plant']);
+  assert.equal(getActivityRendererContract('letter-hunt').renderer,'letter-hunt');
+  assert.equal(getActivityRendererContract('kitchen-count').renderer,'kitchen-count');
 });
