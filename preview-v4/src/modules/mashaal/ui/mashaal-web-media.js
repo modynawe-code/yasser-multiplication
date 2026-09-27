@@ -4,12 +4,14 @@
 // local scenario illustration.
 // Local WebP scene coverage is protected by mashaal-scenario-media.test.js.
 const LOCAL_BASE='assets/mashaal/choices';
+const OER_ANIMAL_BASE='assets/oer/kenney/animals';
 const FLAG_BASE='https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/flags/4x3';
 const TABLER_BASE='https://cdn.jsdelivr.net/npm/@tabler/icons@3.34.1/icons/outline';
 
 const local=(name,altAr)=>Object.freeze({url:`${LOCAL_BASE}/${name}.webp`,altAr,source:'Mashaal scenario artwork',license:'project asset'});
 
 const sourceIcon=(name,altAr)=>Object.freeze({url:`${TABLER_BASE}/${name}.svg`,altAr,source:'Tabler Icons 3.34.1',license:'MIT'});
+const kenneyAnimal=(name,altAr)=>Object.freeze({url:`${OER_ANIMAL_BASE}/${name}.png`,altAr,source:'Kenney Animal Pack Remastered',license:'CC0 1.0'});
 
 export const MASHAAL_WEB_MEDIA=Object.freeze({
   'saudi-flag':Object.freeze({url:`${FLAG_BASE}/sa.svg`,altAr:'علم المملكة العربية السعودية',source:'lipis/flag-icons 7.3.2',license:'MIT'}),
@@ -17,7 +19,7 @@ export const MASHAAL_WEB_MEDIA=Object.freeze({
   'brazil-flag':Object.freeze({url:`${FLAG_BASE}/br.svg`,altAr:'علم البرازيل',source:'lipis/flag-icons 7.3.2',license:'MIT'}),
   doctor:local('doctor','طبيب'),teacher:local('teacher','معلمة'),baker:local('baker','خباز'),
   'return-book':local('return-book','أرجع الكتاب'),'leave-book-floor':local('leave-book-floor','أترك الكتاب على الأرض'),'damage-book':local('damage-book','أتلف الكتاب'),
-  duck:local('duck-reference-unused','بطة'),apple:local('apple','تفاحة'),moon:local('moon','قمر'),
+  duck:kenneyAnimal('duck','بطة'),dog:kenneyAnimal('dog','كلب'),parrot:kenneyAnimal('parrot','ببغاء'),cow:kenneyAnimal('cow','بقرة'),frog:kenneyAnimal('frog','ضفدع'),owl:kenneyAnimal('owl','بومة'),apple:local('apple','تفاحة'),moon:local('moon','قمر'),
   'compare-three-apples':local('compare-three-apples','ثلاث تفاحات'),'compare-four-apples':local('compare-four-apples','أربع تفاحات'),'compare-five-apples':local('compare-five-apples','خمس تفاحات'),
   'healthy-apple':local('healthy-apple','تفاحة'),candy:local('candy','حلوى'),fries:local('fries','بطاطس مقلية'),
   'two-children-one-ball':local('wait-turn','طفلتان ولعبة واحدة'),'wait-turn':local('wait-turn','أنتظر دوري'),'grab-ball':local('grab-ball','آخذ الكرة'),'ask-help':local('ask-help','أطلب المساعدة'),
