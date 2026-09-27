@@ -188,7 +188,7 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     const feedback=byId('mashaalActivityFeedback');if(feedback){feedback.textContent='';feedback.className='mashaal-activity-feedback';}
     const completion=byId('mashaalActivityCompletion');if(completion)completion.hidden=true;
     if(activityView)delete activityView.dataset.state;
-    recitationPlayer=renderStimulus(currentViewModel,layout);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');speech.speak(currentViewModel.audioPromptAr);
+    recitationPlayer=renderStimulus(currentViewModel,layout);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');if(currentViewModel.activityType!=='interactive-story')speech.speak(currentViewModel.audioPromptAr);
   }
   function openSkill(skillId){
     const plan=createMashaalActivityPlan(skillId);if(!plan?.contentReady)return;dailyMissionActive=false;currentPlan=plan;currentActivityIndex=0;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===skillId)||null;openPlannedActivity();
