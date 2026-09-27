@@ -23,14 +23,14 @@ function dayHash(dayKey){
 }
 
 function completedActivityIdsForDay(state,dayKey){
-  const completed=new Set();
+  const completedIds=new Set();
   for(const evidence of state?.evidenceLog||[]){
     if(!evidence?.createdAt||mashaalLocalDayKey(evidence.createdAt)!==dayKey)continue;
     const successful=evidence.type==='activity-completion'||(evidence.type==='digital-attempt'&&evidence?.payload?.isCorrect===true);if(!successful)continue;
     const activityId=String(evidence?.payload?.activityId||'');
-    if(activityId)completed.add(activityId);
+    if(activityId)completedIds.add(activityId);
   }
-  return completed;
+  return completedIds;
 }
 
 export function createMashaalDailyMission(state,{date=new Date(),size=3}={}){
