@@ -22,7 +22,7 @@ test('first open activity bank contains thirty sourced KG3 ideas',()=>{
 });
 
 test('Kenney animal media is local, offline-ready and uniformly licensed',()=>{
-  for(const key of ['duck','dog','parrot','cow','frog','owl']){
+  for(const key of ['duck','dog','parrot','cow','frog','owl','pig','chicken','giraffe','monkey','penguin','rabbit']){
     const media=getMashaalWebMedia(key);
     assert.ok(media);
     assert.match(media.url,/^assets\/oer\/kenney\/animals\//);
@@ -33,7 +33,7 @@ test('Kenney animal media is local, offline-ready and uniformly licensed',()=>{
 
 test('first imported CC0 activities are playable and explicitly source-tagged',async()=>{
   const { getMashaalKg3Activity }=await import('../src/modules/mashaal/curriculum/kg3-activity-catalog.js');
-  for(const id of ['kg3-open-animal-memory-01','kg3-open-animal-count-01','kg3-open-animal-puzzle-01']){
+  for(const id of ['kg3-open-animal-memory-01','kg3-open-animal-count-01','kg3-open-animal-puzzle-01','kg3-open-animal-sort-01']){
     const activity=getMashaalKg3Activity(id);
     assert.ok(activity,id);
     assert.equal(activity.assetSourceId,'kenney-cc0');

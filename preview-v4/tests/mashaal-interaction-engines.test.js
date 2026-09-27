@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getMashaalKg3Activity } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
 import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activity-view-model.js';
 import { getActivityRendererContract } from '../src/shared/activities/activity-renderer-contracts.js';
-import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect,moveMashaalMaze,createMashaalPuzzleOrder,swapMashaalPuzzleTiles,isMashaalPuzzleSolved } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
+import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalAnimalSortMatch,isMashaalColorMixCorrect,moveMashaalMaze,createMashaalPuzzleOrder,swapMashaalPuzzleTiles,isMashaalPuzzleSolved } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
 
 test('memory deck creates exactly two cards per visual without losing pair identity',()=>{
   const deck=buildMashaalMemoryDeck(['apple','moon','ball'],{random:()=>0});
@@ -144,4 +144,22 @@ test('picture puzzle stays curriculum-bound and uses local Mashaal art',()=>{
   assert.equal(puzzle.stimulus.cols,2);
   assert.match(puzzle.stimulus.imagePath,/^assets\/mashaal\/domains\/thinking\.webp$/);
   assert.equal(getActivityRendererContract('picture-puzzle').renderer,'picture-puzzle');
+});
+
+
+test('farm-or-wild sorting accepts only the configured animal group',()=>{
+  const pairs={cow:'farm',chicken:'farm',rabbit:'farm',giraffe:'wild',monkey:'wild',penguin:'wild'};
+  assert.equal(isMashaalAnimalSortMatch('cow','farm',pairs),true);
+  assert.equal(isMashaalAnimalSortMatch('rabbit','farm',pairs),true);
+  assert.equal(isMashaalAnimalSortMatch('giraffe','wild',pairs),true);
+  assert.equal(isMashaalAnimalSortMatch('penguin','farm',pairs),false);
+});
+
+test('farm-or-wild activity is curriculum-bound and uses dedicated renderer',()=>{
+  const sort=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-open-animal-sort-01'));
+  assert.equal(sort.experienceTitleAr,'مزرعة أو برية؟');
+  assert.equal(sort.activityType,'animal-sort');
+  assert.deepEqual(sort.stimulus.animals,['cow','chicken','rabbit','giraffe','monkey','penguin']);
+  assert.deepEqual(sort.stimulus.pairs,{cow:'farm',chicken:'farm',rabbit:'farm',giraffe:'wild',monkey:'wild',penguin:'wild'});
+  assert.equal(getActivityRendererContract('animal-sort').renderer,'animal-sort');
 });
