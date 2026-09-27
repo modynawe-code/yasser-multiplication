@@ -42,7 +42,7 @@ test('first imported CC0 activities are playable and explicitly source-tagged',a
 });
 
 
-test('imported Pratham packs keep source metadata and 85 original illustrations',()=>{
+test('imported Pratham packs keep source metadata and 88 original illustrations',()=>{
   assert.equal(Object.keys(MASHAAL_PRATHAM_OPEN_PACKS).length,6);
   assert.equal(Object.values(MASHAAL_PRATHAM_OPEN_PACKS).reduce((sum,pack)=>sum+pack.imageCount,0),88);
   for(const pack of Object.values(MASHAAL_PRATHAM_OPEN_PACKS))assert.equal(pack.license,'CC BY 4.0');
