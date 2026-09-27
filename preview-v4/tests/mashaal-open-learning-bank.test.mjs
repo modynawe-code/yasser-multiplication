@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { access } from 'node:fs/promises';
 import { MASHAAL_OPEN_LEARNING_SOURCES,getMashaalOpenLearningSource } from '../src/modules/mashaal/curriculum/open-learning-source-registry.js';
 import { MASHAAL_OPEN_ACTIVITY_BANK,listMashaalOpenActivitiesBySource } from '../src/modules/mashaal/curriculum/open-learning-activity-bank.js';
 import { getMashaalWebMedia } from '../src/modules/mashaal/ui/mashaal-web-media.js';
@@ -94,4 +95,17 @@ test('all 88 imported illustrations are reachable through the six puzzle banks',
   assert.equal(paths.length,88);
   assert.equal(new Set(paths).size,88);
   assert.ok(paths.every(path=>/^assets\/oer\/pratham\/\d{4}\/\d{2}\.jpg$/.test(path)));
+});
+
+
+test('all 88 imported illustration files exist on disk',async()=>{
+  const paths=Object.keys(MASHAAL_PRATHAM_OPEN_PACKS).flatMap(packId=>listMashaalPrathamPackImagePaths(packId));
+  for(const path of paths)await access(new URL('../'+path,import.meta.url));
+});
+
+
+test('all six Pratham packs are bound to puzzle-bank activities',async()=>{
+  const { MASHAAL_KG3_ACTIVITY_CATALOG }=await import('../src/modules/mashaal/curriculum/kg3-activity-catalog.js');
+  const packIds=MASHAAL_KG3_ACTIVITY_CATALOG.filter(item=>item.stimulus?.kind==='picture-puzzle-bank').map(item=>item.stimulus.packId).sort();
+  assert.deepEqual(packIds,['0006','0056','0071','0120','0352','0433']);
 });
