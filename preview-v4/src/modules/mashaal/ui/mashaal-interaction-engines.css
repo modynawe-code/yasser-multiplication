@@ -70,11 +70,23 @@
 #mashaalActivityView .mashaal-color-pot{min-height:118px;border:2px solid #ddd0da;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center;padding:7px}
 #mashaalActivityView .mashaal-color-pot[aria-pressed="true"]{border-width:4px;border-color:#765276;background:#fff8fc}
 
+#mashaalActivityView .mashaal-story-host{width:min(100%,780px)}
+#mashaalActivityView .mashaal-story-progress{width:max-content;margin:0 auto 8px;padding:5px 12px;border-radius:999px;background:#f3edf6;color:#765276;font-weight:950}
+#mashaalActivityView .mashaal-story-scene{width:min(100%,420px);min-height:180px;margin:0 auto 8px;display:grid;place-items:center;border:2px solid #eadce8;border-radius:26px;background:linear-gradient(145deg,#fffafd,#f5f8ff)}
+#mashaalActivityView .mashaal-story-scene .mashaal-visual{width:128px;height:128px;border-radius:30px}
+#mashaalActivityView .mashaal-story-prompt{text-align:center;font-size:22px;line-height:1.45;margin:8px 0 12px}
+#mashaalActivityView .mashaal-story-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px);margin-inline:auto}
+#mashaalActivityView .mashaal-story-choice{min-height:132px;padding:8px;border:2px solid #dfd2dd;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center}
+#mashaalActivityView .mashaal-story-choice[data-correct="true"]{border-color:#71b993;background:#effaf5}
+#mashaalActivityView .mashaal-story-choice[data-miss="true"]{border-color:#d98181;background:#fff2f2;animation:mashaalHuntMiss .32s ease}
+#mashaalActivityView .mashaal-story-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:8px 0 0}
+
 @media(max-width:760px){
   #mashaalActivityView .mashaal-drop-zone,#mashaalActivityView .mashaal-drag-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
   #mashaalActivityView .mashaal-letter-hunt-field,#mashaalActivityView .mashaal-kitchen-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
   #mashaalActivityView .mashaal-animal-grid,#mashaalActivityView .mashaal-habitat-grid{grid-template-columns:1fr}
   #mashaalActivityView .mashaal-color-tray{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-story-choices{grid-template-columns:1fr 1fr}
   #mashaalActivityView .mashaal-memory-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   #mashaalActivityView .mashaal-letter-hunt-field,#mashaalActivityView .mashaal-kitchen-tray{grid-template-columns:repeat(3,minmax(0,1fr))}
   #mashaalActivityView .mashaal-animal-grid,#mashaalActivityView .mashaal-habitat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -85,5 +97,5 @@
 }
 @media(prefers-reduced-motion:reduce){
   #mashaalActivityView .mashaal-memory-face,#mashaalActivityView .mashaal-drag-card{transition:none!important}
-  #mashaalActivityView .mashaal-hunt-card[data-miss="true"]{animation:none!important}
+  #mashaalActivityView .mashaal-hunt-card[data-miss="true"],#mashaalActivityView .mashaal-story-choice[data-miss="true"]{animation:none!important}
 }
