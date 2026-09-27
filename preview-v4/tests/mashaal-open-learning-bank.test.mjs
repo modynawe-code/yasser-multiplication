@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { MASHAAL_OPEN_LEARNING_SOURCES,getMashaalOpenLearningSource } from '../src/modules/mashaal/curriculum/open-learning-source-registry.js';
 import { MASHAAL_OPEN_ACTIVITY_BANK,listMashaalOpenActivitiesBySource } from '../src/modules/mashaal/curriculum/open-learning-activity-bank.js';
 import { getMashaalWebMedia } from '../src/modules/mashaal/ui/mashaal-web-media.js';
+import { MASHAAL_PRATHAM_OPEN_PACKS } from '../src/modules/mashaal/curriculum/pratham-open-packs.js';
 
 test('open learning source registry keeps explicit licenses',()=>{
   assert.equal(getMashaalOpenLearningSource('kenney-cc0').license,'CC0 1.0');
@@ -37,5 +38,31 @@ test('first imported CC0 activities are playable and explicitly source-tagged',a
     const activity=getMashaalKg3Activity(id);
     assert.ok(activity,id);
     assert.equal(activity.assetSourceId,'kenney-cc0');
+  }
+});
+
+
+test('imported Pratham packs keep source metadata and 49 original illustrations',()=>{
+  assert.equal(Object.keys(MASHAAL_PRATHAM_OPEN_PACKS).length,3);
+  assert.equal(Object.values(MASHAAL_PRATHAM_OPEN_PACKS).reduce((sum,pack)=>sum+pack.imageCount,0),49);
+  for(const pack of Object.values(MASHAAL_PRATHAM_OPEN_PACKS))assert.equal(pack.license,'CC BY 4.0');
+});
+
+test('Pratham illustration media is local and source-backed',()=>{
+  for(const key of ['pratham-tree-leaves','pratham-tree-flowers','pratham-tree-fruits','pratham-tree-seeds','pratham-color-blue','pratham-color-yellow','pratham-color-orange','pratham-seed-walk','pratham-seed-tree','pratham-seed-fruit']){
+    const media=getMashaalWebMedia(key);
+    assert.ok(media,key);
+    assert.match(media.url,/^assets\/oer\/pratham\/\d{4}\/\d{2}\.jpg$/);
+    assert.equal(media.license,'CC BY 4.0');
+  }
+});
+
+test('five Pratham-backed games are source tagged',async()=>{
+  const { getMashaalKg3Activity }=await import('../src/modules/mashaal/curriculum/kg3-activity-catalog.js');
+  for(const id of ['kg3-open-nature-memory-01','kg3-open-tree-cycle-01','kg3-open-colors-nature-01','kg3-open-seed-journey-01','kg3-open-nature-puzzle-01']){
+    const activity=getMashaalKg3Activity(id);
+    assert.ok(activity,id);
+    assert.equal(activity.assetSourceId,'storyweaver-ccby');
+    assert.ok(['0433','0352','0071'].includes(activity.assetPackId));
   }
 });
