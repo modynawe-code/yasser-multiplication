@@ -15,7 +15,7 @@ test('composition root keeps games, rewards and all three learner runtimes toget
   const main=await read('src/main.js');
   for(const token of ['createGamesController','createRewardCabinetController','createRewardCapabilityRegistry','createAppController','createKhaledController','createMashaalController','createLearnerRuntimeRegistry'])assert.match(main,new RegExp(token));
   for(const learner of ['yasser','khaled','mashaal'])assert.match(main,new RegExp(`learnerRuntimes\\.register\\('${learner}'`));
-  assert.match(main,/createMashaalController\(\{repository:mashaalRepository,onExitToHub:\(\)=>hub\?\.show\(\)\}\)/);
+  assert.match(main,/createMashaalController\(\{repository:mashaalRepository,onExitToHub:\(\)=>hub\?\.show\(\),onActivityCompleted:/);
 });
 
 test('family hub cannot boot without restoring the visible games entry',async()=>{
