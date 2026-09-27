@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getMashaalKg3Activity } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
 import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activity-view-model.js';
 import { getActivityRendererContract } from '../src/shared/activities/activity-renderer-contracts.js';
-import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
+import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect,moveMashaalMaze } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
 
 test('memory deck creates exactly two cards per visual without losing pair identity',()=>{
   const deck=buildMashaalMemoryDeck(['apple','moon','ball'],{random:()=>0});
@@ -104,4 +104,22 @@ test('interactive story is curriculum-bound and uses a dedicated renderer',()=>{
   assert.deepEqual(story.stimulus.steps[0].choices,['brush-teeth','ball']);
   assert.equal(story.stimulus.steps[0].correctChoice,'brush-teeth');
   assert.equal(getActivityRendererContract('interactive-story').renderer,'interactive-story');
+});
+
+
+test('animal maze movement respects walls and board edges',()=>{
+  assert.deepEqual(moveMashaalMaze([0,0],'left',{size:5,walls:[]}),[0,0]);
+  assert.deepEqual(moveMashaalMaze([0,0],'right',{size:5,walls:['0,1']}),[0,0]);
+  assert.deepEqual(moveMashaalMaze([0,0],'down',{size:5,walls:['0,1']}),[1,0]);
+  assert.deepEqual(moveMashaalMaze([4,4],'down',{size:5,walls:[]}),[4,4]);
+});
+
+test('animal maze stays curriculum-bound and daily-play compatible',()=>{
+  const maze=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-animal-maze-duck-01'));
+  assert.equal(maze.experienceTitleAr,'متاهة الحيوانات');
+  assert.equal(maze.activityType,'animal-maze');
+  assert.equal(maze.stimulus.size,5);
+  assert.deepEqual(maze.stimulus.start,[0,0]);
+  assert.deepEqual(maze.stimulus.finish,[4,4]);
+  assert.equal(getActivityRendererContract('animal-maze').renderer,'animal-maze');
 });
