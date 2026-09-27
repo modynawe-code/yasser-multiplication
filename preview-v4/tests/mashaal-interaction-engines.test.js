@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getMashaalKg3Activity } from '../src/modules/mashaal/curriculum/kg3-activity-catalog.js';
 import { createMashaalActivityViewModel } from '../src/modules/mashaal/ui/activity-view-model.js';
 import { getActivityRendererContract } from '../src/shared/activities/activity-renderer-contracts.js';
-import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect,moveMashaalMaze } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
+import { addMashaalSequenceValue,buildMashaalMemoryDeck,mashaalTraceIsComplete,isMashaalLetterHuntTarget,canAddMashaalKitchenItem,isMashaalHabitatMatch,isMashaalColorMixCorrect,moveMashaalMaze,createMashaalPuzzleOrder,swapMashaalPuzzleTiles,isMashaalPuzzleSolved } from '../src/modules/mashaal/ui/mashaal-interaction-engines.js';
 
 test('memory deck creates exactly two cards per visual without losing pair identity',()=>{
   const deck=buildMashaalMemoryDeck(['apple','moon','ball'],{random:()=>0});
@@ -122,4 +122,26 @@ test('animal maze stays curriculum-bound and daily-play compatible',()=>{
   assert.deepEqual(maze.stimulus.start,[0,0]);
   assert.deepEqual(maze.stimulus.finish,[4,4]);
   assert.equal(getActivityRendererContract('animal-maze').renderer,'animal-maze');
+});
+
+
+test('picture puzzle starts shuffled and solves through explicit swaps',()=>{
+  const start=createMashaalPuzzleOrder(4);
+  assert.deepEqual(start,[2,0,3,1]);
+  assert.equal(isMashaalPuzzleSolved(start),false);
+  let order=swapMashaalPuzzleTiles(start,0,1);
+  order=swapMashaalPuzzleTiles(order,1,3);
+  order=swapMashaalPuzzleTiles(order,2,3);
+  assert.deepEqual(order,[0,1,2,3]);
+  assert.equal(isMashaalPuzzleSolved(order),true);
+});
+
+test('picture puzzle stays curriculum-bound and uses local Mashaal art',()=>{
+  const puzzle=createMashaalActivityViewModel(getMashaalKg3Activity('kg3-picture-puzzle-01'));
+  assert.equal(puzzle.experienceTitleAr,'بزل الصور');
+  assert.equal(puzzle.activityType,'picture-puzzle');
+  assert.equal(puzzle.stimulus.rows,2);
+  assert.equal(puzzle.stimulus.cols,2);
+  assert.match(puzzle.stimulus.imagePath,/^assets\/mashaal\/domains\/thinking\.webp$/);
+  assert.equal(getActivityRendererContract('picture-puzzle').renderer,'picture-puzzle');
 });
