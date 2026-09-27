@@ -87,3 +87,11 @@ test('thirteen Pratham-backed games are source tagged',async()=>{
     assert.ok(['0433','0352','0071','0056','0006','0120'].includes(activity.assetPackId));
   }
 });
+
+
+test('all 88 imported illustrations are reachable through the six puzzle banks',()=>{
+  const paths=Object.keys(MASHAAL_PRATHAM_OPEN_PACKS).flatMap(packId=>listMashaalPrathamPackImagePaths(packId));
+  assert.equal(paths.length,88);
+  assert.equal(new Set(paths).size,88);
+  assert.ok(paths.every(path=>/^assets\/oer\/pratham\/\d{4}\/\d{2}\.jpg$/.test(path)));
+});
