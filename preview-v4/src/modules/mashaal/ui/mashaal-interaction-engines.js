@@ -34,6 +34,16 @@ export function canAddMashaalKitchenItem(current,target){
   return safeCurrent<safeTarget;
 }
 
+export function isMashaalHabitatMatch(animal,habitat,pairs={}){
+  return String(pairs?.[String(animal)]||'')===String(habitat||'');
+}
+
+export function isMashaalColorMixCorrect(selection,correctPair=[]){
+  const selected=[...(selection||[])].map(String).sort();
+  const correct=[...(correctPair||[])].map(String).sort();
+  return selected.length===correct.length&&selected.every((value,index)=>value===correct[index]);
+}
+
 function visualCard(choice,viewModel,className){
   const button=document.createElement('button');button.type='button';button.className=className;button.dataset.value=choice.value;button.setAttribute('aria-label',choice.label);
   const visual=document.createElement('span');visual.className='mashaal-interaction-card-visual';visual.appendChild(createMashaalChoiceVisual(choice.visualKey,viewModel));
@@ -228,6 +238,79 @@ export function mountMashaalKitchenCount(host,viewModel,{onComplete}={}){
   return Object.freeze({
     reset(){placed=0;bowlItems.innerHTML='';tray.querySelectorAll('button').forEach(button=>{button.disabled=false;delete button.dataset.used;button.style.transform='';});updateCounter();},
     destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-kitchen-count-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalAnimalHabitat(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-animal-habitat-host');
+  const animals=[...(viewModel.stimulus?.animals||[])],habitats=[...(viewModel.stimulus?.habitats||[])],pairs={...(viewModel.stimulus?.pairs||{})};
+  let selectedAnimal=null,matched=new Set(),destroyed=false;
+  const status=document.createElement('p');status.className='mashaal-habitat-status';status.setAttribute('aria-live','polite');status.textContent='اختاري حيوان ثم مكانه.';
+  const animalGrid=document.createElement('div');animalGrid.className='mashaal-animal-grid';
+  const habitatGrid=document.createElement('div');habitatGrid.className='mashaal-habitat-grid';
+  host.append(animalGrid,habitatGrid,status);
+
+  function choiceFor(value){return viewModel.choices.find(choice=>choice.value===value)||{value,label:value,visualKey:value};}
+  function clearAnimalSelection(){animalGrid.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed','false'));selectedAnimal=null;}
+  function match(animal,habitat){
+    if(destroyed||matched.has(animal))return;
+    if(!isMashaalHabitatMatch(animal,habitat,pairs)){status.textContent='مو مكانه، جرّبي مكان ثاني.';return;}
+    matched.add(animal);
+    const animalButton=animalGrid.querySelector('[data-animal="'+animal+'"]');
+    const habitatButton=habitatGrid.querySelector('[data-habitat="'+habitat+'"]');
+    if(animalButton){animalButton.dataset.matched='true';animalButton.disabled=true;}
+    if(habitatButton){habitatButton.dataset.matched='true';habitatButton.disabled=true;}
+    clearAnimalSelection();status.textContent='ممتاز!';
+    if(matched.size===animals.length)onComplete?.();
+  }
+
+  for(const animal of animals){
+    const button=visualCard(choiceFor(animal),viewModel,'mashaal-animal-card');button.dataset.animal=animal;button.setAttribute('aria-pressed','false');
+    let dragging=false,startX=0,startY=0,moved=false;
+    button.addEventListener('pointerdown',event=>{if(button.disabled)return;dragging=true;moved=false;startX=event.clientX;startY=event.clientY;button.setPointerCapture?.(event.pointerId);button.classList.add('dragging');});
+    button.addEventListener('pointermove',event=>{if(!dragging)return;const dx=event.clientX-startX,dy=event.clientY-startY;if(Math.hypot(dx,dy)>8)moved=true;button.style.transform='translate('+dx+'px,'+dy+'px) scale(1.04)';});
+    const end=event=>{if(!dragging)return;dragging=false;button.classList.remove('dragging');button.style.transform='';try{button.releasePointerCapture?.(event.pointerId);}catch{}if(moved){const node=document.elementFromPoint?.(event.clientX,event.clientY)?.closest?.('[data-habitat]');if(node)match(animal,node.dataset.habitat);}};
+    button.addEventListener('pointerup',end);button.addEventListener('pointercancel',end);
+    button.addEventListener('click',()=>{if(moved){moved=false;return;}if(button.disabled)return;clearAnimalSelection();selectedAnimal=animal;button.setAttribute('aria-pressed','true');status.textContent='الحين اختاري مكانه.';});
+    animalGrid.appendChild(button);
+  }
+  for(const habitat of habitats){
+    const button=visualCard(choiceFor(habitat),viewModel,'mashaal-habitat-card');button.dataset.habitat=habitat;
+    button.addEventListener('click',()=>{if(selectedAnimal)match(selectedAnimal,habitat);else status.textContent='اختاري الحيوان أول.';});
+    habitatGrid.appendChild(button);
+  }
+  return Object.freeze({
+    reset(){matched.clear();clearAnimalSelection();animalGrid.querySelectorAll('button').forEach(button=>{button.disabled=false;delete button.dataset.matched;});habitatGrid.querySelectorAll('button').forEach(button=>{button.disabled=false;delete button.dataset.matched;});status.textContent='اختاري حيوان ثم مكانه.';},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-animal-habitat-host');host.innerHTML='';}
+  });
+}
+
+export function mountMashaalColorMixLab(host,viewModel,{onComplete}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-color-lab-host');
+  const colors=[...(viewModel.stimulus?.colors||[])],correctPair=[...(viewModel.stimulus?.correctPair||[])],target=String(viewModel.stimulus?.target||'orange');
+  let selected=[],destroyed=false,timer=null;
+  const goal=document.createElement('div');goal.className='mashaal-color-goal';
+  const goalText=document.createElement('span');goalText.textContent='نبغى نسوي';
+  goal.append(goalText,createMashaalChoiceVisual(target,viewModel,{compact:true}));
+  const beaker=document.createElement('div');beaker.className='mashaal-color-beaker';
+  const mixture=document.createElement('div');mixture.className='mashaal-color-mixture';beaker.appendChild(mixture);
+  const tray=document.createElement('div');tray.className='mashaal-color-tray';
+  const status=document.createElement('p');status.className='mashaal-color-status';status.setAttribute('aria-live','polite');status.textContent='اختاري لونين.';
+  host.append(goal,beaker,tray,status);
+
+  function choiceFor(value){return viewModel.choices.find(choice=>choice.value===value)||{value,label:value,visualKey:value};}
+  function resetSelection(){selected=[];mixture.innerHTML='';delete beaker.dataset.result;tray.querySelectorAll('button').forEach(button=>{button.disabled=false;button.setAttribute('aria-pressed','false');});}
+  function choose(color,button){
+    if(destroyed||button.disabled||selected.includes(color)||selected.length>=2)return;
+    selected.push(color);button.setAttribute('aria-pressed','true');button.disabled=true;mixture.appendChild(createMashaalChoiceVisual(color,viewModel,{compact:true}));
+    if(selected.length<2){status.textContent='اختاري اللون الثاني.';return;}
+    if(isMashaalColorMixCorrect(selected,correctPair)){beaker.dataset.result=target;mixture.replaceChildren(createMashaalChoiceVisual(target,viewModel));status.textContent='صح! صار برتقالي.';onComplete?.();return;}
+    status.textContent='طلع لون مختلف، جرّبي لونين ثانيين.';timer=setTimeout(()=>{if(!destroyed){resetSelection();status.textContent='اختاري لونين.';}},650);
+  }
+  for(const color of colors){const choice=choiceFor(color),button=visualCard(choice,viewModel,'mashaal-color-pot');button.setAttribute('aria-pressed','false');button.addEventListener('click',()=>choose(color,button));tray.appendChild(button);}
+  return Object.freeze({
+    reset(){if(timer)clearTimeout(timer);resetSelection();status.textContent='اختاري لونين.';},
+    destroy(){destroyed=true;if(timer)clearTimeout(timer);host.classList.remove('mashaal-interaction-host','mashaal-color-lab-host');host.innerHTML='';}
   });
 }
 
