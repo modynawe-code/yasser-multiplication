@@ -5,7 +5,7 @@ const LABELS=Object.freeze({
   'ask-help':'أطلب المساعدة','throw-blocks':'أرمي المكعبات','kick-blocks':'أركل المكعبات','wet-hands':'أبلل يدي','soap':'أستخدم الصابون','rub-hands':'أفرك يدي','rinse-hands':'أشطف يدي',
   'stay-away':'أبتعد','touch-hot':'ألمس','play-near-hot':'ألعب قربه','return-book':'أرجع الكتاب','leave-book-floor':'أتركه على الأرض','damage-book':'أتلفه',
   'help-tidy':'أساعد في الترتيب','leave-mess':'أترك المكان','scatter-toys':'أنثر الألعاب','saudi-flag':'علم السعودية','japan-flag':'علم اليابان','brazil-flag':'علم البرازيل',
-  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق',seed:'بذرة',sprout:'نبتة صغيرة',plant:'نبتة كبيرة',bird:'عصفور',cat:'قطة',pond:'بركة',nest:'عش',home:'بيت',red:'أحمر',yellow:'أصفر',blue:'أزرق',orange:'برتقالي'
+  doctor:'طبيب',teacher:'معلمة',baker:'خباز',left:'هذه المجموعة',right:'هذه المجموعة','ball-above-box':'الكرة فوق الصندوق','ball-inside-box':'الكرة داخل الصندوق','ball-below-box':'الكرة تحت الصندوق',seed:'بذرة',sprout:'نبتة صغيرة',plant:'نبتة كبيرة',bird:'عصفور',cat:'قطة',pond:'بركة',nest:'عش',home:'بيت',red:'أحمر',yellow:'أصفر',blue:'أزرق',orange:'برتقالي',candy:'حلوى'
 });
 
 const tokenLabel=(token)=>LABELS[token]||String(token);
@@ -27,6 +27,8 @@ function stimulusModel(stimulus={}){
     case 'kitchen-count':return {kind:'kitchen-count',item:stimulus.item||'apple',count:Number(stimulus.count)||0,available:Number(stimulus.available)||0};
     case 'animal-habitat':return {kind:'animal-habitat',animals:[...(stimulus.animals||[])],habitats:[...(stimulus.habitats||[])],pairs:{...(stimulus.pairs||{})}};
     case 'color-mix':return {kind:'color-mix',colors:[...(stimulus.colors||[])],target:stimulus.target||'',correctPair:[...(stimulus.correctPair||[])]};
+    case 'picture-puzzle':return {kind:'picture-puzzle',imagePath:stimulus.imagePath||'',rows:Math.max(1,Number(stimulus.rows)||2),cols:Math.max(1,Number(stimulus.cols)||3)};
+    case 'interactive-story':return {kind:'interactive-story',steps:Object.freeze((stimulus.steps||[]).map(step=>Object.freeze({promptAr:String(step.promptAr||''),choices:Object.freeze([...(step.choices||[])]),correctChoice:String(step.correctChoice||'')})))};
     case 'emotion-prompt':return {kind:'emotion-prompt'};
     case 'movement':return {kind:'movement',movement:stimulus.movement||''};
     case 'fine-motor':return {kind:'fine-motor',task:stimulus.task||''};
