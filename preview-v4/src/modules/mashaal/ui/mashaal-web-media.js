@@ -5,6 +5,7 @@
 // Local WebP scene coverage is protected by mashaal-scenario-media.test.js.
 const LOCAL_BASE='assets/mashaal/choices';
 const OER_ANIMAL_BASE='assets/oer/kenney/animals';
+const PRATHAM_BASE='assets/oer/pratham';
 const FLAG_BASE='https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/flags/4x3';
 const TABLER_BASE='https://cdn.jsdelivr.net/npm/@tabler/icons@3.34.1/icons/outline';
 
@@ -12,6 +13,7 @@ const local=(name,altAr)=>Object.freeze({url:`${LOCAL_BASE}/${name}.webp`,altAr,
 
 const sourceIcon=(name,altAr)=>Object.freeze({url:`${TABLER_BASE}/${name}.svg`,altAr,source:'Tabler Icons 3.34.1',license:'MIT'});
 const kenneyAnimal=(name,altAr)=>Object.freeze({url:`${OER_ANIMAL_BASE}/${name}.png`,altAr,source:'Kenney Animal Pack Remastered',license:'CC0 1.0'});
+const prathamImage=(pack,file,altAr,source)=>Object.freeze({url:`${PRATHAM_BASE}/${pack}/${file}.jpg`,altAr,source,license:'CC BY 4.0'});
 
 export const MASHAAL_WEB_MEDIA=Object.freeze({
   'saudi-flag':Object.freeze({url:`${FLAG_BASE}/sa.svg`,altAr:'علم المملكة العربية السعودية',source:'lipis/flag-icons 7.3.2',license:'MIT'}),
@@ -43,6 +45,16 @@ export const MASHAAL_WEB_MEDIA=Object.freeze({
   'umbrella':local('umbrella','مظلة'),
   'sunglasses':local('sunglasses','نظارة شمسية'),
   'ball':local('ball','كرة'),
+  'pratham-tree-leaves':prathamImage('0433','07','شجرة بأوراق','The Tree — Ketan Raut'),
+  'pratham-tree-flowers':prathamImage('0433','08','شجرة مزهرة','The Tree — Ketan Raut'),
+  'pratham-tree-fruits':prathamImage('0433','09','شجرة مثمرة','The Tree — Ketan Raut'),
+  'pratham-tree-seeds':prathamImage('0433','10','بذور الشجرة','The Tree — Ketan Raut'),
+  'pratham-color-blue':prathamImage('0071','02','فراشة زرقاء','Colours of Nature — Bulbul Sharma'),
+  'pratham-color-yellow':prathamImage('0071','03','نحلة صفراء','Colours of Nature — Bulbul Sharma'),
+  'pratham-color-orange':prathamImage('0071','06','بطة برتقالية في البركة','Colours of Nature — Bulbul Sharma'),
+  'pratham-seed-walk':prathamImage('0352','03','طفلان وكلب في رحلة','Let’s Go Seed Collecting! — Archana Sreenivasan'),
+  'pratham-seed-tree':prathamImage('0352','06','أطفال يستكشفون الشجرة','Let’s Go Seed Collecting! — Archana Sreenivasan'),
+  'pratham-seed-fruit':prathamImage('0352','12','أطفال مع فاكهة','Let’s Go Seed Collecting! — Archana Sreenivasan'),
   'fallen-block-tower':local('fallen-block-tower','برج مكعبات وقع'),
   'throw-blocks':local('throw-blocks','أرمي المكعبات'),
   'kick-blocks':local('kick-blocks','أركل المكعبات'),
