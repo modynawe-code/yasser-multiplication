@@ -22,6 +22,7 @@ function stimulusModel(stimulus={}){
     case 'spatial-relation':return {kind:'relation',relation:stimulus.relation||'',subject:stimulus.subject||'',reference:stimulus.reference||''};
     case 'picture-scene':return {kind:'picture',scene:stimulus.scene||''};
     case 'trace-path':return {kind:'trace',path:stimulus.path||'wave'};
+    case 'memory':return {kind:'memory',items:[...(stimulus.items||[])]};
     case 'emotion-prompt':return {kind:'emotion-prompt'};
     case 'movement':return {kind:'movement',movement:stimulus.movement||''};
     case 'fine-motor':return {kind:'fine-motor',task:stimulus.task||''};
