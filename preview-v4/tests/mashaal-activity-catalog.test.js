@@ -12,7 +12,7 @@ const READY_SKILLS=Object.freeze([
 ]);
 
 test('reviewed KG3 catalog is fully source-bound and releasable by contract',()=>{
-  assert.equal(MASHAAL_KG3_ACTIVITY_CATALOG.length,31);
+  assert.equal(MASHAAL_KG3_ACTIVITY_CATALOG.length,32);
   const ids=new Set(),skills=new Set();
   for(const activity of MASHAAL_KG3_ACTIVITY_CATALOG){
     assert.equal(ids.has(activity.id),false,activity.id);ids.add(activity.id);skills.add(activity.skillId);
@@ -20,7 +20,7 @@ test('reviewed KG3 catalog is fully source-bound and releasable by contract',()=
     assert.deepEqual(validateMashaalKg3Activity(activity),{valid:true,errors:[]});
   }
   assert.deepEqual([...READY_SKILLS].sort(),[...skills].sort());
-  assert.equal(listReleasableMashaalKg3Activities(MASHAAL_KG3_ACTIVITY_CATALOG).length,31);
+  assert.equal(listReleasableMashaalKg3Activities(MASHAAL_KG3_ACTIVITY_CATALOG).length,32);
 });
 
 test('Quran recitation skill stays out of playable catalog until approved human audio exists',()=>{
