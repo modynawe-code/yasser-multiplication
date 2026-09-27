@@ -3,6 +3,7 @@ import { getMashaalHomeDomains } from './home-view-model.js';
 import { getMashaalDomainSkills } from './domain-view-model.js';
 import { createMashaalActivityPlan } from '../application/activity-plan.js';
 import { createMashaalDailyMission } from '../application/daily-mission.js';
+import { listMashaalPlayExperiences,getMashaalPlayExperience } from '../application/play-experiences.js';
 import { createMashaalActivityViewModel,isMashaalActivityAnswerCorrect } from './activity-view-model.js';
 import { createMashaalDigitalAttempt } from '../application/digital-attempt.js';
 import { createMashaalActivityCompletion } from '../application/activity-completion.js';
@@ -36,7 +37,7 @@ function renderSkillPreview(skill,domainId){
 export function createMashaalController({repository,onExitToHub,onActivityCompleted}={}){
   if(!repository)throw new Error('Mashaal repository is required');
   const speech=createSpeechService();
-  let bound=false,currentDomain=null,currentSkill=null,currentPlan=null,currentActivityIndex=0,currentActivity=null,currentViewModel=null,currentInteraction=null,state=repository.load(),startedAt=0,activityComplete=false,recitationPlayer=null,recitationPlayed=false,dailyMissionActive=false;
+  let bound=false,currentDomain=null,currentSkill=null,currentPlan=null,currentActivityIndex=0,currentActivity=null,currentViewModel=null,currentInteraction=null,state=repository.load(),startedAt=0,activityComplete=false,recitationPlayer=null,recitationPlayed=false,dailyMissionActive=false,playLibraryActive=false;
   const selectedChoices=new Set();
 
   function destroyRecitation(){if(!recitationPlayer)return;try{recitationPlayer.destroy();}catch{}recitationPlayer=null;}
@@ -64,6 +65,23 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     if(tasks){tasks.innerHTML='';for(const task of mission.tasks){const item=document.createElement('span');item.className='mashaal-daily-task';item.dataset.complete=String(task.complete);item.textContent=task.title;tasks.appendChild(item);}}
     if(start){start.disabled=mission.done;start.textContent=mission.done?'خلصتِ مهمة اليوم':(mission.completeCount?'كمّلي المهمة':'ابدئي المهمة');}
     return mission;
+  }
+  function renderPlayLibrary(){
+    const grid=byId('mashaalPlayGrid');if(!grid)return;grid.innerHTML='';
+    for(const experience of listMashaalPlayExperiences()){
+      if(!experience.available)continue;
+      const plan=createMashaalActivityPlan(experience.skillId),activity=plan?.activities?.find(item=>item.id===experience.activityId),model=activity?createMashaalActivityViewModel(activity):null;
+      const button=document.createElement('button');button.type='button';button.className='mashaal-play-card';button.dataset.activityId=experience.activityId;button.setAttribute('aria-label',experience.title);
+      const visual=document.createElement('span');visual.className='mashaal-play-card-visual';visual.setAttribute('aria-hidden','true');
+      if(experience.imagePath){
+        const image=document.createElement('img');image.src=experience.imagePath;image.alt='';image.decoding='async';visual.appendChild(image);
+      }else if(model&&experience.previewKey){
+        visual.appendChild(createMashaalChoiceVisual(experience.previewKey,model,{compact:true}));
+      }
+      const title=document.createElement('strong');title.textContent=experience.title;
+      const subtitle=document.createElement('small');subtitle.textContent=experience.subtitle;
+      button.append(visual,title,subtitle);grid.appendChild(button);
+    }
   }
   function renderSkills(domainId){
     const grid=byId('mashaalSkillGrid');if(!grid)return;grid.innerHTML='';
@@ -98,8 +116,8 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     host.appendChild(createMashaalStimulusVisual(stimulus,{domainId:currentDomain?.id||null}));return null;
   }
 
-  function enter(){state=repository.load();dailyMissionActive=false;document.body.classList.remove('hub-mode','intro-mode','khaled-mode','family-parent-mode');document.body.classList.add('mashaal-mode');renderDomains();renderDailyMission();show('mashaalHomeView');}
-  function leave(){speech.stop();destroyRecitation();destroyInteraction();dailyMissionActive=false;document.body.classList.remove('mashaal-mode');currentPlan=null;currentActivityIndex=0;currentActivity=null;currentViewModel=null;activityComplete=false;recitationPlayed=false;clearSelections();}
+  function enter(){state=repository.load();dailyMissionActive=false;playLibraryActive=false;document.body.classList.remove('hub-mode','intro-mode','khaled-mode','family-parent-mode');document.body.classList.add('mashaal-mode');renderDomains();renderDailyMission();renderPlayLibrary();show('mashaalHomeView');}
+  function leave(){speech.stop();destroyRecitation();destroyInteraction();dailyMissionActive=false;playLibraryActive=false;document.body.classList.remove('mashaal-mode');currentPlan=null;currentActivityIndex=0;currentActivity=null;currentViewModel=null;activityComplete=false;recitationPlayed=false;clearSelections();}
   function openDomain(domainId){
     destroyRecitation();currentDomain=getMashaalHomeDomains().find(item=>item.id===domainId)||null;if(!currentDomain)return;
     const view=byId('mashaalDomainView');if(view)view.dataset.domainId=currentDomain.id;
@@ -107,8 +125,8 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     byId('mashaalDomainTitle').textContent=currentDomain.title;byId('mashaalDomainMessage').textContent='اختاري الصورة اللي تبين نبدأ فيها.';
     renderSkills(currentDomain.id);show('mashaalDomainView');speech.speak(currentDomain.title);
   }
-  function backHome(){speech.stop();destroyRecitation();destroyInteraction();dailyMissionActive=false;currentPlan=null;currentActivityIndex=0;renderDomains();renderDailyMission();show('mashaalHomeView');}
-  function backDomain(){speech.stop();destroyRecitation();destroyInteraction();dailyMissionActive=false;currentPlan=null;currentActivityIndex=0;currentActivity=null;currentViewModel=null;activityComplete=false;recitationPlayed=false;clearSelections();if(currentDomain){renderSkills(currentDomain.id);show('mashaalDomainView');}else backHome();}
+  function backHome(){speech.stop();destroyRecitation();destroyInteraction();dailyMissionActive=false;playLibraryActive=false;currentPlan=null;currentActivityIndex=0;renderDomains();renderDailyMission();renderPlayLibrary();show('mashaalHomeView');}
+  function backDomain(){speech.stop();destroyRecitation();destroyInteraction();dailyMissionActive=false;playLibraryActive=false;currentPlan=null;currentActivityIndex=0;currentActivity=null;currentViewModel=null;activityComplete=false;recitationPlayed=false;clearSelections();if(currentDomain){renderSkills(currentDomain.id);show('mashaalDomainView');}else backHome();}
   function exit(){leave();onExitToHub?.();}
 
   function renderActivityChoices(){
@@ -188,6 +206,7 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     destroyRecitation();destroyInteraction();currentActivity=currentPlan.activities[currentActivityIndex]||currentPlan.activities[0]||null;currentViewModel=createMashaalActivityViewModel(currentActivity);if(!currentViewModel)return;activityComplete=false;recitationPlayed=false;clearSelections();
     const layout=getMashaalActivityLayout(currentViewModel);
     const activityView=byId('mashaalActivityView');if(activityView){activityView.dataset.domainId=currentPlan.domainId;activityView.dataset.activityKind=currentViewModel.requiresHumanRecitation?'quran-recitation':'standard';activityView.dataset.layout=layout.mode;activityView.dataset.choiceCount=String(layout.choiceCount);}
+    const backButton=byId('mashaalActivityBack');if(backButton)backButton.textContent=playLibraryActive?'رجوع للألعاب':(dailyMissionActive?'رجوع لمهمة اليوم':'رجوع للمهارات');
     byId('mashaalActivitySkill').textContent=currentViewModel.experienceTitleAr||currentSkill?.title||'لعبة مشاعل';byId('mashaalActivityPrompt').textContent=currentViewModel.promptAr;
     const guide=byId('mashaalActivityGuide');if(guide)guide.replaceChildren(createMashaalDomainArt(currentPlan.domainId,{className:'mashaal-activity-guide-image'}));
     const feedback=byId('mashaalActivityFeedback');if(feedback){feedback.textContent='';feedback.className='mashaal-activity-feedback';}
@@ -196,17 +215,23 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     recitationPlayer=renderStimulus(currentViewModel,layout);renderActivityChoices();startedAt=Date.now();show('mashaalActivityView');speech.speak(currentViewModel.audioPromptAr);
   }
   function openSkill(skillId){
-    const plan=createMashaalActivityPlan(skillId);if(!plan?.contentReady)return;dailyMissionActive=false;currentPlan=plan;currentActivityIndex=0;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===skillId)||null;openPlannedActivity();
+    const plan=createMashaalActivityPlan(skillId);if(!plan?.contentReady)return;dailyMissionActive=false;playLibraryActive=false;currentPlan=plan;currentActivityIndex=0;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===skillId)||null;openPlannedActivity();
   }
   function openMissionTask(task){
     if(!task?.skillId||!task?.activityId)return false;
     const plan=createMashaalActivityPlan(task.skillId);if(!plan?.contentReady)return false;
     const index=plan.activities.findIndex(activity=>activity.id===task.activityId);if(index<0)return false;
-    currentPlan=plan;currentActivityIndex=index;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===task.skillId)||null;currentDomain=getMashaalHomeDomains().find(domain=>domain.id===plan.domainId)||currentDomain;dailyMissionActive=true;openPlannedActivity();return true;
+    currentPlan=plan;currentActivityIndex=index;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===task.skillId)||null;currentDomain=getMashaalHomeDomains().find(domain=>domain.id===plan.domainId)||currentDomain;dailyMissionActive=true;playLibraryActive=false;openPlannedActivity();return true;
   }
   function startDailyMission(){
     state=repository.load();const mission=renderDailyMission();if(mission.done){speech.speak('أكملتي مهمة اليوم، أحسنتي يا مشاعل');return;}
     const next=mission.tasks.find(task=>!task.complete);if(next)openMissionTask(next);
+  }
+  function openPlayExperience(activityId){
+    const experience=getMashaalPlayExperience(activityId);if(!experience?.available)return false;
+    const plan=createMashaalActivityPlan(experience.skillId);if(!plan?.contentReady)return false;
+    const index=plan.activities.findIndex(activity=>activity.id===experience.activityId);if(index<0)return false;
+    currentPlan=plan;currentActivityIndex=index;currentSkill=getMashaalDomainSkills(plan.domainId).find(skill=>skill.id===experience.skillId)||null;currentDomain=getMashaalHomeDomains().find(domain=>domain.id===plan.domainId)||null;dailyMissionActive=false;playLibraryActive=true;openPlannedActivity();return true;
   }
   function hearCurrentActivity(){if(!currentViewModel)return;speech.speak(currentViewModel.audioPromptAr,{interrupt:true});}
   function saveEvidence(evidence,skillId){if(recordMashaalEvidence(state,{skillId,evidence}))repository.save(state);}
@@ -217,7 +242,7 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     if(feedback)feedback.className='mashaal-activity-feedback good';
     const activityView=byId('mashaalActivityView');if(activityView)activityView.dataset.state='complete';
     const completion=byId('mashaalActivityCompletion');if(completion){completion.hidden=false;completion.querySelector('span').textContent=praise;}
-    const check=byId('mashaalActivityCheck');if(check){const missionNext=dailyMissionActive?createMashaalDailyMission(state).tasks.find(task=>!task.complete):null;const hasNext=!dailyMissionActive&&Boolean(currentPlan?.activities?.[currentActivityIndex+1]);check.hidden=false;check.disabled=false;check.textContent='اختاري نشاطًا آخر';if(dailyMissionActive)check.textContent=missionNext?'المهمة التالية':'أنهيتِ مهمة اليوم';else if(hasNext)check.textContent='النشاط التالي';}
+    const check=byId('mashaalActivityCheck');if(check){const missionNext=dailyMissionActive?createMashaalDailyMission(state).tasks.find(task=>!task.complete):null;const hasNext=!dailyMissionActive&&!playLibraryActive&&Boolean(currentPlan?.activities?.[currentActivityIndex+1]);check.hidden=false;check.disabled=false;check.textContent='اختاري نشاطًا آخر';if(playLibraryActive)check.textContent='اختاري لعبة ثانية';else if(dailyMissionActive)check.textContent=missionNext?'المهمة التالية':'أنهيتِ مهمة اليوم';else if(hasNext)check.textContent='النشاط التالي';}
     speech.speak(transfer?`${praise} الحين جربي بعيد عن الشاشة. ${transfer}`:praise);
   }
   function completeCurrentActivity(){
@@ -243,9 +268,10 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
     if(bound)return;bound=true;
     byId('mashaalDomainGrid')?.addEventListener('click',event=>{const card=event.target.closest('[data-domain-id]');if(card)openDomain(card.dataset.domainId);});
     byId('mashaalSkillGrid')?.addEventListener('click',event=>{const card=event.target.closest('[data-skill-id]');if(card&&!card.disabled)openSkill(card.dataset.skillId);});
-    byId('mashaalHearHome')?.addEventListener('click',()=>speech.speak('يا مشاعل، اختاري العالم اللي تبين نلعب فيه.'));
+    byId('mashaalPlayGrid')?.addEventListener('click',event=>{const card=event.target.closest('[data-activity-id]');if(card)openPlayExperience(card.dataset.activityId);});
+    byId('mashaalHearHome')?.addEventListener('click',()=>speech.speak('يا مشاعل، اختاري لعبة من ألعابي أو اختاري عالمك.'));
     byId('mashaalHearDomain')?.addEventListener('click',()=>currentDomain&&speech.speak(currentDomain.title));byId('mashaalHearActivity')?.addEventListener('click',hearCurrentActivity);
-    byId('mashaalActivityCheck')?.addEventListener('click',()=>{if(activityComplete){if(dailyMissionActive){const mission=createMashaalDailyMission(state),next=mission.tasks.find(task=>!task.complete);if(next){openMissionTask(next);return;}backHome();speech.speak('أكملتي مهمة اليوم، أحسنتي يا مشاعل');return;}if(currentPlan?.activities?.[currentActivityIndex+1]){currentActivityIndex+=1;openPlannedActivity();}else backDomain();return;}if(selectedChoices.size)submitAnswer([...selectedChoices]);});byId('mashaalDomainBack')?.addEventListener('click',backHome);byId('mashaalActivityBack')?.addEventListener('click',()=>dailyMissionActive?backHome():backDomain());
+    byId('mashaalActivityCheck')?.addEventListener('click',()=>{if(activityComplete){if(playLibraryActive){backHome();return;}if(dailyMissionActive){const mission=createMashaalDailyMission(state),next=mission.tasks.find(task=>!task.complete);if(next){openMissionTask(next);return;}backHome();speech.speak('أكملتي مهمة اليوم، أحسنتي يا مشاعل');return;}if(currentPlan?.activities?.[currentActivityIndex+1]){currentActivityIndex+=1;openPlannedActivity();}else backDomain();return;}if(selectedChoices.size)submitAnswer([...selectedChoices]);});byId('mashaalDomainBack')?.addEventListener('click',backHome);byId('mashaalActivityBack')?.addEventListener('click',()=>dailyMissionActive||playLibraryActive?backHome():backDomain());
     byId('mashaalDailyStart')?.addEventListener('click',startDailyMission);byId('mashaalToHub')?.addEventListener('click',exit);
   }
   return Object.freeze({start(){bind();},enter,leave,getState(){return state;}});
