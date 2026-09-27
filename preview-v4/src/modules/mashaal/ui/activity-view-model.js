@@ -27,6 +27,7 @@ function stimulusModel(stimulus={}){
     case 'kitchen-count':return {kind:'kitchen-count',item:stimulus.item||'apple',count:Number(stimulus.count)||0,available:Number(stimulus.available)||0};
     case 'animal-habitat':return {kind:'animal-habitat',animals:[...(stimulus.animals||[])],habitats:[...(stimulus.habitats||[])],pairs:{...(stimulus.pairs||{})}};
     case 'color-mix':return {kind:'color-mix',colors:[...(stimulus.colors||[])],target:stimulus.target||'',correctPair:[...(stimulus.correctPair||[])]};
+    case 'interactive-story':return {kind:'interactive-story',steps:(stimulus.steps||[]).map(step=>Object.freeze({scene:String(step.scene||''),promptAr:String(step.promptAr||''),audioPromptAr:String(step.audioPromptAr||step.promptAr||''),choices:[...(step.choices||[])],correctChoice:String(step.correctChoice||'')}))};
     case 'emotion-prompt':return {kind:'emotion-prompt'};
     case 'movement':return {kind:'movement',movement:stimulus.movement||''};
     case 'fine-motor':return {kind:'fine-motor',task:stimulus.task||''};

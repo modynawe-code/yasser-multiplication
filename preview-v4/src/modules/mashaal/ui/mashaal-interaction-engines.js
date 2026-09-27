@@ -314,6 +314,44 @@ export function mountMashaalColorMixLab(host,viewModel,{onComplete}={}){
   });
 }
 
+export function mountMashaalInteractiveStory(host,viewModel,{onComplete,onSpeak}={}){
+  host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-story-host');
+  const steps=[...(viewModel.stimulus?.steps||[])];
+  let index=0,destroyed=false,completed=false;
+  const progress=document.createElement('div');progress.className='mashaal-story-progress';
+  const scene=document.createElement('div');scene.className='mashaal-story-scene';
+  const prompt=document.createElement('h3');prompt.className='mashaal-story-prompt';
+  const choices=document.createElement('div');choices.className='mashaal-story-choices';
+  const status=document.createElement('p');status.className='mashaal-story-status';status.setAttribute('aria-live','polite');
+  host.append(progress,scene,prompt,choices,status);
+
+  function choiceFor(value){return viewModel.choices.find(choice=>choice.value===value)||{value,label:value,visualKey:value};}
+  function renderStep(){
+    if(destroyed||completed)return;
+    const step=steps[index];if(!step){completed=true;onComplete?.();return;}
+    progress.textContent=(index+1)+' / '+steps.length;
+    scene.replaceChildren(createMashaalChoiceVisual(step.scene,viewModel));
+    prompt.textContent=step.promptAr||'وش يصير بعد؟';choices.innerHTML='';status.textContent='';
+    for(const value of step.choices||[]){
+      const choice=choiceFor(value),button=visualCard(choice,viewModel,'mashaal-story-choice');button.dataset.storyValue=value;
+      button.addEventListener('click',()=>{
+        if(destroyed||completed)return;
+        if(String(value)!==String(step.correctChoice)){button.dataset.miss='true';status.textContent='جربي مرة ثانية.';setTimeout(()=>{if(!destroyed)delete button.dataset.miss;},420);return;}
+        button.dataset.correct='true';choices.querySelectorAll('button').forEach(item=>item.disabled=true);status.textContent='ممتاز!';
+        index+=1;
+        if(index>=steps.length){completed=true;scene.replaceChildren(createMashaalChoiceVisual('breakfast',viewModel));prompt.textContent='اكتملت قصة الصباح.';choices.innerHTML='';progress.textContent=steps.length+' / '+steps.length;onComplete?.();return;}
+        const next=steps[index];setTimeout(()=>{if(!destroyed&&!completed){renderStep();onSpeak?.(next.audioPromptAr||next.promptAr||'');}},350);
+      });
+      choices.appendChild(button);
+    }
+  }
+  renderStep();
+  return Object.freeze({
+    reset(){index=0;completed=false;renderStep();},
+    destroy(){destroyed=true;host.classList.remove('mashaal-interaction-host','mashaal-story-host');host.innerHTML='';}
+  });
+}
+
 export function mountMashaalTracing(host,viewModel,{onComplete}={}){
   host.innerHTML='';host.classList.add('mashaal-interaction-host','mashaal-trace-host');
   let completed=false,active=false,reached=0,tapIndex=0;

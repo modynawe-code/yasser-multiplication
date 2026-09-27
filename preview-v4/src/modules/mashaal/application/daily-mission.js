@@ -6,7 +6,8 @@ const DAILY_MISSION_POOL=Object.freeze([
   'kg3-memory-match-01',
   'kg3-plant-growth-sequence-01',
   'kg3-animal-habitat-01',
-  'kg3-color-mix-orange-01'
+  'kg3-color-mix-orange-01',
+  'kg3-interactive-story-morning-01'
 ]);
 
 export function mashaalLocalDayKey(value=new Date()){
