@@ -8,6 +8,15 @@ export const MASHAAL_OPEN_LEARNING_SOURCES=Object.freeze({
     attributionRequired:false,
     note:'Official Kenney asset pages state game assets are public-domain CC0.'
   }),
+  'twemoji-ccby':Object.freeze({
+    title:'Twemoji Graphics',
+    license:'CC BY 4.0',
+    sourceUrl:'https://github.com/twitter/twemoji',
+    licenseUrl:'https://creativecommons.org/licenses/by/4.0/',
+    use:['images','letter-picture-cards','educational-games'],
+    attributionRequired:true,
+    note:'Twemoji graphics are used as local SVG picture cards for Arabic letter learning; curriculum mapping is authored in this project.'
+  }),
   'storyweaver-ccby':Object.freeze({
     title:'Pratham Books StoryWeaver',
     license:'CC BY 4.0',
