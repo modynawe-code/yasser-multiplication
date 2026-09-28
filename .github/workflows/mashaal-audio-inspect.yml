@@ -21,6 +21,10 @@ jobs:
           curl -fL --retry 3 --retry-delay 2             'https://alquran.islam.gov.qa/droos/Download/Sound/Dr1_Qasr.mp3'             -o /tmp/mashaal-audio/Dr1_Qasr.mp3
           curl -fL --retry 3 --retry-delay 2             'https://alquran.islam.gov.qa/droos/Download/Sound/Dr1_Mad.mp3'             -o /tmp/mashaal-audio/Dr1_Mad.mp3
           curl -fL --retry 3 --retry-delay 2             'https://alquran.islam.gov.qa/droos/Dr1.html'             -o /tmp/mashaal-audio/Dr1.html
+      - name: Install audio tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
       - name: Inspect durations and silence boundaries
         run: |
           set -o pipefail
@@ -35,6 +39,7 @@ jobs:
           grep -Eio '([^"'"'"']+\.(mp3|js))' /tmp/mashaal-audio/Dr1.html | sort -u || true
           grep -Ein 'Dr1|Sound|audio|currentTime|play\(' /tmp/mashaal-audio/Dr1.html | head -200 || true
       - name: Upload inspection bundle
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mashaal-qatar-audio-inspection
