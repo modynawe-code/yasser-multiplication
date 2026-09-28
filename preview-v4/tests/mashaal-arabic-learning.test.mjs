@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { MASHAAL_ARABIC_LETTERS,MASHAAL_ARABIC_SECTIONS,getMashaalArabicLetter } from '../src/modules/mashaal/curriculum/arabic-letter-curriculum.js';
 import { listMashaalArabicImageAssets } from '../src/modules/mashaal/curriculum/arabic-letter-image-bank.js';
 import { createMashaalArabicProgress } from '../src/modules/mashaal/application/arabic-progress.js';
+import { MASHAAL_ARABIC_MINI_STORIES } from '../src/modules/mashaal/curriculum/arabic-mini-stories.js';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
@@ -82,13 +83,14 @@ test('Arabic learning modules and 84-image bank are included in the first-instal
   for(const path of [
     './src/modules/mashaal/curriculum/arabic-letter-image-bank.js',
     './src/modules/mashaal/curriculum/arabic-letter-curriculum.js',
+    './src/modules/mashaal/curriculum/arabic-mini-stories.js',
     './src/modules/mashaal/application/arabic-progress.js',
     './src/modules/mashaal/ui/mashaal-arabic-learning.js',
     './src/modules/mashaal/ui/mashaal-arabic-learning.css'
   ]) assert.ok(worker.includes("'"+path+"'"),path);
   assert.match(worker,/MASHAAL_ARABIC_TWEMOJI_ASSETS/);
   assert.match(worker,/\.\.\.MASHAAL_ARABIC_TWEMOJI_ASSETS/);
-  assert.match(worker,/shell-155/);
+  assert.match(worker,/shell-156/);
 });
 
 test('Arabic listening still teaches letter names and examples instead of isolated synthetic vowel sounds',async()=>{
@@ -98,4 +100,17 @@ test('Arabic listening still teaches letter names and examples instead of isolat
   assert.doesNotMatch(ui,/letter\.sound|target\.sound|state\.letter\.sound/);
   assert.match(ui,/اسمعي اسم الحرف/);
   assert.match(ui,/هذا حرف/);
+});
+
+
+test('Arabic mini stories provide six three-scene picture sequences and an ordering interaction',async()=>{
+  assert.equal(MASHAAL_ARABIC_MINI_STORIES.length,6);
+  assert.ok(MASHAAL_ARABIC_MINI_STORIES.every(story=>story.scenes.length===3));
+  assert.equal(new Set(MASHAAL_ARABIC_MINI_STORIES.map(story=>story.id)).size,6);
+  assert.ok(MASHAAL_ARABIC_MINI_STORIES.every(story=>story.scenes.every(scene=>scene.image.endsWith('.svg')&&scene.word&&scene.text)));
+  const ui=await read('src/modules/mashaal/ui/mashaal-arabic-learning.js');
+  assert.match(ui,/renderMiniStories/);
+  assert.match(ui,/رتّبي الأحداث/);
+  assert.match(ui,/ترتيب القصة/);
+  assert.match(ui,/MASHAAL_ARABIC_MINI_STORIES/);
 });

@@ -1,5 +1,6 @@
 import { MASHAAL_ARABIC_LETTERS,MASHAAL_ARABIC_SECTIONS,getMashaalArabicLetter,getMashaalArabicSection } from '../curriculum/arabic-letter-curriculum.js';
 import { createMashaalArabicProgress } from '../application/arabic-progress.js';
+import { MASHAAL_ARABIC_MINI_STORIES } from '../curriculum/arabic-mini-stories.js';
 
 const progress=createMashaalArabicProgress();
 
@@ -430,6 +431,70 @@ function renderLinkedActivities(host,items,onOpenActivity){
   host.appendChild(grid);
 }
 
+function renderMiniStories(host,onOpenActivity){
+  const shell=node('div','mashaal-arabic-stories');
+  const selector=node('div','mashaal-arabic-story-selector');
+  const stage=node('div','mashaal-arabic-story-stage');
+  shell.append(selector,stage);host.appendChild(shell);
+
+  function sceneCard(scene,index,{button=false,onClick}={}){
+    const card=node(button?'button':'article','mashaal-arabic-story-scene');
+    if(button)card.type='button';
+    const number=node('span','mashaal-arabic-story-number',String(index+1));
+    card.append(number,imageNode(scene,'mashaal-arabic-story-image'),node('strong','',scene.word),node('p','',scene.text));
+    if(onClick)card.addEventListener('click',onClick);
+    return card;
+  }
+
+  function showStory(story){
+    selector.querySelectorAll('button').forEach(item=>item.dataset.selected=String(item.dataset.storyId===story.id));
+    stage.innerHTML='';
+    stage.append(node('h3','',story.title));
+    const scenes=node('div','mashaal-arabic-story-scenes');
+    story.scenes.forEach((scene,index)=>scenes.appendChild(sceneCard(scene,index)));
+    const quiz=node('button','mashaal-arabic-tool mashaal-arabic-story-quiz','🧩 رتّبي الأحداث');
+    quiz.type='button';quiz.addEventListener('click',()=>startQuiz(story));
+    stage.append(scenes,quiz);
+  }
+
+  function startQuiz(story){
+    stage.innerHTML='';
+    stage.append(node('h3','',story.title),node('p','mashaal-arabic-story-instruction','اضغطي الصور بترتيب القصة من الأول إلى الأخير.'));
+    const picked=node('div','mashaal-arabic-story-picked','الترتيب: ');
+    const choices=node('div','mashaal-arabic-story-scenes mashaal-arabic-story-quiz-grid');
+    const answer=[];
+    const shuffledScenes=shuffled(story.scenes.map((scene,index)=>({scene,index})));
+    for(const entry of shuffledScenes){
+      const card=sceneCard(entry.scene,entry.index,{button:true,onClick:()=>{
+        if(card.disabled)return;
+        card.disabled=true;answer.push(entry.index);picked.textContent='الترتيب: '+answer.map(value=>value+1).join(' ← ');
+        if(answer.length===story.scenes.length){
+          const ok=answer.every((value,index)=>value===index);
+          progress.record(story.letterId,'attempt',{correct:ok});
+          const feedback=node('p','mashaal-arabic-game-feedback',ok?'ممتاز! رتبتِ أحداث القصة بشكل صحيح.':'الترتيب يحتاج محاولة ثانية.');
+          feedback.dataset.outcome=ok?'correct':'wrong';stage.appendChild(feedback);
+          const again=node('button','mashaal-arabic-tool',ok?'اقرئي القصة مرة ثانية':'أعيدي المحاولة');
+          again.type='button';again.addEventListener('click',()=>ok?showStory(story):startQuiz(story));stage.appendChild(again);
+        }
+      }});
+      card.querySelector('p')?.remove();
+      choices.appendChild(card);
+    }
+    stage.append(picked,choices);
+  }
+
+  for(const story of MASHAAL_ARABIC_MINI_STORIES){
+    const button=node('button','mashaal-arabic-story-tab');button.type='button';button.dataset.storyId=story.id;
+    button.textContent=story.title;button.addEventListener('click',()=>showStory(story));selector.appendChild(button);
+  }
+  showStory(MASHAAL_ARABIC_MINI_STORIES[0]);
+
+  const more=node('section','mashaal-arabic-more-stories');
+  more.append(node('h3','', 'قصص إضافية موجودة في التطبيق'));
+  renderLinkedActivities(more,STORY_ITEMS,onOpenActivity);
+  shell.appendChild(more);
+}
+
 export function mountMashaalArabicSection(host,sectionId,{onSpeak,onSwitchSection,onOpenActivity,initialLetterId}={}){
   if(!host)return Object.freeze({destroy(){}});
   host.innerHTML='';
@@ -441,7 +506,7 @@ export function mountMashaalArabicSection(host,sectionId,{onSpeak,onSwitchSectio
   else if(section.id==='color')mountCanvasPractice(host,{mode:'color',onSpeak,initialLetterId});
   else if(section.id==='listen')cleanup=renderListening(host,{onSpeak})||cleanup;
   else if(section.id==='words')renderWords(host,{initialLetterId});
-  else if(section.id==='stories')renderLinkedActivities(host,STORY_ITEMS,onOpenActivity);
+  else if(section.id==='stories')renderMiniStories(host,onOpenActivity);
   else if(section.id==='games')renderArabicGames(host,{initialLetterId});
   return Object.freeze({destroy(){cleanup();host.innerHTML='';}});
 }
