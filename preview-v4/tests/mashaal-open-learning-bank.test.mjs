@@ -9,6 +9,7 @@ test('open learning source registry keeps explicit licenses',()=>{
   assert.equal(getMashaalOpenLearningSource('kenney-cc0').license,'CC0 1.0');
   assert.equal(getMashaalOpenLearningSource('storyweaver-ccby').license,'CC BY 4.0');
   assert.equal(getMashaalOpenLearningSource('twemoji-ccby').license,'CC BY 4.0');
+  assert.equal(getMashaalOpenLearningSource('openmoji-ccbysa').license,'CC BY-SA 4.0');
   assert.equal(getMashaalOpenLearningSource('bookdash-ccby').license,'CC BY 4.0');
   assert.equal(getMashaalOpenLearningSource('african-storybook-ccby').license,'CC BY 4.0');
   assert.equal(getMashaalOpenLearningSource('illustrative-math-k').license,'CC BY-NC-SA 4.0');
