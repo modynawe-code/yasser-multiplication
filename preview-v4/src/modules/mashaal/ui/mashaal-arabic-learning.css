@@ -206,3 +206,44 @@ button.mashaal-arabic-story-scene:disabled{opacity:.48}
 
 .mashaal-arabic-audio-credit{margin:2px 0 0;text-align:center;font-size:11px;line-height:1.55;color:var(--muted);font-weight:750}
 .mashaal-arabic-audio-credit a{color:#765276;text-decoration:underline;text-underline-offset:2px;font-weight:900}
+
+
+/* Picture coloring pages */
+.mashaal-coloring-shell{display:grid;gap:16px}
+.mashaal-coloring-chooser{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.mashaal-coloring-page-card{min-width:0;min-height:150px;border:1px solid #e7dbe4;border-radius:20px;background:#fff;display:grid;grid-template-rows:88px auto auto;place-items:center;gap:4px;padding:10px;color:#594657;touch-action:manipulation}
+.mashaal-coloring-page-card img{width:100%;height:88px;object-fit:contain}
+.mashaal-coloring-page-card strong{font-size:16px}
+.mashaal-coloring-page-card small{font-size:10px;color:var(--muted);font-weight:850}
+.mashaal-coloring-page-card[data-selected="true"]{background:#fff0f8;border-color:#9d648b;box-shadow:inset 0 0 0 2px #efd6e6}
+.mashaal-coloring-work{display:grid;gap:12px}
+.mashaal-coloring-heading{display:flex;align-items:center;justify-content:center;gap:14px;text-align:center}
+.mashaal-coloring-letter{width:68px;height:68px;border-radius:20px;background:#fff0f8;color:#7a4f70;display:grid;place-items:center;font-size:38px;font-weight:950}
+.mashaal-coloring-heading-copy{display:grid;gap:2px;text-align:start}
+.mashaal-coloring-heading-copy h3{margin:0;font-size:24px;color:#5c4458}
+.mashaal-coloring-heading-copy p{margin:0;color:var(--muted);font-weight:850}
+.mashaal-coloring-board{position:relative;width:min(100%,720px);aspect-ratio:720/520;margin:auto;border:1px solid #e4d8e0;border-radius:24px;background:#fff;overflow:hidden;box-shadow:inset 0 0 0 8px #faf7f9}
+.mashaal-coloring-paint,.mashaal-coloring-outline{position:absolute;inset:0;width:100%;height:100%}
+.mashaal-coloring-paint{z-index:1;touch-action:none;overscroll-behavior:contain}
+.mashaal-coloring-outline{z-index:2;object-fit:contain;padding:28px;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.mashaal-coloring-palette{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.mashaal-coloring-swatch{width:42px;height:42px;border:3px solid #fff;border-radius:50%;background:var(--swatch);box-shadow:0 0 0 1px #d7cad4;touch-action:manipulation}
+.mashaal-coloring-swatch[data-selected="true"]{box-shadow:0 0 0 3px #75546e}
+.mashaal-coloring-tools{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.mashaal-coloring-sizes{display:flex;justify-content:center;gap:6px}
+.mashaal-coloring-credit{margin:0;text-align:center;font-size:10px;color:var(--muted);font-weight:750}
+.mashaal-coloring-credit a{color:#765276}
+@media(max-width:760px){
+  .mashaal-coloring-chooser{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:4px}
+  .mashaal-coloring-page-card{flex:0 0 126px;min-height:132px;grid-template-rows:70px auto auto;scroll-snap-align:start}
+  .mashaal-coloring-page-card img{height:70px}
+  .mashaal-coloring-outline{padding:22px}
+}
+@media(max-width:430px){
+  .mashaal-coloring-heading{gap:10px}
+  .mashaal-coloring-letter{width:56px;height:56px;border-radius:16px;font-size:32px}
+  .mashaal-coloring-heading-copy h3{font-size:21px}
+  .mashaal-coloring-board{border-radius:18px}
+  .mashaal-coloring-outline{padding:16px}
+  .mashaal-coloring-swatch{width:38px;height:38px}
+}
