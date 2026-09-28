@@ -61,7 +61,7 @@ function renderLetterExplorer(host,{onSpeak,onSwitchSection}){
     picker.querySelectorAll('[data-letter-id]').forEach(item=>item.dataset.selected=String(item.dataset.letterId===letter.id));
     detail.innerHTML='';
     const hero=node('div','mashaal-arabic-letter-hero');
-    hero.append(node('strong','',letter.letter),node('span','',`حرف ${letter.name}`),node('small','',`صوته: ${letter.sound}`));
+    hero.append(node('strong','',letter.letter),node('span','',`حرف ${letter.name}`),node('small','',`مثال: ${letter.exampleWord}`));
     const words=node('div','mashaal-arabic-word-row');
     for(const word of letter.words){
       const wordButton=node('button','mashaal-arabic-word',word);wordButton.type='button';
@@ -69,7 +69,7 @@ function renderLetterExplorer(host,{onSpeak,onSwitchSection}){
       words.appendChild(wordButton);
     }
     const actions=node('div','mashaal-arabic-letter-actions');
-    const hear=node('button','mashaal-arabic-action','🔊 اسمعي الحرف');hear.type='button';hear.addEventListener('click',()=>onSpeak?.(`حرف ${letter.name}. ${letter.sound}`));
+    const hear=node('button','mashaal-arabic-action','🔊 اسمعي اسم الحرف');hear.type='button';hear.addEventListener('click',()=>onSpeak?.(`هذا حرف ${letter.name}. ${letter.name}. مثال: ${letter.exampleWord}.`));
     const write=node('button','mashaal-arabic-action','✍️ اكتبي الحرف');write.type='button';write.addEventListener('click',()=>onSwitchSection?.('write',letter.id));
     const color=node('button','mashaal-arabic-action','🎨 لوّني الحرف');color.type='button';color.addEventListener('click',()=>onSwitchSection?.('color',letter.id));
     actions.append(hear,write,color);
@@ -116,7 +116,7 @@ function mountCanvasPractice(host,{mode,onSpeak,initialLetterId}){
   canvas.addEventListener('pointerdown',start);canvas.addEventListener('pointermove',move);canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',end);
 
   const clear=node('button','mashaal-arabic-tool','↻ مسح');clear.type='button';clear.addEventListener('click',drawGuide);
-  const hear=node('button','mashaal-arabic-tool','🔊 اسمعي');hear.type='button';hear.addEventListener('click',()=>onSpeak?.(`حرف ${state.letter.name}. ${state.letter.sound}`));
+  const hear=node('button','mashaal-arabic-tool','🔊 اسمعي');hear.type='button';hear.addEventListener('click',()=>onSpeak?.(`هذا حرف ${state.letter.name}. ${state.letter.name}. مثال: ${state.letter.exampleWord}.`));
   toolbar.append(clear,hear);
   if(mode==='color'){
     const colors=['#dd5f8c','#6a73c9','#39a37c','#e09b34','#74508f','#2f3237'];
@@ -136,16 +136,16 @@ function mountCanvasPractice(host,{mode,onSpeak,initialLetterId}){
 function renderListening(host,{onSpeak}){
   const quiz=node('div','mashaal-arabic-listen');
   const controls=node('div','mashaal-arabic-listen-controls');
-  const hear=node('button','mashaal-arabic-listen-hear','🔊 اسمعي الحرف');hear.type='button';
-  const status=node('p','mashaal-arabic-listen-status','اسمعي ثم اختاري الحرف الصحيح.');
+  const hear=node('button','mashaal-arabic-listen-hear','🔊 اسمعي اسم الحرف');hear.type='button';
+  const status=node('p','mashaal-arabic-listen-status','اسمعي اسم الحرف ثم اختاريه.');
   const choices=node('div','mashaal-arabic-listen-choices');
   controls.append(hear,status);quiz.append(controls,choices);host.appendChild(quiz);
   let index=0,target=MASHAAL_ARABIC_LETTERS[0],timer=null;
 
   function shuffled(items){return [...items].sort(()=>Math.random()-.5);}
-  function speakTarget(){onSpeak?.(`اختاري حرف ${target.name}. ${target.sound}`);}
+  function speakTarget(){onSpeak?.(`اختاري حرف ${target.name}. ${target.name}. مثال: ${target.exampleWord}.`);}
   function round(){
-    target=MASHAAL_ARABIC_LETTERS[index%MASHAAL_ARABIC_LETTERS.length];index+=1;choices.innerHTML='';status.textContent='اسمعي ثم اختاري الحرف الصحيح.';
+    target=MASHAAL_ARABIC_LETTERS[index%MASHAAL_ARABIC_LETTERS.length];index+=1;choices.innerHTML='';status.textContent='اسمعي اسم الحرف ثم اختاريه.';
     const targetIndex=MASHAAL_ARABIC_LETTERS.indexOf(target);
     const options=shuffled([target,MASHAAL_ARABIC_LETTERS[(targetIndex+5)%28],MASHAAL_ARABIC_LETTERS[(targetIndex+11)%28],MASHAAL_ARABIC_LETTERS[(targetIndex+19)%28]]);
     for(const letter of options){
