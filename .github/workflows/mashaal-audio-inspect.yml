@@ -1,0 +1,42 @@
+name: Mashaal Arabic Audio Inspect
+
+on:
+  push:
+    branches:
+      - work/mashaal-qatar-letter-audio-v1
+    paths:
+      - '.github/workflows/mashaal-audio-inspect.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official lesson audio
+        run: |
+          mkdir -p /tmp/mashaal-audio
+          curl -fL --retry 3 --retry-delay 2             'https://alquran.islam.gov.qa/droos/Download/Sound/Dr1_Qasr.mp3'             -o /tmp/mashaal-audio/Dr1_Qasr.mp3
+          curl -fL --retry 3 --retry-delay 2             'https://alquran.islam.gov.qa/droos/Download/Sound/Dr1_Mad.mp3'             -o /tmp/mashaal-audio/Dr1_Mad.mp3
+          curl -fL --retry 3 --retry-delay 2             'https://alquran.islam.gov.qa/droos/Dr1.html'             -o /tmp/mashaal-audio/Dr1.html
+      - name: Inspect durations and silence boundaries
+        run: |
+          set -o pipefail
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /tmp/mashaal-audio/Dr1_Qasr.mp3 | tee /tmp/mashaal-audio/qasr-duration.txt
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 /tmp/mashaal-audio/Dr1_Mad.mp3 | tee /tmp/mashaal-audio/mad-duration.txt
+          ffmpeg -hide_banner -i /tmp/mashaal-audio/Dr1_Qasr.mp3 -af silencedetect=noise=-38dB:d=0.22 -f null - 2>&1 | tee /tmp/mashaal-audio/qasr-silence.txt
+          ffmpeg -hide_banner -i /tmp/mashaal-audio/Dr1_Mad.mp3 -af silencedetect=noise=-38dB:d=0.22 -f null - 2>&1 | tee /tmp/mashaal-audio/mad-silence.txt
+          grep -E 'silence_(start|end)' /tmp/mashaal-audio/qasr-silence.txt || true
+          grep -E 'silence_(start|end)' /tmp/mashaal-audio/mad-silence.txt || true
+      - name: Show lesson HTML media references
+        run: |
+          grep -Eio '([^"'"'"']+\.(mp3|js))' /tmp/mashaal-audio/Dr1.html | sort -u || true
+          grep -Ein 'Dr1|Sound|audio|currentTime|play\(' /tmp/mashaal-audio/Dr1.html | head -200 || true
+      - name: Upload inspection bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: mashaal-qatar-audio-inspection
+          path: /tmp/mashaal-audio/
+          retention-days: 1
