@@ -6,6 +6,7 @@ import { listMashaalArabicImageAssets } from '../src/modules/mashaal/curriculum/
 import { createMashaalArabicProgress } from '../src/modules/mashaal/application/arabic-progress.js';
 import { MASHAAL_ARABIC_MINI_STORIES } from '../src/modules/mashaal/curriculum/arabic-mini-stories.js';
 import { MASHAAL_ARABIC_LETTER_AUDIO,MASHAAL_ARABIC_LETTER_AUDIO_SOURCE,listMashaalArabicLetterAudioAssets,createMashaalArabicLetterAudioPlayer } from '../src/modules/mashaal/curriculum/arabic-letter-audio.js';
+import { MASHAAL_ARABIC_COLORING_PAGES,MASHAAL_ARABIC_COLORING_SOURCE,listMashaalArabicColoringAssets } from '../src/modules/mashaal/curriculum/arabic-coloring-pages.js';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
@@ -85,16 +86,20 @@ test('Arabic learning modules and 84-image bank are included in the first-instal
     './src/modules/mashaal/curriculum/arabic-letter-image-bank.js',
     './src/modules/mashaal/curriculum/arabic-letter-curriculum.js',
     './src/modules/mashaal/curriculum/arabic-letter-audio.js',
+    './src/modules/mashaal/curriculum/arabic-coloring-pages.js',
     './src/modules/mashaal/curriculum/arabic-mini-stories.js',
     './src/modules/mashaal/application/arabic-progress.js',
     './src/modules/mashaal/ui/mashaal-arabic-learning.js',
+    './src/modules/mashaal/ui/mashaal-arabic-coloring.js',
     './src/modules/mashaal/ui/mashaal-arabic-learning.css'
   ]) assert.ok(worker.includes("'"+path+"'"),path);
   assert.match(worker,/MASHAAL_ARABIC_TWEMOJI_ASSETS/);
   assert.match(worker,/\.\.\.MASHAAL_ARABIC_TWEMOJI_ASSETS/);
   assert.match(worker,/MASHAAL_ARABIC_LETTER_AUDIO_ASSETS/);
   assert.match(worker,/\.\.\.MASHAAL_ARABIC_LETTER_AUDIO_ASSETS/);
-  assert.match(worker,/shell-157/);
+  assert.match(worker,/MASHAAL_ARABIC_COLORING_ASSETS/);
+  assert.match(worker,/\.\.\.MASHAAL_ARABIC_COLORING_ASSETS/);
+  assert.match(worker,/shell-158/);
 });
 
 test('Arabic letter names use official local recordings instead of TTS',async()=>{
@@ -165,4 +170,33 @@ test('official audio source attribution is preserved beside the imported files',
   assert.match(source,/دولة قطر/);
   assert.match(source,/الحقوق للمصدر الأصلي/);
   assert.match(source,/العنصر 28.*الهمزة/);
+});
+
+
+test('first picture coloring batch contains five local line-art pages',async()=>{
+  assert.equal(MASHAAL_ARABIC_COLORING_PAGES.length,5);
+  assert.deepEqual(MASHAAL_ARABIC_COLORING_PAGES.map(item=>item.word),['أرنب','بطة','تمساح','ثعلب','جمل']);
+  assert.deepEqual(MASHAAL_ARABIC_COLORING_PAGES.map(item=>item.letterId),['alif','ba','ta','tha','jim']);
+  assert.equal(MASHAAL_ARABIC_COLORING_SOURCE.license,'CC BY-SA 4.0');
+  const assets=listMashaalArabicColoringAssets();
+  assert.equal(new Set(assets).size,5);
+  for(const asset of assets){
+    assert.match(asset,/^\.\/assets\/oer\/openmoji\/coloring\/[a-z]+\.svg$/);
+    const svg=await readFile(new URL('../'+asset.replace(/^\.\//,''),import.meta.url),'utf8');
+    assert.match(svg,/stroke=/);
+    assert.match(svg,/fill="none"/);
+  }
+});
+
+test('picture coloring UI paints beneath a persistent line-art overlay with touch tools',async()=>{
+  const ui=await read('src/modules/mashaal/ui/mashaal-arabic-coloring.js');
+  const parentUi=await read('src/modules/mashaal/ui/mashaal-arabic-learning.js');
+  assert.match(ui,/mashaal-coloring-outline/);
+  assert.match(ui,/mashaal-coloring-paint/);
+  assert.match(ui,/pointerdown/);
+  assert.match(ui,/destination-out/);
+  assert.match(ui,/تراجع/);
+  assert.match(ui,/ممحاة/);
+  assert.match(ui,/مسح/);
+  assert.match(parentUi,/mountMashaalArabicColoring/);
 });
