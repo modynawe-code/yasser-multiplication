@@ -296,7 +296,7 @@ function renderListening(host){
       choices.appendChild(button);
     }
   }
-  hear.addEventListener('click',speakTarget);round();setTimeout(speakTarget,100);
+  hear.addEventListener('click',playTarget);round();
   return ()=>{if(timer)clearTimeout(timer);};
 }
 
