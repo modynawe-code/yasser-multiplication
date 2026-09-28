@@ -88,7 +88,7 @@ test('Arabic learning modules and 84-image bank are included in the first-instal
   ]) assert.ok(worker.includes("'"+path+"'"),path);
   assert.match(worker,/MASHAAL_ARABIC_TWEMOJI_ASSETS/);
   assert.match(worker,/\.\.\.MASHAAL_ARABIC_TWEMOJI_ASSETS/);
-  assert.match(worker,/shell-155/);
+  assert.match(worker,/shell-156/);
 });
 
 test('Arabic listening still teaches letter names and examples instead of isolated synthetic vowel sounds',async()=>{
