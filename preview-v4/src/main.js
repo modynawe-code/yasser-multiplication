@@ -1,5 +1,5 @@
 import { createLocalStorageRepository } from './infrastructure/storage/local-storage-repository.js';
-import { normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
+import { createInitialState,normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
 import { createAppController } from './ui/app-controller.js';
 import { registerServiceWorker } from './platform/pwa/register-service-worker.js';
 import { ensureYasserHomeShell } from './modules/yasser/ui/yasser-home-shell.js';
@@ -8,16 +8,15 @@ import { hydrateLearnerHub } from './modules/hub/learner-hub-registry.js';
 import { createHubController } from './modules/hub/hub-controller.js';
 import { createLearnerRuntimeRegistry } from './modules/hub/learner-runtime-registry.js';
 import { createKhaledRepository } from './modules/khaled/infrastructure/storage/local-storage-repository.js';
-import { normalizeKhaledState,applyKhaledAttemptEvent } from './modules/khaled/domain/state-model.js';
+import { createInitialKhaledState,normalizeKhaledState,applyKhaledAttemptEvent } from './modules/khaled/domain/state-model.js';
 import { ensureKhaledHomeShell } from './modules/khaled/ui/khaled-home-shell.js';
 import { createKhaledController } from './modules/khaled/ui/khaled-controller.js';
 import { createKhaledSceneController } from './modules/khaled/ui/khaled-scene-controller.js';
 import { ensureMashaalShell } from './modules/mashaal/ui/mashaal-shell.js';
 import { createMashaalController } from './modules/mashaal/ui/mashaal-controller.js';
-import { createMashaalTreasureController } from './modules/mashaal/ui/mashaal-treasure-controller.js';
 import { createMashaalGameChallengePresenter } from './modules/mashaal/ui/mashaal-game-challenge-presenter.js';
 import { createMashaalLocalStorageRepository } from './modules/mashaal/infrastructure/local-storage-repository.js';
-import { normalizeMashaalState } from './modules/mashaal/domain/state-model.js';
+import { createInitialMashaalState,normalizeMashaalState } from './modules/mashaal/domain/state-model.js';
 import { recordMashaalEvidence } from './modules/mashaal/application/progress-service.js';
 import { createMashaalGameLearningProvider } from './modules/mashaal/application/game-learning-provider.js';
 import { createFamilyParentController } from './modules/parent/family-parent-controller.js';
@@ -33,12 +32,14 @@ import { createFamilySyncCapabilityRegistry } from './shared/sync/family-sync-ca
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
 import { appendCloudSession } from './shared/sync/session-sync.js';
 import { createLocalBackupService } from './shared/backup/local-backup-service.js';
+import { resetLearnerScopedProgress } from './shared/progress/learner-scoped-reset.js';
 import { createRewardRepository } from './shared/rewards/reward-repository.js';
 import { createLearningRewardService,createRewardingRepository } from './shared/rewards/learning-reward-service.js';
 import { createRewardCapabilityRegistry } from './shared/rewards/reward-capability-registry.js';
 import { renderLearningMotivation } from './shared/ui/learning-motivation.js';
 import { createRewardCabinetController } from './shared/ui/reward-cabinet.js';
 import { createFamilyGameRewardRuntime } from './composition/game-reward-runtime.js';
+import { createGameEvent } from './modules/games/core/game-event-contract.js';
 
 document.title='تعلم العائلة';
 const localBackup=createLocalBackupService();
@@ -58,7 +59,7 @@ const parentReportCapabilities=createFamilyParentReportCapabilityRegistry();
 const syncCapabilities=createFamilySyncCapabilityRegistry();
 const challengePresentations=createChallengePresentationRegistry();
 challengePresentations.register('kg3-choice',createMashaalGameChallengePresenter());
-let cabinet=null,mashaalTreasures=null,hub=null,games=null,independentGames=null;
+let cabinet=null,hub=null,games=null,independentGames=null;
 function presentLearningStatus(learnerId,result){
   const capability=rewardCapabilities.get(learnerId);
   if(capability?.mode!=='academic')return false;
@@ -101,9 +102,26 @@ const cloudAuth=createFamilyAuthClient();
 const cloudSync=createFamilySyncService({authClient:cloudAuth,capabilityRegistry:syncCapabilities});
 const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
-const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show()});
-const gameRewardRuntime=createFamilyGameRewardRuntime({repository:rewardRepository,onReward:announcement=>mashaalTreasures?.announce(announcement)});
-mashaalTreasures=createMashaalTreasureController({getSummary:()=>gameRewardRuntime.getSummary('mashaal'),onExit:()=>mashaal.enter()});
+let gameRewardRuntime=null;
+const mashaal=createMashaalController({repository:mashaalRepository,onExitToHub:()=>hub?.show(),onActivityCompleted:event=>gameRewardRuntime?.handle(createGameEvent({type:'game.completed',gameId:event.activityId,learnerId:'mashaal',sessionId:event.evidenceId,at:event.at,payload:{skillId:event.skillId,source:'mashaal-learning'}}))});
+gameRewardRuntime=createFamilyGameRewardRuntime({repository:rewardRepository,onReward:announcement=>{if(announcement?.event?.learnerId==='mashaal')cabinet?.refresh('mashaal',announcement.result);}});
+const resetTargets=Object.freeze({
+  yasser:Object.freeze({repository:yasserBaseRepository,initialState:createInitialState}),
+  khaled:Object.freeze({repository:khaledBaseRepository,initialState:createInitialKhaledState}),
+  mashaal:Object.freeze({repository:mashaalRepository,initialState:createInitialMashaalState})
+});
+async function resetLearnerProgress(learnerId){
+  const id=String(learnerId||'').trim().toLowerCase(),target=resetTargets[id];
+  if(!target)throw new TypeError('unknown learner reset target');
+  const saved=target.repository.save(target.initialState());
+  if(saved===false)throw new Error('failed to reset learner state');
+  resetLearnerScopedProgress(localBackup.storage,id);
+  rewardRepository.reset(id);
+  gameRewardRuntime.resetProgress(id);
+  await localBackup.flush();
+  globalThis.location?.reload?.();
+  return true;
+}
 const learnerRuntimes=createLearnerRuntimeRegistry();
 const hubVisuals=createKhaledSceneController();
 let yasserStarted=false,khaledStarted=false;
@@ -112,15 +130,17 @@ rewardCapabilities.register('yasser',{mode:'academic',getState:()=>yasser.getSta
 rewardCapabilities.register('khaled',{mode:'academic',getState:()=>khaled.getState(),onEnter:()=>khaled.enter(),motivationAnchor:'#khaledHomeView .khaled-stats'});
 rewardCapabilities.register('mashaal',{mode:'developmental',getState:()=>mashaal.getState(),onEnter:()=>mashaal.enter()});
 
-parentReportCapabilities.register('yasser',{reportType:'academic',getState:()=>yasser.getState(),renderReport:familyYasserReport,renderOverview:familyYasserOverview,listSessions:familyYasserSessions});
-parentReportCapabilities.register('khaled',{reportType:'academic',getState:()=>khaled.getState(),renderReport:familyKhaledReport,renderOverview:familyKhaledOverview,listSessions:familyKhaledSessions});
-parentReportCapabilities.register('mashaal',{reportType:'developmental',getState:()=>mashaal.getState(),renderReport:familyMashaalReport,renderOverview:familyMashaalOverview,listSessions:familyMashaalSessions});
+parentReportCapabilities.register('yasser',{reportType:'academic',getState:()=>yasser.getState(),renderReport:familyYasserReport,renderOverview:familyYasserOverview,listSessions:familyYasserSessions,resetProgress:()=>resetLearnerProgress('yasser')});
+parentReportCapabilities.register('khaled',{reportType:'academic',getState:()=>khaled.getState(),renderReport:familyKhaledReport,renderOverview:familyKhaledOverview,listSessions:familyKhaledSessions,resetProgress:()=>resetLearnerProgress('khaled')});
+parentReportCapabilities.register('mashaal',{reportType:'developmental',getState:()=>mashaal.getState(),renderReport:familyMashaalReport,renderOverview:familyMashaalOverview,listSessions:familyMashaalSessions,resetProgress:()=>resetLearnerProgress('mashaal')});
 
 cabinet=createRewardCabinetController({
   capabilityRegistry:rewardCapabilities,
   getStatus:learnerId=>{
     const capability=rewardCapabilities.get(learnerId);
-    return capability?.mode==='academic'&&capability.getState?rewardService.evaluate(learnerId,capability.getState()):{};
+    if(!capability)return {};
+    if(capability.mode==='developmental')return {summary:gameRewardRuntime.getSummary(learnerId),trends:{streakDays:0},challenges:{daily:[],weekly:[]}};
+    return capability.getState?rewardService.evaluate(learnerId,capability.getState()):{};
   },
   onExit:learnerId=>rewardCapabilities.get(learnerId)?.onEnter?.()
 });
@@ -140,21 +160,18 @@ const familyParent=createFamilyParentController({
   cloudAuth,cloudSync,onCloudRestore:result=>{if(result?.requiresReload)window.location.reload();},onExitToHub:()=>hub?.show()
 });
 
-function leaveLearningAreas(){cabinet?.leave();mashaalTreasures?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
+function leaveLearningAreas(){cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
 
-learnerRuntimes.register('yasser',{leave:()=>yasser.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();mashaalTreasures?.leave();khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode');if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();}});
-learnerRuntimes.register('khaled',{leave:()=>khaled.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();mashaalTreasures?.leave();yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}});
-learnerRuntimes.register('mashaal',{leave:()=>mashaal.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();mashaalTreasures?.leave();yasser.leave();khaled.leave();familyParent.leave();mashaal.enter();}});
+learnerRuntimes.register('yasser',{leave:()=>yasser.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode');if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();}});
+learnerRuntimes.register('khaled',{leave:()=>khaled.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}});
+learnerRuntimes.register('mashaal',{leave:()=>mashaal.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();yasser.leave();khaled.leave();familyParent.leave();mashaal.enter();}});
 
 function enterLearner(learnerId){if(!learnerRuntimes.activate(learnerId))hub?.show();}
 
 hub=createHubController({onBeforeShow:()=>{independentGames?.leave();learnerRuntimes.leaveAll();leaveLearningAreas();games?.leave();},onAfterShow:()=>hubVisuals.hub(),onSelectLearner:enterLearner});
 
-games=createGamesController({learningAdapter:gameLearning,challengePresentations,onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
-independentGames=createInteractiveGamesController({
-  onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();games?.leave();},
-  onExitToHub:()=>hub?.show()
-});
+games=createGamesController({learningAdapter:gameLearning,challengePresentations,onBeforeEnter:()=>{independentGames?.leave();learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
+independentGames=createInteractiveGamesController({onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();games?.leave();},onExitToHub:()=>hub?.show()});
 
 function exitKhaledToHub(){
   khaled.leave();
@@ -165,7 +182,7 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub'])docume
 mashaal.start();
 presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
 presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
-cabinet.start();mashaalTreasures.start();familyParent.start();games.start();independentGames.start();hubVisuals.warm();hub.start();registerServiceWorker();
+cabinet.start();familyParent.start();games.start();independentGames.start();hubVisuals.warm();hub.start();registerServiceWorker();
 void localBackup.flush();
 globalThis.addEventListener?.('pagehide',()=>{void localBackup.flush();});
 globalThis.addEventListener?.('visibilitychange',()=>{if(globalThis.document?.visibilityState==='hidden')void localBackup.flush();});

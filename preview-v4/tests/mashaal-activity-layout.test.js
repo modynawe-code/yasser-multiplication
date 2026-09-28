@@ -38,19 +38,26 @@ test('activity shell loads the dedicated responsive layout module',async()=>{
   assert.match(css,/max-height:700px/);
 });
 
-test('controller exposes layout metadata and ordered touch sequence numbers',async()=>{
+test('controller exposes layout metadata and routes touch-first interaction engines',async()=>{
   const controller=await readFile(new URL('../src/modules/mashaal/ui/mashaal-controller.js',import.meta.url),'utf8');
   assert.match(controller,/dataset\.layout=layout\.mode/);
   assert.match(controller,/dataset\.choiceCount=String\(layout\.choiceCount\)/);
-  assert.match(controller,/button\.dataset\.order=String\(selectedChoices\.size\)/);
+  assert.match(controller,/mountMashaalDragSequence/);
+  assert.match(controller,/mountMashaalMemoryMatch/);
+  assert.match(controller,/mountMashaalTracing/);
+  assert.match(controller,/mountMashaalInteractiveStory/);
+  assert.match(controller,/mountMashaalAnimalMaze/);
+  assert.match(controller,/mountMashaalPicturePuzzle/);
+  assert.match(controller,/mountMashaalAnimalSort/);
 });
-
 test('offline shell versions and caches the activity layout modules',async()=>{
   const sw=await readFile(new URL('../service-worker.js',import.meta.url),'utf8');
   assert.match(sw,/CACHE_VERSION=`\$\{CACHE_PREFIX\}shell-\d+`/);
   assert.match(sw,/activity-layout\.js/);
   assert.match(sw,/activity-renderer-contracts\.js/);
   assert.match(sw,/mashaal-activity-layout\.css/);
+  assert.match(sw,/mashaal-interaction-engines\.js/);
+  assert.match(sw,/mashaal-interaction-engines\.css/);
 });
 
 test('guided KG3 visuals have explicit large tablet presentation rules',async()=>{

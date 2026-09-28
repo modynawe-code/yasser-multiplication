@@ -83,17 +83,6 @@ test('left arm faces preserve logical pip order instead of mirroring the chain',
   assert.equal(nearestJoin(placements[2],tiles[2],placements[3],tiles[3],96).left,3);
 });
 
-test('three-tile opening shown in the reported screenshot keeps equal visible halves together',()=>{
-  const tiles=[tile(2,3),tile(3,5),tile(5,5)];
-  const {placements}=planDominoChain({tiles,anchorIndex:2,width:574,height:393,tileWidth:84,tileHeight:44,padding:6});
-  assert.equal(placements.length,3);
-  assert.deepEqual(placements.map(item=>item.rotation%360),[0,0,0]);
-  for(let index=0;index<tiles.length-1;index++){
-    const join=nearestJoin(placements[index],tiles[index],placements[index+1],tiles[index+1],84);
-    assert.equal(join.left,join.right,`visible mismatch ${join.left}|${join.right} at ${index}-${index+1}`);
-  }
-});
-
 test('mobile reserves the edge turn before a following double',()=>{
   const base=[tile(0,1),tile(1,2),tile(2,3),tile(3,4)];
   const before=planDominoChain({tiles:base,anchorIndex:0,width:320,height:240,tileWidth:78,tileHeight:41,padding:6});

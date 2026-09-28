@@ -1,5 +1,5 @@
 export const DOMINO_NORMAL_SCALES=Object.freeze([1,.88,.76]);
-const EMERGENCY_SCALES=Object.freeze([.70,.64,.58,.52,.48,.46,.42,.40,.38,.35]);
+const EMERGENCY_SCALES=Object.freeze([.70,.64,.58,.52,.48,.46]);
 
 function clamp(value,min,max){return Math.min(max,Math.max(min,value));}
 function number(value,fallback){const parsed=Number(value);return Number.isFinite(parsed)?parsed:fallback;}
@@ -46,14 +46,11 @@ function buildArm({tiles,indices,arm,anchor,occupied,context}){
   let port=arm==='right'?anchor.ports.right:anchor.ports.left;
   let rowY=anchor.y,row=0;
   const placed=[];
-  for(let position=0;position<indices.length;position++){
-    const index=indices[position];
+  for(const index of indices){
     const tile=tiles[index],all=[...occupied,...placed];
     const straight=straightCandidate({index,tile,port,rowY,direction,arm,row,context});
-    const nextTile=tiles[indices[position+1]];
-    const nextHalf=nextTile?(isDouble(nextTile)?context.short/2:context.long/2):0;
-    const reserve=nextTile?nextHalf:0;
-    const mustTurn=!isDouble(tile)&&(!canPlace(straight,index,all,context)||(nextTile&&clearanceAfter(straight,direction,arm,context)<reserve));
+    const reserve=context.short+context.long/2;
+    const mustTurn=!isDouble(tile)&&(!canPlace(straight,index,all,context)||clearanceAfter(straight,direction,arm,context)<reserve);
     if(mustTurn){
       const corner=cornerCandidate({index,tile,port,rowY,direction,verticalSign,arm,row,context});
       if(!canPlace(corner,index,all,context))return null;
