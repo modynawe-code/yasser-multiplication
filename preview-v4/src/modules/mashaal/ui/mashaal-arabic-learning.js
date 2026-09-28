@@ -1,14 +1,27 @@
 import { MASHAAL_ARABIC_LETTERS,MASHAAL_ARABIC_SECTIONS,getMashaalArabicLetter,getMashaalArabicSection } from '../curriculum/arabic-letter-curriculum.js';
 import { createMashaalArabicProgress } from '../application/arabic-progress.js';
 import { MASHAAL_ARABIC_MINI_STORIES } from '../curriculum/arabic-mini-stories.js';
+import { createMashaalArabicLetterAudioPlayer,MASHAAL_ARABIC_LETTER_AUDIO_SOURCE } from '../curriculum/arabic-letter-audio.js';
 
 const progress=createMashaalArabicProgress();
+const letterAudio=createMashaalArabicLetterAudioPlayer();
 
 function node(tag,className,text){
   const item=document.createElement(tag);
   if(className)item.className=className;
   if(text!==undefined)item.textContent=text;
   return item;
+}
+
+function letterAudioCredit(){
+  const note=node('p','mashaal-arabic-audio-credit');
+  note.append(document.createTextNode('نطق الحروف: '+MASHAAL_ARABIC_LETTER_AUDIO_SOURCE.organization+' · '));
+  const link=node('a','', 'المصدر الرسمي');
+  link.href=MASHAAL_ARABIC_LETTER_AUDIO_SOURCE.pageUrl;
+  link.target='_blank';
+  link.rel='noopener noreferrer';
+  note.appendChild(link);
+  return note;
 }
 
 function imageNode(item,className=''){
@@ -106,7 +119,7 @@ function pictureRow(items){
   return row;
 }
 
-function renderLetterExplorer(host,{onSpeak,onSwitchSection}){
+function renderLetterExplorer(host,{onSwitchSection}){
   const body=node('div','mashaal-arabic-explorer');
   const picker=node('div','mashaal-arabic-picker');
   const detail=node('div','mashaal-arabic-letter-detail');
@@ -122,7 +135,7 @@ function renderLetterExplorer(host,{onSpeak,onSwitchSection}){
     hero.append(node('strong','',letter.letter),node('span','', 'حرف '+letter.name),node('small','', 'أمثلة مصوّرة تبدأ بالحرف'),state);
     const actions=node('div','mashaal-arabic-letter-actions');
     const hear=node('button','mashaal-arabic-action','🔊 اسم الحرف');
-    hear.type='button';hear.addEventListener('click',()=>onSpeak?.('هذا حرف '+letter.name+'. '+letter.name+'. مثال: '+letter.exampleWord+'.'));
+    hear.type='button';hear.addEventListener('click',()=>letterAudio.play(letter.id));
     const write=node('button','mashaal-arabic-action','✍️ أتدرب على الكتابة');
     write.type='button';write.addEventListener('click',()=>onSwitchSection?.('write',letter.id));
     const color=node('button','mashaal-arabic-action','🎨 ألوّن الحرف');
@@ -130,14 +143,14 @@ function renderLetterExplorer(host,{onSpeak,onSwitchSection}){
     const play=node('button','mashaal-arabic-action','🎮 ألعب بالحرف');
     play.type='button';play.addEventListener('click',()=>onSwitchSection?.('games',letter.id));
     actions.append(hear,write,color,play);
-    detail.append(hero,pictureRow(letter.items),actions);
+    detail.append(hero,pictureRow(letter.items),actions,letterAudioCredit());
   }
 
   renderLetterGrid(picker,showLetter,'alif');
   showLetter(MASHAAL_ARABIC_LETTERS[0]);
 }
 
-function mountCanvasPractice(host,{mode,onSpeak,initialLetterId}){
+function mountCanvasPractice(host,{mode,initialLetterId}){
   const state={
     letter:getMashaalArabicLetter(initialLetterId)||MASHAAL_ARABIC_LETTERS[0],
     drawing:false,brush:'#6a3f68',width:mode==='write'?18:30,last:null,points:[],history:[],eraser:false
@@ -211,7 +224,8 @@ function mountCanvasPractice(host,{mode,onSpeak,initialLetterId}){
 
   const clear=node('button','mashaal-arabic-tool','↻ مسح');clear.type='button';clear.addEventListener('click',drawGuide);
   const undoButton=node('button','mashaal-arabic-tool','↶ تراجع');undoButton.type='button';undoButton.addEventListener('click',undo);
-  toolbar.append(clear,undoButton);
+  const hearLetter=node('button','mashaal-arabic-tool','🔊 اسمعي الحرف');hearLetter.type='button';hearLetter.addEventListener('click',()=>letterAudio.play(state.letter.id));
+  toolbar.append(clear,undoButton,hearLetter);
 
   if(mode==='write'){
     const check=node('button','mashaal-arabic-tool mashaal-arabic-check','✓ تحققي');check.type='button';
@@ -255,19 +269,19 @@ function mountCanvasPractice(host,{mode,onSpeak,initialLetterId}){
     status.textContent=mode==='write'?'تتبعي حرف '+letter.name+' ثم اضغطي تحققي.':'لوّني حرف '+letter.name+'.';
     renderReference();drawGuide();
   }
-  renderLetterGrid(picker,chooseLetter,state.letter.id);renderReference();drawGuide();
+  renderLetterGrid(picker,chooseLetter,state.letter.id);renderReference();drawGuide();stage.appendChild(letterAudioCredit());
 }
 
-function renderListening(host,{onSpeak}){
+function renderListening(host){
   const quiz=node('div','mashaal-arabic-listen');
   const controls=node('div','mashaal-arabic-listen-controls');
   const hear=node('button','mashaal-arabic-listen-hear','🔊 اسمعي اسم الحرف');hear.type='button';
   const status=node('p','mashaal-arabic-listen-status','اسمعي اسم الحرف ثم اختاريه.');
   const choices=node('div','mashaal-arabic-listen-choices');
-  controls.append(hear,status);quiz.append(controls,choices);host.appendChild(quiz);
+  controls.append(hear,status,letterAudioCredit());quiz.append(controls,choices);host.appendChild(quiz);
   let index=0,target=MASHAAL_ARABIC_LETTERS[0],timer=null;
   function shuffled(items){return [...items].sort(()=>Math.random()-.5);}
-  function speakTarget(){onSpeak?.('اختاري حرف '+target.name+'. '+target.name+'. مثال: '+target.exampleWord+'.');}
+  function playTarget(){return letterAudio.play(target.id);}
   function round(){
     target=MASHAAL_ARABIC_LETTERS[index%MASHAAL_ARABIC_LETTERS.length];index+=1;choices.innerHTML='';status.textContent='اسمعي اسم الحرف ثم اختاريه.';
     const targetIndex=MASHAAL_ARABIC_LETTERS.indexOf(target);
@@ -276,13 +290,13 @@ function renderListening(host,{onSpeak}){
       const button=letterButton(letter);button.classList.add('mashaal-arabic-listen-choice');
       button.addEventListener('click',()=>{
         const correct=letter.id===target.id;progress.record(target.id,'attempt',{correct});
-        if(!correct){button.dataset.outcome='wrong';status.textContent='مو هذا، اسمعي مرة ثانية.';speakTarget();return;}
-        button.dataset.outcome='correct';status.textContent='ممتاز!';timer=setTimeout(()=>{round();speakTarget();},650);
+        if(!correct){button.dataset.outcome='wrong';status.textContent='مو هذا، اسمعي مرة ثانية.';playTarget();return;}
+        button.dataset.outcome='correct';status.textContent='ممتاز! اضغطي اسمعي للحرف التالي.';timer=setTimeout(()=>{round();},650);
       });
       choices.appendChild(button);
     }
   }
-  hear.addEventListener('click',speakTarget);round();setTimeout(speakTarget,100);
+  hear.addEventListener('click',playTarget);round();
   return ()=>{if(timer)clearTimeout(timer);};
 }
 
@@ -501,12 +515,12 @@ export function mountMashaalArabicSection(host,sectionId,{onSpeak,onSwitchSectio
   const section=getMashaalArabicSection(sectionId)||MASHAAL_ARABIC_SECTIONS[0];
   renderSectionIntro(host,section);
   let cleanup=()=>{};
-  if(section.id==='letters')renderLetterExplorer(host,{onSpeak,onSwitchSection});
-  else if(section.id==='write')mountCanvasPractice(host,{mode:'write',onSpeak,initialLetterId});
-  else if(section.id==='color')mountCanvasPractice(host,{mode:'color',onSpeak,initialLetterId});
-  else if(section.id==='listen')cleanup=renderListening(host,{onSpeak})||cleanup;
+  if(section.id==='letters')renderLetterExplorer(host,{onSwitchSection});
+  else if(section.id==='write')mountCanvasPractice(host,{mode:'write',initialLetterId});
+  else if(section.id==='color')mountCanvasPractice(host,{mode:'color',initialLetterId});
+  else if(section.id==='listen')cleanup=renderListening(host)||cleanup;
   else if(section.id==='words')renderWords(host,{initialLetterId});
   else if(section.id==='stories')renderMiniStories(host,onOpenActivity);
   else if(section.id==='games')renderArabicGames(host,{initialLetterId});
-  return Object.freeze({destroy(){cleanup();host.innerHTML='';}});
+  return Object.freeze({destroy(){letterAudio.stop();cleanup();host.innerHTML='';}});
 }

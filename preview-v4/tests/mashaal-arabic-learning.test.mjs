@@ -5,6 +5,7 @@ import { MASHAAL_ARABIC_LETTERS,MASHAAL_ARABIC_SECTIONS,getMashaalArabicLetter }
 import { listMashaalArabicImageAssets } from '../src/modules/mashaal/curriculum/arabic-letter-image-bank.js';
 import { createMashaalArabicProgress } from '../src/modules/mashaal/application/arabic-progress.js';
 import { MASHAAL_ARABIC_MINI_STORIES } from '../src/modules/mashaal/curriculum/arabic-mini-stories.js';
+import { MASHAAL_ARABIC_LETTER_AUDIO,MASHAAL_ARABIC_LETTER_AUDIO_SOURCE,listMashaalArabicLetterAudioAssets,createMashaalArabicLetterAudioPlayer } from '../src/modules/mashaal/curriculum/arabic-letter-audio.js';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 
@@ -83,6 +84,7 @@ test('Arabic learning modules and 84-image bank are included in the first-instal
   for(const path of [
     './src/modules/mashaal/curriculum/arabic-letter-image-bank.js',
     './src/modules/mashaal/curriculum/arabic-letter-curriculum.js',
+    './src/modules/mashaal/curriculum/arabic-letter-audio.js',
     './src/modules/mashaal/curriculum/arabic-mini-stories.js',
     './src/modules/mashaal/application/arabic-progress.js',
     './src/modules/mashaal/ui/mashaal-arabic-learning.js',
@@ -90,16 +92,21 @@ test('Arabic learning modules and 84-image bank are included in the first-instal
   ]) assert.ok(worker.includes("'"+path+"'"),path);
   assert.match(worker,/MASHAAL_ARABIC_TWEMOJI_ASSETS/);
   assert.match(worker,/\.\.\.MASHAAL_ARABIC_TWEMOJI_ASSETS/);
-  assert.match(worker,/shell-156/);
+  assert.match(worker,/MASHAAL_ARABIC_LETTER_AUDIO_ASSETS/);
+  assert.match(worker,/\.\.\.MASHAAL_ARABIC_LETTER_AUDIO_ASSETS/);
+  assert.match(worker,/shell-157/);
 });
 
-test('Arabic listening still teaches letter names and examples instead of isolated synthetic vowel sounds',async()=>{
+test('Arabic letter names use official local recordings instead of TTS',async()=>{
   const curriculum=await read('src/modules/mashaal/curriculum/arabic-letter-curriculum.js');
   const ui=await read('src/modules/mashaal/ui/mashaal-arabic-learning.js');
   assert.doesNotMatch(curriculum,/sound:/);
   assert.doesNotMatch(ui,/letter\.sound|target\.sound|state\.letter\.sound/);
+  assert.doesNotMatch(ui,/onSpeak\?\.\('هذا حرف/);
+  assert.doesNotMatch(ui,/speakTarget/);
+  assert.match(ui,/letterAudio\.play/);
+  assert.match(ui,/MASHAAL_ARABIC_LETTER_AUDIO_SOURCE/);
   assert.match(ui,/اسمعي اسم الحرف/);
-  assert.match(ui,/هذا حرف/);
 });
 
 
@@ -113,4 +120,49 @@ test('Arabic mini stories provide six three-scene picture sequences and an order
   assert.match(ui,/رتّبي الأحداث/);
   assert.match(ui,/ترتيب القصة/);
   assert.match(ui,/MASHAAL_ARABIC_MINI_STORIES/);
+});
+
+
+test('official Qatar Awqaf letter audio maps all 28 app letters to local Qasr MP3 files',async()=>{
+  const assets=listMashaalArabicLetterAudioAssets();
+  assert.equal(Object.keys(MASHAAL_ARABIC_LETTER_AUDIO).length,28);
+  assert.equal(assets.length,28);
+  assert.equal(new Set(assets).size,28);
+  assert.equal(MASHAAL_ARABIC_LETTER_AUDIO.alif.sourceIndex,1);
+  assert.equal(MASHAAL_ARABIC_LETTER_AUDIO.waw.sourceIndex,27);
+  assert.equal(MASHAAL_ARABIC_LETTER_AUDIO.ya.sourceIndex,29);
+  assert.ok(!Object.values(MASHAAL_ARABIC_LETTER_AUDIO).some(item=>item.sourceIndex===28));
+  assert.equal(MASHAAL_ARABIC_LETTER_AUDIO_SOURCE.reading,'القصر');
+  assert.match(MASHAAL_ARABIC_LETTER_AUDIO_SOURCE.organization,/وزارة الأوقاف/);
+  for(const asset of assets){
+    assert.match(asset,/^\.\/assets\/audio\/mashaal\/arabic-letters\/[a-z]+\.mp3$/);
+    const bytes=await readFile(new URL('../'+asset.replace(/^\.\//,''),import.meta.url));
+    assert.ok(bytes.byteLength>1000,asset);
+  }
+});
+
+test('official letter audio player opens the matching local recording and stops the previous one',async()=>{
+  const played=[],paused=[];
+  class FakeAudio{
+    constructor(url){this.url=url;this.currentTime=0;this.preload='';this.playsInline=false;}
+    async play(){played.push(this.url);}
+    pause(){paused.push(this.url);}
+  }
+  const player=createMashaalArabicLetterAudioPlayer({AudioCtor:FakeAudio});
+  assert.equal(await player.play('ba'),true);
+  assert.match(played.at(-1),/\/ba\.mp3$/);
+  assert.equal(await player.play('ya'),true);
+  assert.match(played.at(-1),/\/ya\.mp3$/);
+  assert.match(paused.at(-1),/\/ba\.mp3$/);
+  assert.equal(await player.play('missing'),false);
+  player.stop();
+  assert.match(paused.at(-1),/\/ya\.mp3$/);
+});
+
+test('official audio source attribution is preserved beside the imported files',async()=>{
+  const source=await read('assets/audio/mashaal/arabic-letters/SOURCE.txt');
+  assert.match(source,/وزارة الأوقاف والشؤون الإسلامية/);
+  assert.match(source,/دولة قطر/);
+  assert.match(source,/الحقوق للمصدر الأصلي/);
+  assert.match(source,/العنصر 28.*الهمزة/);
 });

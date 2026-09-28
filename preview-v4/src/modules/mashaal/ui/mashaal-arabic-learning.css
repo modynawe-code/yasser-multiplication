@@ -203,3 +203,6 @@ button.mashaal-arabic-story-scene:disabled{opacity:.48}
   .mashaal-arabic-story-quiz-grid .mashaal-arabic-story-scene{grid-template-columns:90px 1fr;grid-template-rows:1fr}
   .mashaal-arabic-story-quiz-grid .mashaal-arabic-story-image{grid-row:auto}
 }
+
+.mashaal-arabic-audio-credit{margin:2px 0 0;text-align:center;font-size:11px;line-height:1.55;color:var(--muted);font-weight:750}
+.mashaal-arabic-audio-credit a{color:#765276;text-decoration:underline;text-underline-offset:2px;font-weight:900}
