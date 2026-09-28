@@ -52,5 +52,16 @@ test('Arabic learning modules are available on first-install offline cache',asyn
     './src/modules/mashaal/ui/mashaal-arabic-learning.js',
     './src/modules/mashaal/ui/mashaal-arabic-learning.css'
   ]) assert.ok(worker.includes(`'${path}'`),path);
-  assert.match(worker,/shell-153/);
+  assert.match(worker,/shell-154/);
+});
+
+
+test('Arabic listening teaches letter names and examples instead of isolated synthetic vowel sounds',async()=>{
+  const curriculum=await read('src/modules/mashaal/curriculum/arabic-letter-curriculum.js');
+  const ui=await read('src/modules/mashaal/ui/mashaal-arabic-learning.js');
+  assert.doesNotMatch(curriculum,/sound:/);
+  assert.doesNotMatch(ui,/letter\.sound|target\.sound|state\.letter\.sound/);
+  assert.match(ui,/اسمعي اسم الحرف/);
+  assert.match(ui,/مثال:/);
+  assert.match(ui,/هذا حرف/);
 });
