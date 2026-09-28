@@ -52,5 +52,5 @@ test('Arabic learning modules are available on first-install offline cache',asyn
     './src/modules/mashaal/ui/mashaal-arabic-learning.js',
     './src/modules/mashaal/ui/mashaal-arabic-learning.css'
   ]) assert.ok(worker.includes(`'${path}'`),path);
-  assert.match(worker,/shell-153/);
+  assert.match(worker,/shell-154/);
 });
