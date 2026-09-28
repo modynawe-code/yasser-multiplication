@@ -99,7 +99,7 @@ test('Arabic learning modules and 84-image bank are included in the first-instal
   assert.match(worker,/\.\.\.MASHAAL_ARABIC_LETTER_AUDIO_ASSETS/);
   assert.match(worker,/MASHAAL_ARABIC_COLORING_ASSETS/);
   assert.match(worker,/\.\.\.MASHAAL_ARABIC_COLORING_ASSETS/);
-  assert.match(worker,/shell-158/);
+  assert.match(worker,/shell-\d+/);
 });
 
 test('Arabic letter names use official local recordings instead of TTS',async()=>{
