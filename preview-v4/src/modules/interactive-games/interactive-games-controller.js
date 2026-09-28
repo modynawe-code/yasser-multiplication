@@ -1,5 +1,5 @@
 import {drawParticipants,normalizeParticipants} from './selection-engine.js';
-import {createDotsBoxesGame,pickDotsBoxesEdge,startDotsBoxesGame,verdictDotsBoxes} from './dots-boxes-engine.js';
+import {answerDotsBoxesEdge,createDotsBoxesGame,pickDotsBoxesEdge,startDotsBoxesGame} from './dots-boxes-engine.js';
 import {loadGameQuestionBank,nextGameQuestion,orderCurriculumQuestions,saveGameQuestionBank} from './question-bank.js';
 import {PRIMARY_QUESTION_BANK,PRIMARY_QUESTION_BANK_VERSION} from './primary-question-bank.js';
 import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.js';
@@ -126,7 +126,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
   }
   function resolveDotsAnswer(verdict){
     if(!pendingEdge||!dotsGame||!activeQuestion)return;
-    dotsGame=verdictDotsBoxes(dotsGame,verdict);pendingEdge=null;activeQuestion=null;renderDotsBoxes();
+    dotsGame=answerDotsBoxesEdge(dotsGame,pendingEdge,verdict);pendingEdge=null;activeQuestion=null;renderDotsBoxes();
   }
   function renderWheel(){
     const wheel=byId('independentWheel');if(!wheel)return;
