@@ -17,6 +17,15 @@ export const MASHAAL_OPEN_LEARNING_SOURCES=Object.freeze({
     attributionRequired:true,
     note:'Twemoji graphics are used as local SVG picture cards for Arabic letter learning; curriculum mapping is authored in this project.'
   }),
+  'openmoji-ccbysa':Object.freeze({
+    title:'OpenMoji',
+    license:'CC BY-SA 4.0',
+    sourceUrl:'https://github.com/hfg-gmuend/openmoji',
+    licenseUrl:'https://creativecommons.org/licenses/by-sa/4.0/',
+    use:['line-art','coloring-pages','educational-images'],
+    attributionRequired:true,
+    note:'Black OpenMoji SVGs are used as local line-art coloring pages for Arabic letter activities.'
+  }),
   'storyweaver-ccby':Object.freeze({
     title:'Pratham Books StoryWeaver',
     license:'CC BY 4.0',

@@ -2,6 +2,7 @@ import { MASHAAL_ARABIC_LETTERS,MASHAAL_ARABIC_SECTIONS,getMashaalArabicLetter,g
 import { createMashaalArabicProgress } from '../application/arabic-progress.js';
 import { MASHAAL_ARABIC_MINI_STORIES } from '../curriculum/arabic-mini-stories.js';
 import { createMashaalArabicLetterAudioPlayer,MASHAAL_ARABIC_LETTER_AUDIO_SOURCE } from '../curriculum/arabic-letter-audio.js';
+import { mountMashaalArabicColoring } from './mashaal-arabic-coloring.js';
 
 const progress=createMashaalArabicProgress();
 const letterAudio=createMashaalArabicLetterAudioPlayer();
@@ -517,7 +518,7 @@ export function mountMashaalArabicSection(host,sectionId,{onSpeak,onSwitchSectio
   let cleanup=()=>{};
   if(section.id==='letters')renderLetterExplorer(host,{onSwitchSection});
   else if(section.id==='write')mountCanvasPractice(host,{mode:'write',initialLetterId});
-  else if(section.id==='color')mountCanvasPractice(host,{mode:'color',initialLetterId});
+  else if(section.id==='color')cleanup=mountMashaalArabicColoring(host,{initialLetterId})?.destroy||cleanup;
   else if(section.id==='listen')cleanup=renderListening(host)||cleanup;
   else if(section.id==='words')renderWords(host,{initialLetterId});
   else if(section.id==='stories')renderMiniStories(host,onOpenActivity);
