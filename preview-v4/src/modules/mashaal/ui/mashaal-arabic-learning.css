@@ -9,8 +9,14 @@
 .mashaal-arabic-section-card-copy{display:grid;gap:2px;min-width:0}
 .mashaal-arabic-section-card-copy strong{font-size:14px;line-height:1.2}
 .mashaal-arabic-section-card-copy small{font-size:9px;line-height:1.25;color:var(--muted);font-weight:800}
+.mashaal-arabic-progress-summary{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(120px,1fr);align-items:center;gap:10px;padding:8px 12px;border:1px solid #eadde8;border-radius:16px;background:#fffafc}
+.mashaal-arabic-progress-copy{display:grid;gap:1px}
+.mashaal-arabic-progress-copy strong{font-size:12px;color:#684962}
+.mashaal-arabic-progress-copy small{font-size:10px;color:var(--muted);font-weight:800}
+.mashaal-arabic-progress-meter{height:8px;border-radius:999px;background:#efe7ed;overflow:hidden}
+.mashaal-arabic-progress-bar{display:block;height:100%;border-radius:inherit;background:#8c5b80}
 
-#mashaalArabicView .mashaal-wrap{max-width:980px;margin:auto;padding:18px}
+#mashaalArabicView .mashaal-wrap{max-width:1040px;margin:auto;padding:18px}
 .mashaal-arabic-view-actions{display:flex;justify-content:flex-start;margin-bottom:12px}
 .mashaal-arabic-panel{border:1px solid #eadfed;border-radius:28px;background:#fff;box-shadow:0 18px 44px rgba(80,54,92,.07);padding:20px}
 .mashaal-arabic-section-intro{display:flex;align-items:center;gap:14px;padding:4px 4px 18px;border-bottom:1px solid #f0e6ee;margin-bottom:18px}
@@ -18,31 +24,52 @@
 .mashaal-arabic-section-copy h2{margin:0;font-size:28px}
 .mashaal-arabic-section-copy p{margin:4px 0 0;color:var(--muted);font-weight:800}
 
-.mashaal-arabic-explorer{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(300px,1.2fr);gap:18px}
+.mashaal-arabic-explorer{display:grid;grid-template-columns:minmax(260px,.72fr) minmax(360px,1.28fr);gap:18px}
 .mashaal-arabic-picker,.mashaal-arabic-practice-picker{min-width:0}
 .mashaal-arabic-letter-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
-.mashaal-arabic-letter{min-width:0;min-height:66px;border:1px solid #e6dbe5;border-radius:16px;background:#fff;display:grid;place-items:center;padding:5px;color:#4e3b50;touch-action:manipulation}
+.mashaal-arabic-letter{position:relative;min-width:0;min-height:66px;border:1px solid #e6dbe5;border-radius:16px;background:#fff;display:grid;place-items:center;padding:5px;color:#4e3b50;touch-action:manipulation}
+.mashaal-arabic-letter::after{content:"";position:absolute;inset-inline-end:6px;top:6px;width:7px;height:7px;border-radius:50%;background:#ddd}
+.mashaal-arabic-letter[data-progress="learning"]::after{background:#d3a452}
+.mashaal-arabic-letter[data-progress="mastered"]::after{background:#5ea477}
 .mashaal-arabic-letter strong{font-size:28px;line-height:1}
 .mashaal-arabic-letter small{font-size:9px;font-weight:850;color:var(--muted)}
 .mashaal-arabic-letter[data-selected="true"]{border-color:#a85d8d;background:#fff0f8;box-shadow:inset 0 0 0 2px #edd2e3}
-.mashaal-arabic-letter-detail{min-height:330px;border-radius:24px;background:#fff7fb;border:1px solid #eedfea;padding:20px;display:grid;align-content:center;gap:16px}
+.mashaal-arabic-letter-detail{min-height:390px;border-radius:24px;background:#fff7fb;border:1px solid #eedfea;padding:20px;display:grid;align-content:center;gap:16px}
 .mashaal-arabic-letter-hero{display:grid;place-items:center;gap:4px}
-.mashaal-arabic-letter-hero strong{font-size:112px;line-height:.95;color:#6d4265}
-.mashaal-arabic-letter-hero span{font-size:21px;font-weight:950}
-.mashaal-arabic-letter-hero small{font-size:14px;font-weight:850;color:var(--muted)}
-.mashaal-arabic-word-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
-.mashaal-arabic-word{min-height:44px;padding:8px 14px;border:1px solid #e5d6e2;border-radius:14px;background:#fff;font-size:17px;font-weight:900}
-.mashaal-arabic-letter-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.mashaal-arabic-action,.mashaal-arabic-tool{min-height:50px;border:1px solid #ddceda;border-radius:15px;background:#fff;color:#63465e;font-weight:900}
+.mashaal-arabic-letter-hero>strong{font-size:104px;line-height:.95;color:#6d4265}
+.mashaal-arabic-letter-hero>span:not(.mashaal-arabic-mastery-chip){font-size:21px;font-weight:950}
+.mashaal-arabic-letter-hero>small{font-size:13px;font-weight:850;color:var(--muted)}
+.mashaal-arabic-mastery-chip{padding:4px 10px;border-radius:999px;background:#eee8ed;color:#6a5865;font-size:11px!important;font-weight:900}
+.mashaal-arabic-mastery-chip[data-state="learning"]{background:#fff5db;color:#8a681d}
+.mashaal-arabic-mastery-chip[data-state="mastered"]{background:#e8f7ed;color:#36744a}
+
+.mashaal-arabic-picture-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mashaal-arabic-picture-card{min-width:0;min-height:128px;border:1px solid #eadde7;border-radius:19px;background:#fff;display:grid;grid-template-rows:minmax(72px,1fr) auto;place-items:center;gap:6px;padding:9px;color:#4d3d4d}
+button.mashaal-arabic-picture-card{cursor:pointer;touch-action:manipulation}
+.mashaal-arabic-picture{width:100%;height:82px;object-fit:contain}
+.mashaal-arabic-picture-card strong{font-size:16px}
+.mashaal-arabic-letter-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mashaal-arabic-action,.mashaal-arabic-tool{min-height:50px;border:1px solid #ddceda;border-radius:15px;background:#fff;color:#63465e;font-weight:900;touch-action:manipulation}
+.mashaal-arabic-action:active,.mashaal-arabic-tool:active{transform:scale(.985)}
 
 .mashaal-arabic-practice-picker{margin-bottom:14px}
 .mashaal-arabic-practice-stage{display:grid;gap:12px}
+.mashaal-arabic-practice-reference{display:grid;gap:8px}
+.mashaal-arabic-practice-reference>strong{text-align:center;font-size:18px;color:#6c4b66}
+.mashaal-arabic-practice-reference .mashaal-arabic-picture-row{max-width:620px;width:100%;margin:auto}
+.mashaal-arabic-practice-reference .mashaal-arabic-picture-card{min-height:100px}
+.mashaal-arabic-practice-reference .mashaal-arabic-picture{height:58px}
 .mashaal-arabic-canvas{width:100%;height:auto;max-height:52dvh;border:1px solid #e4d5e0;border-radius:24px;background:#fffafc;touch-action:none;overscroll-behavior:contain}
 .mashaal-arabic-practice-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .mashaal-arabic-practice-status,.mashaal-arabic-listen-status{margin:0;text-align:center;color:#765276;font-weight:900}
+.mashaal-arabic-check{background:#765276;color:#fff}
+.mashaal-arabic-tool[data-active="true"]{background:#765276;color:#fff;border-color:#765276}
 .mashaal-arabic-palette{display:flex;gap:6px;margin-inline-start:auto}
 .mashaal-arabic-swatch{width:40px;height:40px;border:3px solid #fff;border-radius:50%;background:var(--swatch);box-shadow:0 0 0 1px #d9cbd6}
 .mashaal-arabic-swatch[data-selected="true"]{box-shadow:0 0 0 3px #765276}
+.mashaal-arabic-brush-sizes{display:flex;gap:5px}
+.mashaal-arabic-size{min-height:38px;padding:6px 10px;border:1px solid #dfd3dc;border-radius:12px;background:#fff;color:#69566a;font-size:11px;font-weight:900}
+.mashaal-arabic-size[data-selected="true"]{background:#f0e4ed;border-color:#8b5c7e}
 
 .mashaal-arabic-listen{max-width:620px;margin:auto;display:grid;gap:18px}
 .mashaal-arabic-listen-controls{display:grid;place-items:center;gap:10px}
@@ -56,9 +83,40 @@
 .mashaal-arabic-words-view{display:grid;gap:18px}
 .mashaal-arabic-word-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .mashaal-arabic-word-cards h3{grid-column:1/-1;margin:0;text-align:center;font-size:24px}
-.mashaal-arabic-word-card{min-height:116px;border:1px solid #e8dbe5;border-radius:20px;background:#fff8fc;display:grid;place-items:center;padding:12px}
-.mashaal-arabic-word-card strong{font-size:25px}
-.mashaal-arabic-word-card small{font-size:11px;color:var(--muted);font-weight:850}
+.mashaal-arabic-word-cards .mashaal-arabic-picture-card{min-height:160px}
+.mashaal-arabic-word-cards .mashaal-arabic-picture{height:100px}
+.mashaal-arabic-builder-host{display:grid}
+.mashaal-arabic-word-builder{border:1px solid #eadce7;border-radius:22px;background:#fff8fc;padding:16px;display:grid;gap:12px}
+.mashaal-arabic-word-builder-head{display:flex;align-items:center;justify-content:center;gap:14px}
+.mashaal-arabic-builder-image{width:88px;height:88px;object-fit:contain}
+.mashaal-arabic-word-builder-head>div{display:grid;gap:3px}
+.mashaal-arabic-word-builder-head strong{font-size:19px}
+.mashaal-arabic-word-builder-head small{color:var(--muted);font-weight:800}
+.mashaal-arabic-built-word{min-height:54px;border:2px dashed #d9c5d5;border-radius:15px;background:#fff;display:grid;place-items:center;font-size:26px;font-weight:950;letter-spacing:2px}
+.mashaal-arabic-built-word[data-outcome="correct"]{border-style:solid;border-color:#70aa82;background:#edf9f1;color:#326b43}
+.mashaal-arabic-built-word[data-outcome="wrong"]{border-style:solid;border-color:#d88888;background:#fff0f0}
+.mashaal-arabic-scrambled-letters{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;direction:rtl}
+.mashaal-arabic-scramble-letter{min-width:52px;min-height:52px;border:1px solid #dbcbd7;border-radius:14px;background:#fff;font-size:24px;font-weight:950;color:#5f475d}
+.mashaal-arabic-scramble-letter:disabled{opacity:.35}
+
+.mashaal-arabic-games{display:grid;gap:14px}
+.mashaal-arabic-game-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mashaal-arabic-game-mode{min-height:88px;border:1px solid #e4d8e1;border-radius:18px;background:#fff;display:grid;place-items:center;padding:10px;text-align:center;color:#5c485b}
+.mashaal-arabic-game-mode strong{font-size:16px}
+.mashaal-arabic-game-mode small{font-size:10px;color:var(--muted);font-weight:800}
+.mashaal-arabic-game-mode[data-selected="true"]{background:#fff0f8;border-color:#a56c92;box-shadow:inset 0 0 0 2px #efd6e6}
+.mashaal-arabic-game-stage{min-height:360px;border:1px solid #eadde8;border-radius:24px;background:#fff9fc;padding:18px;display:grid;align-content:center;gap:15px}
+.mashaal-arabic-game-stage h3{margin:0;text-align:center;font-size:23px;color:#5c4258}
+.mashaal-arabic-game-stage>.mashaal-arabic-picture-card{max-width:250px;width:100%;margin:auto}
+.mashaal-arabic-game-target-letter{font-size:94px;font-weight:950;text-align:center;color:#754d6d}
+.mashaal-arabic-game-letter-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.mashaal-arabic-game-letter-options .mashaal-arabic-letter{min-height:100px}
+.mashaal-arabic-game-letter-options .mashaal-arabic-letter strong{font-size:48px}
+.mashaal-arabic-game-image-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.mashaal-arabic-game-image-options .mashaal-arabic-picture-card{min-height:150px}
+.mashaal-arabic-game-feedback{margin:0;text-align:center;padding:10px 12px;border-radius:14px;font-weight:950}
+.mashaal-arabic-game-feedback[data-outcome="correct"]{background:#eaf7ee;color:#347047}
+.mashaal-arabic-game-feedback[data-outcome="wrong"]{background:#fff0f0;color:#9a4d4d}
 
 .mashaal-arabic-linked-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .mashaal-arabic-linked-card{min-height:150px;border:1px solid #e5d6e2;border-radius:22px;background:linear-gradient(160deg,#fff7fb,#f7f8ff);padding:18px;display:grid;align-content:center;gap:8px;text-align:center}
@@ -68,7 +126,10 @@
 
 @media(max-width:900px){
   #mashaalHomeView .mashaal-arabic-section-grid{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:4px}
+  #mashaalHomeView .mashaal-arabic-progress-summary{flex:0 0 250px;grid-template-columns:1fr}
   #mashaalHomeView .mashaal-arabic-section-card{flex:0 0 112px;scroll-snap-align:start}
+  .mashaal-arabic-letter-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mashaal-arabic-game-image-options{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:760px){
   #mashaalHomeView .mashaal-arabic-hub{padding:4px 16px 14px}
@@ -80,10 +141,22 @@
   .mashaal-arabic-letter-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
   .mashaal-arabic-letter{min-height:58px}
   .mashaal-arabic-letter strong{font-size:24px}
-  .mashaal-arabic-letter-detail{min-height:280px}
-  .mashaal-arabic-letter-hero strong{font-size:92px}
+  .mashaal-arabic-letter-detail{min-height:340px}
+  .mashaal-arabic-letter-hero>strong{font-size:88px}
   .mashaal-arabic-listen-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mashaal-arabic-word-cards,.mashaal-arabic-linked-grid{grid-template-columns:1fr}
+  .mashaal-arabic-word-cards .mashaal-arabic-picture-card{min-height:135px}
+  .mashaal-arabic-game-letter-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+  .mashaal-arabic-picture-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .mashaal-arabic-picture-card{min-height:104px;padding:6px}
+  .mashaal-arabic-picture{height:60px}
+  .mashaal-arabic-picture-card strong{font-size:13px}
+  .mashaal-arabic-game-modes{grid-template-columns:1fr}
+  .mashaal-arabic-game-mode{min-height:66px}
+  .mashaal-arabic-word-builder-head{align-items:center}
+  .mashaal-arabic-builder-image{width:72px;height:72px}
 }
 @media(max-width:430px){
   .mashaal-arabic-section-intro{gap:10px}
@@ -92,7 +165,11 @@
   .mashaal-arabic-letter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .mashaal-arabic-letter-actions{grid-template-columns:1fr}
   .mashaal-arabic-palette{width:100%;margin-inline-start:0;justify-content:center}
+  .mashaal-arabic-brush-sizes{width:100%;justify-content:center}
+  .mashaal-arabic-game-image-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mashaal-arabic-game-stage{padding:12px;min-height:320px}
+  .mashaal-arabic-game-target-letter{font-size:76px}
 }
 @media(prefers-reduced-motion:reduce){
-  .mashaal-arabic-section-card,.mashaal-arabic-letter{transition:none!important}
+  .mashaal-arabic-section-card,.mashaal-arabic-letter,.mashaal-arabic-action,.mashaal-arabic-tool{transition:none!important}
 }
