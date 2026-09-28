@@ -13,8 +13,8 @@ function correctedCycles(prefix,date,skillId='review'){return Array.from({length
 ]).flat();}
 
 test('daily challenge counts completed learning questions from today only',()=>{
-  const log=[...Array.from({length:20},(_,index)=>attempt(`today-${index}`,{date:`2026-09-08T10:${String(index).padStart(2,'0')}:00Z`})),attempt('old',{date:'2026-09-07T10:00:00Z'})];
-  const progress=deriveChallengeProgress(log,{learnerId:'yasser',now:new Date('2026-09-08T15:00:00Z')});
+  const log=[...Array.from({length:20},(_,index)=>attempt(`today-${index}`,{date:`2026-09-08T16:${String(index).padStart(2,'0')}:00Z`})),attempt('old',{date:'2026-09-07T16:00:00Z'})];
+  const progress=deriveChallengeProgress(log,{learnerId:'yasser',now:new Date('2026-09-08T20:00:00Z')});
   assert.equal(progress.daily[0].current,20);
   assert.equal(progress.daily[0].target,20);
   assert.equal(progress.dailyComplete,true);
