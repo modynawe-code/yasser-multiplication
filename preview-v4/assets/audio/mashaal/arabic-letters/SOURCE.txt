@@ -1,4 +1,20 @@
-Source: Ministry of Endowments and Islamic Affairs, State of Qatar — الدروس الهجائية لتعلم قراءة القرآن الكريم — Lesson 1, Qasr reading.
-Original lesson: https://alquran.islam.gov.qa/droos/Dr1.html
-Download page: https://alquran.islam.gov.qa/droos/Download.html
-Imported items: 1-27 and 29. Item 28 is standalone hamza and is not part of the app current 28-letter grid.
+المصدر الصوتي:
+وزارة الأوقاف والشؤون الإسلامية – دولة قطر
+الدروس الهجائية لتعلّم قراءة القرآن الكريم
+الدرس الأول: الحروف العربية المفردة
+طريقة القراءة المستخدمة داخل التطبيق: القصر
+
+الصفحة الأصلية:
+https://alquran.islam.gov.qa/droos/Dr1.html
+
+صفحة التحميل:
+https://alquran.islam.gov.qa/droos/Download.html
+
+Source:
+Ministry of Endowments and Islamic Affairs, State of Qatar
+Hijaiyyah lessons for learning to read the Holy Quran — Lesson 1, Qasr reading.
+
+تم الاحتفاظ بالتسجيلات الصوتية كما وردت من المصدر، مع إعادة تسمية الملفات فقط لتطابق معرفات الحروف داخل التطبيق.
+الملفات المستخدمة تقابل عناصر المصدر 1–27 و29.
+العنصر 28 في المصدر هو الهمزة المفردة، وهي ليست عنصرًا مستقلًا ضمن شبكة الحروف العربية الـ28 الحالية في التطبيق.
+الحقوق للمصدر الأصلي، ولا ينسب التطبيق هذه التسجيلات لنفسه.
