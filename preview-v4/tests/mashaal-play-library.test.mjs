@@ -31,7 +31,7 @@ test('Mashaal home and controller expose direct game navigation',async()=>{
   assert.match(controller,/playLibraryActive/);
   assert.match(controller,/رجوع للألعاب/);
   assert.match(controller,/اختاري لعبة ثانية/);
-  assert.match(css,/grid-template-areas:"hero daily" "hero plays" "hero prompt" "hero domains" "hero status"/);
+  assert.match(css,/grid-template-areas:"hero daily" "hero arabic" "hero plays" "hero prompt" "hero domains" "hero status"/);
 });
 
 test('daily mission count keeps numeric order inside RTL layout',async()=>{

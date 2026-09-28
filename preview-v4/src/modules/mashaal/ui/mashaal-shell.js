@@ -17,6 +17,7 @@ export function ensureMashaalShell(){
   ensureStyle('src/modules/mashaal/ui/mashaal-interaction-engines.css','mashaal-interaction-engines');
   ensureStyle('src/modules/mashaal/ui/mashaal-daily-mission.css','mashaal-daily-mission');
   ensureStyle('src/modules/mashaal/ui/mashaal-play-library.css','mashaal-play-library');
+  ensureStyle('src/modules/mashaal/ui/mashaal-arabic-learning.css','mashaal-arabic-learning');
 
   const wrapper=document.createElement('div');
   wrapper.innerHTML=`
@@ -36,6 +37,10 @@ export function ensureMashaalShell(){
           <div class="mashaal-daily-tasks" id="mashaalDailyTasks"></div>
           <button class="mashaal-daily-start" id="mashaalDailyStart" type="button">ابدئي المهمة</button>
         </section>
+        <section class="mashaal-arabic-hub" id="mashaalArabicHub" aria-labelledby="mashaalArabicHubTitle">
+          <div class="mashaal-arabic-hub-heading"><strong id="mashaalArabicHubTitle">العربية</strong><span>حروف · كتابة · تلوين · استماع · كلمات · قصص · ألعاب</span></div>
+          <div class="mashaal-arabic-section-grid" id="mashaalArabicSectionGrid" aria-label="أقسام تعلم العربية"></div>
+        </section>
         <section class="mashaal-play-library" id="mashaalPlayLibrary" aria-labelledby="mashaalPlayTitle">
           <div class="mashaal-play-heading"><strong id="mashaalPlayTitle">ألعابي</strong><span>اختاري اللعبة وابدئي مباشرة</span></div>
           <div class="mashaal-play-grid" id="mashaalPlayGrid" aria-label="ألعاب مشاعل التفاعلية"></div>
@@ -43,6 +48,15 @@ export function ensureMashaalShell(){
         <div class="mashaal-world-prompt" aria-hidden="true"><strong>اختاري عالمك</strong><span>المسي الصورة الكبيرة</span></div>
         <div class="mashaal-domain-grid" id="mashaalDomainGrid" aria-label="عوالم تعلم مشاعل"></div>
         <p class="mashaal-safe-note" aria-live="polite" id="mashaalHomeStatus"></p>
+      </div>
+    </section>
+
+    <section id="mashaalArabicView" class="view">
+      <div class="mashaal-wrap">
+        <div class="mashaal-arabic-view-actions">
+          <button class="icon-btn" id="mashaalArabicBack" type="button" data-nav="back">رجوع لمشاعل</button>
+        </div>
+        <section class="mashaal-arabic-panel" id="mashaalArabicContent" aria-live="polite"></section>
       </div>
     </section>
 
