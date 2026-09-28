@@ -173,3 +173,33 @@ button.mashaal-arabic-picture-card{cursor:pointer;touch-action:manipulation}
 @media(prefers-reduced-motion:reduce){
   .mashaal-arabic-section-card,.mashaal-arabic-letter,.mashaal-arabic-action,.mashaal-arabic-tool{transition:none!important}
 }
+
+
+.mashaal-arabic-stories{display:grid;gap:16px}
+.mashaal-arabic-story-selector{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity}
+.mashaal-arabic-story-tab{flex:0 0 auto;min-height:46px;padding:8px 13px;border:1px solid #e2d5df;border-radius:14px;background:#fff;color:#624b60;font-weight:900;scroll-snap-align:start}
+.mashaal-arabic-story-tab[data-selected="true"]{background:#fff0f8;border-color:#9e688d;box-shadow:inset 0 0 0 2px #efd6e6}
+.mashaal-arabic-story-stage{border:1px solid #eadde8;border-radius:24px;background:#fff9fc;padding:18px;display:grid;gap:14px}
+.mashaal-arabic-story-stage>h3{margin:0;text-align:center;font-size:23px;color:#5c4258}
+.mashaal-arabic-story-scenes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mashaal-arabic-story-scene{position:relative;min-width:0;border:1px solid #e4d7e1;border-radius:20px;background:#fff;padding:12px;display:grid;grid-template-rows:auto 100px auto 1fr;place-items:center;gap:6px;text-align:center;color:#544252}
+button.mashaal-arabic-story-scene{touch-action:manipulation}
+button.mashaal-arabic-story-scene:disabled{opacity:.48}
+.mashaal-arabic-story-number{position:absolute;top:8px;inset-inline-start:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#7d5673;color:#fff;font-size:12px;font-weight:950}
+.mashaal-arabic-story-image{width:100%;height:100px;object-fit:contain}
+.mashaal-arabic-story-scene strong{font-size:17px}
+.mashaal-arabic-story-scene p{margin:0;font-size:13px;line-height:1.6;color:#665867;font-weight:750}
+.mashaal-arabic-story-instruction,.mashaal-arabic-story-picked{margin:0;text-align:center;color:#765276;font-weight:900}
+.mashaal-arabic-story-quiz{justify-self:center;padding-inline:24px}
+.mashaal-arabic-more-stories{display:grid;gap:10px;padding-top:6px}
+.mashaal-arabic-more-stories>h3{margin:0;font-size:18px;color:#684b64}
+@media(max-width:760px){
+  .mashaal-arabic-story-scenes{grid-template-columns:1fr}
+  .mashaal-arabic-story-scene{grid-template-columns:96px 1fr;grid-template-rows:auto auto;min-height:120px;text-align:start}
+  .mashaal-arabic-story-image{grid-row:1/3;width:88px;height:88px}
+  .mashaal-arabic-story-scene strong{align-self:end}
+  .mashaal-arabic-story-scene p{align-self:start}
+  .mashaal-arabic-story-number{top:7px;inset-inline-start:7px}
+  .mashaal-arabic-story-quiz-grid .mashaal-arabic-story-scene{grid-template-columns:90px 1fr;grid-template-rows:1fr}
+  .mashaal-arabic-story-quiz-grid .mashaal-arabic-story-image{grid-row:auto}
+}
