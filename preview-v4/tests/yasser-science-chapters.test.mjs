@@ -103,6 +103,9 @@ test('science UI connects unit 3 visual assets and keeps learner wording neutral
   const css=readFileSync(new URL('../src/modules/yasser/science/yasser-science.css',import.meta.url),'utf8');
   assert.match(source,/علوم الفصل الدراسي الأول/);
   assert.match(source,/scienceUnitSwitch/);
+  assert.match(source,/yasserScienceDivisionExamView/);
+  assert.match(source,/scienceDivisionExamBack/);
+  assert.match(source,/show\(dedicatedExam\?'yasserScienceDivisionExamView'/);
   assert.match(source,/YASSER_SCIENCE_UNIT3_VISUAL_ASSETS/);
   assert.match(source,/أسئلة بصرية بالصور والمخططات/);
   assert.doesNotMatch(source,/صور الكتاب/);
