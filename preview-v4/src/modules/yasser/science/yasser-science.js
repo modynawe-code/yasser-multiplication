@@ -3,16 +3,21 @@ import {YASSER_SCIENCE_PLAYABLE_QUESTIONS} from './science-question-bank.js';
 import {YASSER_SCIENCE_VISUAL_ASSETS} from './science-visuals.js';
 import {YASSER_SCIENCE_UNIT2_VISUAL_ASSETS} from './science-unit2-visuals.generated.js';
 import {YASSER_SCIENCE_UNIT3_VISUAL_ASSETS} from './science-unit3-visuals.generated.js';
+import {YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS} from './science-division-exam.js';
 import {DEFAULT_YASSER_SCIENCE_UNIT_ID,YASSER_SCIENCE_UNITS,filterScienceProgressByUnit,filterScienceQuestionsByChapter,filterScienceQuestionsByUnit,getScienceChapter,getScienceUnit} from './science-chapters.js';
 import {applyScienceAttempt,applyScienceSessionSummary,createScienceSession,getScienceDashboard,getScienceReviewQuestionIds,sessionWrongQuestionIds,submitScienceAnswer} from './science-engine.js';
 
 const STORAGE_KEY='family-learning:yasser:science:v1';
+const EXAM_CHECKPOINT_KEY='family-learning:yasser:science:division-exam:v1';
 const SCIENCE_ASSETS=Object.freeze({...YASSER_SCIENCE_ASSETS,...YASSER_SCIENCE_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT2_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT3_VISUAL_ASSETS});
-let mounted=false,session=null,progress=loadProgress(),feedbackTimer=null,activeUnitId=DEFAULT_YASSER_SCIENCE_UNIT_ID;
+let mounted=false,session=null,progress=loadProgress(),feedbackTimer=null,activeUnitId=DEFAULT_YASSER_SCIENCE_UNIT_ID,tableSelection={};
 
 function storage(){try{return globalThis.localStorage;}catch{return null;}}
 function loadProgress(){try{return JSON.parse(storage()?.getItem(STORAGE_KEY)||'{}')||{};}catch{return {};}}
 function saveProgress(){try{storage()?.setItem(STORAGE_KEY,JSON.stringify(progress));}catch{}}
+function loadExamCheckpoint(){try{const saved=JSON.parse(storage()?.getItem(EXAM_CHECKPOINT_KEY)||'null');return saved?.version===1&&saved?.session?.mode==='exam'?saved:null;}catch{return null;}}
+function saveExamCheckpoint(){if(session?.mode!=='exam')return;try{storage()?.setItem(EXAM_CHECKPOINT_KEY,JSON.stringify({version:1,unitId:activeUnitId,tableSelection,session}));}catch{}}
+function clearExamCheckpoint(){try{storage()?.removeItem(EXAM_CHECKPOINT_KEY);}catch{}}
 function ensureStyle(){if(document.querySelector('link[data-module-style="yasser-science"]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/yasser/science/yasser-science.css';link.dataset.moduleStyle='yasser-science';document.head.appendChild(link);}
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
 function clearTimer(){if(feedbackTimer){clearTimeout(feedbackTimer);feedbackTimer=null;}}
@@ -20,7 +25,7 @@ function currentUnit(){return getScienceUnit(activeUnitId);}
 function currentChapter(){return getScienceChapter(currentUnit().currentChapterId);}
 function unitQuestions(){return filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,activeUnitId);}
 function visualUnitQuestions(){return unitQuestions().filter(question=>question.assetId&&SCIENCE_ASSETS[question.assetId]);}
-function cellDivisionQuestions(){return filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'chapter-2-cell-heredity').filter(question=>question.unit==='division');}
+function cellDivisionQuestions(){return YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS;}
 function unitProgress(){return filterScienceProgressByUnit(progress,activeUnitId);}
 function scopeLabel(){return String(YASSER_SCIENCE_SCOPE.label||'سادس ابتدائي').split(' • ')[0];}
 function chapterDisplayName(label=''){return label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');}
@@ -50,15 +55,16 @@ function ensureShell(){
       <button type="button" data-science-mode="exam"><span class="science-mode-code">20</span><span><strong>اختبار المدرسة</strong><small>20 سؤالًا مما تم فتحه، بدون كشف الإجابة أثناء الحل</small></span></button>
     </section>
 
-    <button type="button" class="science-division-exam" id="scienceCellDivisionExam" hidden><strong>اختبار شامل: درس انقسام الخلايا</strong><span id="scienceDivisionExamCount"></span><small>يشمل جميع أسئلة الدرس، بدون كشف الإجابة أثناء الحل</small></button>
+  <button type="button" class="science-division-exam" id="scienceCellDivisionExam" hidden><strong>اختبار شامل: درس انقسام الخلايا</strong><span id="scienceDivisionExamCount"></span><small>يشمل جميع أسئلة الدرس، بدون كشف الإجابة أثناء الحل</small></button>
+  <button type="button" class="science-resume-entry" id="scienceResumeEntry" hidden>متابعة اختبار انقسام الخلايا</button>
 
     <section class="yasser-science-dashboard" id="scienceDashboard" aria-label="تقدم العلوم"></section>
 
     <section class="yasser-science-session" id="scienceSession" hidden>
       <div class="science-session-bar">
-        <button type="button" class="science-exit" id="scienceExit">إنهاء الجولة</button>
+        <button type="button" class="science-exit" id="scienceExit">خروج مع حفظ التقدم</button>
         <div class="science-progress-copy"><strong id="scienceStep">السؤال 1</strong><span id="scienceModeLabel"></span></div>
-        <div class="science-score"><span>النقاط <b id="sciencePoints">0</b></span><span>السلسلة <b id="scienceStreak">0</b></span></div>
+        <div class="science-score"><span>صحيح <b id="scienceCorrectCount">0</b></span><span>خطأ <b id="scienceWrongCount">0</b></span><span>النقاط <b id="sciencePoints">0</b></span><span>السلسلة <b id="scienceStreak">0</b></span></div>
       </div>
       <div class="science-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="scienceProgress"></span></div>
       <article class="science-question-card" id="scienceQuestionCard">
@@ -69,6 +75,7 @@ function ensureShell(){
         <h2 id="sciencePrompt"></h2>
         <div class="science-answers" id="scienceAnswers"></div>
         <p class="science-feedback" id="scienceFeedback" aria-live="polite"></p>
+        <button type="button" class="science-next-question" id="scienceNextQuestion" hidden>السؤال التالي</button>
       </article>
     </section>
 
@@ -134,50 +141,90 @@ function renderDashboard(){
     if(!review){review=document.createElement('button');review.id='scienceReviewEntry';review.type='button';review.className='science-review-entry';review.innerHTML='<span>مراجعة ذكية</span><strong>أسئلتي اللي أخطأت فيها من هذه الوحدة</strong>';review.addEventListener('click',()=>startScience('review'));modes?.after(review);}
     review.hidden=false;
   }else if(review)review.hidden=true;
+  const resume=document.getElementById('scienceResumeEntry');if(resume)resume.hidden=!loadExamCheckpoint();
 }
 
 function modeLabel(mode){return {quick:'تدريب سريع',images:'تحدي الصور',exam:'اختبار المدرسة',review:'مراجعة الأخطاء'}[mode]||'علوم';}
-function showLanding(){clearTimer();closeImageZoom();session=null;show('yasserScienceView');document.getElementById('scienceExit').textContent='إنهاء الجولة';document.getElementById('scienceSession').hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceUnitSwitch').hidden=false;document.getElementById('scienceModes').hidden=false;document.getElementById('scienceUnitCard').hidden=false;renderUnitSwitch();renderUnitCard();renderDashboard();}
+function showLanding(){if(session?.mode==='exam'&&session.questions.some(question=>question.unit==='division'))saveExamCheckpoint();clearTimer();closeImageZoom();session=null;tableSelection={};show('yasserScienceView');document.getElementById('scienceExit').textContent='إنهاء الجولة';document.getElementById('scienceSession').hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceUnitSwitch').hidden=false;document.getElementById('scienceModes').hidden=false;document.getElementById('scienceUnitCard').hidden=false;renderUnitSwitch();renderUnitCard();renderDashboard();}
 function selectUnit(unitId){if(!YASSER_SCIENCE_UNITS.some(unit=>unit.id===unitId))return;activeUnitId=unitId;showLanding();}
 
 function startScience(mode,reviewIds=[],questionOverride=null){
-  clearTimer();closeImageZoom();const dedicatedExam=Boolean(questionOverride&&mode==='exam'),scopedProgress=unitProgress(),allQuestions=questionOverride||unitQuestions(),imageQuestions=visualUnitQuestions(),questions=mode==='images'?imageQuestions:allQuestions;
+  const divisionReview=mode==='review'&&reviewIds.some(id=>YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS.some(question=>question.id===id));
+  if(mode==='exam'&&questionOverride&&loadExamCheckpoint()){resumeScienceExam();return;}
+  clearTimer();closeImageZoom();const dedicatedExam=Boolean(questionOverride&&mode==='exam')||divisionReview,scopedProgress=unitProgress(),allQuestions=questionOverride||unitQuestions(),imageQuestions=visualUnitQuestions(),questions=divisionReview?YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS:mode==='images'?imageQuestions:allQuestions;
   if(mode==='images'&&!questions.length){showLanding();return;}
   const ids=mode==='review'?(reviewIds.length?reviewIds:getScienceReviewQuestionIds(scopedProgress)):[];
   const count=mode==='images'?Math.min(10,questions.length):(questionOverride&&mode==='exam'?questions.length:undefined);
-  session=createScienceSession({mode,count,progress:scopedProgress,questions,reviewQuestionIds:ids});
+  session=createScienceSession({mode,count:dedicatedExam&&mode==='exam'?questions.length:count,progress:scopedProgress,questions,reviewQuestionIds:ids,preserveOrder:dedicatedExam&&mode==='exam'});tableSelection={};
   if(!session.questions.length){showLanding();return;}
   show(dedicatedExam?'yasserScienceDivisionExamView':'yasserScienceView');document.getElementById('scienceExit').textContent=dedicatedExam?'إنهاء الاختبار':'إنهاء الجولة';if(dedicatedExam)document.getElementById('scienceDivisionExamPageCount').textContent=`اختبار شامل • ${session.questions.length} سؤالًا`;
+  if(dedicatedExam&&mode==='exam')saveExamCheckpoint();
   document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;document.getElementById('scienceCellDivisionExam').hidden=true;const reviewEntry=document.getElementById('scienceReviewEntry');if(reviewEntry)reviewEntry.hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;
   const unit=currentUnit(),stage=unit.status==='current'?currentChapter().shortLabel:'مراجعة الوحدة';
   document.getElementById('scienceModeLabel').textContent=dedicatedExam?`اختبار شامل • درس انقسام الخلايا • ${session.questions.length} سؤالًا`:`${modeLabel(session.mode)} • ${unit.shortLabel} • ${stage}`;renderQuestion();
 }
 
+function resumeScienceExam(){
+  const saved=loadExamCheckpoint();if(!saved)return;activeUnitId=saved.unitId||DEFAULT_YASSER_SCIENCE_UNIT_ID;session=saved.session;tableSelection=saved.tableSelection||{};clearTimer();closeImageZoom();
+  document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;document.getElementById('scienceDivisionExamPageCount').textContent=`اختبار شامل • ${session.questions.length} سؤالًا`;show('yasserScienceDivisionExamView');
+  if(session.completed)finishScience();else renderQuestion();
+}
+
 function renderQuestion(){
   if(!session||session.completed){finishScience();return;}
-  closeImageZoom();const question=session.questions[session.index],total=session.questions.length,completed=session.answers.length,pct=Math.round((completed/Math.max(total,1))*100);
-  document.getElementById('scienceStep').textContent=`السؤال ${session.index+1} من ${total}`;document.getElementById('scienceProgress').style.width=`${pct}%`;document.querySelector('.science-progress-track')?.setAttribute('aria-valuenow',String(pct));document.getElementById('sciencePoints').textContent=String(session.points);document.getElementById('scienceStreak').textContent=String(session.streak);
+  closeImageZoom();const question=session.questions[session.index],total=session.questions.length,weight=totalResponseCount(),completed=answeredResponseCount(),pct=Math.round((completed/Math.max(weight,1))*100);
+  document.getElementById('scienceStep').textContent=`السؤال ${session.index+1} من ${total}`;document.getElementById('scienceProgress').style.width=`${pct}%`;document.querySelector('.science-progress-track')?.setAttribute('aria-valuenow',String(pct));document.getElementById('sciencePoints').textContent=String(session.points);document.getElementById('scienceStreak').textContent=String(session.streak);document.getElementById('scienceCorrectCount').textContent=String(session.correct);document.getElementById('scienceWrongCount').textContent=String(session.wrong);document.getElementById('scienceNextQuestion').hidden=true;
   document.getElementById('sciencePrompt').textContent=question.prompt;document.getElementById('scienceFeedback').textContent='';document.getElementById('scienceFeedback').className='science-feedback';
   const source=document.getElementById('scienceSource');source.hidden=session.mode==='exam';source.textContent=question.assetId?'سؤال بصري':'سؤال من محتوى الوحدة';
   const wrap=document.getElementById('scienceImageWrap'),image=document.getElementById('scienceImage'),asset=question.assetId?SCIENCE_ASSETS[question.assetId]:null;
   wrap.hidden=!asset;if(asset){image.src=asset.src;image.alt=asset.alt;document.getElementById('scienceImageOpen').dataset.assetId=asset.id;}else{image.removeAttribute('src');image.alt='';document.getElementById('scienceImageOpen').removeAttribute('data-asset-id');}
-  const answers=document.getElementById('scienceAnswers');answers.innerHTML='';
-  question.choices.forEach(choice=>{const button=document.createElement('button');button.type='button';button.className='science-answer';button.textContent=choice;button.addEventListener('click',()=>answerQuestion(choice,button));answers.appendChild(button);});
+  const answers=document.getElementById('scienceAnswers');answers.innerHTML='';answers.classList.remove('science-matching-table');
+  if(question.type==='matchingTable')renderMatchingTable(question,answers);
+  else if(question.type==='shortAnswer'){
+    const input=document.createElement('input');input.type='text';input.inputMode='numeric';input.autocomplete='off';input.className='science-short-answer';input.placeholder='اكتب العدد';input.value=tableSelection.numericAnswer||'';input.setAttribute('aria-label','اكتب الإجابة العددية');
+    const submit=document.createElement('button');submit.type='button';submit.className='science-next-question';submit.textContent='تحقق من الإجابة';submit.disabled=!input.value;input.addEventListener('input',()=>{submit.disabled=!input.value.trim();tableSelection.numericAnswer=input.value;saveExamCheckpoint();});submit.addEventListener('click',()=>answerQuestion(input.value,submit));answers.append(input,submit);
+  }else question.choices.forEach(choice=>{const button=document.createElement('button');button.type='button';button.className='science-answer';button.textContent=choice;button.addEventListener('click',()=>answerQuestion(choice,button));answers.appendChild(button);});
+  saveExamCheckpoint();
+}
+
+function totalResponseCount(){return session?.questions.reduce((total,question)=>total+(question.type==='matchingTable'?question.rows.length:1),0)||0;}
+function answeredResponseCount(){return session?.answers.reduce((total,answer)=>total+(answer.correctCount||0)+(answer.wrongCount||0),0)||0;}
+function renderMatchingTable(question,host){
+  host.classList.add('science-matching-table');
+  question.rows.forEach(row=>{
+    const line=document.createElement('div');line.className='science-match-row';line.dataset.matchRow=row.id;
+    const prompt=document.createElement('strong');prompt.textContent=row.prompt;line.appendChild(prompt);
+    const choices=document.createElement('div');choices.className='science-match-choices';
+    question.columns.forEach(column=>{const button=document.createElement('button');button.type='button';button.className='science-answer science-match-answer';button.textContent=column;button.setAttribute('aria-pressed',String(tableSelection[row.id]===column));if(tableSelection[row.id]===column)button.classList.add('selected');button.addEventListener('click',()=>{tableSelection[row.id]=column;line.querySelectorAll('.science-match-answer').forEach(item=>{const selected=item.textContent===column;item.classList.toggle('selected',selected);item.setAttribute('aria-pressed',String(selected));});const submit=host.querySelector('.science-table-submit');if(submit)submit.disabled=question.rows.some(item=>!tableSelection[item.id]);saveExamCheckpoint();});choices.appendChild(button);});
+    line.appendChild(choices);host.appendChild(line);
+  });
+  const submit=document.createElement('button');submit.type='button';submit.className='science-next-question science-table-submit';submit.textContent='تحقق من الجدول';submit.disabled=question.rows.some(row=>!tableSelection[row.id]);submit.addEventListener('click',()=>answerQuestion({...tableSelection},submit));host.appendChild(submit);
 }
 
 function openImageZoom(){const image=document.getElementById('scienceImage');if(!image?.src)return;const modal=document.getElementById('scienceImageModal'),modalImage=document.getElementById('scienceImageModalImg');if(!modal||!modalImage)return;modalImage.src=image.src;modalImage.alt=image.alt;modal.hidden=false;document.body.classList.add('science-image-zoom-open');document.getElementById('scienceImageModalClose')?.focus();}
 function closeImageZoom(){const modal=document.getElementById('scienceImageModal');if(!modal||modal.hidden)return;modal.hidden=true;document.body.classList.remove('science-image-zoom-open');const modalImage=document.getElementById('scienceImageModalImg');if(modalImage){modalImage.removeAttribute('src');modalImage.alt='';}}
 
 function answerQuestion(choice,button){
-  if(!session||button.disabled)return;document.querySelectorAll('#scienceAnswers .science-answer').forEach(node=>{node.disabled=true;});const result=submitScienceAnswer({session,answer:choice});if(!result.accepted)return;
-  progress=applyScienceAttempt(progress,result.attempt);progress=applyScienceSessionSummary(progress,session);saveProgress();document.getElementById('sciencePoints').textContent=String(session.points);document.getElementById('scienceStreak').textContent=String(session.streak);
-  if(session.mode==='exam'){feedbackTimer=setTimeout(renderQuestion,180);return;}
-  const feedback=document.getElementById('scienceFeedback');if(result.attempt.isCorrect){button.classList.add('correct');feedback.textContent='صحيح — كمل.';feedback.classList.add('good');}else{button.classList.add('wrong');const correct=[...document.querySelectorAll('#scienceAnswers .science-answer')].find(node=>node.textContent===result.question.answer);correct?.classList.add('correct');feedback.textContent=result.question.feedback;feedback.classList.add('bad');}feedbackTimer=setTimeout(renderQuestion,result.attempt.isCorrect?900:1500);
+  if(!session||button.disabled)return;document.querySelectorAll('#scienceAnswers .science-answer').forEach(node=>{node.disabled=true;});document.querySelector('#scienceAnswers .science-short-answer')?.setAttribute('disabled','');button.disabled=true;
+  const result=submitScienceAnswer({session,answer:choice});if(!result.accepted)return;
+  progress=applyScienceAttempt(progress,result.attempt);progress=applyScienceSessionSummary(progress,session);saveProgress();saveExamCheckpoint();document.getElementById('sciencePoints').textContent=String(session.points);document.getElementById('scienceStreak').textContent=String(session.streak);document.getElementById('scienceCorrectCount').textContent=String(session.correct);document.getElementById('scienceWrongCount').textContent=String(session.wrong);
+  const pct=Math.round(answeredResponseCount()/Math.max(totalResponseCount(),1)*100);document.getElementById('scienceProgress').style.width=`${pct}%`;document.querySelector('.science-progress-track')?.setAttribute('aria-valuenow',String(pct));
+  const feedback=document.getElementById('scienceFeedback');
+  if(result.question.type==='matchingTable'){
+    for(const row of result.question.rows){const line=document.querySelector(`[data-match-row="${row.id}"]`);line?.classList.toggle('is-correct',choice[row.id]===row.answer);line?.classList.toggle('is-wrong',choice[row.id]!==row.answer);line?.querySelectorAll('button').forEach(option=>{if(option.textContent===row.answer)option.classList.add('correct');if(choice[row.id]===option.textContent&&choice[row.id]!==row.answer)option.classList.add('wrong');});}
+    const right=result.question.rows.filter(row=>choice[row.id]===row.answer).length;feedback.textContent=result.attempt.isCorrect?`إجابة صحيحة. أكملت الجدول كاملًا: ${right} من ${result.question.rows.length}.`:`إجابة غير مكتملة. الصحيح ${right} من ${result.question.rows.length}، وعُرضت الإجابات الصحيحة في الجدول.`;feedback.classList.add(result.attempt.isCorrect?'good':'bad');
+  }else{
+    const correct=[...document.querySelectorAll('#scienceAnswers .science-answer')].find(node=>node.textContent===result.question.answer);
+    if(result.attempt.isCorrect){button.classList.add('correct');feedback.textContent=`إجابة صحيحة: ${result.question.answer}`;feedback.classList.add('good');}
+    else{button.classList.add('wrong');correct?.classList.add('correct');feedback.textContent=`إجابة غير صحيحة. الإجابة الصحيحة: ${result.question.answer}`;feedback.classList.add('bad');}
+  }
+  if(session.mode==='exam'){document.getElementById('scienceNextQuestion').hidden=false;document.getElementById('scienceNextQuestion').textContent=session.completed?'عرض النتيجة':'السؤال التالي';return;}
+  feedbackTimer=setTimeout(()=>{tableSelection={};renderQuestion();},result.attempt.isCorrect?900:1500);
 }
 
 function finishScience(){
   if(!session)return;clearTimer();closeImageZoom();progress=applyScienceSessionSummary(progress,session);saveProgress();document.getElementById('scienceSession').hidden=true;document.getElementById('scienceResult').hidden=false;
-  const total=Math.max(session.answers.length,1),pct=Math.round((session.correct/total)*100),examName=session.questions.every(question=>question.unit==='division')?'درس انقسام الخلايا':currentUnit().shortLabel;document.getElementById('scienceResultScore').textContent=`${pct}%`;document.getElementById('scienceResultCorrect').textContent=String(session.correct);document.getElementById('scienceResultWrong').textContent=String(session.wrong);document.getElementById('scienceResultStreak').textContent=String(session.bestStreak);document.getElementById('scienceResultTitle').textContent=pct>=90?'إتقان قوي':pct>=75?'نتيجة جيدة':'نحتاج جولة مراجعة';document.getElementById('scienceResultCopy').textContent=session.mode==='exam'?`انتهى اختبار ${examName}. الأخطاء محفوظة للمراجعة.`:'الأخطاء انتقلت تلقائيًا للمراجعة الذكية.';
+  if(session.questions.some(question=>question.unit==='division')&&session.mode==='exam')clearExamCheckpoint();const total=Math.max(session.correct+session.wrong,1),pct=Math.round((session.correct/total)*100),examName=session.questions.every(question=>question.unit==='division')?'درس انقسام الخلايا':currentUnit().shortLabel;document.getElementById('scienceResultScore').textContent=`${pct}%`;document.getElementById('scienceResultCorrect').textContent=String(session.correct);document.getElementById('scienceResultWrong').textContent=String(session.wrong);document.getElementById('scienceResultStreak').textContent=String(session.bestStreak);document.getElementById('scienceResultTitle').textContent=pct>=90?'إتقان قوي':pct>=75?'نتيجة جيدة':'نحتاج جولة مراجعة';document.getElementById('scienceResultCopy').textContent=session.mode==='exam'?`انتهى اختبار ${examName}. الأخطاء محفوظة للمراجعة.`:'الأخطاء انتقلت تلقائيًا للمراجعة الذكية.';
   const reviewIds=sessionWrongQuestionIds(session),review=document.getElementById('scienceReviewMistakes');review.hidden=!reviewIds.length;review.onclick=()=>startScience('review',reviewIds);
 }
 
@@ -185,8 +232,8 @@ function bind(){
   if(mounted)return;mounted=true;
   document.querySelectorAll('[data-science-mode]').forEach(button=>button.addEventListener('click',()=>{if(!button.disabled)startScience(button.dataset.scienceMode);}));
   document.getElementById('scienceCellDivisionExam')?.addEventListener('click',()=>startScience('exam',[],cellDivisionQuestions()));
-  document.getElementById('scienceExit')?.addEventListener('click',showLanding);document.getElementById('scienceResultHome')?.addEventListener('click',showLanding);document.getElementById('yasserScienceBack')?.addEventListener('click',()=>closeYasserScience());document.getElementById('scienceDivisionExamBack')?.addEventListener('click',showLanding);document.getElementById('scienceImageOpen')?.addEventListener('click',openImageZoom);document.getElementById('scienceImageModalClose')?.addEventListener('click',closeImageZoom);document.getElementById('scienceImageModal')?.addEventListener('click',event=>{if(event.target.id==='scienceImageModal')closeImageZoom();});document.addEventListener('keydown',event=>{if(event.key==='Escape')closeImageZoom();});
+  document.getElementById('scienceExit')?.addEventListener('click',showLanding);document.getElementById('scienceResultHome')?.addEventListener('click',showLanding);document.getElementById('scienceResumeEntry')?.addEventListener('click',resumeScienceExam);document.getElementById('scienceNextQuestion')?.addEventListener('click',()=>{tableSelection={};renderQuestion();});document.getElementById('yasserScienceBack')?.addEventListener('click',()=>closeYasserScience());document.getElementById('scienceDivisionExamBack')?.addEventListener('click',showLanding);document.getElementById('scienceImageOpen')?.addEventListener('click',openImageZoom);document.getElementById('scienceImageModalClose')?.addEventListener('click',closeImageZoom);document.getElementById('scienceImageModal')?.addEventListener('click',event=>{if(event.target.id==='scienceImageModal')closeImageZoom();});document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(session?.mode==='exam'&&session.questions.some(question=>question.unit==='division'))saveExamCheckpoint();closeImageZoom();}});
 }
 
 export function openYasserScience(){ensureStyle();ensureShell();bind();progress=loadProgress();activeUnitId=DEFAULT_YASSER_SCIENCE_UNIT_ID;document.body.classList.remove('intro-mode','yasser-quran-mode','hub-mode','khaled-mode','mashaal-mode');document.body.classList.add('yasser-science-mode');show('yasserScienceView');showLanding();}
-export function closeYasserScience(){clearTimer();closeImageZoom();session=null;document.body.classList.remove('yasser-science-mode');document.body.classList.add('intro-mode');show('introView');}
+export function closeYasserScience(){if(session?.mode==='exam'&&session.questions.some(question=>question.unit==='division'))saveExamCheckpoint();clearTimer();closeImageZoom();session=null;tableSelection={};document.body.classList.remove('yasser-science-mode');document.body.classList.add('intro-mode');show('introView');}

@@ -13,8 +13,15 @@ export function validateScienceBank({questions=YASSER_SCIENCE_QUESTIONS,assets=Y
   for(const question of questions){
     if(!question?.id||ids.has(question.id))errors.push(`duplicate-or-missing-id:${question?.id||'unknown'}`);else ids.add(question.id);
     if(!question?.concept)errors.push(`missing-concept:${question?.id}`);
-    if(!Array.isArray(question?.choices)||question.choices.length<2)errors.push(`invalid-choices:${question?.id}`);
-    if(!question?.choices?.includes(question?.answer))errors.push(`answer-not-in-choices:${question?.id}`);
+    if(question?.type==='matchingTable'){
+      if(!Array.isArray(question.rows)||question.rows.length<2||!Array.isArray(question.columns)||question.columns.length<2)errors.push(`invalid-table:${question?.id}`);
+      for(const row of question.rows||[])if(!row?.id||!question.columns.includes(row.answer)||question.answer?.[row.id]!==row.answer)errors.push(`invalid-table-answer:${question?.id}:${row?.id||'unknown'}`);
+    }else if(question?.type==='shortAnswer'){
+      if(typeof question.answer!=='string'||!question.answer.trim())errors.push(`invalid-short-answer:${question?.id}`);
+    }else{
+      if(!Array.isArray(question?.choices)||question.choices.length<2)errors.push(`invalid-choices:${question?.id}`);
+      if(!question?.choices?.includes(question?.answer))errors.push(`answer-not-in-choices:${question?.id}`);
+    }
     if(question?.assetId&&!assets?.[question.assetId])errors.push(`missing-asset:${question?.id}:${question.assetId}`);
     if(!question?.source?.label||!question?.source?.page)errors.push(`missing-source:${question?.id}`);
   }
@@ -142,7 +149,7 @@ function selectReviewQuestions(questions,reviewQuestionIds,limit,rng){
   return selected;
 }
 
-export function createScienceSession({mode='quick',count,progress,questions=YASSER_SCIENCE_QUESTIONS,rng=Math.random,reviewQuestionIds=[]}={}){
+export function createScienceSession({mode='quick',count,progress,questions=YASSER_SCIENCE_QUESTIONS,rng=Math.random,reviewQuestionIds=[],preserveOrder=false}={}){
   const safeMode=['quick','images','exam','review'].includes(mode)?mode:'quick';
   const requested=Number(count)||({quick:10,images:8,exam:20,review:10}[safeMode]||10);
   if(safeMode==='review'&&reviewQuestionIds.length){
@@ -154,7 +161,7 @@ export function createScienceSession({mode='quick',count,progress,questions=YASS
   const pool=safeMode==='images'?(textbookVisualQuestions.length?textbookVisualQuestions:allVisualQuestions):questions;
   const limit=Math.min(requested,pool.length);
   if(safeMode==='images')return createSessionState(safeMode,selectBalancedByAsset(pool,limit,rng),rng);
-  if(safeMode==='exam')return createSessionState(safeMode,selectExamQuestions(pool,limit,rng),rng);
+  if(safeMode==='exam')return createSessionState(safeMode,preserveOrder?pool.slice(0,limit):selectExamQuestions(pool,limit,rng),rng);
   const weak=new Set(weakConceptIds(progress));
   const priority=shuffle(pool.filter(item=>weak.has(item.concept)),rng);
   const regular=shuffle(pool.filter(item=>!weak.has(item.concept)),rng);
@@ -167,11 +174,14 @@ export function createScienceSession({mode='quick',count,progress,questions=YASS
 export function submitScienceAnswer({session,answer,answeredAt=new Date().toISOString()}={}){
   if(!session||session.completed||session.index>=session.questions.length)return {accepted:false};
   const question=session.questions[session.index];
-  const isCorrect=String(answer)===String(question.answer);
-  if(isCorrect){session.correct+=1;session.streak+=1;session.bestStreak=Math.max(session.bestStreak,session.streak);}else{session.wrong+=1;session.streak=0;}
-  const earned=isCorrect?10+Math.min(10,Math.floor(Math.max(session.streak-1,0)/3)*2):0;
-  session.points+=earned;
-  const attempt=Object.freeze({mode:session.mode,questionId:question.id,reviewTargetId:question.reviewTargetId||null,concept:question.concept,unit:question.unit,answer:String(answer),correctAnswer:String(question.answer),isCorrect,earned,answeredAt});
+  const table=question.type==='matchingTable';
+  const normalizeNumber=value=>String(value??'').trim().replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[،,\s]/g,'');
+  const correctCount=table?question.rows.filter(row=>String(answer?.[row.id])===String(row.answer)).length:(question.type==='shortAnswer'?normalizeNumber(answer)===normalizeNumber(question.answer):String(answer)===String(question.answer)?1:0);
+  const responseCount=table?question.rows.length:1,wrongCount=responseCount-correctCount,isCorrect=wrongCount===0;
+  if(isCorrect){session.streak+=responseCount;session.bestStreak=Math.max(session.bestStreak,session.streak);}else session.streak=0;
+  const earned=correctCount*10;
+  session.correct+=correctCount;session.wrong+=wrongCount;session.points+=earned;
+  const attempt=Object.freeze({mode:session.mode,questionId:question.id,reviewTargetId:question.reviewTargetId||null,concept:question.concept,unit:question.unit,answer:table?JSON.stringify(answer||{}):String(answer),correctAnswer:table?JSON.stringify(question.answer):String(question.answer),isCorrect,correctCount,wrongCount,earned,answeredAt});
   session.answers.push(attempt);session.index+=1;
   if(session.index>=session.questions.length)session.completed=true;
   return {accepted:true,attempt,question};
@@ -179,7 +189,7 @@ export function submitScienceAnswer({session,answer,answeredAt=new Date().toISOS
 
 export function applyScienceAttempt(progress,attempt){
   const next=cloneProgress(progress);const current=next.concepts[attempt.concept]||{correct:0,wrong:0,last:null};
-  next.concepts[attempt.concept]={correct:current.correct+(attempt.isCorrect?1:0),wrong:current.wrong+(attempt.isCorrect?0:1),last:attempt.answeredAt};
+  next.concepts[attempt.concept]={correct:current.correct+(attempt.correctCount??(attempt.isCorrect?1:0)),wrong:current.wrong+(attempt.wrongCount??(attempt.isCorrect?0:1)),last:attempt.answeredAt};
   next.points+=attempt.earned||0;
   next.attempts.unshift(attempt);next.attempts=next.attempts.slice(0,250);next.updatedAt=attempt.answeredAt;
   return next;
@@ -203,9 +213,9 @@ export function getScienceReviewQuestionIds(progress,{limit=12}={}){
 
 export function getScienceDashboard(progress){
   const attempts=(progress?.attempts||[]).filter(item=>item.mode!=='review');
-  const total=attempts.length;const correct=attempts.filter(item=>item.isCorrect).length;
-  const recent=attempts.slice(0,30);const recentCorrect=recent.filter(item=>item.isCorrect).length;
-  const accuracy=total?Math.round((correct/total)*100):0;const recentAccuracy=recent.length?Math.round((recentCorrect/recent.length)*100):0;
+  const total=attempts.reduce((sum,item)=>sum+(item.correctCount??(item.isCorrect?1:0))+(item.wrongCount??(item.isCorrect?0:1)),0);const correct=attempts.reduce((sum,item)=>sum+(item.correctCount??(item.isCorrect?1:0)),0);
+  const recent=attempts.slice(0,30);const recentTotal=recent.reduce((sum,item)=>sum+(item.correctCount??(item.isCorrect?1:0))+(item.wrongCount??(item.isCorrect?0:1)),0);const recentCorrect=recent.reduce((sum,item)=>sum+(item.correctCount??(item.isCorrect?1:0)),0);
+  const accuracy=total?Math.round((correct/total)*100):0;const recentAccuracy=recentTotal?Math.round((recentCorrect/recentTotal)*100):0;
   const reviewCount=getScienceReviewQuestionIds(progress).length;
   let readiness='ابدأ أول تحدي';
   if(recent.length>=10)readiness=recentAccuracy>=90?'جاهزية قوية':recentAccuracy>=75?'جاهزية جيدة':'تحتاج مراجعة';
