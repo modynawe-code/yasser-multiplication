@@ -282,7 +282,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       const button=event.target.closest('[data-remove-question]');if(!button)return;
       questions=saveGameQuestionBank(questions.filter((_,index)=>index!==Number(button.dataset.removeQuestion)));renderQuestionBank();
     });
-    const route=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(route))open(route);
+    const route=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(route))queueMicrotask(()=>{if(location.hash===`#game-${route}`)open(route);});
     byId('independentPlayView')?.addEventListener('click',event=>{
       const button=event.target.closest('[data-independent-verdict]');if(!button)return;
       const verdict=button.dataset.independentVerdict;
