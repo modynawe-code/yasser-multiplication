@@ -173,10 +173,9 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     byId('independentPlayTitle').textContent=game==='dice'?'النرد العشوائي':game==='wheel'?'عجلة الحظ':game==='dots'?'أكمل المربع':game==='letters'?'تحدي الحروف':'خريطة الكنز';
     byId('independentPlayKicker').textContent=game==='dice'?'اختيار عشوائي':game==='wheel'?'دوران واختيار':game==='treasure'?'محطات الخريطة':'تنافس فريقين';
     byId('independentDrawButton').textContent=game==='dice'?'ارمِ النرد':'أدر العجلة';
-    const boardGame=['dots','letters','treasure'].includes(game);
     byId('independentDrawButton').hidden=true;byId('independentResetCycle').hidden=true;byId('independentHistoryWrap').hidden=true;byId('independentPlayActions').hidden=true;byId('independentResult').hidden=false;
     byId('independentResult').innerHTML='<span>النتيجة تظهر هنا</span>';
-    byId('independentPlayView').hidden=false;renderStage();if(game==='dots')startDotsBoxes();if(game==='letters')startLettersChallenge();renderHistory();showView('independentGamesView');
+    renderStage();if(game==='dots')startDotsBoxes();if(game==='letters')startLettersChallenge();renderHistory();showView('independentGameView');
   }
   function draw(){
     const pool=drawPool();if(activeGame==='dots'||!pool.length){status(activeGame==='wheel'&&wheelMode==='groups'?'أضف مجموعة واحدة على الأقل لعجلة الحظ.':'أضف مشاركين أولًا.');return;}
@@ -228,17 +227,17 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
   function resetCycle(){if(animationTimer)return;remaining=[...drawPool()];const target=byId('independentResult');if(target)target.innerHTML='<span>بدأت دورة جديدة</span>';}
   function enter(){
     onBeforeEnter?.();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode','xo-game-mode','rps-game-mode');document.body.classList.add('independent-games-mode');
-    byId('independentPlayView').hidden=true;renderParticipants();renderGroups();renderStage();showView('independentGamesView');
+    renderParticipants();renderGroups();renderStage();showView('independentGamesView');
   }
   function leave(){
     stopAnimation();
-    document.body.classList.remove('independent-games-mode');byId('independentPlayView').hidden=true;
+    document.body.classList.remove('independent-games-mode');
   }
   function bind(){
     if(bound)return;bound=true;ensureInteractiveGamesShell();
     byId('independentGamesOpenBtn')?.addEventListener('click',enter);
     byId('independentGamesBack')?.addEventListener('click',()=>{leave();onExitToHub?.();});
-    byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentPlayView').hidden=true;byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;showView('independentGamesView');});
+    byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;showView('independentGamesView');});
     byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();const input=byId('independentParticipantInput');addNames(input.value);input.value='';input.focus();});
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});
     byId('independentNoRepeat')?.addEventListener('change',event=>{cycleMode=event.target.checked;remaining=[...drawPool()];});

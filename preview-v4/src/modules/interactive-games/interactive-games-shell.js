@@ -45,8 +45,13 @@ export function ensureInteractiveGamesShell(){
           <button class="independent-game-card" data-independent-game="letters"><span class="independent-game-art letters-art" aria-hidden="true"><img src="assets/wafy-games/tileletters.png" alt="" /></span><span class="independent-game-copy"><strong>تحدي الحروف</strong><small>العب بلوحة الحروف ومسار الفريق.</small></span><span class="independent-play">ابدأ</span></button>
           <button class="independent-game-card" data-independent-game="dice"><span class="independent-game-art dice-art" aria-hidden="true"><img src="assets/wafy-games/tiledice.png" alt="" /></span><span class="independent-game-copy"><strong>النرد</strong><small>ارم النرد أو رج الجهاز لاختيار الاسم.</small></span><span class="independent-play">ابدأ</span></button>
         </div>
-      </section>
-      <section id="independentPlayView" class="independent-play-view card" hidden aria-live="polite">
+    </div>`;
+  main.appendChild(shell);
+  const gameView=document.createElement('section');
+  gameView.id='independentGameView';gameView.className='view';
+  gameView.innerHTML=`
+    <div class="independent-games-shell">
+      <section id="independentPlayView" class="independent-play-view card" aria-live="polite">
         <div class="independent-play-head"><button class="icon-btn" id="independentPlayBack">الألعاب</button><div><div class="kicker" id="independentPlayKicker">اختيار عشوائي</div><h2 id="independentPlayTitle">النرد العشوائي</h2></div></div>
         <div class="independent-stage" id="independentStage"></div>
         <div class="independent-result" id="independentResult" role="status" aria-live="polite"><span>النتيجة تظهر هنا</span></div>
@@ -54,5 +59,5 @@ export function ensureInteractiveGamesShell(){
         <div class="independent-history-wrap" id="independentHistoryWrap"><strong>آخر الاختيارات</strong><ol id="independentHistory" class="independent-history"></ol></div>
       </section>
     </div>`;
-  main.appendChild(shell);
+  main.appendChild(gameView);
 }
