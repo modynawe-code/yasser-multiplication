@@ -238,7 +238,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     if(bound)return;bound=true;ensureInteractiveGamesShell();
     byId('independentGamesOpenBtn')?.addEventListener('click',enter);
     byId('independentGamesBack')?.addEventListener('click',()=>{leave();onExitToHub?.();});
-    byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;if(location.hash.startsWith('#game-'))window.history.replaceState(null,'',location.pathname+location.search);showView('independentGamesView');});
+    byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;renderParticipants();renderGroups();renderStage();renderHistory();if(location.hash.startsWith('#game-'))window.history.replaceState(null,'',location.pathname+location.search);showView('independentGamesView');});
     document.querySelectorAll('[data-independent-game]').forEach(link=>link.addEventListener('click',event=>{
       event.preventDefault();
       event.stopPropagation();
