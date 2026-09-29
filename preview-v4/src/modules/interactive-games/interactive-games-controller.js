@@ -5,7 +5,8 @@ import {GAME_QUESTION_BANK,GAME_QUESTION_BANK_VERSION} from './game-question-ban
 import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.js';
 import {newLettersGame,pickLetterCell,startLettersGame,verdictLetterCell} from './letters-challenge-engine.js';
 import {newTreasureGame,setTreasurePlayer,startTreasureGame,stopsFor,TREASURE_ART,verdictTreasureGame} from './treasure-map-engine.js';
-import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-5';
+import {answerPassParcelQuestion,createPassParcelGame,currentPassParcelHolder,passParcelToNext,startPassParcelRound,stopPassParcelRound} from './pass-the-parcel-engine.js?v=20260929-1';
+import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-6';
 
 function byId(id){return document.getElementById(id);}
 function showView(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -15,8 +16,10 @@ const diePips=face=>(DIE_PIPS[face]||DIE_PIPS[5]).map(position=>`<i class="pip p
 
 export function createInteractiveGamesController({onBeforeEnter,onExitToHub,random=Math.random}={}){
   const storedSetup=loadIndependentGameSetup();
-  let bound=false,participants=storedSetup.participants,groups=storedSetup.groups,wheelMode='students',remaining=[...storedSetup.participants],history=[],questions=loadGameQuestionBank(undefined,GAME_QUESTION_BANK,GAME_QUESTION_BANK_VERSION),askedQuestionIds=[],activeQuestion=null,drawnNames=[],drawnIndex=0,drawCycleRestarted=false,activeGame='dice',animationTimer=null,cycleMode=true,dotsGame=null,lettersGame=null,treasureGame=null,pendingEdge=null,diceCount=1,diceFace=5,shakeEnabled=false,lastMotionAt=0,treasurePick='random',recordMode='play';
+  let bound=false,participants=storedSetup.participants,groups=storedSetup.groups,wheelMode='students',remaining=[...storedSetup.participants],history=[],questions=loadGameQuestionBank(undefined,GAME_QUESTION_BANK,GAME_QUESTION_BANK_VERSION),askedQuestionIds=[],activeQuestion=null,drawnNames=[],drawnIndex=0,drawCycleRestarted=false,activeGame='dice',animationTimer=null,parcelTimer=null,cycleMode=true,dotsGame=null,lettersGame=null,treasureGame=null,parcelGame=null,pendingEdge=null,diceCount=1,diceFace=5,shakeEnabled=false,lastMotionAt=0,treasurePick='random',recordMode='play';
+  function clearParcelTimer(){if(parcelTimer){clearTimeout(parcelTimer);parcelTimer=null;}}
   function stopAnimation(){
+    clearParcelTimer();
     if(animationTimer){clearTimeout(animationTimer);animationTimer=null;}
     const drawButton=byId('independentDrawButton');if(drawButton)drawButton.disabled=false;
     const resetButton=byId('independentResetCycle');if(resetButton)resetButton.disabled=false;
@@ -60,9 +63,11 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       return`${heading}<li>${escapeHtml(question.text)}${question.answer?` <small>— ${escapeHtml(question.answer)}</small>`:''}${review?` <small>• ${review}</small>`:''}<button type="button" data-remove-question="${escapeHtml(question.id)}" aria-label="حذف السؤال">×</button></li>`;
     }).join(''):'<li>أضف أسئلة لبدء اللعب.</li>';
   }
-  function chooseQuestion(){
-    const result=nextGameQuestion(questions,askedQuestionIds);activeQuestion=result.question;askedQuestionIds=result.askedIds;return result;
+  function chooseQuestion(pool=questions){
+    const result=nextGameQuestion(pool,askedQuestionIds);activeQuestion=result.question;askedQuestionIds=result.askedIds;return result;
   }
+  function parcelQuestionPool(){return questions.filter(question=>Boolean(question.category)&&isPlayableGameQuestion(question));}
+  function chooseParcelQuestion(){return chooseQuestion(parcelQuestionPool());}
   function questionUnavailableMessage(){return questions.length?'انتهت أسئلة البنك المستخدمة في هذه الجولة.':'أضف أسئلة في بنك الألعاب.';}
   function renderQuestion(){
     if(!activeQuestion)return'';
@@ -76,6 +81,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     else if(activeGame==='wheel')host.innerHTML=`<div class="wafy-wheel-screen"><label class="wheel-mode">الاختيار من<select id="independentWheelMode"><option value="students" ${wheelMode==='students'?'selected':''}>أسماء الطلاب</option><option value="groups" ${wheelMode==='groups'?'selected':''}>المجموعات</option></select></label><div class="independent-wheel-wrap"><span class="independent-wheel-pointer" aria-hidden="true"><img src="assets/wafy-games/wheelpointer.png" alt="" /></span><img class="independent-wheel-rim" src="assets/wafy-games/wheelrim.png" alt="" /><div class="independent-wheel" id="independentWheel" role="img" aria-label="عجلة الحظ"></div><button type="button" class="independent-wheel-hub" data-game-draw aria-label="دور"><img src="assets/wafy-games/wheelhub.png" alt="" /><span>دور</span></button></div><p class="wafy-wheel-hint">اضغط العجلة لتدور</p><label class="wafy-source-toggle"><input type="checkbox" data-dice-no-repeat ${cycleMode?'checked':''} /><span><strong>لا تكرر من اختير</strong><small data-cycle-count></small></span><span class="wafy-toggle" aria-hidden="true"></span></label></div>`;
     else if(activeGame==='dots')renderDotsBoxes(host);
     else if(activeGame==='letters')renderLettersChallenge(host);
+    else if(activeGame==='parcel')renderPassParcel(host);
     else renderTreasureMap(host);
     if(activeGame==='wheel')renderWheel();
   }
@@ -143,6 +149,60 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     const progress=`المحطة ${arabicNumber(Math.min(treasureGame.at+1,treasureGame.stops))} من ${arabicNumber(treasureGame.stops)}`;
     host.innerHTML=`<div class="treasure-game"><div class="treasure-map-art ${art===TREASURE_ART.portrait?'portrait':''}" role="img" aria-label="خريطة كنز وافي">${stops}</div><div class="treasure-progress">${treasureGame.finished?'اكتملت خريطة الكنز':progress}</div>${picker}${treasureGame.answering&&!treasureGame.finished?`<div class="treasure-current-player">دور ${escapeHtml(treasureGame.answering)}</div>${activeQuestion?renderQuestion():`<p>${questionUnavailableMessage()}</p>`}`:''}${treasureGame.finished?'<button type="button" class="btn primary" data-treasure-restart>خريطة جديدة</button>':''}</div>`;
   }
+  function parcelScoresMarkup(){
+    const roster=parcelGame?.roster||participants;
+    const scores=parcelGame?.scores||{};
+    return `<div class="parcel-scoreboard">${roster.map(name=>`<span class="${parcelGame?.winner===name?'winner':''}"><strong>${escapeHtml(name)}</strong><b>${arabicNumber(scores[name]||0)}</b></span>`).join('')}</div>`;
+  }
+  function renderPassParcel(host=byId('independentStage')){
+    if(!host)return;
+    if(!parcelGame)parcelGame=createPassParcelGame(participants,{targetScore:5});
+    const holder=currentPassParcelHolder(parcelGame);
+    if(participants.length<2){
+      host.innerHTML='<p class="wafy-empty-game">أضف مشاركين اثنين على الأقل لبدء مرّر الطرد.</p>';return;
+    }
+    if(parcelGame.status==='finished'){
+      host.innerHTML=`<div class="parcel-game">${parcelScoresMarkup()}<div class="parcel-winner"><span aria-hidden="true">🏆</span><strong>فاز ${escapeHtml(parcelGame.winner||'')}</strong><small>وصل إلى ${arabicNumber(parcelGame.targetScore)} نقاط</small></div><button type="button" class="btn primary parcel-main-action" data-parcel-reset>لعبة جديدة</button></div>`;return;
+    }
+    if(parcelGame.status==='passing'){
+      host.innerHTML=`<div class="parcel-game">${parcelScoresMarkup()}<div class="parcel-passing"><span class="parcel-gift" aria-hidden="true">🎁</span><small>الطرد الآن عند</small><strong>${escapeHtml(holder)}</strong><p>مرّر الجهاز للاعب التالي بسرعة. المؤقت عشوائي ولن يظهر العد.</p><button type="button" class="btn primary parcel-main-action" data-parcel-pass>مرّر الطرد</button></div></div>`;return;
+    }
+    if(parcelGame.status==='question'){
+      host.innerHTML=`<div class="parcel-game">${parcelScoresMarkup()}<div class="parcel-stop"><span aria-hidden="true">⏰</span><strong>وقف! الطرد عند ${escapeHtml(holder)}</strong></div>${activeQuestion?renderQuestion():'<p class="dots-feedback">لا توجد أسئلة عامة جاهزة للعب حاليًا.</p>'}</div>`;return;
+    }
+    const roundLabel=parcelGame.round?`الجولة ${arabicNumber(parcelGame.round)} انتهت`:'جاهزين؟';
+    host.innerHTML=`<div class="parcel-game">${parcelScoresMarkup()}<div class="parcel-ready"><span class="parcel-gift" aria-hidden="true">🎁</span><strong>${roundLabel}</strong><p>أول لاعب يصل إلى ${arabicNumber(parcelGame.targetScore)} نقاط يفوز. مدة التمرير عشوائية بين ١٢ و٢٥ ثانية.</p><button type="button" class="btn primary parcel-main-action" data-parcel-start>${parcelGame.round?'ابدأ الجولة التالية':'ابدأ التمرير'}</button></div></div>`;
+  }
+  function startParcelRound(){
+    if(participants.length<2){status('أضف مشاركين اثنين على الأقل قبل بدء مرّر الطرد.');return;}
+    clearParcelTimer();
+    if(!parcelGame||JSON.stringify(parcelGame.roster)!==JSON.stringify(participants))parcelGame=createPassParcelGame(participants,{targetScore:5});
+    parcelGame=startPassParcelRound(parcelGame,{random,minMs:12000,maxMs:25000});
+    activeQuestion=null;renderPassParcel();
+    parcelTimer=setTimeout(()=>{
+      parcelTimer=null;
+      if(parcelGame?.status!=='passing')return;
+      const picked=chooseParcelQuestion().question;
+      if(!picked){
+        parcelGame=Object.freeze({...parcelGame,status:'round_complete',durationMs:0});
+        status('لا توجد أسئلة عامة جاهزة للعب حاليًا.');
+        renderPassParcel();return;
+      }
+      parcelGame=stopPassParcelRound(parcelGame,picked.id);
+      renderPassParcel();
+    },parcelGame.durationMs);
+  }
+  function passParcel(){
+    if(parcelGame?.status!=='passing')return;
+    parcelGame=passParcelToNext(parcelGame);renderPassParcel();
+  }
+  function resolveParcelAnswer(verdict){
+    if(parcelGame?.status!=='question'||!activeQuestion)return;
+    parcelGame=answerPassParcelQuestion(parcelGame,verdict);activeQuestion=null;renderPassParcel();
+  }
+  function resetParcel(){
+    clearParcelTimer();askedQuestionIds=[];activeQuestion=null;parcelGame=createPassParcelGame(participants,{targetScore:5});renderPassParcel();
+  }
   function startDotsBoxes(){
     if(participants.length<2){status('أضف مشاركين اثنين على الأقل قبل بدء أكمل المربع.');return;}
     const game=!dotsGame||dotsGame.started||dotsGame.finished?createDotsBoxesGame(participants,{random}):dotsGame;dotsGame=startDotsBoxesGame(game,{random});pendingEdge=null;renderDotsBoxes();
@@ -180,16 +240,16 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     wheel.innerHTML=entries.map((name,index)=>`<span class="independent-wheel-label" style="--angle:${segment*index+segment/2}deg">${escapeHtml(name)}</span>`).join('');
   }
   function open(game){
-    if(!['dice','wheel','dots','letters','treasure'].includes(game))return;
+    if(!['dice','wheel','dots','letters','treasure','parcel'].includes(game))return;
     stopAnimation();
-    activeGame=game;cycleMode=byId('independentNoRepeat')?.checked!==false;dotsGame=null;lettersGame=null;treasureGame=null;pendingEdge=null;askedQuestionIds=[];activeQuestion=null;
+    activeGame=game;cycleMode=byId('independentNoRepeat')?.checked!==false;dotsGame=null;lettersGame=null;treasureGame=null;parcelGame=null;pendingEdge=null;askedQuestionIds=[];activeQuestion=null;
     remaining=[...drawPool()];
-    byId('independentPlayTitle').textContent=game==='dice'?'النرد العشوائي':game==='wheel'?'عجلة الحظ':game==='dots'?'أكمل المربع':game==='letters'?'تحدي الحروف':'خريطة الكنز';
-    byId('independentPlayKicker').textContent=game==='dice'?'اختيار عشوائي':game==='wheel'?'دوران واختيار':game==='treasure'?'محطات الخريطة':'تنافس فريقين';
+    byId('independentPlayTitle').textContent=game==='dice'?'النرد العشوائي':game==='wheel'?'عجلة الحظ':game==='dots'?'أكمل المربع':game==='letters'?'تحدي الحروف':game==='parcel'?'مرّر الطرد':'خريطة الكنز';
+    byId('independentPlayKicker').textContent=game==='dice'?'اختيار عشوائي':game==='wheel'?'دوران واختيار':game==='treasure'?'محطات الخريطة':game==='parcel'?'لعبة عائلية':'تنافس فريقين';
     byId('independentDrawButton').textContent=game==='dice'?'ارمِ النرد':'أدر العجلة';
     byId('independentDrawButton').hidden=true;byId('independentResetCycle').hidden=true;byId('independentHistoryWrap').hidden=true;byId('independentPlayActions').hidden=true;byId('independentResult').hidden=false;
     byId('independentResult').hidden=true;byId('independentResult').innerHTML='<span>النتيجة تظهر هنا</span>';
-    renderStage();if(game==='dots'){dotsGame=createDotsBoxesGame(participants,{random});renderDotsBoxes();}if(game==='letters'){lettersGame=newLettersGame(participants,random);renderLettersChallenge();}renderHistory();showView('independentGameView');
+    renderStage();if(game==='dots'){dotsGame=createDotsBoxesGame(participants,{random});renderDotsBoxes();}if(game==='letters'){lettersGame=newLettersGame(participants,random);renderLettersChallenge();}if(game==='parcel'){parcelGame=createPassParcelGame(participants,{targetScore:5});renderPassParcel();}renderHistory();showView('independentGameView');
   }
   function draw(){
     const pool=drawPool();if(activeGame==='dots'||!pool.length){status(activeGame==='wheel'&&wheelMode==='groups'?'أضف مجموعة واحدة على الأقل لعجلة الحظ.':'أضف مشاركين أولًا.');return;}
@@ -260,7 +320,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       window.history.pushState(null,'',`${location.pathname}${location.search}#game-${game}`);
       open(game);
     }));
-    window.addEventListener('hashchange',()=>{const game=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(game))open(game);});
+    window.addEventListener('hashchange',()=>{const game=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure','parcel'].includes(game))open(game);});
     byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();const input=byId('independentParticipantInput');addNames(input.value);input.value='';input.focus();});
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});
     byId('independentNoRepeat')?.addEventListener('change',event=>{cycleMode=event.target.checked;remaining=[...drawPool()];});
@@ -271,7 +331,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       if(event.target.matches('[data-dice-shake]')){setShake(event.target.checked);return;}
     });
     byId('independentStage')?.addEventListener('click',event=>{
-      const quickDraw=event.target.closest('[data-game-draw]'),diceCountButton=event.target.closest('[data-dice-count]'),mapPick=event.target.closest('[data-treasure-pick]'),record=event.target.closest('[data-record-mode]'),start=event.target.closest('[data-dots-start]'),edge=event.target.closest('[data-dots-edge]'),letterStart=event.target.closest('[data-letters-start]'),letter=event.target.closest('[data-letter-cell]'),letterRestart=event.target.closest('[data-letters-restart]'),treasureStart=event.target.closest('[data-treasure-start]'),treasurePlayer=event.target.closest('[data-treasure-player]'),treasureRestart=event.target.closest('[data-treasure-restart]'),answer=event.target.closest('[data-dots-answer]'),restart=event.target.closest('[data-dots-restart]');
+      const quickDraw=event.target.closest('[data-game-draw]'),diceCountButton=event.target.closest('[data-dice-count]'),mapPick=event.target.closest('[data-treasure-pick]'),record=event.target.closest('[data-record-mode]'),start=event.target.closest('[data-dots-start]'),edge=event.target.closest('[data-dots-edge]'),letterStart=event.target.closest('[data-letters-start]'),letter=event.target.closest('[data-letter-cell]'),letterRestart=event.target.closest('[data-letters-restart]'),treasureStart=event.target.closest('[data-treasure-start]'),treasurePlayer=event.target.closest('[data-treasure-player]'),treasureRestart=event.target.closest('[data-treasure-restart]'),parcelStart=event.target.closest('[data-parcel-start]'),parcelPass=event.target.closest('[data-parcel-pass]'),parcelReset=event.target.closest('[data-parcel-reset]'),answer=event.target.closest('[data-dots-answer]'),restart=event.target.closest('[data-dots-restart]');
       if(quickDraw){draw();return;}
       if(diceCountButton){diceCount=Number(diceCountButton.dataset.diceCount)||1;renderDice();return;}
       if(mapPick){treasurePick=mapPick.dataset.treasurePick==='controlled'?'controlled':'random';byId('independentStage')?.querySelectorAll('[data-treasure-pick]').forEach(button=>button.classList.toggle('selected',button===mapPick));return;}
@@ -284,6 +344,9 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       if(treasureStart){startTreasureMap();return;}
       if(treasurePlayer){treasureGame=setTreasurePlayer(treasureGame,treasurePlayer.dataset.treasurePlayer);chooseQuestion();renderTreasureMap();return;}
       if(treasureRestart){const {roster,stops,pick}=treasureGame;treasureGame=startTreasureGame(newTreasureGame(roster,stops,pick),random);activeQuestion=treasureGame.answering?chooseQuestion().question:null;renderTreasureMap();return;}
+      if(parcelStart){startParcelRound();return;}
+      if(parcelPass){passParcel();return;}
+      if(parcelReset){resetParcel();return;}
       if(answer){resolveDotsAnswer(answer.dataset.dotsAnswer);return;}
       if(restart)startDotsBoxes();
     });
@@ -297,13 +360,14 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       const button=event.target.closest('[data-remove-question]');if(!button)return;
       questions=saveGameQuestionBank(questions.filter(question=>question.id!==button.dataset.removeQuestion));renderQuestionBank();
     });
-    const route=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(route))queueMicrotask(()=>{if(location.hash===`#game-${route}`)open(route);});
+    const route=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure','parcel'].includes(route))queueMicrotask(()=>{if(location.hash===`#game-${route}`)open(route);});
     byId('independentPlayView')?.addEventListener('click',event=>{
       const button=event.target.closest('[data-independent-verdict]');if(!button)return;
       const verdict=button.dataset.independentVerdict;
       if(activeGame==='dots'){resolveDotsAnswer(verdict);return;}
       if(activeGame==='letters'){resolveLettersAnswer(verdict);return;}
       if(activeGame==='treasure'){resolveTreasureAnswer(verdict);return;}
+      if(activeGame==='parcel'){resolveParcelAnswer(verdict);return;}
       drawnIndex++;
       if(drawnIndex<drawnNames.length){chooseQuestion();renderDrawQuestion();}
       else{const result=byId('independentResult');if(result)result.innerHTML=`<small>${verdict==='correct'?'إجابة صحيحة':verdict==='wrong'?'إجابة خاطئة':'لم يجب'}</small><strong>اكتملت السحبة</strong>`;activeQuestion=null;}
