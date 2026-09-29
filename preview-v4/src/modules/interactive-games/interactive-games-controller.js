@@ -1,7 +1,7 @@
 import {drawParticipants,normalizeParticipants} from './selection-engine.js';
 import {answerDotsBoxesEdge,createDotsBoxesGame,pickDotsBoxesEdge,startDotsBoxesGame} from './dots-boxes-engine.js';
-import {loadGameQuestionBank,nextGameQuestion,orderCurriculumQuestions,saveGameQuestionBank} from './question-bank.js';
-import {PRIMARY_QUESTION_BANK,PRIMARY_QUESTION_BANK_VERSION} from './primary-question-bank.js';
+import {isPlayableGameQuestion,loadGameQuestionBank,nextGameQuestion,orderCurriculumQuestions,saveGameQuestionBank} from './question-bank.js?v=20260929-bank1';
+import {GAME_QUESTION_BANK,GAME_QUESTION_BANK_VERSION} from './game-question-bank.js?v=20260929-bank1';
 import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.js';
 import {newLettersGame,pickLetterCell,startLettersGame,verdictLetterCell} from './letters-challenge-engine.js';
 import {newTreasureGame,setTreasurePlayer,startTreasureGame,stopsFor,TREASURE_ART,verdictTreasureGame} from './treasure-map-engine.js';
@@ -15,7 +15,7 @@ const diePips=face=>(DIE_PIPS[face]||DIE_PIPS[5]).map(position=>`<i class="pip p
 
 export function createInteractiveGamesController({onBeforeEnter,onExitToHub,random=Math.random}={}){
   const storedSetup=loadIndependentGameSetup();
-  let bound=false,participants=storedSetup.participants,groups=storedSetup.groups,wheelMode='students',remaining=[...storedSetup.participants],history=[],questions=loadGameQuestionBank(undefined,PRIMARY_QUESTION_BANK,PRIMARY_QUESTION_BANK_VERSION),askedQuestionIds=[],activeQuestion=null,drawnNames=[],drawnIndex=0,drawCycleRestarted=false,activeGame='dice',animationTimer=null,cycleMode=true,dotsGame=null,lettersGame=null,treasureGame=null,pendingEdge=null,diceCount=1,diceFace=5,shakeEnabled=false,lastMotionAt=0,treasurePick='random',recordMode='play';
+  let bound=false,participants=storedSetup.participants,groups=storedSetup.groups,wheelMode='students',remaining=[...storedSetup.participants],history=[],questions=loadGameQuestionBank(undefined,GAME_QUESTION_BANK,GAME_QUESTION_BANK_VERSION),askedQuestionIds=[],activeQuestion=null,drawnNames=[],drawnIndex=0,drawCycleRestarted=false,activeGame='dice',animationTimer=null,cycleMode=true,dotsGame=null,lettersGame=null,treasureGame=null,pendingEdge=null,diceCount=1,diceFace=5,shakeEnabled=false,lastMotionAt=0,treasurePick='random',recordMode='play';
   function stopAnimation(){
     if(animationTimer){clearTimeout(animationTimer);animationTimer=null;}
     const drawButton=byId('independentDrawButton');if(drawButton)drawButton.disabled=false;
@@ -43,8 +43,22 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
   }
   function renderQuestionBank(){
     const count=byId('independentQuestionCount'),host=byId('independentQuestionList');
-    if(count)count.textContent=`${arabicNumber(questions.length)} سؤال`;
-    if(host){let previousGroup='';host.innerHTML=questions.length?orderCurriculumQuestions(questions).map((question,index)=>{const grouped=question.grade!==undefined&&question.grade!==null&&question.grade!==''&&question.semester!==undefined&&question.semester!==null&&question.semester!==''&&Boolean(question.subject)&&Number.isFinite(Number(question.grade))&&Number.isFinite(Number(question.semester)),group=grouped?`الصف ${arabicNumber(Number(question.grade))} · الفصل ${arabicNumber(Number(question.semester))} · ${escapeHtml(question.subject)}`:'أسئلة إضافية';const heading=group===previousGroup?'':`<li class="question-bank-group" role="presentation">${group}</li>`;previousGroup=group;return`${heading}<li>${escapeHtml(question.text)}${question.answer?` <small>— ${escapeHtml(question.answer)}</small>`:''}<button type="button" data-remove-question="${index}" aria-label="حذف السؤال">×</button></li>`;}).join(''):'<li>أضف أسئلة لبدء اللعب.</li>';}
+    const playable=questions.filter(isPlayableGameQuestion).length;
+    if(count)count.textContent=`${arabicNumber(questions.length)} سؤال · ${arabicNumber(playable)} جاهز للعب`;
+    if(!host)return;
+    let previousGroup='';
+    const statusLabel=question=>question.reviewStatus==='pending_review'?'قيد المراجعة':question.reviewStatus==='needs_revision'?'تحتاج صياغة':question.reviewStatus==='duplicate'?'مكرر':'';
+    host.innerHTML=questions.length?orderCurriculumQuestions(questions).map(question=>{
+      const curriculum=question.grade!==undefined&&question.grade!==null&&question.grade!==''&&question.semester!==undefined&&question.semester!==null&&question.semester!==''&&Boolean(question.subject)&&Number.isFinite(Number(question.grade))&&Number.isFinite(Number(question.semester));
+      const group=curriculum
+        ?`الصف ${arabicNumber(Number(question.grade))} · الفصل ${arabicNumber(Number(question.semester))} · ${escapeHtml(question.subject)}`
+        :question.category
+          ?`${escapeHtml(question.category)}${question.subCategory?` · ${escapeHtml(question.subCategory)}`:''}`
+          :'أسئلة إضافية';
+      const heading=group===previousGroup?'':`<li class="question-bank-group" role="presentation">${group}</li>`;previousGroup=group;
+      const review=statusLabel(question);
+      return`${heading}<li>${escapeHtml(question.text)}${question.answer?` <small>— ${escapeHtml(question.answer)}</small>`:''}${review?` <small>• ${review}</small>`:''}<button type="button" data-remove-question="${escapeHtml(question.id)}" aria-label="حذف السؤال">×</button></li>`;
+    }).join(''):'<li>أضف أسئلة لبدء اللعب.</li>';
   }
   function chooseQuestion(){
     const result=nextGameQuestion(questions,askedQuestionIds);activeQuestion=result.question;askedQuestionIds=result.askedIds;return result;
@@ -281,7 +295,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     });
     byId('independentQuestionList')?.addEventListener('click',event=>{
       const button=event.target.closest('[data-remove-question]');if(!button)return;
-      questions=saveGameQuestionBank(questions.filter((_,index)=>index!==Number(button.dataset.removeQuestion)));renderQuestionBank();
+      questions=saveGameQuestionBank(questions.filter(question=>question.id!==button.dataset.removeQuestion));renderQuestionBank();
     });
     const route=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(route))queueMicrotask(()=>{if(location.hash===`#game-${route}`)open(route);});
     byId('independentPlayView')?.addEventListener('click',event=>{
