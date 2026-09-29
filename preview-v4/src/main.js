@@ -24,7 +24,7 @@ import { createFamilyParentReportCapabilityRegistry } from './modules/parent/fam
 import { hydrateFamilyParentLearners } from './modules/parent/family-parent-shell-registry.js';
 import { familyYasserReport,familyKhaledReport,familyMashaalReport,familyYasserOverview,familyKhaledOverview,familyMashaalOverview,familyYasserSessions,familyKhaledSessions,familyMashaalSessions } from './modules/parent/family-parent-renderers.js';
 import { createGamesController } from './modules/games/games-controller.js';
-import { createInteractiveGamesController } from './modules/interactive-games/interactive-games-controller.js?v=20260929-2';
+import { createInteractiveGamesController } from './modules/interactive-games/interactive-games-controller.js?v=20260929-3';
 import { createGameLearningAdapter } from './modules/games/learning/game-learning-providers.js';
 import { createChallengePresentationRegistry } from './modules/games/core/challenge-presentation-registry.js';
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
