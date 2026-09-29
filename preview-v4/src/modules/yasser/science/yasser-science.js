@@ -85,6 +85,10 @@ function ensureShell(){
     <div class="science-image-modal-stage"><img id="scienceImageModalImg" alt="" /></div>
   </div>`;
   main.appendChild(view);
+  const examView=document.createElement('section');examView.id='yasserScienceDivisionExamView';examView.className='view yasser-science-division-page';
+  examView.innerHTML=`<div class="yasser-science-shell yasser-science-exam-shell"><header class="yasser-science-head"><div><div class="kicker">علوم ياسر</div><h1>اختبار انقسام الخلايا</h1><p id="scienceDivisionExamPageCount">اختبار شامل للدرس</p></div><button class="icon-btn" id="scienceDivisionExamBack" type="button">العودة للعلوم</button></header></div>`;
+  main.appendChild(examView);
+  const examShell=examView.querySelector('.yasser-science-exam-shell');examShell.append(document.getElementById('scienceSession'),document.getElementById('scienceResult'));
 }
 
 function renderUnitSwitch(){
@@ -133,19 +137,20 @@ function renderDashboard(){
 }
 
 function modeLabel(mode){return {quick:'تدريب سريع',images:'تحدي الصور',exam:'اختبار المدرسة',review:'مراجعة الأخطاء'}[mode]||'علوم';}
-function showLanding(){clearTimer();closeImageZoom();session=null;document.getElementById('scienceSession').hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceUnitSwitch').hidden=false;document.getElementById('scienceModes').hidden=false;document.getElementById('scienceUnitCard').hidden=false;renderUnitSwitch();renderUnitCard();renderDashboard();}
+function showLanding(){clearTimer();closeImageZoom();session=null;show('yasserScienceView');document.getElementById('scienceExit').textContent='إنهاء الجولة';document.getElementById('scienceSession').hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceUnitSwitch').hidden=false;document.getElementById('scienceModes').hidden=false;document.getElementById('scienceUnitCard').hidden=false;renderUnitSwitch();renderUnitCard();renderDashboard();}
 function selectUnit(unitId){if(!YASSER_SCIENCE_UNITS.some(unit=>unit.id===unitId))return;activeUnitId=unitId;showLanding();}
 
 function startScience(mode,reviewIds=[],questionOverride=null){
-  clearTimer();closeImageZoom();const scopedProgress=unitProgress(),allQuestions=questionOverride||unitQuestions(),imageQuestions=visualUnitQuestions(),questions=mode==='images'?imageQuestions:allQuestions;
+  clearTimer();closeImageZoom();const dedicatedExam=Boolean(questionOverride&&mode==='exam'),scopedProgress=unitProgress(),allQuestions=questionOverride||unitQuestions(),imageQuestions=visualUnitQuestions(),questions=mode==='images'?imageQuestions:allQuestions;
   if(mode==='images'&&!questions.length){showLanding();return;}
   const ids=mode==='review'?(reviewIds.length?reviewIds:getScienceReviewQuestionIds(scopedProgress)):[];
   const count=mode==='images'?Math.min(10,questions.length):(questionOverride&&mode==='exam'?questions.length:undefined);
   session=createScienceSession({mode,count,progress:scopedProgress,questions,reviewQuestionIds:ids});
   if(!session.questions.length){showLanding();return;}
+  show(dedicatedExam?'yasserScienceDivisionExamView':'yasserScienceView');document.getElementById('scienceExit').textContent=dedicatedExam?'إنهاء الاختبار':'إنهاء الجولة';if(dedicatedExam)document.getElementById('scienceDivisionExamPageCount').textContent=`اختبار شامل • ${session.questions.length} سؤالًا`;
   document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;document.getElementById('scienceCellDivisionExam').hidden=true;const reviewEntry=document.getElementById('scienceReviewEntry');if(reviewEntry)reviewEntry.hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;
   const unit=currentUnit(),stage=unit.status==='current'?currentChapter().shortLabel:'مراجعة الوحدة';
-  document.getElementById('scienceModeLabel').textContent=`${modeLabel(session.mode)} • ${unit.shortLabel} • ${stage}`;renderQuestion();
+  document.getElementById('scienceModeLabel').textContent=dedicatedExam?`اختبار شامل • درس انقسام الخلايا • ${session.questions.length} سؤالًا`:`${modeLabel(session.mode)} • ${unit.shortLabel} • ${stage}`;renderQuestion();
 }
 
 function renderQuestion(){
@@ -172,7 +177,7 @@ function answerQuestion(choice,button){
 
 function finishScience(){
   if(!session)return;clearTimer();closeImageZoom();progress=applyScienceSessionSummary(progress,session);saveProgress();document.getElementById('scienceSession').hidden=true;document.getElementById('scienceResult').hidden=false;
-  const total=Math.max(session.answers.length,1),pct=Math.round((session.correct/total)*100);document.getElementById('scienceResultScore').textContent=`${pct}%`;document.getElementById('scienceResultCorrect').textContent=String(session.correct);document.getElementById('scienceResultWrong').textContent=String(session.wrong);document.getElementById('scienceResultStreak').textContent=String(session.bestStreak);document.getElementById('scienceResultTitle').textContent=pct>=90?'إتقان قوي':pct>=75?'نتيجة جيدة':'نحتاج جولة مراجعة';document.getElementById('scienceResultCopy').textContent=session.mode==='exam'?`انتهى اختبار ${currentUnit().shortLabel}. الأخطاء محفوظة للمراجعة.`:'الأخطاء انتقلت تلقائيًا للمراجعة الذكية.';
+  const total=Math.max(session.answers.length,1),pct=Math.round((session.correct/total)*100),examName=session.questions.every(question=>question.unit==='division')?'درس انقسام الخلايا':currentUnit().shortLabel;document.getElementById('scienceResultScore').textContent=`${pct}%`;document.getElementById('scienceResultCorrect').textContent=String(session.correct);document.getElementById('scienceResultWrong').textContent=String(session.wrong);document.getElementById('scienceResultStreak').textContent=String(session.bestStreak);document.getElementById('scienceResultTitle').textContent=pct>=90?'إتقان قوي':pct>=75?'نتيجة جيدة':'نحتاج جولة مراجعة';document.getElementById('scienceResultCopy').textContent=session.mode==='exam'?`انتهى اختبار ${examName}. الأخطاء محفوظة للمراجعة.`:'الأخطاء انتقلت تلقائيًا للمراجعة الذكية.';
   const reviewIds=sessionWrongQuestionIds(session),review=document.getElementById('scienceReviewMistakes');review.hidden=!reviewIds.length;review.onclick=()=>startScience('review',reviewIds);
 }
 
@@ -180,7 +185,7 @@ function bind(){
   if(mounted)return;mounted=true;
   document.querySelectorAll('[data-science-mode]').forEach(button=>button.addEventListener('click',()=>{if(!button.disabled)startScience(button.dataset.scienceMode);}));
   document.getElementById('scienceCellDivisionExam')?.addEventListener('click',()=>startScience('exam',[],cellDivisionQuestions()));
-  document.getElementById('scienceExit')?.addEventListener('click',showLanding);document.getElementById('scienceResultHome')?.addEventListener('click',showLanding);document.getElementById('yasserScienceBack')?.addEventListener('click',()=>closeYasserScience());document.getElementById('scienceImageOpen')?.addEventListener('click',openImageZoom);document.getElementById('scienceImageModalClose')?.addEventListener('click',closeImageZoom);document.getElementById('scienceImageModal')?.addEventListener('click',event=>{if(event.target.id==='scienceImageModal')closeImageZoom();});document.addEventListener('keydown',event=>{if(event.key==='Escape')closeImageZoom();});
+  document.getElementById('scienceExit')?.addEventListener('click',showLanding);document.getElementById('scienceResultHome')?.addEventListener('click',showLanding);document.getElementById('yasserScienceBack')?.addEventListener('click',()=>closeYasserScience());document.getElementById('scienceDivisionExamBack')?.addEventListener('click',showLanding);document.getElementById('scienceImageOpen')?.addEventListener('click',openImageZoom);document.getElementById('scienceImageModalClose')?.addEventListener('click',closeImageZoom);document.getElementById('scienceImageModal')?.addEventListener('click',event=>{if(event.target.id==='scienceImageModal')closeImageZoom();});document.addEventListener('keydown',event=>{if(event.key==='Escape')closeImageZoom();});
 }
 
 export function openYasserScience(){ensureStyle();ensureShell();bind();progress=loadProgress();activeUnitId=DEFAULT_YASSER_SCIENCE_UNIT_ID;document.body.classList.remove('intro-mode','yasser-quran-mode','hub-mode','khaled-mode','mashaal-mode');document.body.classList.add('yasser-science-mode');show('yasserScienceView');showLanding();}
