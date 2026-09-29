@@ -11,9 +11,9 @@ export function isLettersBoardFull(board){return board.every(row=>row.every(cell
 export function lettersWinningPath(board,team){
   if(!board?.length||!board[0]?.length)return false;
   const rows=board.length,cols=board[0].length,starts=[];
-  for(let i=0;i<(team==='orange'?rows:cols);i++){const row=team==='orange'?i:0,col=team==='orange'?0:i;if(board[row][col]?.owner===team)starts.push([row,col]);}
+  for(let i=0;i<(team==='orange'?cols:rows);i++){const row=team==='orange'?0:i,col=team==='orange'?i:0;if(board[row][col]?.owner===team)starts.push([row,col]);}
   const seen=new Set(),queue=[...starts];
-  while(queue.length){const[row,col]=queue.shift(),key=`${row},${col}`;if(seen.has(key))continue;seen.add(key);if(team==='orange'?col===cols-1:row===rows-1)return true;for(const[nextRow,nextCol]of lettersNeighbors(row,col,rows,cols))if(board[nextRow][nextCol]?.owner===team)queue.push([nextRow,nextCol]);}
+  while(queue.length){const[row,col]=queue.shift(),key=`${row},${col}`;if(seen.has(key))continue;seen.add(key);if(team==='orange'?row===rows-1:col===cols-1)return true;for(const[nextRow,nextCol]of lettersNeighbors(row,col,rows,cols))if(board[nextRow][nextCol]?.owner===team)queue.push([nextRow,nextCol]);}
   return false;
 }
 export function newLettersGame(roster=[],random=Math.random){const teams={orange:[],green:[]};roster.forEach((name,index)=>teams[index%2?'green':'orange'].push(name));return{board:newLettersBoard(random),teams,turn:'orange',cursor:{orange:0,green:0},started:false,selected:null,winner:null,finished:false};}
