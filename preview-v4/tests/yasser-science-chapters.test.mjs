@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {YASSER_SCIENCE_PLAYABLE_QUESTIONS} from '../src/modules/yasser/science/science-question-bank.js';
+import {YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS} from '../src/modules/yasser/science/science-division-exam.js';
 import {DEFAULT_YASSER_SCIENCE_CHAPTER_ID,DEFAULT_YASSER_SCIENCE_UNIT_ID,YASSER_SCIENCE_CHAPTERS,YASSER_SCIENCE_UNITS,filterScienceProgressByChapter,filterScienceProgressByUnit,filterScienceQuestionsByChapter,filterScienceQuestionsByUnit} from '../src/modules/yasser/science/science-chapters.js';
 import {createScienceSession} from '../src/modules/yasser/science/science-engine.js';
 
@@ -69,7 +70,7 @@ test('unit 3 quick, image and school exam sessions stay inside chapter 5',()=>{
 });
 
 
-test('Yasser has a complete lesson-only exam for cell division',()=>{
+test('general cell-division records stay available in the shared curriculum bank',()=>{
   const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'chapter-2-cell-heredity').filter(question=>question.unit==='division');
   assert.equal(questions.length,45);
   assert.ok(questions.some(question=>question.concept==='cell-cycle-rate'));
@@ -81,6 +82,16 @@ test('Yasser has a complete lesson-only exam for cell division',()=>{
   assert.equal(session.questions.length,45);
   assert.equal(new Set(session.questions.map(question=>question.id)).size,45);
   assert.ok(session.questions.every(question=>question.unit==='division'));
+});
+
+test('the dedicated cell-division exam is sourced only from the supplied teacher materials',()=>{
+  const questions=YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS;
+  assert.equal(questions.slice(0,7).map(question=>question.type).join(','),'choice,choice,choice,trueFalse,trueFalse,trueFalse,matchingTable');
+  assert.ok(questions.every(question=>question.unit==='division'&&['teacher-worksheet','teacher-reference'].includes(question.source.kind)));
+  assert.ok(questions.some(question=>question.type==='shortAnswer'&&question.answer==='٨'));
+  assert.equal(questions.find(question=>question.type==='matchingTable')?.rows.length,5);
+  const source=readFileSync(new URL('../src/modules/yasser/science/yasser-science.js',import.meta.url),'utf8');
+  assert.match(source,/function cellDivisionQuestions\(\)\{return YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS;\}/);
 });
 
 test('unit progress excludes attempts from other science units',()=>{
@@ -105,7 +116,7 @@ test('science UI connects unit 3 visual assets and keeps learner wording neutral
   assert.match(source,/scienceUnitSwitch/);
   assert.match(source,/yasserScienceDivisionExamView/);
   assert.match(source,/scienceDivisionExamBack/);
-  assert.match(source,/filterScienceQuestionsByChapter\(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'chapter-2-cell-heredity'\)/);
+  assert.match(source,/YASSER_SCIENCE_TEACHER_DIVISION_QUESTIONS/);
   assert.match(source,/show\(dedicatedExam\?'yasserScienceDivisionExamView'/);
   assert.match(source,/YASSER_SCIENCE_UNIT3_VISUAL_ASSETS/);
   assert.match(source,/أسئلة بصرية بالصور والمخططات/);
