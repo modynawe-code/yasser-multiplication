@@ -3,7 +3,7 @@ import {YASSER_SCIENCE_PLAYABLE_QUESTIONS} from './science-question-bank.js';
 import {YASSER_SCIENCE_VISUAL_ASSETS} from './science-visuals.js';
 import {YASSER_SCIENCE_UNIT2_VISUAL_ASSETS} from './science-unit2-visuals.generated.js';
 import {YASSER_SCIENCE_UNIT3_VISUAL_ASSETS} from './science-unit3-visuals.generated.js';
-import {DEFAULT_YASSER_SCIENCE_UNIT_ID,YASSER_SCIENCE_UNITS,filterScienceProgressByUnit,filterScienceQuestionsByUnit,getScienceChapter,getScienceUnit} from './science-chapters.js';
+import {DEFAULT_YASSER_SCIENCE_UNIT_ID,YASSER_SCIENCE_UNITS,filterScienceProgressByUnit,filterScienceQuestionsByChapter,filterScienceQuestionsByUnit,getScienceChapter,getScienceUnit} from './science-chapters.js';
 import {applyScienceAttempt,applyScienceSessionSummary,createScienceSession,getScienceDashboard,getScienceReviewQuestionIds,sessionWrongQuestionIds,submitScienceAnswer} from './science-engine.js';
 
 const STORAGE_KEY='family-learning:yasser:science:v1';
@@ -20,7 +20,7 @@ function currentUnit(){return getScienceUnit(activeUnitId);}
 function currentChapter(){return getScienceChapter(currentUnit().currentChapterId);}
 function unitQuestions(){return filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,activeUnitId);}
 function visualUnitQuestions(){return unitQuestions().filter(question=>question.assetId&&SCIENCE_ASSETS[question.assetId]);}
-function cellDivisionQuestions(){return YASSER_SCIENCE_PLAYABLE_QUESTIONS.filter(question=>question.unit==='division'&&question.chapterId==='chapter-2-cell-heredity');}
+function cellDivisionQuestions(){return filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'chapter-2-cell-heredity').filter(question=>question.unit==='division');}
 function unitProgress(){return filterScienceProgressByUnit(progress,activeUnitId);}
 function scopeLabel(){return String(YASSER_SCIENCE_SCOPE.label||'سادس ابتدائي').split(' • ')[0];}
 function chapterDisplayName(label=''){return label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');}
