@@ -21,3 +21,5 @@
 .science-division-exam strong{font-size:1.06rem}.science-division-exam span{font-weight:900;color:#267446}.science-division-exam small{flex-basis:100%;color:#4c6957}
 .science-division-exam:focus-visible{outline:3px solid #f3ad3d;outline-offset:3px}
 @media(max-width:600px){.science-division-exam{min-height:76px;justify-content:flex-start;padding:14px}.science-division-exam small{font-size:.9rem}}
+
+.yasser-science-division-page{min-height:100dvh;background:#f4f6fb}.yasser-science-exam-shell{max-width:920px;min-height:100dvh;margin:0 auto;padding-top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column}.yasser-science-division-page .yasser-science-session,.yasser-science-division-page .yasser-science-result{margin-top:12px}.yasser-science-division-page .science-session-bar{position:sticky;top:0;z-index:2;padding:8px 0;background:#f4f6fb}
