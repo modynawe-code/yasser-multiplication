@@ -164,9 +164,6 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
   }
   function open(game){
     if(!['dice','wheel','dots','letters','treasure'].includes(game))return;
-    if(!questions.length){status('أضف أسئلة في بنك ألعاب وافي قبل بدء اللعب.');return;}
-    if(game!=='dots'&&participants.length<1&&!(game==='wheel'&&groups.length)){status('أضف مشاركًا واحدًا على الأقل قبل اللعب.');return;}
-    if((game==='dots'||game==='letters')&&participants.length<2){status('أضف اسمين على الأقل قبل بدء لعبة الفريقين.');return;}
     stopAnimation();
     activeGame=game;cycleMode=byId('independentNoRepeat')?.checked!==false;dotsGame=null;lettersGame=null;treasureGame=null;pendingEdge=null;askedQuestionIds=[];activeQuestion=null;
     remaining=[...drawPool()];
@@ -237,8 +234,8 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     if(bound)return;bound=true;ensureInteractiveGamesShell();
     byId('independentGamesOpenBtn')?.addEventListener('click',enter);
     byId('independentGamesBack')?.addEventListener('click',()=>{leave();onExitToHub?.();});
-    byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;showView('independentGamesView');});
-    byId('independentGamesView')?.addEventListener('click',event=>{const button=event.target.closest('[data-independent-game]');if(button)open(button.dataset.independentGame);});
+    byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;if(location.hash.startsWith('#game-'))window.history.replaceState(null,'',location.pathname+location.search);showView('independentGamesView');});
+    window.addEventListener('hashchange',()=>{const game=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(game))open(game);});
     byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();const input=byId('independentParticipantInput');addNames(input.value);input.value='';input.focus();});
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});
     byId('independentNoRepeat')?.addEventListener('change',event=>{cycleMode=event.target.checked;remaining=[...drawPool()];});
@@ -275,6 +272,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       const button=event.target.closest('[data-remove-question]');if(!button)return;
       questions=saveGameQuestionBank(questions.filter((_,index)=>index!==Number(button.dataset.removeQuestion)));renderQuestionBank();
     });
+    const route=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(route))open(route);
     byId('independentPlayView')?.addEventListener('click',event=>{
       const button=event.target.closest('[data-independent-verdict]');if(!button)return;
       const verdict=button.dataset.independentVerdict;
