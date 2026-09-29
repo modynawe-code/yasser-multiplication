@@ -143,7 +143,7 @@ function startScience(mode,reviewIds=[],questionOverride=null){
   const count=mode==='images'?Math.min(10,questions.length):(questionOverride&&mode==='exam'?questions.length:undefined);
   session=createScienceSession({mode,count,progress:scopedProgress,questions,reviewQuestionIds:ids});
   if(!session.questions.length){showLanding();return;}
-  document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;const reviewEntry=document.getElementById('scienceReviewEntry');if(reviewEntry)reviewEntry.hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;
+  document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;document.getElementById('scienceCellDivisionExam').hidden=true;const reviewEntry=document.getElementById('scienceReviewEntry');if(reviewEntry)reviewEntry.hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;
   const unit=currentUnit(),stage=unit.status==='current'?currentChapter().shortLabel:'مراجعة الوحدة';
   document.getElementById('scienceModeLabel').textContent=`${modeLabel(session.mode)} • ${unit.shortLabel} • ${stage}`;renderQuestion();
 }
