@@ -20,6 +20,7 @@ function currentUnit(){return getScienceUnit(activeUnitId);}
 function currentChapter(){return getScienceChapter(currentUnit().currentChapterId);}
 function unitQuestions(){return filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,activeUnitId);}
 function visualUnitQuestions(){return unitQuestions().filter(question=>question.assetId&&SCIENCE_ASSETS[question.assetId]);}
+function cellDivisionQuestions(){return YASSER_SCIENCE_PLAYABLE_QUESTIONS.filter(question=>question.unit==='division'&&question.chapterId==='chapter-2-cell-heredity');}
 function unitProgress(){return filterScienceProgressByUnit(progress,activeUnitId);}
 function scopeLabel(){return String(YASSER_SCIENCE_SCOPE.label||'سادس ابتدائي').split(' • ')[0];}
 function chapterDisplayName(label=''){return label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');}
@@ -48,6 +49,8 @@ function ensureShell(){
       <button type="button" data-science-mode="images"><span class="science-mode-code" id="scienceImageModeCount">10</span><span><strong>تحدي الصور</strong><small id="scienceImageModeCopy">أسئلة بصرية بالصور والمخططات</small></span></button>
       <button type="button" data-science-mode="exam"><span class="science-mode-code">20</span><span><strong>اختبار المدرسة</strong><small>20 سؤالًا مما تم فتحه، بدون كشف الإجابة أثناء الحل</small></span></button>
     </section>
+
+    <button type="button" class="science-division-exam" id="scienceCellDivisionExam" hidden><strong>اختبار شامل: درس انقسام الخلايا</strong><span id="scienceDivisionExamCount"></span><small>يشمل جميع أسئلة الدرس، بدون كشف الإجابة أثناء الحل</small></button>
 
     <section class="yasser-science-dashboard" id="scienceDashboard" aria-label="تقدم العلوم"></section>
 
@@ -97,7 +100,8 @@ function renderUnitSwitch(){
 }
 
 function renderUnitCard(){
-  const unit=currentUnit(),chapter=currentChapter(),questions=unitQuestions(),visualQuestions=visualUnitQuestions();
+  const unit=currentUnit(),chapter=currentChapter(),questions=unitQuestions(),visualQuestions=visualUnitQuestions(),divisionQuestions=cellDivisionQuestions();
+  const divisionButton=document.getElementById('scienceCellDivisionExam');if(divisionButton){divisionButton.hidden=activeUnitId!=='unit-1-diversity-of-life'||!divisionQuestions.length;document.getElementById('scienceDivisionExamCount').textContent=`${divisionQuestions.length} سؤالًا`;}
   const isCurrent=unit.status==='current';
   document.getElementById('scienceUnitBadge').textContent=`الوحدة ${unit.number}`;
   document.getElementById('scienceUnitState').textContent=isCurrent?'الوحدة الحالية':'وحدة للمراجعة';
@@ -132,11 +136,11 @@ function modeLabel(mode){return {quick:'تدريب سريع',images:'تحدي ا
 function showLanding(){clearTimer();closeImageZoom();session=null;document.getElementById('scienceSession').hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceUnitSwitch').hidden=false;document.getElementById('scienceModes').hidden=false;document.getElementById('scienceUnitCard').hidden=false;renderUnitSwitch();renderUnitCard();renderDashboard();}
 function selectUnit(unitId){if(!YASSER_SCIENCE_UNITS.some(unit=>unit.id===unitId))return;activeUnitId=unitId;showLanding();}
 
-function startScience(mode,reviewIds=[]){
-  clearTimer();closeImageZoom();const scopedProgress=unitProgress(),allQuestions=unitQuestions(),imageQuestions=visualUnitQuestions(),questions=mode==='images'?imageQuestions:allQuestions;
+function startScience(mode,reviewIds=[],questionOverride=null){
+  clearTimer();closeImageZoom();const scopedProgress=unitProgress(),allQuestions=questionOverride||unitQuestions(),imageQuestions=visualUnitQuestions(),questions=mode==='images'?imageQuestions:allQuestions;
   if(mode==='images'&&!questions.length){showLanding();return;}
   const ids=mode==='review'?(reviewIds.length?reviewIds:getScienceReviewQuestionIds(scopedProgress)):[];
-  const count=mode==='images'?Math.min(10,questions.length):undefined;
+  const count=mode==='images'?Math.min(10,questions.length):(questionOverride&&mode==='exam'?questions.length:undefined);
   session=createScienceSession({mode,count,progress:scopedProgress,questions,reviewQuestionIds:ids});
   if(!session.questions.length){showLanding();return;}
   document.getElementById('scienceUnitSwitch').hidden=true;document.getElementById('scienceUnitCard').hidden=true;document.getElementById('scienceModes').hidden=true;const reviewEntry=document.getElementById('scienceReviewEntry');if(reviewEntry)reviewEntry.hidden=true;document.getElementById('scienceResult').hidden=true;document.getElementById('scienceSession').hidden=false;
@@ -175,6 +179,7 @@ function finishScience(){
 function bind(){
   if(mounted)return;mounted=true;
   document.querySelectorAll('[data-science-mode]').forEach(button=>button.addEventListener('click',()=>{if(!button.disabled)startScience(button.dataset.scienceMode);}));
+  document.getElementById('scienceCellDivisionExam')?.addEventListener('click',()=>startScience('exam',[],cellDivisionQuestions()));
   document.getElementById('scienceExit')?.addEventListener('click',showLanding);document.getElementById('scienceResultHome')?.addEventListener('click',showLanding);document.getElementById('yasserScienceBack')?.addEventListener('click',()=>closeYasserScience());document.getElementById('scienceImageOpen')?.addEventListener('click',openImageZoom);document.getElementById('scienceImageModalClose')?.addEventListener('click',closeImageZoom);document.getElementById('scienceImageModal')?.addEventListener('click',event=>{if(event.target.id==='scienceImageModal')closeImageZoom();});document.addEventListener('keydown',event=>{if(event.key==='Escape')closeImageZoom();});
 }
 

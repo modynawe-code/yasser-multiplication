@@ -8,7 +8,7 @@ export const YASSER_SCIENCE_CHAPTERS=Object.freeze([
 ]);
 
 export const YASSER_SCIENCE_UNITS=Object.freeze([
-  Object.freeze({id:'unit-1-diversity-of-life',number:1,label:'الوحدة الأولى: تنوع الحياة',shortLabel:'تنوع الحياة',status:'review',currentChapterId:'chapter-1-cells',allowedChapterIds:Object.freeze(['chapter-1-cells'])}),
+  Object.freeze({id:'unit-1-diversity-of-life',number:1,label:'الوحدة الأولى: تنوع الحياة',shortLabel:'تنوع الحياة',status:'review',currentChapterId:'chapter-1-cells',allowedChapterIds:Object.freeze(['chapter-1-cells','chapter-2-cell-heredity'])}),
   Object.freeze({id:'unit-2-life-processes',number:2,label:'الوحدة الثانية: عمليات الحياة',shortLabel:'عمليات الحياة',status:'review',currentChapterId:'chapter-4-human-animals',allowedChapterIds:Object.freeze(['chapter-3-plants-microorganisms','chapter-4-human-animals'])}),
   Object.freeze({id:'unit-3-ecosystems-resources',number:3,label:'الوحدة الثالثة: الأنظمة البيئية ومواردها',shortLabel:'الأنظمة البيئية ومواردها',status:'current',currentChapterId:'chapter-5-ecosystems',allowedChapterIds:Object.freeze(['chapter-5-ecosystems'])})
 ]);
