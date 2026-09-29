@@ -1,6 +1,6 @@
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="interactive-games"]'))return;
-  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
+  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css?v=20260929-1';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
 }
 
 export function ensureInteractiveGamesShell(){

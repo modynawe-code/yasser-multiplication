@@ -5,7 +5,7 @@ import {PRIMARY_QUESTION_BANK,PRIMARY_QUESTION_BANK_VERSION} from './primary-que
 import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.js';
 import {newLettersGame,pickLetterCell,startLettersGame,verdictLetterCell} from './letters-challenge-engine.js';
 import {newTreasureGame,setTreasurePlayer,startTreasureGame,stopsFor,TREASURE_ART,verdictTreasureGame} from './treasure-map-engine.js';
-import {ensureInteractiveGamesShell} from './interactive-games-shell.js';
+import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-1';
 
 function byId(id){return document.getElementById(id);}
 function showView(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
