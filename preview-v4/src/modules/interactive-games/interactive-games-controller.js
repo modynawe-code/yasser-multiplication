@@ -5,7 +5,7 @@ import {PRIMARY_QUESTION_BANK,PRIMARY_QUESTION_BANK_VERSION} from './primary-que
 import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.js';
 import {newLettersGame,pickLetterCell,startLettersGame,verdictLetterCell} from './letters-challenge-engine.js';
 import {newTreasureGame,setTreasurePlayer,startTreasureGame,stopsFor,TREASURE_ART,verdictTreasureGame} from './treasure-map-engine.js';
-import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-4';
+import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-5';
 
 function byId(id){return document.getElementById(id);}
 function showView(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -31,7 +31,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     if(!host)return;
     host.innerHTML=participants.length?participants.map((name,index)=>`<span class="independent-participant"><span>${escapeHtml(name)}</span><button type="button" data-remove-participant="${index}" aria-label="حذف ${escapeHtml(name)}">×</button></span>`).join(''):'<p class="independent-empty">أضف أسماء المشاركين لبدء اللعب.</p>';
     host.querySelectorAll('[data-remove-participant]').forEach(button=>button.addEventListener('click',()=>{
-      const index=Number(button.dataset.removeParticipant);participants=participants.filter((_,i)=>i!==index);remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];renderParticipants();renderHistory();renderStage();status('');
+      const index=Number(button.dataset.removeParticipant);participants=participants.filter((_,i)=>i!==index);remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];if(activeGame==='dots'&&!dotsGame?.started)dotsGame=createDotsBoxesGame(participants,{random});if(activeGame==='letters'&&!lettersGame?.started)lettersGame=newLettersGame(participants,random);renderParticipants();renderHistory();renderStage();status('');
     }));
   }
   function escapeHtml(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
@@ -95,10 +95,10 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
         if(row%2===0&&col%2===0)cells.push('<span class="dots-node" aria-hidden="true"></span>');
         else if(row%2===0){
           const edge=`h-${row/2}-${(col-1)/2}`,owner=dotsGame.edges[edge];
-          cells.push(`<button type="button" class="dots-edge dots-edge-h ${owner===undefined?'':owner===-1?'seed':'claimed team-'+owner}" data-dots-edge="${edge}" aria-label="${owner===undefined?'اختر ضلعًا أفقيًا':owner===-1?'ضلع ابتدائي':`ضلع يملكه ${escapeHtml(dotsGame.teams[owner])}`}" ${owner===undefined&&!dotsGame.finished?'':'disabled'}></button>`);
+          cells.push(`<button type="button" class="dots-edge dots-edge-h ${owner===undefined?'':owner===-1?'seed':'claimed team-'+owner}" data-dots-edge="${edge}" aria-label="${owner===undefined?'اختر ضلعًا أفقيًا':owner===-1?'ضلع ابتدائي':`ضلع يملكه ${escapeHtml(dotsGame.teams[owner])}`}" ${owner===undefined&&!dotsGame.finished&&dotsGame.started?'':'disabled'}></button>`);
         }else if(col%2===0){
           const edge=`v-${(row-1)/2}-${col/2}`,owner=dotsGame.edges[edge];
-          cells.push(`<button type="button" class="dots-edge dots-edge-v ${owner===undefined?'':owner===-1?'seed':'claimed team-'+owner}" data-dots-edge="${edge}" aria-label="${owner===undefined?'اختر ضلعًا عموديًا':owner===-1?'ضلع ابتدائي':`ضلع يملكه ${escapeHtml(dotsGame.teams[owner])}`}" ${owner===undefined&&!dotsGame.finished?'':'disabled'}></button>`);
+          cells.push(`<button type="button" class="dots-edge dots-edge-v ${owner===undefined?'':owner===-1?'seed':'claimed team-'+owner}" data-dots-edge="${edge}" aria-label="${owner===undefined?'اختر ضلعًا عموديًا':owner===-1?'ضلع ابتدائي':`ضلع يملكه ${escapeHtml(dotsGame.teams[owner])}`}" ${owner===undefined&&!dotsGame.finished&&dotsGame.started?'':'disabled'}></button>`);
         }else{
           const owner=dotsGame.boxes[`${(row-1)/2}-${(col-1)/2}`];
           cells.push(`<span class="dots-box ${owner===undefined?'':'claimed team-'+owner}" aria-label="${owner===undefined?'مربع فارغ':`مربع لصالح ${escapeHtml(dotsGame.teams[owner])}`}">${owner===undefined?'':escapeHtml(dotsGame.teams[owner])}</span>`);
@@ -109,13 +109,15 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     const player=dotsGame.teamPlayers[dotsGame.turn][dotsGame.cursor[dotsGame.turn]];
     const turn=dotsGame.finished?(dotsGame.winner===null?'انتهت المباراة بالتعادل':`فاز ${dotsGame.teams[dotsGame.winner]}`):`دور ${dotsGame.teams[dotsGame.turn]} — ${escapeHtml(player||'')}`;
     const last=dotsGame.lastMove?(dotsGame.lastMove.correct?dotsGame.lastMove.closed.length?`إجابة صحيحة! أُغلق ${arabicNumber(dotsGame.lastMove.closed.length)} مربع.`:'إجابة صحيحة؛ لم يُغلق مربع.':dotsGame.lastMove.verdict==='none'?'لم يجب الفريق؛ بقي الضلع متاحًا وانتقل الدور.':'إجابة خاطئة؛ بقي الضلع متاحًا وانتقل الدور.') :'';
-    host.innerHTML=`<div class="dots-game"><div class="dots-scoreboard"><div class="dots-score team-0"><strong>البرتقالي</strong><b>${arabicNumber(dotsGame.scores[0])}</b></div><div class="dots-score team-1"><strong>الأخضر</strong><b>${arabicNumber(dotsGame.scores[1])}</b></div></div><p class="dots-turn" aria-live="polite">${escapeHtml(turn)}</p><div class="dots-board" role="group" aria-label="لوحة أكمل المربع">${board.join('')}</div>${pendingEdge&&!dotsGame.finished?(activeQuestion?renderQuestion():`<p class="dots-feedback">${questionUnavailableMessage()}</p>`):''}${last?`<p class="dots-feedback" role="status">${escapeHtml(last)}</p>`:''}${dotsGame.finished?'<button type="button" class="btn primary" data-dots-restart>مباراة جديدة</button>':''}</div>`;
+    const startControls=dotsGame.started?'':`<div class="wafy-game-start-options"><div class="wafy-mode-options"><button type="button" data-record-mode="play" class="${recordMode==='play'?'selected':''}">لعب فقط</button><button type="button" data-record-mode="linked" class="${recordMode==='linked'?'selected':''}">مرتبط بسجل المتابعة</button></div><button type="button" class="btn primary" data-dots-start ${participants.length<2?'disabled':''}>ابدأ اللعب</button></div>`;
+    host.innerHTML=`<div class="dots-game"><div class="dots-scoreboard"><div class="dots-score team-0"><strong>البرتقالي</strong><b>${arabicNumber(dotsGame.scores[0])}</b></div><div class="dots-score team-1"><strong>الأخضر</strong><b>${arabicNumber(dotsGame.scores[1])}</b></div></div><p class="dots-turn" aria-live="polite">${escapeHtml(dotsGame.started?turn:'اختر وضع اللعب ثم ابدأ')}</p><div class="dots-board" role="group" aria-label="لوحة أكمل المربع">${board.join('')}</div>${startControls}${pendingEdge&&!dotsGame.finished?(activeQuestion?renderQuestion():`<p class="dots-feedback">${questionUnavailableMessage()}</p>`):''}${last?`<p class="dots-feedback" role="status">${escapeHtml(last)}</p>`:''}${dotsGame.finished?'<button type="button" class="btn primary" data-dots-restart>مباراة جديدة</button>':''}</div>`;
   }
   function renderLettersChallenge(host=byId('independentStage')){
     if(!host)return;
     if(!lettersGame){host.innerHTML='<p class="wafy-empty-game">أضف مشاركين لبدء اللعبة.</p>';return;}
-    const team=lettersGame.turn,player=lettersGame.teams[team][lettersGame.cursor[team]]||'',turnLabel=lettersGame.winner?`فاز الفريق ${lettersGame.winner==='orange'?'البرتقالي':'الأخضر'}`:lettersGame.finished?'اكتملت اللوحة':`دور ${team==='orange'?'البرتقالي':'الأخضر'} · ${escapeHtml(player)}`,orangeScore=lettersGame.board.flat().filter(cell=>cell.owner==='orange').length,greenScore=lettersGame.board.flat().filter(cell=>cell.owner==='green').length,board=lettersGame.board.map(row=>`<div class="letters-row">${row.map(cell=>`<button type="button" class="letters-cell ${cell.owner?`team-${cell.owner==='orange'?0:1}`:''}" data-letter-cell="${cell.row}-${cell.col}" ${cell.owner||lettersGame.finished||lettersGame.selected?'disabled':''} aria-label="${cell.letter}${cell.owner?`، للفريق ${cell.owner==='orange'?'البرتقالي':'الأخضر'}`:''}">${escapeHtml(cell.letter)}</button>`).join('')}</div>`).join('');
-    host.innerHTML=`<div class="letters-game"><div class="letters-scoreline"><strong class="orange"><span>↓</span><b>${arabicNumber(orangeScore)}</b><small>${escapeHtml(lettersGame.teams.orange.join('، '))}</small></strong><span>${turnLabel}</span><strong class="green"><span>←</span><b>${arabicNumber(greenScore)}</b><small>${escapeHtml(lettersGame.teams.green.join('، '))}</small></strong></div><div class="letters-playfield" aria-label="مسارات الفريقين"><span class="letters-direction letters-direction-top" aria-hidden="true"></span><span class="letters-direction letters-direction-right" aria-hidden="true"></span><div class="letters-board" role="group" aria-label="لوحة تحدي الحروف">${board}</div><span class="letters-direction letters-direction-bottom" aria-hidden="true"></span><span class="letters-direction letters-direction-left" aria-hidden="true"></span></div>${lettersGame.selected&&!lettersGame.finished?(activeQuestion?renderQuestion():`<p class="dots-feedback">${questionUnavailableMessage()}</p>`):''}${lettersGame.finished?'<button type="button" class="btn primary" data-letters-restart>تحدٍ جديد</button>':''}</div>`;
+    const team=lettersGame.turn,player=lettersGame.teams[team][lettersGame.cursor[team]]||'',turnLabel=lettersGame.winner?`فاز الفريق ${lettersGame.winner==='orange'?'البرتقالي':'الأخضر'}`:lettersGame.finished?'اكتملت اللوحة':`دور ${team==='orange'?'البرتقالي':'الأخضر'} · ${escapeHtml(player)}`,orangeScore=lettersGame.board.flat().filter(cell=>cell.owner==='orange').length,greenScore=lettersGame.board.flat().filter(cell=>cell.owner==='green').length,board=lettersGame.board.map(row=>`<div class="letters-row">${row.map(cell=>`<button type="button" class="letters-cell ${cell.owner?`team-${cell.owner==='orange'?0:1}`:''}" data-letter-cell="${cell.row}-${cell.col}" ${!lettersGame.started||cell.owner||lettersGame.finished||lettersGame.selected?'disabled':''} aria-label="${cell.letter}${cell.owner?`، للفريق ${cell.owner==='orange'?'البرتقالي':'الأخضر'}`:''}">${escapeHtml(cell.letter)}</button>`).join('')}</div>`).join('');
+    const startControls=lettersGame.started?'':`<div class="wafy-game-start-options"><div class="wafy-mode-options"><button type="button" data-record-mode="play" class="${recordMode==='play'?'selected':''}">لعب فقط</button><button type="button" data-record-mode="linked" class="${recordMode==='linked'?'selected':''}">مرتبط بسجل المتابعة</button></div><button type="button" class="btn primary" data-letters-start ${participants.length<2?'disabled':''}>ابدأ اللعب</button></div>`;
+    host.innerHTML=`<div class="letters-game"><div class="letters-scoreline"><strong class="orange"><span>↓</span><b>${arabicNumber(orangeScore)}</b><small>${escapeHtml(lettersGame.teams.orange.join('، ')||'البرتقالي')}</small></strong><span>${lettersGame.started?turnLabel:'اختر وضع اللعب ثم ابدأ'}</span><strong class="green"><span>←</span><b>${arabicNumber(greenScore)}</b><small>${escapeHtml(lettersGame.teams.green.join('، ')||'الأخضر')}</small></strong></div><div class="letters-playfield" aria-label="مسارات الفريقين"><span class="letters-direction letters-direction-top" aria-hidden="true"></span><span class="letters-direction letters-direction-right" aria-hidden="true"></span><div class="letters-board" role="group" aria-label="لوحة تحدي الحروف">${board}</div><span class="letters-direction letters-direction-bottom" aria-hidden="true"></span><span class="letters-direction letters-direction-left" aria-hidden="true"></span></div>${startControls}${lettersGame.selected&&!lettersGame.finished?(activeQuestion?renderQuestion():`<p class="dots-feedback">${questionUnavailableMessage()}</p>`):''}${lettersGame.finished?'<button type="button" class="btn primary" data-letters-restart>تحدٍ جديد</button>':''}</div>`;
   }
   function renderTreasureMap(host=byId('independentStage')){
     if(!host)return;
@@ -128,11 +130,11 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
   }
   function startDotsBoxes(){
     if(participants.length<2){status('أضف مشاركين اثنين على الأقل قبل بدء أكمل المربع.');return;}
-    dotsGame=startDotsBoxesGame(createDotsBoxesGame(participants,{random}),{random});pendingEdge=null;renderDotsBoxes();
+    const game=!dotsGame||dotsGame.started||dotsGame.finished?createDotsBoxesGame(participants,{random}):dotsGame;dotsGame=startDotsBoxesGame(game,{random});pendingEdge=null;renderDotsBoxes();
   }
   function startLettersChallenge(){
     if(participants.length<2){status('أضف اسمين على الأقل للعب تحدي الحروف.');return;}
-    lettersGame=startLettersGame(newLettersGame(participants,random),random);renderLettersChallenge();
+    const game=!lettersGame||lettersGame.started||lettersGame.finished?newLettersGame(participants,random):lettersGame;lettersGame=startLettersGame(game,random);renderLettersChallenge();
   }
   function startTreasureMap(){
     const rawStops=Number(byId('treasureStops')?.value);
@@ -172,7 +174,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     byId('independentDrawButton').textContent=game==='dice'?'ارمِ النرد':'أدر العجلة';
     byId('independentDrawButton').hidden=true;byId('independentResetCycle').hidden=true;byId('independentHistoryWrap').hidden=true;byId('independentPlayActions').hidden=true;byId('independentResult').hidden=false;
     byId('independentResult').innerHTML='<span>النتيجة تظهر هنا</span>';
-    renderStage();if(game==='dots')startDotsBoxes();if(game==='letters')startLettersChallenge();renderHistory();showView('independentGameView');
+    renderStage();if(game==='dots'){dotsGame=createDotsBoxesGame(participants,{random});renderDotsBoxes();}if(game==='letters'){lettersGame=newLettersGame(participants,random);renderLettersChallenge();}renderHistory();showView('independentGameView');
   }
   function draw(){
     const pool=drawPool();if(activeGame==='dots'||!pool.length){status(activeGame==='wheel'&&wheelMode==='groups'?'أضف مجموعة واحدة على الأقل لعجلة الحظ.':'أضف مشاركين أولًا.');return;}
@@ -217,7 +219,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     const incoming=normalizeParticipants(String(value||'').split(/[\n,،]+/));
     const combined=normalizeParticipants([...participants,...incoming]);
     const added=combined.length-participants.length;
-    participants=combined;remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];renderParticipants();renderHistory();renderStage();
+    participants=combined;remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];if(activeGame==='dots'&&!dotsGame?.started)dotsGame=createDotsBoxesGame(participants,{random});if(activeGame==='letters'&&!lettersGame?.started)lettersGame=newLettersGame(participants,random);renderParticipants();renderHistory();renderStage();
     status(added?`أُضيف ${arabicNumber(added)} ${added===1?'مشارك':'مشاركين'}.`:'الاسم موجود بالقائمة أو الحقل فارغ.');
   }
   function setGroups(value){groups=normalizeParticipants(String(value||'').split(/[\n,،]+/));remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});renderGroups();renderStage();status(groups.length?`حُفظت ${arabicNumber(groups.length)} مجموعة.`:'أضف أسماء المجموعات كلًّا في سطر.');}
@@ -235,7 +237,13 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     byId('independentGamesOpenBtn')?.addEventListener('click',enter);
     byId('independentGamesBack')?.addEventListener('click',()=>{leave();onExitToHub?.();});
     byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;if(location.hash.startsWith('#game-'))window.history.replaceState(null,'',location.pathname+location.search);showView('independentGamesView');});
-    document.querySelectorAll('[data-independent-game]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();const game=link.dataset.independentGame;window.history.pushState(null,'',`${location.pathname}${location.search}#game-${game}`);open(game);}));
+    document.querySelectorAll('[data-independent-game]').forEach(link=>link.addEventListener('click',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const game=link.dataset.independentGame;
+      window.history.pushState(null,'',`${location.pathname}${location.search}#game-${game}`);
+      open(game);
+    }));
     window.addEventListener('hashchange',()=>{const game=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(game))open(game);});
     byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();const input=byId('independentParticipantInput');addNames(input.value);input.value='';input.focus();});
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});

@@ -171,5 +171,13 @@ body.independent-games-mode{background:#dce5df;color:#101713}
 .wafy-empty-game{padding:14px 20px;border:2px solid #101713;border-radius:16px;background:#fff;font-weight:900}
 @media(max-width:700px){.independent-games-shell{width:calc(100% - 28px);gap:14px}.independent-game-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.independent-game-card{aspect-ratio:.76;border-radius:15px}.independent-game-art{border-radius:15px}.independent-stage{padding:0}.independent-wheel-wrap{width:min(88vw,400px)}.independent-play-head .icon-btn{width:48px;height:48px}.independent-wheel-label{font-size:clamp(11px,2.9vw,18px)}.dots-board{--dots-cell:clamp(30px,calc((100vw - 58px)/7),64px);padding:7px}.dots-node{width:12px;height:12px}.dots-edge-h{height:9px}.dots-edge-v{width:9px}.letters-board{--hex-width:clamp(40px,calc((100vw - 72px)/5),70px)}.letters-row:nth-child(even){transform:translateX(calc(var(--hex-width)*.25))}.letters-cell{flex-basis:var(--hex-width);width:var(--hex-width);height:calc(var(--hex-width)*.88)}.treasure-map-art{width:100%;min-height:0}.treasure-map-art.portrait{width:min(100%,400px)}}
 @media(min-width:701px){.letters-board{--hex-width:clamp(64px,8vw,86px)}}
+.wafy-game-start-options{width:100%;display:grid;gap:10px;margin-top:8px}
+.wafy-mode-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:5px;border:2px solid #101713;border-radius:18px;background:#fff}
+.wafy-mode-options button{min-height:48px;border:2px solid #101713;border-radius:13px;background:#fff;color:#101713;font:inherit;font-weight:900}
+.wafy-mode-options button.selected{background:#ffd64d}
+.wafy-game-start-options>.btn{width:100%;min-height:62px;border:2px solid #101713;border-radius:18px;background:#00bd79;color:#101713;box-shadow:0 4px 0 #101713;font:inherit;font-size:20px;font-weight:950}
+.wafy-game-start-options>.btn:disabled{opacity:.55;cursor:not-allowed}
+.dots-turn{margin:0}
+@media(max-width:520px){.wafy-mode-options button{font-size:13px;line-height:1.25}.wafy-game-start-options>.btn{min-height:58px;font-size:18px}}
 .independent-catalog{order:1}.independent-setup{order:2}.independent-play-view{order:3}
 .pip-top-left{left:17%;top:17%}.pip-top-right{right:17%;top:17%}.pip-center{left:41.5%;top:41.5%}.pip-bottom-left{left:17%;bottom:17%}.pip-bottom-right{right:17%;bottom:17%}.pip-middle-left{left:17%;top:41.5%}.pip-middle-right{right:17%;top:41.5%}
