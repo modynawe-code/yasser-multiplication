@@ -1,6 +1,6 @@
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="interactive-games"]'))return;
-  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css?v=20260929-5';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
+  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css?v=20260929-6';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
 }
 
 export function ensureInteractiveGamesShell(){
@@ -36,12 +36,12 @@ export function ensureInteractiveGamesShell(){
         <details class="independent-question-bank"><summary>بنك أسئلة الألعاب <span id="independentQuestionCount">٠ سؤال</span></summary><p>أضف الأسئلة بالطريقة اليدوية المتاحة في وافي. تُستخدم هنا داخل الألعاب فقط.</p><form id="independentQuestionForm"><label>السؤال<input id="independentQuestionText" maxlength="240" required placeholder="اكتب السؤال" /></label><label>الإجابة (اختياري)<input id="independentQuestionAnswer" maxlength="160" placeholder="اكتب الإجابة" /></label><button class="btn secondary" type="submit">أضف السؤال</button></form><ol id="independentQuestionList"></ol></details>
       </section>
       <section class="independent-catalog" aria-label="الألعاب المتاحة">
-        <div class="independent-catalog-head"><h2>ألعاب تفاعلية</h2><strong>٥</strong></div>
+        <div class="independent-catalog-head"><h2>ألعاب تفاعلية</h2><strong>٦</strong></div>
         <div class="independent-game-grid">
           <a class="independent-game-card" aria-label="عجلة الحظ" href="#game-wheel" data-independent-game="wheel"><span class="independent-game-art wheel-art" aria-hidden="true"><img src="assets/wafy-games/tilewheel.png" alt="" /></span><span class="independent-game-copy"><strong>عجلة الحظ</strong><small>أدرها للاختيار من أسماء المشاركين أو المجموعات.</small></span><span class="independent-play">ابدأ</span></a>
           <a class="independent-game-card" aria-label="خريطة الكنز" href="#game-treasure" data-independent-game="treasure"><span class="independent-game-art treasure-art" aria-hidden="true"><img src="assets/wafy-games/tiletreasure.png" alt="" /></span><span class="independent-game-copy"><strong>خريطة الكنز</strong><small>أكمل محطات الخريطة بالإجابة عن الأسئلة.</small></span><span class="independent-play">ابدأ</span></a>
           <a class="independent-game-card" aria-label="أكمل المربع" href="#game-dots" data-independent-game="dots"><span class="independent-game-art dots-art" aria-hidden="true"><img src="assets/wafy-games/tileboxes.png" alt="" /></span><span class="independent-game-copy"><strong>أكمل المربع</strong><small>فريقان، أسئلة وأضلاع؛ اجمع خمسة مربعات للفوز.</small></span><span class="independent-play">ابدأ</span></a>
-          <div class="independent-game-card independent-game-soon" aria-label="قريبًا"><span class="independent-game-art" aria-hidden="true"><img src="assets/wafy-games/tilesoon.png" alt="" /></span></div>
+          <a class="independent-game-card" aria-label="مرّر الطرد" href="#game-parcel" data-independent-game="parcel"><span class="independent-game-art parcel-art" aria-hidden="true"><span class="parcel-tile-gift">🎁</span></span><span class="independent-game-copy"><strong>مرّر الطرد</strong><small>مرّر الجهاز قبل أن يتوقف المؤقت، ثم أجب عن السؤال.</small></span><span class="independent-play">ابدأ</span></a>
           <a class="independent-game-card" aria-label="تحدي الحروف" href="#game-letters" data-independent-game="letters"><span class="independent-game-art letters-art" aria-hidden="true"><img src="assets/wafy-games/tileletters.png" alt="" /></span><span class="independent-game-copy"><strong>تحدي الحروف</strong><small>العب بلوحة الحروف ومسار الفريق.</small></span><span class="independent-play">ابدأ</span></a>
           <a class="independent-game-card" aria-label="النرد" href="#game-dice" data-independent-game="dice"><span class="independent-game-art dice-art" aria-hidden="true"><img src="assets/wafy-games/tiledice.png" alt="" /></span><span class="independent-game-copy"><strong>النرد</strong><small>ارم النرد أو رج الجهاز لاختيار الاسم.</small></span><span class="independent-play">ابدأ</span></a>
         </div>
