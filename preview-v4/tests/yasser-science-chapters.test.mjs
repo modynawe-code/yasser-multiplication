@@ -16,7 +16,7 @@ const UNIT_TWO_UNITS=new Set([...CHAPTER_THREE_UNITS,...CHAPTER_FOUR_UNITS]);
 test('unit 1 remains stable as a review scope',()=>{
   assert.equal(DEFAULT_YASSER_SCIENCE_CHAPTER_ID,'chapter-1-cells');
   const questions=filterScienceQuestionsByUnit(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'unit-1-diversity-of-life');
-  assert.equal(questions.length,163);
+  assert.equal(questions.length,165);
   assert.ok(questions.every(question=>[...CHAPTER_ONE_UNITS,...CHAPTER_TWO_UNITS].includes(question.unit)));
 });
 
@@ -71,14 +71,15 @@ test('unit 3 quick, image and school exam sessions stay inside chapter 5',()=>{
 
 test('Yasser has a complete lesson-only exam for cell division',()=>{
   const questions=filterScienceQuestionsByChapter(YASSER_SCIENCE_PLAYABLE_QUESTIONS,'chapter-2-cell-heredity').filter(question=>question.unit==='division');
-  assert.equal(questions.length,43);
+  assert.equal(questions.length,45);
   assert.ok(questions.some(question=>question.concept==='cell-cycle-rate'));
   assert.ok(questions.some(question=>question.concept==='mitosis-stages'));
+  assert.ok(questions.some(question=>question.concept==='division-cell-type'));
   assert.ok(questions.some(question=>question.concept==='meiosis-chromosome-count'));
   assert.ok(questions.some(question=>question.concept==='fertilization-chromosome-count'));
   const session=createScienceSession({mode:'exam',count:questions.length,questions,rng:()=>.37});
-  assert.equal(session.questions.length,43);
-  assert.equal(new Set(session.questions.map(question=>question.id)).size,43);
+  assert.equal(session.questions.length,45);
+  assert.equal(new Set(session.questions.map(question=>question.id)).size,45);
   assert.ok(session.questions.every(question=>question.unit==='division'));
 });
 
