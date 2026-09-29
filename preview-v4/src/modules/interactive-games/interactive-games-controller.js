@@ -238,10 +238,10 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     byId('independentGamesOpenBtn')?.addEventListener('click',enter);
     byId('independentGamesBack')?.addEventListener('click',()=>{leave();onExitToHub?.();});
     byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;showView('independentGamesView');});
+    byId('independentGamesView')?.addEventListener('click',event=>{const button=event.target.closest('[data-independent-game]');if(button)open(button.dataset.independentGame);});
     byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();const input=byId('independentParticipantInput');addNames(input.value);input.value='';input.focus();});
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});
     byId('independentNoRepeat')?.addEventListener('change',event=>{cycleMode=event.target.checked;remaining=[...drawPool()];});
-    document.querySelectorAll('[data-independent-game]').forEach(button=>button.addEventListener('click',()=>open(button.dataset.independentGame)));
     byId('independentDrawButton')?.addEventListener('click',draw);byId('independentResetCycle')?.addEventListener('click',resetCycle);
     byId('independentStage')?.addEventListener('change',event=>{
       if(event.target.id==='independentWheelMode'){wheelMode=event.target.value==='groups'?'groups':'students';remaining=[...drawPool()];renderStage();return;}
