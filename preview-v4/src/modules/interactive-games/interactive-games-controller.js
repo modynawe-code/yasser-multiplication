@@ -5,7 +5,7 @@ import {PRIMARY_QUESTION_BANK,PRIMARY_QUESTION_BANK_VERSION} from './primary-que
 import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.js';
 import {newLettersGame,pickLetterCell,startLettersGame,verdictLetterCell} from './letters-challenge-engine.js';
 import {newTreasureGame,setTreasurePlayer,startTreasureGame,stopsFor,TREASURE_ART,verdictTreasureGame} from './treasure-map-engine.js';
-import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-1';
+import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-2';
 
 function byId(id){return document.getElementById(id);}
 function showView(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -235,6 +235,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     byId('independentGamesOpenBtn')?.addEventListener('click',enter);
     byId('independentGamesBack')?.addEventListener('click',()=>{leave();onExitToHub?.();});
     byId('independentPlayBack')?.addEventListener('click',()=>{stopAnimation();byId('independentDrawButton').hidden=false;byId('independentResetCycle').hidden=false;byId('independentHistoryWrap').hidden=false;byId('independentResult').hidden=false;if(location.hash.startsWith('#game-'))window.history.replaceState(null,'',location.pathname+location.search);showView('independentGamesView');});
+    document.querySelectorAll('[data-independent-game]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();const game=link.dataset.independentGame;window.history.pushState(null,'',`${location.pathname}${location.search}#game-${game}`);open(game);}));
     window.addEventListener('hashchange',()=>{const game=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure'].includes(game))open(game);});
     byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();const input=byId('independentParticipantInput');addNames(input.value);input.value='';input.focus();});
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});

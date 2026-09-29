@@ -1,6 +1,6 @@
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="interactive-games"]'))return;
-  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css?v=20260929-1';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
+  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css?v=20260929-2';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
 }
 
 export function ensureInteractiveGamesShell(){
@@ -55,7 +55,7 @@ export function ensureInteractiveGamesShell(){
         <div class="independent-play-head"><button class="icon-btn" id="independentPlayBack">الألعاب</button><div><div class="kicker" id="independentPlayKicker">اختيار عشوائي</div><h2 id="independentPlayTitle">النرد العشوائي</h2></div></div>
         <div class="independent-stage" id="independentStage"></div>
         <div class="independent-result" id="independentResult" role="status" aria-live="polite"><span>النتيجة تظهر هنا</span></div>
-        <div class="independent-play-actions"><button class="btn primary" id="independentDrawButton">ارمِ النرد</button><button class="btn secondary" id="independentResetCycle">ابدأ دورة جديدة</button></div>
+        <div class="independent-play-actions" id="independentPlayActions"><button class="btn primary" id="independentDrawButton">ارمِ النرد</button><button class="btn secondary" id="independentResetCycle">ابدأ دورة جديدة</button></div>
         <div class="independent-history-wrap" id="independentHistoryWrap"><strong>آخر الاختيارات</strong><ol id="independentHistory" class="independent-history"></ol></div>
       </section>
     </div>`;
