@@ -34,7 +34,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     if(!host)return;
     host.innerHTML=participants.length?participants.map((name,index)=>`<span class="independent-participant"><span>${escapeHtml(name)}</span><button type="button" data-remove-participant="${index}" aria-label="حذف ${escapeHtml(name)}">×</button></span>`).join(''):'<p class="independent-empty">أضف أسماء المشاركين لبدء اللعب.</p>';
     host.querySelectorAll('[data-remove-participant]').forEach(button=>button.addEventListener('click',()=>{
-      const index=Number(button.dataset.removeParticipant);participants=participants.filter((_,i)=>i!==index);remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];if(activeGame==='dots'&&!dotsGame?.started)dotsGame=createDotsBoxesGame(participants,{random});if(activeGame==='letters'&&!lettersGame?.started)lettersGame=newLettersGame(participants,random);renderParticipants();renderHistory();renderStage();status('');
+      const index=Number(button.dataset.removeParticipant);participants=participants.filter((_,i)=>i!==index);remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];if(activeGame==='dots'&&!dotsGame?.started)dotsGame=createDotsBoxesGame(participants,{random});if(activeGame==='letters'&&!lettersGame?.started)lettersGame=newLettersGame(participants,random);if(activeGame==='parcel'&&parcelGame?.status!=='passing'&&parcelGame?.status!=='question')parcelGame=createPassParcelGame(participants,{targetScore:5});renderParticipants();renderHistory();renderStage();status('');
     }));
   }
   function escapeHtml(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
@@ -159,7 +159,8 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     if(!parcelGame)parcelGame=createPassParcelGame(participants,{targetScore:5});
     const holder=currentPassParcelHolder(parcelGame);
     if(participants.length<2){
-      host.innerHTML='<p class="wafy-empty-game">أضف مشاركين اثنين على الأقل لبدء مرّر الطرد.</p>';return;
+      const existing=participants.length?`<div class="parcel-setup-list">${participants.map(name=>`<span>${escapeHtml(name)}</span>`).join('')}</div>`:'';
+      host.innerHTML=`<div class="parcel-game"><div class="parcel-ready parcel-player-setup"><span class="parcel-gift" aria-hidden="true">🎁</span><strong>أضف المشاركين</strong><p>أضف مشاركين اثنين على الأقل لبدء مرّر الطرد.</p>${existing}<form class="parcel-add-form" data-parcel-participant-form><input data-parcel-participant-input maxlength="32" autocomplete="off" placeholder="اكتب اسم المشارك" aria-label="اسم المشارك" required /><button type="submit" class="btn primary">أضف</button></form></div></div>`;return;
     }
     if(parcelGame.status==='finished'){
       host.innerHTML=`<div class="parcel-game">${parcelScoresMarkup()}<div class="parcel-winner"><span aria-hidden="true">🏆</span><strong>فاز ${escapeHtml(parcelGame.winner||'')}</strong><small>وصل إلى ${arabicNumber(parcelGame.targetScore)} نقاط</small></div><button type="button" class="btn primary parcel-main-action" data-parcel-reset>لعبة جديدة</button></div>`;return;
@@ -295,7 +296,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     const incoming=normalizeParticipants(String(value||'').split(/[\n,،]+/));
     const combined=normalizeParticipants([...participants,...incoming]);
     const added=combined.length-participants.length;
-    participants=combined;remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];if(activeGame==='dots'&&!dotsGame?.started)dotsGame=createDotsBoxesGame(participants,{random});if(activeGame==='letters'&&!lettersGame?.started)lettersGame=newLettersGame(participants,random);renderParticipants();renderHistory();renderStage();
+    participants=combined;remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];if(activeGame==='dots'&&!dotsGame?.started)dotsGame=createDotsBoxesGame(participants,{random});if(activeGame==='letters'&&!lettersGame?.started)lettersGame=newLettersGame(participants,random);if(activeGame==='parcel'&&parcelGame?.status!=='passing'&&parcelGame?.status!=='question')parcelGame=createPassParcelGame(participants,{targetScore:5});renderParticipants();renderHistory();renderStage();
     status(added?`أُضيف ${arabicNumber(added)} ${added===1?'مشارك':'مشاركين'}.`:'الاسم موجود بالقائمة أو الحقل فارغ.');
   }
   function submitParticipantName(){
@@ -342,6 +343,7 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});
     byId('independentNoRepeat')?.addEventListener('change',event=>{cycleMode=event.target.checked;remaining=[...drawPool()];});
     byId('independentDrawButton')?.addEventListener('click',draw);byId('independentResetCycle')?.addEventListener('click',resetCycle);
+    byId('independentStage')?.addEventListener('submit',event=>{const form=event.target.closest('[data-parcel-participant-form]');if(!form)return;event.preventDefault();const input=form.querySelector('[data-parcel-participant-input]');const value=String(input?.value||'').trim();if(!value)return;addNames(value);parcelGame=createPassParcelGame(participants,{targetScore:5});renderPassParcel();queueMicrotask(()=>byId('independentStage')?.querySelector('[data-parcel-participant-input]')?.focus());});
     byId('independentStage')?.addEventListener('change',event=>{
       if(event.target.id==='independentWheelMode'){wheelMode=event.target.value==='groups'?'groups':'students';remaining=[...drawPool()];renderStage();return;}
       if(event.target.matches('[data-dice-no-repeat]')){cycleMode=event.target.checked;const toggle=byId('independentNoRepeat');if(toggle)toggle.checked=cycleMode;remaining=[...drawPool()];const label=byId('independentStage')?.querySelector('[data-cycle-count]');if(label)label.textContent=cycleRemainingLabel();return;}
