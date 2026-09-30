@@ -1,6 +1,6 @@
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="interactive-games"]'))return;
-  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css?v=20260929-6';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
+  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/interactive-games/interactive-games.css?v=20260930-1';link.dataset.moduleStyle='interactive-games';document.head.appendChild(link);
 }
 
 export function ensureInteractiveGamesShell(){
@@ -27,7 +27,7 @@ export function ensureInteractiveGamesShell(){
       </header>
       <section class="independent-setup card" aria-labelledby="independentSetupTitle">
         <div class="independent-setup-copy"><div><h2 id="independentSetupTitle">جهّز المشاركين</h2><p>أدخل اسمًا في كل سطر. تقدر تعدّل القائمة متى ما بغيت.</p></div><strong class="independent-count" id="independentParticipantCount">٠ مشاركين</strong></div>
-        <form id="independentParticipantForm" class="independent-add-form"><label class="sr-only" for="independentParticipantInput">اسم مشارك</label><input id="independentParticipantInput" maxlength="32" autocomplete="off" placeholder="اكتب اسم المشارك" /><button class="btn primary" type="submit">أضف</button></form>
+        <form id="independentParticipantForm" class="independent-add-form"><label class="sr-only" for="independentParticipantInput">اسم مشارك</label><input id="independentParticipantInput" maxlength="32" autocomplete="off" enterkeyhint="done" placeholder="اكتب اسم المشارك" /><button class="btn primary" id="independentParticipantAdd" type="button">أضف</button></form>
         <div id="independentParticipants" class="independent-participants" aria-live="polite"></div>
         <details class="independent-groups"><summary>مجموعات عجلة الحظ</summary><p>اكتب اسم كل مجموعة في سطر. هذه القائمة مستقلة عن ملفات الأطفال.</p><form id="independentGroupForm"><label>أسماء المجموعات<textarea id="independentGroupInput" rows="3" placeholder="المجموعة الأولى&#10;المجموعة الثانية"></textarea></label><button class="btn secondary" type="submit">حفظ المجموعات</button></form><p id="independentGroupSummary" aria-live="polite"></p></details>
         <label class="independent-draw-count"><span>عدد الأسماء في سحبة النرد</span><input id="independentDrawCount" type="number" min="1" value="1" inputmode="numeric" /></label>

@@ -6,7 +6,7 @@ import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.j
 import {newLettersGame,pickLetterCell,startLettersGame,verdictLetterCell} from './letters-challenge-engine.js';
 import {newTreasureGame,setTreasurePlayer,startTreasureGame,stopsFor,TREASURE_ART,verdictTreasureGame} from './treasure-map-engine.js';
 import {answerPassParcelQuestion,createPassParcelGame,currentPassParcelHolder,passParcelToNext,startPassParcelRound,stopPassParcelRound} from './pass-the-parcel-engine.js?v=20260929-1';
-import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260929-6';
+import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260930-1';
 
 function byId(id){return document.getElementById(id);}
 function showView(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -298,6 +298,14 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
     participants=combined;remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});history=[];if(activeGame==='dots'&&!dotsGame?.started)dotsGame=createDotsBoxesGame(participants,{random});if(activeGame==='letters'&&!lettersGame?.started)lettersGame=newLettersGame(participants,random);renderParticipants();renderHistory();renderStage();
     status(added?`أُضيف ${arabicNumber(added)} ${added===1?'مشارك':'مشاركين'}.`:'الاسم موجود بالقائمة أو الحقل فارغ.');
   }
+  function submitParticipantName(){
+    const input=byId('independentParticipantInput');
+    if(!input)return;
+    const value=input.value;
+    addNames(value);
+    if(String(value||'').trim())input.value='';
+    input.focus();
+  }
   function setGroups(value){groups=normalizeParticipants(String(value||'').split(/[\n,،]+/));remaining=[...drawPool()];saveIndependentGameSetup({participants,groups});renderGroups();renderStage();status(groups.length?`حُفظت ${arabicNumber(groups.length)} مجموعة.`:'أضف أسماء المجموعات كلًّا في سطر.');}
   function resetCycle(){if(animationTimer)return;remaining=[...drawPool()];const target=byId('independentResult');if(target){target.hidden=false;target.innerHTML='<span>بدأت دورة جديدة</span>';}}
   function enter(){
@@ -317,11 +325,20 @@ export function createInteractiveGamesController({onBeforeEnter,onExitToHub,rand
       event.preventDefault();
       event.stopPropagation();
       const game=link.dataset.independentGame;
+      if(game==='parcel'&&participants.length<2){
+        status('أضف مشاركين اثنين على الأقل قبل فتح مرّر الطرد.');
+        const setup=byId('independentSetupTitle')?.closest('.independent-setup');
+        setup?.scrollIntoView({behavior:'smooth',block:'start'});
+        byId('independentParticipantInput')?.focus();
+        return;
+      }
       window.history.pushState(null,'',`${location.pathname}${location.search}#game-${game}`);
       open(game);
     }));
     window.addEventListener('hashchange',()=>{const game=location.hash.slice('#game-'.length);if(['dice','wheel','dots','letters','treasure','parcel'].includes(game))open(game);});
-    byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();const input=byId('independentParticipantInput');addNames(input.value);input.value='';input.focus();});
+    byId('independentParticipantForm')?.addEventListener('submit',event=>{event.preventDefault();submitParticipantName();});
+    byId('independentParticipantAdd')?.addEventListener('click',event=>{event.preventDefault();submitParticipantName();});
+    byId('independentParticipantInput')?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();submitParticipantName();}});
     byId('independentGroupForm')?.addEventListener('submit',event=>{event.preventDefault();setGroups(byId('independentGroupInput')?.value);});
     byId('independentNoRepeat')?.addEventListener('change',event=>{cycleMode=event.target.checked;remaining=[...drawPool()];});
     byId('independentDrawButton')?.addEventListener('click',draw);byId('independentResetCycle')?.addEventListener('click',resetCycle);
