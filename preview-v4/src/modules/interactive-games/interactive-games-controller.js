@@ -6,7 +6,7 @@ import {loadIndependentGameSetup,saveIndependentGameSetup} from './setup-store.j
 import {newLettersGame,pickLetterCell,startLettersGame,verdictLetterCell} from './letters-challenge-engine.js';
 import {newTreasureGame,setTreasurePlayer,startTreasureGame,stopsFor,TREASURE_ART,verdictTreasureGame} from './treasure-map-engine.js';
 import {answerPassParcelQuestion,createPassParcelGame,currentPassParcelHolder,passParcelToNext,startPassParcelRound,stopPassParcelRound} from './pass-the-parcel-engine.js?v=20260929-1';
-import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260930-1';
+import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=20260930-2';
 
 function byId(id){return document.getElementById(id);}
 function showView(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
