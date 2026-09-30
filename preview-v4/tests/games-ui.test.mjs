@@ -198,3 +198,21 @@ test('PWA shell includes resumable games, registry participants and the shared n
     'src/modules/games/puzzle/puzzle.css'
   ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
 });
+
+test('Monopoly keeps the complete classic board fixed while turn and property actions overlay its center',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
+  const engine=await read('src/modules/games/monopoly/monopoly-engine.js');
+  assert.match(catalog,/id:'family-monopoly'/);
+  assert.match(engine,/export const BOARD=freeze\(\[/);
+  assert.match(engine,/property\('نيوم'/);
+  assert.match(controller,/\.mono-board-wrap\{width:min\(100vw,100dvh\);height:min\(100vw,100dvh\)/);
+  assert.match(controller,/\.mono-overlay\{position:absolute/);
+  assert.match(controller,/\.mono-actions\{display:flex/);
+  assert.match(controller,/font:800 clamp\(6px,2\.3vw,14px\)\/1\.05 system-ui/);
+  assert.match(controller,/grid-template-columns:1\.35fr repeat\(9,minmax\(0,1fr\)\) 1\.35fr/);
+  assert.match(controller,/data-action="trade-confirm"/);
+  assert.match(controller,/data-action="sell"/);
+  assert.doesNotMatch(controller,/min-width:\s*430px/);
+  assert.doesNotMatch(controller,/monoGame[^\n]*grid-template-rows:auto 1fr/);
+});
