@@ -22,7 +22,7 @@ function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,marioController=null,ps1Controller=null,puzzleController=null,localXoStartedAt=null,localXoRecordedKey='';
+  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,marioController=null,ps1Controller=null,puzzleController=null,monopolyController=null,localXoStartedAt=null,localXoRecordedKey='';
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false,historyDays=7;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -34,7 +34,26 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   gameLauncher.register('family-word-categories',({game})=>openCategories(game));
   gameLauncher.register('super-mario-bros',({game})=>openMario(game));
   gameLauncher.register('playstation-ps1',({game})=>openPs1(game));
+  gameLauncher.register('family-monopoly',({game})=>openMonopoly(game));
 
+  async function openMonopoly(game=gameRegistry.get('family-monopoly')){
+    clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);
+    rpsController?.leave();categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});
+    document.body.classList.remove('rps-game-mode','categories-game-mode','mario-game-mode','ps1-game-mode','puzzle-game-mode');
+    enterGamesChrome();
+    if(!game?.load)return;
+    try{
+      if(!monopolyController){
+        const module=await game.load();
+        monopolyController=module.createMonopolyController({onBack:()=>{document.body.classList.remove('monopoly-game-mode');renderCatalog();show('gamesHomeView');}});
+      }
+      monopolyController.start();
+    }catch{
+      monopolyController?.leave?.({navigate:false});
+      document.body.classList.remove('monopoly-game-mode');
+      renderCatalog();show('gamesHomeView');
+    }
+  }
   async function openFamilyPuzzle(game=gameRegistry.get('family-pixel-puzzle')){
     clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);
     rpsController?.leave();categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();
@@ -93,17 +112,17 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode');document.body.classList.add('games-mode');}
 
   function leave(){
-    document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode','categories-game-mode','mario-game-mode','ps1-game-mode','puzzle-game-mode');
-    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});
+    document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode','categories-game-mode','mario-game-mode','ps1-game-mode','puzzle-game-mode','monopoly-game-mode');
+    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});monopolyController?.leave?.({navigate:false});
     clearChallenge();onlineSession.forget();xoEvents.reset();
     xoState=null;playMode='local';onlineTurnVersion=-1;onlineCelebrated='';
   }
 
   function enterHome(){
     onBeforeEnter?.();
-    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});
+    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});monopolyController?.leave?.({navigate:false});
     onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode','categories-game-mode','mario-game-mode');
-    document.body.classList.remove('ps1-game-mode','puzzle-game-mode');enterGamesChrome();void gameHistoryService.flushPending();renderCatalog();show('gamesHomeView');
+    document.body.classList.remove('ps1-game-mode','puzzle-game-mode','monopoly-game-mode');enterGamesChrome();void gameHistoryService.flushPending();renderCatalog();show('gamesHomeView');
   }
 
   function gameTitle(gameId){return gameRegistry.get(gameId)?.title||gameId||'لعبة';}
