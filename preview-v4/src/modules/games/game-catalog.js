@@ -92,6 +92,19 @@ export const gameRegistry=createGameRegistry([
     metadata:{accent:'family',icon:wordCategoriesArt(),availabilityLabel:'محلي + أونلاين — 2 إلى 5',description:'تحدي الحروف للعائلة: نفس الجهاز أو كل واحد من جهازه، مع مؤقت وتسليم وتحكيم وسجل فوز يومي.'}
   },
   {
+    id:'family-monopoly',
+    title:'مونوبولي العائلة',
+    category:'fun',
+    playModes:['local'],
+    networkMode:'none',
+    learningMode:'none',
+    minPlayers:2,
+    maxPlayers:4,
+    version:1,
+    load:()=>import('./monopoly/monopoly-controller.js'),
+    metadata:{accent:'family',icon:'🏠',availabilityLabel:'محلي — 2 إلى 4',description:'لعبة عقارات عائلية: شراء وإيجارات وتطوير وسجن وإفلاس، وتعمل مباشرة على الجوال والتابلت.'}
+  },
+  {
     id:'domino',
     title:'الدومينو',
     category:'fun',
