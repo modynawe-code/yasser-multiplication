@@ -238,10 +238,10 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/function renderMiniMap\(activeIndex,visible=true\)/);
   assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
   assert.match(controller,/async function zoomOutBoardTransition\(\)/);
-  assert.match(controller,/await waitForMotion\(380\)/);
+  assert.match(controller,/await waitForMotion\(650\)/);
   assert.match(controller,/await waitForMotion\(movementStepDuration\(\)\)/);
-  assert.match(controller,/await waitForMotion\(440\)/);
-  assert.match(controller,/function cameraScaleForMove\(\)\{if\(isPhoneLayout\(\)\)return 1\.8/);
+  assert.match(controller,/await waitForMotion\(620\)/);
+  assert.match(controller,/function cameraScaleForMove\(\)\{const width=globalThis\.innerWidth\|\|0;if\(isPhoneLayout\(\)\)return 2\.15/);
   assert.match(controller,/movementAnimating=false;render\(\);await zoomOutBoardTransition\(\)/);
   assert.match(controller,/data-action="focus-space"/);
   assert.match(controller,/id="monoBoardOverview"/);
@@ -256,7 +256,7 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/if\(reduced\)\{focusMovement\(to\);await waitForMotion\(1200\);return;\}/);
   assert.match(controller,/\.mono-space\.is-camera-path\{background-color:#d7e4ff;box-shadow:inset 0 0 0 2px #8da9e4\}/);
   assert.match(controller,/function zoomOutBoard\(\)/);
-  assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.22s/);
+  assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.34s/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
   assert.match(controller,/await animateTokenMove\(actor\.id,from,to\);if\(animationId!==movementAnimationId\)return;movementAnimating=false;render\(\);await zoomOutBoardTransition\(\)/);
   assert.match(controller,/grid-template-columns:1\.35fr repeat\(9,minmax\(0,1fr\)\) 1\.35fr/);
