@@ -162,6 +162,20 @@ test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet he
   assert.match(openFamilyCss,/@media\(orientation:landscape\) and \(min-width:850px\) and \(max-height:820px\)/);
 });
 
+test('family Monopoly is advertised and wired for online play with offline assets',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
+  const onlineSession=await read('src/modules/games/monopoly/monopoly-online-session.js');
+  const serviceWorker=await read('service-worker.js');
+  assert.match(catalog,/id:'family-monopoly',[\s\S]*?playModes:\['local','online'\],[\s\S]*?networkMode:'turn-based'/);
+  assert.match(controller,/id="monoCreateRoom"/);
+  assert.match(controller,/id="monoJoinRoom"/);
+  assert.match(controller,/function startOnlineRoom\(\)/);
+  assert.match(controller,/data-action="build"/);
+  assert.match(onlineSession,/gameId:'family-monopoly'/);
+  for(const path of ['src/modules/games/monopoly/monopoly-engine.js','src/modules/games/monopoly/monopoly-controller.js','src/modules/games/monopoly/monopoly-online-session.js'])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
+});
+
 test('PWA shell includes resumable games, registry participants and the shared natural voice architecture',async()=>{
   const serviceWorker=await read('service-worker.js');
   assert.match(serviceWorker,/shell-\d+/);

@@ -54,6 +54,19 @@ test('non-terminal online state does not create history',()=>{
   assert.equal(built,null);
 });
 
+test('online Monopoly terminal state maps the cash winner to family history',()=>{
+  const match=buildOnlineRoomMatch({
+    roomRow:{id:'room-monopoly',code:'234567',game_id:'family-monopoly',history_family_id:'par-family-1',created_at:'2026-10-01T01:00:00Z'},
+    players:[{player_id:'p1',learner_id:'yasser',display_name:'ياسر',seat:0,participation_role:'player'},{player_id:'p2',learner_id:'khaled',display_name:'خالد',seat:1,participation_role:'player'}],
+    state:{status:'finished',winnerId:'p1',startedAt:'2026-10-01T01:00:00Z',players:[{id:'p1',cash:1700},{id:'p2',cash:0}]},version:18,
+    recordedAt:'2026-10-01T02:00:00Z'
+  });
+  assert.equal(match.value.gameId,'family-monopoly');
+  assert.equal(match.value.playMode,'online');
+  assert.deepEqual(match.value.winnerIds,['yasser']);
+  assert.deepEqual(match.value.players.map(player=>player.outcome),['win','loss']);
+});
+
 test('family word online result maps player ids to learner ids and scores',()=>{
   const built=buildOnlineRoomMatch({
     roomRow:{id:'room-3',code:'654321',game_id:'family-word-categories',history_family_id:'par-family-1',created_at:'2026-09-25T18:00:00Z'},

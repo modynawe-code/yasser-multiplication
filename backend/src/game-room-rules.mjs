@@ -1,4 +1,5 @@
 import { addFamilyWordCategoriesRoomPlayer, applyFamilyWordCategoriesRoomAction, createInitialFamilyWordCategoriesRoomState, projectFamilyWordCategoriesRoomState } from './family-word-categories-engine.mjs';
+import { bidAuction, buildHouse, buyProperty, createMonopolyState, drawCard, endTurn, passAuction, payJail, rollDice, sellProperty, skipProperty, tradeProperty } from '../../preview-v4/src/modules/games/monopoly/monopoly-engine.js';
 import {
   CLASSIC_MOVE_STATE,
   classicAbleToPlay,
@@ -239,6 +240,47 @@ export function projectDominoRoomState(state,{viewerPlayerId=null}={}){
   return Object.freeze(next);
 }
 
+export function createInitialMonopolyRoomState(hostPlayerId,{displayName=hostPlayerId}={}){
+  return Object.freeze({gameId:'family-monopoly',status:'waiting',players:Object.freeze([{id:hostPlayerId,name:String(displayName||hostPlayerId).slice(0,40)}])});
+}
+
+export function addMonopolyRoomPlayer(state,playerId,{displayName=playerId}={}){
+  if(state?.gameId!=='family-monopoly'||state.status!=='waiting')return{ok:false,reason:'room-not-waiting'};
+  if(state.players.length>=4)return{ok:false,reason:'room-full'};
+  if(state.players.some(player=>player.id===playerId))return{ok:false,reason:'player-already-in-room'};
+  const next=clone(state);next.players.push({id:playerId,name:String(displayName||playerId).slice(0,40)});return{ok:true,state:next};
+}
+
+export function applyMonopolyRoomAction(state,{playerId,type,payload={}}={}){
+  if(state?.gameId!=='family-monopoly')return{ok:false,reason:'invalid-game-state'};
+  if(!state.players?.some(player=>player.id===playerId))return{ok:false,reason:'player-not-in-room'};
+  if(type==='start'){
+    if(state.status!=='waiting')return{ok:false,reason:'game-already-started'};
+    if(state.players[0]?.id!==playerId)return{ok:false,reason:'host-only'};
+    if(state.players.length<2)return{ok:false,reason:'need-more-players'};
+    return{ok:true,state:{...createMonopolyState(state.players),gameId:'family-monopoly'}};
+  }
+  if(state.status!=='playing')return{ok:false,reason:'game-not-playing'};
+  const action=String(type||''),turnPlayer=state.players[state.turnIndex],auctionPlayer=state.auction?.nextIndex===undefined?null:state.players[state.auction.nextIndex];
+  if(action==='bid'||action==='pass-auction'){
+    if(auctionPlayer?.id!==playerId)return{ok:false,reason:'not-your-turn'};
+  }else if(turnPlayer?.id!==playerId)return{ok:false,reason:'not-your-turn'};
+  let next=state;
+  if(action==='roll')next=rollDice(state);
+  else if(action==='jail')next=payJail(state);
+  else if(action==='buy')next=buyProperty(state);
+  else if(action==='skip')next=skipProperty(state);
+  else if(action==='bid')next=bidAuction(state,payload.amount);
+  else if(action==='pass-auction')next=passAuction(state);
+  else if(action==='card')next=drawCard(state);
+  else if(action==='end')next=endTurn(state);
+  else if(action==='sell')next=sellProperty(state,Number(payload.index));
+  else if(action==='build')next=buildHouse(state,Number(payload.index));
+  else if(action==='trade')next=tradeProperty(state,Number(payload.index),String(payload.targetId||''),payload.offerCash,payload.requestCash);
+  else return{ok:false,reason:'unsupported-action'};
+  return next===state?{ok:false,reason:'invalid-action'}:{ok:true,state:next};
+}
+
 const RULES=Object.freeze({
   xo:Object.freeze({
     gameId:'xo',
@@ -274,6 +316,14 @@ const RULES=Object.freeze({
     addPlayer:addDominoRoomGuest,
     applyAction(state,{playerId,type,payload={}}={}){return applyDominoRoomAction(state,{playerId,type,payload});},
     projectState(state,context={}){return projectDominoRoomState(state,context);}
+  }),
+  'family-monopoly':Object.freeze({
+    gameId:'family-monopoly',
+    maxPlayers:4,
+    maxSpectators:8,
+    createInitialState:createInitialMonopolyRoomState,
+    addPlayer:addMonopolyRoomPlayer,
+    applyAction(state,{playerId,type,payload={}}={}){return applyMonopolyRoomAction(state,{playerId,type,payload});}
   })
 });
 

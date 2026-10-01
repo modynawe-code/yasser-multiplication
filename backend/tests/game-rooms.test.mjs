@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { addXoRoomGuest, applyXoRoomAction, createInitialXoRoomState } from '../src/game-rooms.mjs';
-import { addRpsRoomGuest, applyRpsRoomAction, createInitialRpsRoomState, getGameRoomRules, listGameRoomRuleIds, projectRpsRoomState } from '../src/game-room-rules.mjs';
+import { addMonopolyRoomPlayer, addRpsRoomGuest, applyMonopolyRoomAction, applyRpsRoomAction, createInitialMonopolyRoomState, createInitialRpsRoomState, getGameRoomRules, listGameRoomRuleIds, projectRpsRoomState } from '../src/game-room-rules.mjs';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -51,7 +51,7 @@ test('server requires both players before starting an online rematch',()=>{
 });
 
 test('room transport dispatches game-specific state changes through a rule registry',()=>{
-  assert.deepEqual(listGameRoomRuleIds(),['xo','rock-paper-scissors','family-word-categories','domino']);
+  assert.deepEqual(listGameRoomRuleIds(),['xo','rock-paper-scissors','family-word-categories','domino','family-monopoly']);
   assert.equal(getGameRoomRules('unknown'),null);
   const rules=getGameRoomRules('xo');
   let state=rules.addPlayer(rules.createInitialState('host'),'guest').state;
@@ -60,6 +60,32 @@ test('room transport dispatches game-specific state changes through a rule regis
   assert.equal(moved.state.board[4],'host');
   assert.equal(rules.maxPlayers,2);
   assert.equal(rules.maxSpectators,8);
+});
+
+test('family Monopoly rooms wait for 2-4 players and only the host can start',()=>{
+  let state=createInitialMonopolyRoomState('host',{displayName:'ياسر'});
+  assert.equal(state.status,'waiting');
+  assert.equal(addMonopolyRoomPlayer(state,'host',{displayName:'ياسر'}).reason,'player-already-in-room');
+  assert.equal(applyMonopolyRoomAction(state,{playerId:'host',type:'start'}).reason,'need-more-players');
+  state=addMonopolyRoomPlayer(state,'guest',{displayName:'خالد'}).state;
+  assert.equal(applyMonopolyRoomAction(state,{playerId:'guest',type:'start'}).reason,'host-only');
+  state=addMonopolyRoomPlayer(state,'third',{displayName:'مشاعل'}).state;
+  assert.equal(state.players.length,3);
+  const started=applyMonopolyRoomAction(state,{playerId:'host',type:'start'});
+  assert.equal(started.ok,true);
+  assert.equal(started.state.status,'playing');
+  assert.deepEqual(started.state.players.map(player=>player.name),['ياسر','خالد','مشاعل']);
+  assert.equal(started.state.players[0].cash,1500);
+  assert.equal(applyMonopolyRoomAction(started.state,{playerId:'guest',type:'roll'}).reason,'not-your-turn');
+  assert.equal(applyMonopolyRoomAction(started.state,{playerId:'host',type:'roll'}).ok,true);
+  const purchaseState=JSON.parse(JSON.stringify(started.state));purchaseState.phase='property';purchaseState.pending={type:'buy',index:1};
+  assert.equal(applyMonopolyRoomAction(purchaseState,{playerId:'guest',type:'buy'}).reason,'not-your-turn');
+  const bought=applyMonopolyRoomAction(purchaseState,{playerId:'host',type:'buy'});
+  assert.equal(bought.ok,true);assert.equal(bought.state.ownership[1].ownerId,'host');assert.equal(bought.state.players[0].cash,1440);
+  assert.equal(getGameRoomRules('family-monopoly').maxPlayers,4);
+  assert.equal(addMonopolyRoomPlayer(state,'fourth',{displayName:'ضيف'}).ok,true);
+  const full=addMonopolyRoomPlayer(addMonopolyRoomPlayer(state,'fourth',{displayName:'ضيف'}).state,'fifth',{displayName:'ضيف 2'});
+  assert.equal(full.reason,'room-full');
 });
 
 test('RPS online rules support simultaneous private choices and reveal only after both choose',()=>{

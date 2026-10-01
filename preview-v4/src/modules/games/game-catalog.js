@@ -95,14 +95,14 @@ export const gameRegistry=createGameRegistry([
     id:'family-monopoly',
     title:'مونوبولي العائلة',
     category:'fun',
-    playModes:['local'],
-    networkMode:'none',
+    playModes:['local','online'],
+    networkMode:'turn-based',
     learningMode:'none',
     minPlayers:2,
     maxPlayers:4,
     version:1,
     load:()=>import('./monopoly/monopoly-controller.js'),
-    metadata:{accent:'family',icon:'🏠',availabilityLabel:'محلي — 2 إلى 4',description:'لعبة عقارات عائلية: شراء وإيجارات وتطوير وسجن وإفلاس، وتعمل مباشرة على الجوال والتابلت.'}
+    metadata:{accent:'family',icon:'🏠',availabilityLabel:'محلي + أونلاين — 2 إلى 4',description:'لعبة عقارات عائلية: العبوا على جهاز واحد أو من أجهزة مختلفة، واشتروا الأراضي وطوروها وتنافسوا حتى النهاية.'}
   },
   {
     id:'domino',

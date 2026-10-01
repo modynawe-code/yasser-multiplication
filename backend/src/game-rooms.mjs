@@ -81,7 +81,7 @@ async function createRoom(request,env,respond,readJson){
   if(!rules||!validLearner(learnerId))return respond(400,{error:'invalid_game_room'});
   const throttle=await allowCreate(request,env);if(!throttle.ok)return respond(429,{error:'too_many_rooms'});
   const historyFamilyId=await historyFamilyForDeviceToken(request,env);
-  const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),state=rules.createInitialState(playerId);
+  const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),state=rules.createInitialState(playerId,{learnerId,displayName});
   let code=null;
   for(let attempt=0;attempt<12;attempt++){
     const candidate=generateRoomCode();
@@ -119,7 +119,7 @@ async function joinRoom(request,env,respond,readJson){
     if(availableSeat===undefined)return fail(409,'room_full');
     seat=availableSeat;
   }
-  const playerId=randomId('gpl'),next=participationRole==='player'?rules.addPlayer(state,playerId):{ok:true,state};
+  const playerId=randomId('gpl'),next=participationRole==='player'?rules.addPlayer(state,playerId,{learnerId,displayName}):{ok:true,state};
   if(!next.ok)return fail(409,next.reason);
   const playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso();
   const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,participation_role,authority_role,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,displayName,tokenHash,seat,participationRole,'guest',joinedAt,joinedAt).run();
