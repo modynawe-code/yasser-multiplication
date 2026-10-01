@@ -243,12 +243,14 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/movementAnimating/);
   assert.match(controller,/function isTabletPortrait\(\)/);
   assert.match(controller,/function cameraScaleForMove\(\)/);
+  assert.match(controller,/function movementStepDuration\(\)/);
+  assert.match(controller,/await waitForMotion\(movementStepDuration\(\)\)/);
   assert.match(controller,/function focusMovement\(index\)/);
   assert.match(controller,/is-camera-path/);
-  assert.match(controller,/if\(reduced\)\{focusMovement\(to\);await waitForMotion\(550\);return;\}/);
-  assert.match(controller,/\.mono-space\.is-camera-path\{background-color:#eaf1ff\}/);
+  assert.match(controller,/if\(reduced\)\{focusMovement\(to\);await waitForMotion\(800\);return;\}/);
+  assert.match(controller,/\.mono-space\.is-camera-path\{background-color:#d7e4ff;box-shadow:inset 0 0 0 2px #8da9e4\}/);
   assert.match(controller,/function zoomOutBoard\(\)/);
-  assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.13s/);
+  assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.22s/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
   assert.match(controller,/await animateTokenMove\(actor\.id,from,to\);if\(animationId!==movementAnimationId\)return;movementAnimating=false;zoomOutBoard\(\);render\(\)/);
   assert.match(controller,/grid-template-columns:1\.35fr repeat\(9,minmax\(0,1fr\)\) 1\.35fr/);
