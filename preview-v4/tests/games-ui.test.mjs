@@ -244,6 +244,9 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/function isTabletPortrait\(\)/);
   assert.match(controller,/function cameraScaleForMove\(\)/);
   assert.match(controller,/function focusMovement\(index\)/);
+  assert.match(controller,/is-camera-path/);
+  assert.match(controller,/if\(reduced\)\{focusMovement\(to\);await waitForMotion\(550\);return;\}/);
+  assert.match(controller,/\.mono-space\.is-camera-path\{background-color:#eaf1ff\}/);
   assert.match(controller,/function zoomOutBoard\(\)/);
   assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.13s/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
