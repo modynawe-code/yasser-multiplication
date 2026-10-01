@@ -227,6 +227,9 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/font:800 clamp\(8px,2\.3vw,14px\)\/1\.05 system-ui/);
   assert.match(controller,/font-size:clamp\(10px,1\.25vmin,16px\)/);
   assert.match(controller,/\.mono-space\{font-size:clamp\(8px,2\.55vw,13px\)\}/);
+  assert.match(controller,/\.mono-space-name\{display:-webkit-box;max-width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2/);
+  assert.match(controller,/white-space:nowrap;max-width:100%/);
+  assert.match(controller,/function spaceDisplay\(space\).*mono-space-name/);
   assert.match(controller,/min-height:44px/);
   assert.match(controller,/mono-deed-facts/);
   assert.match(controller,/mono-dice-roll/);
