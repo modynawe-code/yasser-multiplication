@@ -224,7 +224,12 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/\.mono-board-wrap\{width:min\(100vw,100dvh\);height:min\(100vw,100dvh\)/);
   assert.match(controller,/\.mono-overlay\{position:absolute/);
   assert.match(controller,/\.mono-actions\{display:flex/);
-  assert.match(controller,/font:800 clamp\(6px,2\.3vw,14px\)\/1\.05 system-ui/);
+  assert.match(controller,/font:800 clamp\(8px,2\.3vw,14px\)\/1\.05 system-ui/);
+  assert.match(controller,/font-size:clamp\(10px,1\.25vmin,16px\)/);
+  assert.match(controller,/\.mono-space\{font-size:clamp\(8px,2\.55vw,13px\)\}/);
+  assert.match(controller,/min-height:44px/);
+  assert.match(controller,/mono-deed-facts/);
+  assert.match(controller,/mono-dice-roll/);
   assert.match(controller,/grid-template-columns:1\.35fr repeat\(9,minmax\(0,1fr\)\) 1\.35fr/);
   assert.match(controller,/data-action="trade-confirm"/);
   assert.match(controller,/data-action="sell"/);
