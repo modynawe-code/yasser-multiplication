@@ -17,13 +17,15 @@ test('family shell owns only the Khaled home mount',async()=>{
   assert.doesNotMatch(familyShell,/id="khaledSkillList"/);
 });
 
-test('Khaled subject gateway separates math, science and Quran',async()=>{
+test('Khaled subject gateway separates math, science, Quran and literacy',async()=>{
   const shell=await read('src/modules/khaled/ui/khaled-home-shell.js');
   assert.match(shell,/home\.dataset\.presentation==='khaled-home-v4'/);
-  for(const id of ['khaledMathOpen','khaledScienceOpen','khaledQuranOpen','khaledHomeToHub','khaledMathToSubjects','khaledHomeCharacter','khaledAttempts','khaledErrors','khaledSkillList'])assert.match(shell,new RegExp(`id="${id}"`));
+  for(const id of ['khaledMathOpen','khaledScienceOpen','khaledQuranOpen','khaledLiteracyOpen','khaledHomeToHub','khaledMathToSubjects','khaledHomeCharacter','khaledAttempts','khaledErrors','khaledSkillList'])assert.match(shell,new RegExp(`id="${id}"`));
   assert.match(shell,/math\.id='khaledMathView'/);
   assert.match(shell,/createKhaledScienceController/);
   assert.match(shell,/createKhaledQuranController/);
+  assert.match(shell,/createKhaledLiteracyController/);
+  assert.match(shell,/khaledLiteracyOpen.*literacyController\?\.open\(\)/);
   assert.match(shell,/\.\.\/science\/khaled-science\.js/);
 });
 

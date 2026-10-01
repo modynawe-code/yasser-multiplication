@@ -6,3 +6,6 @@
 
 /* Worksheet atlas is 1120×1820 and preserves the source artwork. */
 .khaled-science-art{background-size:1120px 1820px!important}
+
+.khaled-subject-card.literacy{grid-column:1/-1}.khaled-subject-card.literacy .khaled-subject-mark{background:#fff4dc;color:#815a17}.khaled-subject-card.literacy em{color:#815a17}
+@media(max-width:700px){.khaled-subject-card.literacy{grid-column:auto}}

@@ -1,0 +1,9 @@
+.khaled-literacy-shell{max-width:1040px;margin:auto;padding:clamp(16px,3vw,30px);border:1px solid #eadfce;border-radius:28px;background:#fff;box-shadow:0 20px 48px rgba(73,52,31,.08);direction:rtl}
+.khaled-literacy-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px}
+.khaled-literacy-header h1{margin:0;font-size:clamp(24px,3vw,34px);line-height:1.25}
+.khaled-literacy-header p{margin:8px 0 0;color:var(--muted);font-weight:750;line-height:1.6}
+.khaled-literacy-player{display:grid;place-items:center;min-height:220px;padding:18px;border-radius:22px;background:#172338}
+.khaled-literacy-player video{display:block;width:auto;height:auto;max-width:100%;max-height:min(68dvh,780px);aspect-ratio:464/848;border-radius:14px;background:#0c1421;object-fit:contain}
+.khaled-literacy-note{margin:12px 2px 0;color:var(--muted);font-size:13px;font-weight:750}
+@media(max-width:700px){.khaled-literacy-shell{padding:16px;border-radius:22px}.khaled-literacy-header{flex-direction:column-reverse;gap:12px}.khaled-literacy-header .icon-btn{align-self:flex-start}.khaled-literacy-player{padding:10px;min-height:180px;border-radius:18px}.khaled-literacy-player video{max-height:68dvh}}
+@media(prefers-reduced-motion:reduce){.khaled-literacy-shell{scroll-behavior:auto}}
