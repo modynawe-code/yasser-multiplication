@@ -233,6 +233,14 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/min-height:44px/);
   assert.match(controller,/mono-deed-facts/);
   assert.match(controller,/mono-dice-roll/);
+  assert.match(controller,/\.mono-board\{transform-origin:top left;transition:transform/);
+  assert.match(controller,/function focusBoard\(index\)/);
+  assert.match(controller,/function renderMiniMap\(activeIndex\)/);
+  assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
+  assert.match(controller,/data-action="focus-space"/);
+  assert.match(controller,/id="monoBoardOverview"/);
+  assert.match(controller,/prefers-reduced-motion:reduce/);
+  assert.match(controller,/movementAnimating/);
   assert.match(controller,/grid-template-columns:1\.35fr repeat\(9,minmax\(0,1fr\)\) 1\.35fr/);
   assert.match(controller,/data-action="trade-confirm"/);
   assert.match(controller,/data-action="sell"/);
