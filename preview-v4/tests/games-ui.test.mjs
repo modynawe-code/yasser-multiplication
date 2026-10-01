@@ -206,6 +206,7 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(catalog,/id:'family-monopoly'/);
   assert.match(engine,/export const BOARD=freeze\(\[/);
   assert.match(engine,/property\('نيوم'/);
+  assert.match(controller,/#monopolyGameView \[hidden\]\{display:none!important\}/);
   assert.match(controller,/\.mono-board-wrap\{width:min\(100vw,100dvh\);height:min\(100vw,100dvh\)/);
   assert.match(controller,/\.mono-overlay\{position:absolute/);
   assert.match(controller,/\.mono-actions\{display:flex/);
