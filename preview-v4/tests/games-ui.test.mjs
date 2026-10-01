@@ -237,6 +237,12 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/function focusBoard\(index\)/);
   assert.match(controller,/function renderMiniMap\(activeIndex,visible=true\)/);
   assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
+  assert.match(controller,/async function zoomOutBoardTransition\(\)/);
+  assert.match(controller,/await waitForMotion\(380\)/);
+  assert.match(controller,/await waitForMotion\(movementStepDuration\(\)\)/);
+  assert.match(controller,/await waitForMotion\(440\)/);
+  assert.match(controller,/function cameraScaleForMove\(\)\{if\(isPhoneLayout\(\)\)return 1\.8/);
+  assert.match(controller,/movementAnimating=false;render\(\);await zoomOutBoardTransition\(\)/);
   assert.match(controller,/data-action="focus-space"/);
   assert.match(controller,/id="monoBoardOverview"/);
   assert.match(controller,/prefers-reduced-motion:reduce/);
