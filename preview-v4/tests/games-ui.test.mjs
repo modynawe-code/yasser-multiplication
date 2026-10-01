@@ -258,7 +258,7 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/function zoomOutBoard\(\)/);
   assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.22s/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
-  assert.match(controller,/await animateTokenMove\(actor\.id,from,to\);if\(animationId!==movementAnimationId\)return;movementAnimating=false;zoomOutBoard\(\);render\(\)/);
+  assert.match(controller,/await animateTokenMove\(actor\.id,from,to\);if\(animationId!==movementAnimationId\)return;movementAnimating=false;render\(\);await zoomOutBoardTransition\(\)/);
   assert.match(controller,/grid-template-columns:1\.35fr repeat\(9,minmax\(0,1fr\)\) 1\.35fr/);
   assert.match(controller,/data-action="trade-confirm"/);
   assert.match(controller,/data-action="sell"/);
