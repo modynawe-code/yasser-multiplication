@@ -234,6 +234,10 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/mono-deed-facts/);
   assert.match(controller,/mono-dice-roll/);
   assert.match(controller,/\.mono-board\{transform-origin:top left;transition:transform/);
+  assert.match(controller,/\.mono-token-row\{position:absolute;z-index:2;display:grid/);
+  assert.match(controller,/\.mono-token-row\[data-edge=bottom\]\{top:2px/);
+  assert.match(controller,/\.mono-token-row\[data-edge=top\]\{bottom:2px/);
+  assert.match(controller,/class="mono-token-row" data-edge="\$\{edge\}" aria-hidden="true"/);
   assert.match(controller,/function focusBoard\(index\)/);
   assert.match(controller,/function renderMiniMap\(activeIndex,visible=true\)/);
   assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
@@ -247,6 +251,8 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(controller,/id="monoBoardOverview"/);
   assert.match(controller,/prefers-reduced-motion:reduce/);
   assert.match(controller,/movementAnimating/);
+  assert.match(controller,/function openSetup\(\)\{ensureMonopolyShell\(\);state=null;onlineBusy=false;onlineRoom=null;onlineSession\.stop\(\)/);
+  assert.match(controller,/addEventListener\?\.\('pageshow',event=>\{if\(event\.persisted&&document\.getElementById\('monopolyGameView'\)\?\.classList\.contains\('active'\)\)openSetup\(\);\}/);
   assert.match(controller,/function isTabletPortrait\(\)/);
   assert.match(controller,/function cameraScaleForMove\(\)/);
   assert.match(controller,/function movementStepDuration\(\)/);
