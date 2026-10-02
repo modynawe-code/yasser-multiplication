@@ -1,3 +1,4 @@
+// Force Safari clients to install the worker that refreshes the updated game shell.
 importScripts('./service-worker.js');
 
 const EXTENSION_CACHE_PREFIX='family-learning-runtime-extensions-';
