@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-170`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-171`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -83,6 +83,8 @@ const APP_SHELL=[
   './assets/characters/yasser-welcome.webp','./assets/assistant/assistant-welcome.webp',
   './assets/visual/yasser/welcome.b64.txt','./assets/visual/yasser/thinking.b64.txt','./assets/visual/yasser/encourage.b64.txt','./assets/visual/yasser/celebrate.b64.txt','./assets/visual/yasser/mastered.b64.txt',
   './assets/visual/assistant/idle.b64.txt','./assets/visual/assistant/thinking.b64.txt','./assets/visual/assistant/celebrate.b64.txt',
+  './assets/visual/yasser-mascot-v1/yasser-welcome.webp','./assets/visual/yasser-mascot-v1/yasser-thinking.webp','./assets/visual/yasser-mascot-v1/yasser-encourage.webp','./assets/visual/yasser-mascot-v1/yasser-celebrate.webp','./assets/visual/yasser-mascot-v1/yasser-mastered.webp',
+  './assets/visual/yasser-mascot-v1/assistant-idle.webp','./assets/visual/yasser-mascot-v1/assistant-thinking.webp','./assets/visual/yasser-mascot-v1/composite-thinking.webp','./assets/visual/yasser-mascot-v1/composite-correct.webp','./assets/visual/yasser-mascot-v1/composite-celebration.webp',
   './assets/rewards/mastery-cup.b64.txt','./assets/rewards/weekly-cup.b64.txt','./assets/rewards/accuracy-medal.b64.txt','./assets/rewards/mastery-shield.b64.txt','./assets/rewards/distinction-crown.b64.txt','./assets/rewards/streak-flame.b64.txt','./assets/rewards/surprise-box.b64.txt','./assets/rewards/progress-badge.b64.txt',
   ...ORIGINAL_REWARD_ASSETS,
   ...MASHAAL_DOMAIN_ASSETS,

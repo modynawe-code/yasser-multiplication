@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { getScene, SCENES } from '../src/ui/visual/scene-manifest.js';
 import { VISUAL_ASSETS } from '../src/ui/visual/character-assets.js';
@@ -23,8 +24,21 @@ test('character states prefer original png files and retain legacy fallback',()=
   }
 });
 
+test('optimized character images are valid precacheable WebP assets',async()=>{
+  const descriptors=[...Object.values(VISUAL_ASSETS.yasser),...Object.values(VISUAL_ASSETS.assistant),VISUAL_ASSETS.composite.thinking,VISUAL_ASSETS.composite.correct,VISUAL_ASSETS.composite.celebration];
+  const optimized=[...new Set(descriptors.map(item=>item.optimized).filter(Boolean))];
+  assert.equal(optimized.length,10);
+  for(const path of optimized){
+    const bytes=await readFile(new URL(`../${path}`,import.meta.url));
+    assert.equal(bytes.toString('ascii',0,4),'RIFF',path);
+    assert.equal(bytes.toString('ascii',8,12),'WEBP',path);
+  }
+});
+
 test('temporary feedback scenes return to the calm question state',()=>{
   assert.equal(getScene('correct').returnTo,'question');
+  assert.equal(getScene('correct').composite,'correct');
+  assert.equal(getScene('learn').composite,'thinking');
   assert.equal(getScene('wrong').returnTo,'question');
   assert.ok(getScene('correct').duration>0);
   assert.ok(getScene('wrong').duration>0);

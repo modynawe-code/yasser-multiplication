@@ -1,24 +1,25 @@
 const ROOT=new URL('../../../',import.meta.url);
 
-const asset=(source,fallback=null)=>({source,fallback});
+const asset=(source,fallback=null,optimized=null)=>({source,fallback,optimized});
 
 export const VISUAL_ASSETS={
   yasser:{
-    welcome:asset('assets/visual/original/yasser/welcome.png','assets/visual/yasser/welcome.b64.txt'),
-    thinking:asset('assets/visual/original/yasser/thinking.png','assets/visual/yasser/thinking.b64.txt'),
-    encourage:asset('assets/visual/original/yasser/encourage.png','assets/visual/yasser/encourage.b64.txt'),
-    celebrate:asset('assets/visual/original/yasser/celebrate.png','assets/visual/yasser/celebrate.b64.txt'),
-    mastered:asset('assets/visual/original/yasser/mastered.png','assets/visual/yasser/mastered.b64.txt')
+    welcome:asset('assets/visual/original/yasser/welcome.png','assets/visual/yasser/welcome.b64.txt','assets/visual/yasser-mascot-v1/yasser-welcome.webp'),
+    thinking:asset('assets/visual/original/yasser/thinking.png','assets/visual/yasser/thinking.b64.txt','assets/visual/yasser-mascot-v1/yasser-thinking.webp'),
+    encourage:asset('assets/visual/original/yasser/encourage.png','assets/visual/yasser/encourage.b64.txt','assets/visual/yasser-mascot-v1/yasser-encourage.webp'),
+    celebrate:asset('assets/visual/original/yasser/celebrate.png','assets/visual/yasser/celebrate.b64.txt','assets/visual/yasser-mascot-v1/yasser-celebrate.webp'),
+    mastered:asset('assets/visual/original/yasser/mastered.png','assets/visual/yasser/mastered.b64.txt','assets/visual/yasser-mascot-v1/yasser-mastered.webp')
   },
   assistant:{
-    idle:asset('assets/visual/original/assistant/idle.png','assets/visual/assistant/idle.b64.txt'),
-    thinking:asset('assets/visual/original/assistant/thinking.png','assets/visual/assistant/thinking.b64.txt'),
+    idle:asset('assets/visual/original/assistant/idle.png','assets/visual/assistant/idle.b64.txt','assets/visual/yasser-mascot-v1/assistant-idle.webp'),
+    thinking:asset('assets/visual/original/assistant/thinking.png','assets/visual/assistant/thinking.b64.txt','assets/visual/yasser-mascot-v1/assistant-thinking.webp'),
     celebrate:asset('assets/visual/original/assistant/celebrate.png','assets/visual/assistant/celebrate.b64.txt')
   },
   composite:{
     welcome:asset('assets/visual/original/group/yasser-assistant-welcome.png'),
-    thinking:asset('assets/visual/original/group/yasser-assistant-thinking.png'),
-    celebration:asset('assets/visual/original/group/yasser-assistant-celebration.png')
+    thinking:asset('assets/visual/original/group/yasser-assistant-thinking.png',null,'assets/visual/yasser-mascot-v1/composite-thinking.webp'),
+    correct:asset('assets/visual/original/group/yasser-assistant-celebration.png',null,'assets/visual/yasser-mascot-v1/composite-correct.webp'),
+    celebration:asset('assets/visual/original/group/yasser-assistant-celebration.png',null,'assets/visual/yasser-mascot-v1/composite-celebration.webp')
   }
 };
 
@@ -82,6 +83,11 @@ async function loadPath(path){
 
 async function loadDescriptor(group,state){
   const selected=getDescriptor(group,state);
+  if(selected.descriptor.optimized){
+    try{
+      return{url:await loadPath(selected.descriptor.optimized),state:selected.state,quality:'optimized'};
+    }catch{}
+  }
   try{
     return{url:await loadPath(selected.descriptor.source),state:selected.state,quality:'original'};
   }catch(originalError){

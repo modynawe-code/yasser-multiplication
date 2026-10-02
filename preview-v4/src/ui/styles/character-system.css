@@ -29,11 +29,11 @@ body.intro-mode main{padding-top:max(18px,env(safe-area-inset-top))}
 
 .learn-head{position:relative}
 .learn-visuals{display:flex;align-items:flex-end;justify-content:center;gap:var(--character-gap-medium);width:calc(var(--character-yasser-learn) + var(--character-assistant-learn) + var(--character-gap-medium));min-height:calc(var(--character-yasser-learn) + 4px);flex:0 0 auto;pointer-events:none}
-.learn-yasser{height:var(--character-yasser-learn);width:auto}.learn-assistant{width:var(--character-assistant-learn);height:var(--character-assistant-learn);margin-bottom:4px}
+.learn-yasser{height:var(--character-yasser-learn);width:auto}.learn-assistant{width:var(--character-assistant-learn);height:var(--character-assistant-learn);margin-bottom:4px}.learn-composite{width:min(100%,360px);height:auto;max-height:var(--character-yasser-learn);object-fit:contain;filter:drop-shadow(0 14px 18px rgba(31,56,126,.14))}
 
 .question-card{position:relative;overflow:hidden}
 .session-visuals{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:var(--character-gap-medium);width:min(100%,420px);min-height:calc(var(--character-yasser-session) + 4px);margin:0 auto 8px;pointer-events:none}
-.session-yasser{height:var(--character-yasser-session);width:auto}.session-assistant{width:var(--character-assistant-session);height:var(--character-assistant-session);margin-bottom:6px}
+.session-yasser{height:var(--character-yasser-session);width:auto}.session-assistant{width:var(--character-assistant-session);height:var(--character-assistant-session);margin-bottom:6px}.session-composite{width:min(100%,360px);height:auto;max-height:var(--character-yasser-session);object-fit:contain;filter:drop-shadow(0 14px 18px rgba(31,56,126,.14))}
 .question-card .streak{margin-top:6px}
 .question-card.exam-mode .session-visuals{display:none}
 .question-card.exam-mode .streak{margin-top:0}
