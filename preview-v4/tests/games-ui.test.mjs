@@ -213,7 +213,7 @@ test('PWA shell includes resumable games, registry participants and the shared n
   ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
 });
 
-test('Monopoly keeps the complete classic board fixed while turn and property actions overlay its center',async()=>{
+test('Monopoly keeps controls outside the board and clamps focused movement to its frame',async()=>{
   const catalog=await read('src/modules/games/game-catalog.js');
   const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
   const engine=await read('src/modules/games/monopoly/monopoly-engine.js');
@@ -222,6 +222,9 @@ test('Monopoly keeps the complete classic board fixed while turn and property ac
   assert.match(engine,/property\('نيوم'/);
   assert.match(controller,/#monopolyGameView \[hidden\]\{display:none!important\}/);
   assert.match(controller,/\.mono-board-wrap\{width:min\(100vw,100dvh\);height:min\(100vw,100dvh\)/);
+  assert.match(controller,/id="monoControlPanel"/);
+  assert.match(controller,/\.mono-control-panel\{width:min\(100%,1000px\)/);
+  assert.match(controller,/Math\.min\(0,Math\.max\(wrap\.clientWidth-board\.offsetWidth\*scale/);
   assert.match(controller,/\.mono-overlay\{position:absolute/);
   assert.match(controller,/\.mono-actions\{display:flex/);
   assert.match(controller,/font:800 clamp\(8px,2\.3vw,14px\)\/1\.05 system-ui/);
