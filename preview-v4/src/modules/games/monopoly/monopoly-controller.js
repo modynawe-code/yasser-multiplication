@@ -57,7 +57,7 @@ function ensureMonopolyStyle(){
     .mono-mini-map{position:relative;inset:auto;right:auto;bottom:auto;flex:0 0 72px;width:72px;max-width:72px}
     @media(max-width:849px) and (orientation:portrait){
       .mono-game{position:relative}
-      .mono-game.overlay-open::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:rgba(17,31,24,.36)}
+      .mono-game.overlay-open::before{display:none}
       .mono-game.overlay-open .mono-board-wrap{width:min(100vw,calc(64dvh - 24px));height:min(100vw,calc(64dvh - 24px))}
       .mono-overlay{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto;width:min(calc(100% - 16px),700px);max-height:min(36dvh,360px);margin:0 auto;overflow:hidden;animation:none}
     }
