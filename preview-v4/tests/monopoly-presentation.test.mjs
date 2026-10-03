@@ -16,6 +16,8 @@ test('rent event reports both player balances and the calculated rent', () => {
   assert.equal(event.type, 'rent');
   assert.equal(event.reason, 'طريف');
   assert.equal(event.amount, 4);
+  assert.equal(event.payerId, 'b');
+  assert.equal(event.ownerId, 'a');
   assert.deepEqual(event.transactions.map(row => [row.before, row.after]), [[1500, 1496], [1440, 1444]]);
 });
 
