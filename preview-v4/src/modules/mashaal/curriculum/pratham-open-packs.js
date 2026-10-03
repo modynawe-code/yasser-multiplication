@@ -1,0 +1,41 @@
+export const MASHAAL_PRATHAM_OPEN_PACKS=Object.freeze({
+  '0433':Object.freeze({
+    title:'The Tree',author:'Usha Rane',illustrator:'Ketan Raut',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/212-the-tree',
+    basePath:'assets/oer/pratham/0433',imageCount:13
+  }),
+  '0352':Object.freeze({
+    title:"Let's Go Seed Collecting!",author:'Neha Sumitran',illustrator:'Archana Sreenivasan',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/4407-let-s-go-seed-collecting',
+    basePath:'assets/oer/pratham/0352',imageCount:19
+  }),
+  '0071':Object.freeze({
+    title:'Colours of Nature',author:'Bulbul Sharma',illustrator:'Bulbul Sharma',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/409-colours-of-nature',
+    basePath:'assets/oer/pratham/0071',imageCount:17
+  }),
+  '0056':Object.freeze({
+    title:'Goodnight, Tinku!',author:'Preethi Nambiar',illustrator:'Sonal Goyal, Sumit Sakhuja',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/258-goodnight-tinku',
+    basePath:'assets/oer/pratham/0056',imageCount:12
+  }),
+  '0006':Object.freeze({
+    title:'Counting on Moru',author:'Rukmini Banerji',illustrator:'Nina Sabnani',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/38-counting-on-moru',
+    basePath:'assets/oer/pratham/0006',imageCount:24
+  }),
+
+  '0120':Object.freeze({
+    title:"Anaya's Thumb",author:'Natasha Sharma',illustrator:'Ruchi Shah',license:'CC BY 4.0',
+    storyUrl:'https://storyweaver.org.in/stories/1002-anaya-s-thumb',
+    basePath:'assets/oer/pratham/0120',imageCount:3,selectedFiles:Object.freeze(['03.jpg','05.jpg','09.jpg'])
+  })
+});
+
+export function getMashaalPrathamOpenPack(id){return MASHAAL_PRATHAM_OPEN_PACKS[String(id||'')]||null;}
+
+export function listMashaalPrathamPackImagePaths(id){
+  const pack=getMashaalPrathamOpenPack(id);if(!pack)return Object.freeze([]);
+  const files=Array.isArray(pack.selectedFiles)?[...pack.selectedFiles]:Array.from({length:Number(pack.imageCount)||0},(_,index)=>String(index+1).padStart(2,'0')+'.jpg');
+  return Object.freeze(files.map(file=>`${pack.basePath}/${file}`));
+}

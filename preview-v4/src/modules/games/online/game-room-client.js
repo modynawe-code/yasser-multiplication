@@ -1,0 +1,46 @@
+import { FAMILY_API_PRODUCTION_BASE,getFamilyApiBase } from '../../../shared/config/family-api-config.js';
+import { getGameHistoryDeviceToken } from '../history/game-history-device-token.js';
+
+async function parseResponse(response){
+  let body=null;try{body=await response.json();}catch{}
+  if(response.ok)return body;
+  const error=new Error(body?.error||`game_room_http_${response.status}`);error.status=response.status;error.body=body;throw error;
+}
+
+export function getGameRoomApiBase(){
+  return getFamilyApiBase()||FAMILY_API_PRODUCTION_BASE;
+}
+
+export function createGameRoomClient({baseUrl=getGameRoomApiBase(),fetchImpl=globalThis.fetch}={}){
+  if(typeof fetchImpl!=='function')throw new TypeError('fetch implementation required');
+  const base=String(baseUrl||'').replace(/\/$/,'');
+  async function request(path,{method='GET',body,token}={}){
+    const headers={'content-type':'application/json'};if(token)headers['x-game-token']=token;const familyToken=getGameHistoryDeviceToken();if(familyToken)headers['x-family-game-token']=familyToken;
+    const response=await fetchImpl(`${base}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
+    return parseResponse(response);
+  }
+  return Object.freeze({
+    createRoom({gameId='xo',learnerId,displayName}={}){return request('/v1/games/rooms',{method:'POST',body:{gameId,learnerId,displayName}});},
+    joinRoom({code,learnerId,displayName,participationRole='player'}={}){return request('/v1/games/rooms/join',{method:'POST',body:{code,learnerId,displayName,participationRole}});},
+    getRoom({code,token}={}){return request(`/v1/games/rooms/${encodeURIComponent(code)}`,{token});},
+    submitAction({code,token,expectedVersion,type,payload={},cell}={}){
+      const extra=payload&&typeof payload==='object'&&!Array.isArray(payload)?payload:{};
+      const body={...extra,expectedVersion,type};
+      if(cell!==undefined&&body.cell===undefined)body.cell=cell;
+      return request(`/v1/games/rooms/${encodeURIComponent(code)}/actions`,{method:'POST',token,body});
+    }
+  });
+}
+
+export function createRoomPoller({load,onRoom,onError,intervalMs=1100,setTimer=setTimeout,clearTimer=clearTimeout}={}){
+  let timer=null,stopped=true,busy=false;
+  async function tick(){
+    if(stopped||busy)return;busy=true;
+    try{const result=await load();if(!stopped)onRoom?.(result?.room||result);}catch(error){if(!stopped)onError?.(error);}finally{busy=false;if(!stopped)timer=setTimer(tick,intervalMs);}
+  }
+  return Object.freeze({
+    start(){if(!stopped)return;stopped=false;tick();},
+    stop(){stopped=true;if(timer!==null){clearTimer(timer);timer=null;}},
+    get running(){return!stopped;}
+  });
+}

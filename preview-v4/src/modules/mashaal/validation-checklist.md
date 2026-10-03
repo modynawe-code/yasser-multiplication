@@ -1,0 +1,25 @@
+# Mashaal KG3 validation checklist
+
+- [x] Learner registered through the open learner registry.
+- [x] Six Saudi KG3 domains represented and source-bound.
+- [x] Twenty-five KG3 skills mapped to direct SELS indicators.
+- [x] Twenty-four non-recitation activities playable with qualitative developmental evidence.
+- [x] Child flow is audio-first, non-punitive, and alternates screen/off-screen practice.
+- [x] Tablet landscape layout, large touch targets, visible focus, reduced-motion support, and non-color-only meaning implemented.
+- [x] Ordered and multi-select choices expose accessible pressed state.
+- [x] Family Hub and parent-report layouts scale to future learners without fixed desktop child counts.
+- [x] Parent report derives Mashaal state from the same curriculum/activity plan and shows no child percentage score.
+- [x] Full games/rewards integration preserves Yasser and Khaled while keeping Mashaal developmental rewards separate.
+- [x] Cloud sync is learner-neutral and restores exact stage-specific sessions without duplicating local/baseline history.
+- [x] Attempts, developmental evidence, and cloud session history are append-only/idempotent.
+- [x] Offline PWA shell includes Mashaal runtime, parent-report, family-sync capability, and session-restore dependencies.
+- [x] Yasser regression coverage passes.
+- [x] Khaled regression coverage passes.
+- [x] Family backend regression coverage passes.
+- [x] Quran recitation runtime forbids synthetic recitation and is limited to Surat Al-Ikhlas (112).
+- [x] Verified Al-Ikhlas human-recitation asset is committed: 238696 bytes, SHA-256 `102112a78148e14a568679599d856b06ce830ac63e6e59fa2d6a5a423d8c9bd1`.
+- [x] Mashaal content readiness is 25/25 skills.
+- [x] Galaxy Tab visual QA contract and manual evidence matrix are documented and regression-tested; this does not count as the real-device pass.
+- [ ] Run the documented manual visual QA on the actual target Galaxy Tab in landscape and portrait and record PASS evidence.
+- [ ] Apply the reviewed D1 migrations only during controlled production rollout.
+- [ ] Merge PR #29 only after remaining release blockers are cleared and Mohammed explicitly approves the merge.

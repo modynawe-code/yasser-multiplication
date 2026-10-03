@@ -1,0 +1,25 @@
+export const MASHAAL_RELEASE_EVIDENCE = Object.freeze({
+  manualVisualQa:Object.freeze({
+    status:'pending',
+    actualDevice:false,
+    deviceModel:null,
+    androidVersion:null,
+    browserMode:null,
+    browserVersion:null,
+    testedAt:null,
+    landscape:Object.freeze({status:'pending',viewport:null,evidenceRefs:Object.freeze([])}),
+    portrait:Object.freeze({status:'pending',viewport:null,evidenceRefs:Object.freeze([])}),
+    orientationChangePassed:false,
+    offlineSmokePassed:false
+  }),
+  productionD1:Object.freeze({
+    status:'pending',
+    databaseName:'yasser-khaled-family',
+    appliedAt:null,
+    appliedMigrations:Object.freeze([]),
+    d1Bookmark:null,
+    backupRef:null,
+    prePostRowCountsVerified:false,
+    verifiedTriggers:Object.freeze([])
+  })
+});

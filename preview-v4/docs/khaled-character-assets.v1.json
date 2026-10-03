@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "character": "khaled",
+  "palette": "orange",
+  "sourcePolicy": "Preserve original uploaded PNG dimensions and pixels. Do not resize, crop, recompress, or re-encode source masters.",
+  "integrationStatus": "source masters confirmed; repository binary ingest pending",
+  "assets": [
+    {
+      "key": "welcome",
+      "filename": "khaled-point-thumbsup.png",
+      "repoPath": "assets/visual/original/khaled/khaled-point-thumbsup.png",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1319773,
+      "sha256": "bdbc35cea45abf584b992629a6424f4b6461dccbce0ffeb936008dacb9de30f2"
+    },
+    {
+      "key": "mastered",
+      "filename": "khaled-star-badge.png",
+      "repoPath": "assets/visual/original/khaled/khaled-star-badge.png",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1311063,
+      "sha256": "bb8a975daf5a2a39740779504dcc64760bca315544e7b64c83b4be43b995552c"
+    },
+    {
+      "key": "thinking",
+      "filename": "khaled-thinking.png",
+      "repoPath": "assets/visual/original/khaled/khaled-thinking.png",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 972111,
+      "sha256": "8cbb9c76084fe5367a48537df0979577a8ea8f7eea9e44d20960926578b53291"
+    },
+    {
+      "key": "celebrate",
+      "filename": "khaled-celebration.png",
+      "repoPath": "assets/visual/original/khaled/khaled-celebration.png",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1407145,
+      "sha256": "3ecb4906acab750b0230ead13fd27d4168e8108fd1b4170a6150af85b533c0cb"
+    },
+    {
+      "key": "encourage",
+      "filename": "khaled-thumbsup.png",
+      "repoPath": "assets/visual/original/khaled/khaled-thumbsup.png",
+      "width": 1086,
+      "height": 1448,
+      "bytes": 1263459,
+      "sha256": "9c5fb726edcd7a62b7b8831fd5fa171925c074f8983dacc15a171df147fedd43"
+    },
+    {
+      "key": "group-thinking",
+      "filename": "khaled-thinking-with-calculator.png",
+      "repoPath": "assets/visual/original/khaled/group/khaled-thinking-with-calculator.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 1377617,
+      "sha256": "2b25222f4f81e020a5d112d73113d32e5c617fd494037f83b0cbdf5d3112c0f4"
+    },
+    {
+      "key": "group-celebration",
+      "filename": "khaled-celebration-with-calculator.png",
+      "repoPath": "assets/visual/original/khaled/group/khaled-celebration-with-calculator.png",
+      "width": 1448,
+      "height": 1086,
+      "bytes": 1720745,
+      "sha256": "f3c516b9d0754223b7948dc85ea016eedee6788873b76afcd313b4881bc130c6"
+    }
+  ]
+}

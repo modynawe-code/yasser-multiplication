@@ -1,0 +1,15 @@
+{
+  "id":"./",
+  "name":"تعلم العائلة",
+  "short_name":"تعلم العائلة",
+  "description":"منصة تعلم عائلية بمسارات مستقلة ومناسبة لمرحلة كل طفل",
+  "lang":"ar",
+  "dir":"rtl",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "orientation":"any",
+  "background_color":"#f4f6fb",
+  "theme_color":"#3157d5",
+  "categories":["education"]
+}

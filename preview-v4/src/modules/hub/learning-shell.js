@@ -1,0 +1,133 @@
+function ensureStyle(href,key){
+  if(document.querySelector(`link[data-module-style="${key}"]`))return;
+  const link=document.createElement('link');
+  link.rel='stylesheet';
+  link.href=href;
+  link.dataset.moduleStyle=key;
+  document.head.appendChild(link);
+}
+
+export function ensureLearningShell(){
+  const main=document.querySelector('main');
+  if(!main||document.getElementById('hubView'))return;
+
+  ensureStyle('src/ui/styles/learning-navigation.css','learning-navigation');
+  ensureStyle('src/modules/hub/learning-hub.css','learning-hub');
+  ensureStyle('src/modules/khaled/ui/khaled-character-system.css','khaled-characters');
+  ensureStyle('src/modules/khaled/ui/khaled-device-hardening.css','khaled-device-hardening');
+  ensureStyle('src/modules/parent/family-parent.css','family-parent');
+
+  const topbar=document.querySelector('.topbar');
+  if(topbar&&!document.getElementById('switchLearnerBtn')){
+    const button=document.createElement('button');
+    button.className='icon-btn';
+    button.id='switchLearnerBtn';
+    button.textContent='اختيار الطفل';
+    topbar.appendChild(button);
+  }
+
+  const shell=document.createElement('div');
+  shell.innerHTML=`
+    <section id="hubView" class="view">
+      <div class="learner-hub">
+        <div class="hub-heading">
+          <div class="hub-heading-actions"><button class="icon-btn family-parent-open" id="familyParentBtn">تقرير ولي الأمر</button></div>
+          <div class="kicker">اختر رحلتك</div><h1>مين بيتعلم اليوم؟</h1><p>لكل واحد مساره ومستواه وتقدمه الخاص.</p>
+        </div>
+        <div class="learner-grid">
+          <button class="learner-card yasser-card" id="hubYasser">
+            <div class="learner-character-shell hub-yasser-character" aria-hidden="true">
+              <img class="learner-yasser-image" src="assets/visual/original/yasser/welcome.png" alt="" width="1049" height="1499" decoding="async" fetchpriority="high" />
+            </div>
+            <div class="learner-card-copy"><strong>ياسر</strong><span>جدول الضرب 1–10</span><small>تدريب • اختبار • إتقان</small></div>
+          </button>
+          <button class="learner-card khaled-card" id="hubKhaled">
+            <div class="learner-character-shell hub-khaled-character" aria-hidden="true">
+              <img id="hubKhaledCharacter" class="khaled-character-image" alt="" width="1086" height="1448" decoding="async" hidden />
+              <div class="learner-placeholder khaled" id="hubKhaledFallback"><span>+</span><span>−</span></div>
+            </div>
+            <div class="learner-card-copy"><strong>خالد</strong><span>رياضيات أول ابتدائي</span><small>أعداد • عمليات • قياس • أشكال • نقود</small></div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="khaledIntroView" class="view">
+      <div class="khaled-intro-shell">
+        <article class="card khaled-intro-card">
+          <div class="khaled-intro-toolbar">
+            <button class="icon-btn" id="khaledIntroBack" data-nav="back" aria-label="العودة لاختيار الطفل">رجوع</button>
+            <div class="khaled-intro-badge">رياضيات أول ابتدائي</div>
+            <span class="khaled-intro-toolbar-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="khaled-intro-character" aria-hidden="true">
+            <img id="khaledIntroCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" fetchpriority="high" hidden />
+            <div class="khaled-character-fallback" id="khaledIntroCharacterFallback">+ −</div>
+          </div>
+          <div class="khaled-intro-copy">
+            <h1>جاهز يا خالد؟</h1>
+            <p>نعدّ ونقارن ونجمع ونتعلم بالصور والنقود خطوة خطوة.</p>
+          </div>
+          <button class="btn khaled-intro-start" id="khaledIntroStart">يلا نبدأ</button>
+        </article>
+      </div>
+    </section>
+
+    <section id="khaledHomeView" class="view"></section>
+
+    <section id="khaledSessionView" class="view">
+      <div class="khaled-session-wrap">
+        <div class="session-head"><div><h2 id="khaledSessionTitle">رياضيات خالد</h2><p id="khaledSessionMeta"></p></div><div class="learning-nav-actions"><button class="icon-btn" id="khaledExitSession" data-nav="back" aria-label="العودة لمهارات خالد">رجوع</button></div></div>
+        <div class="progress-line" id="khaledSessionProgressTrack" role="progressbar" aria-label="تقدم جولة خالد" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="khaledSessionProgress" style="width:0%"></i></div>
+        <div class="card khaled-question-card">
+          <div class="khaled-session-character" aria-hidden="true">
+            <img id="khaledSessionCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" hidden />
+            <div class="khaled-character-fallback compact" id="khaledSessionCharacterFallback">+ −</div>
+          </div>
+          <div class="khaled-question-content">
+            <button class="hear-question" id="hearKhaledQuestion" aria-label="اسمع السؤال"><span class="learning-speaker-mark" aria-hidden="true"><i></i></span><span>اسمع السؤال</span></button>
+            <h3 id="khaledPrompt">اختر الإجابة</h3>
+            <div class="khaled-visual" id="khaledVisual"></div>
+            <div class="khaled-answers" id="khaledAnswers"></div>
+            <div class="khaled-feedback" id="khaledFeedback" role="status" aria-live="polite" aria-atomic="true"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="khaledResultView" class="view">
+      <div class="result khaled-result"><div class="card result-card">
+        <div class="khaled-result-character" aria-hidden="true">
+          <img id="khaledResultCharacter" class="khaled-character-image" alt="" width="1448" height="1086" decoding="async" hidden />
+          <div class="khaled-result-symbol" id="khaledResultCharacterFallback">+ −</div>
+        </div>
+        <h2 id="khaledResultTitle">أحسنت يا خالد</h2><p id="khaledResultSkill"></p>
+        <div class="score-ring" id="khaledResultScore" role="progressbar" aria-label="إتقان جولة خالد" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><strong id="khaledResultPct">0%</strong></div>
+        <div class="result-metrics"><div class="result-metric"><span>صح من أول مرة</span><strong id="khaledResultCorrect">0</strong></div><div class="result-metric"><span>صح بعد تصحيح</span><strong id="khaledResultCorrected">0</strong></div><div class="result-metric"><span>تحتاج مراجعة</span><strong id="khaledResultWrong">0</strong></div></div>
+        <div class="result-actions"><button class="btn primary" id="khaledRetry">مرة ثانية</button><button class="btn secondary" id="khaledResultHome">مهارات خالد</button><button class="khaled-result-link" id="khaledResultToHub">اختيار الطفل</button></div>
+      </div></div>
+    </section>
+
+    <section id="familyParentView" class="view">
+      <div class="family-parent-layout">
+        <nav class="card family-parent-nav">
+          <button class="active" data-family-parent-tab="overview">الملخص</button>
+          <button data-family-parent-tab="sessions">آخر الجلسات</button>
+          <button id="familyParentHome">العودة لاختيار الطفل</button>
+        </nav>
+        <div class="card family-parent-main" id="familyParentContent"></div>
+      </div>
+    </section>`;
+
+  const fragment=document.createDocumentFragment();
+  while(shell.firstElementChild)fragment.appendChild(shell.firstElementChild);
+  main.prepend(fragment);
+
+  if(!document.getElementById('familyPinModal')){
+    const modal=document.createElement('div');
+    modal.className='modal';
+    modal.id='familyPinModal';
+    modal.innerHTML=`<div class="card modal-card"><h3 style="margin-top:0">تقرير ولي الأمر</h3><p class="muted">أدخل الرقم السري لعرض تقدم الأطفال.</p><input class="pin" id="familyPinInput" type="password" inputmode="numeric" maxlength="4" /><button class="btn primary" style="width:100%" id="familyPinSubmit">فتح التقرير</button><button class="btn secondary" style="width:100%;margin-top:8px" id="familyPinCancel">إلغاء</button></div>`;
+    document.body.appendChild(modal);
+  }
+}

@@ -1,0 +1,3 @@
+import { LEGACY_STORAGE_KEYS, STORAGE_KEY } from '../../domain/constants.js';
+import { createInitialState, normalizeState } from '../../domain/state-model.js';
+export function createLocalStorageRepository(storage=globalThis.localStorage){return{load(){try{let raw=storage?.getItem(STORAGE_KEY);if(!raw){for(const legacyKey of LEGACY_STORAGE_KEYS){const legacy=storage?.getItem(legacyKey);if(legacy){raw=legacy;break;}}}return normalizeState(raw?JSON.parse(raw):createInitialState());}catch{return createInitialState();}},save(state){try{storage?.setItem(STORAGE_KEY,JSON.stringify(state));return true;}catch{return false;}},export(state){return JSON.stringify(state,null,2);}};}

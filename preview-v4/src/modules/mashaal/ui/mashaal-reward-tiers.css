@@ -1,0 +1,34 @@
+.mashaal-treasure-tiers{display:grid;gap:1.25rem}
+.mashaal-treasure-tier{padding:1rem;border:1px solid rgba(79,66,80,.08);border-radius:30px;background:rgba(255,255,255,.54)}
+.mashaal-treasure-tier>header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.15rem .2rem .85rem}
+.mashaal-treasure-tier>header h2{margin:0;color:var(--mashaal-treasure-ink);font-size:clamp(1.25rem,2.5vw,1.65rem)}
+.mashaal-treasure-tier>header p{margin:.16rem 0 0;color:var(--mashaal-treasure-muted);font-size:.84rem;font-weight:700}
+.mashaal-treasure-tier>header>span{display:grid;place-items:center;min-width:64px;min-height:38px;padding:.2rem .6rem;border-radius:999px;background:#fff;color:var(--mashaal-treasure-lavender);font-weight:900}
+.mashaal-treasure-tier.premium{border-color:rgba(199,160,88,.22);background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(246,244,255,.88));box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),0 12px 34px rgba(127,108,155,.08)}
+.mashaal-treasure-tier.premium>header h2{color:#75639f}
+.mashaal-tier-chip{display:inline-flex;position:relative;align-items:center;justify-content:center;margin:.36rem .18rem 0;padding:.22rem .55rem;border-radius:999px;background:#f2edf1;color:#786a72;font-size:.68rem;font-style:normal;font-weight:900}
+.mashaal-tier-chip.premium{background:linear-gradient(135deg,#fff,#eeeaff);color:#7763a5;border:1px solid rgba(192,159,90,.2)}
+.mashaal-treasure-card>.mashaal-tier-chip{position:absolute;z-index:2;top:.68rem;inset-inline-start:.72rem;margin:0}
+.mashaal-treasure-card.premium{background:linear-gradient(155deg,rgba(255,255,255,.98),rgba(245,243,255,.96));border-color:rgba(179,159,213,.22)}
+.mashaal-treasure-card.premium.locked{background:linear-gradient(155deg,rgba(252,252,253,.84),rgba(244,243,248,.82))}
+.mashaal-treasure-card.premium.unlocked{box-shadow:0 12px 30px rgba(151,129,180,.13),inset 0 0 0 1px rgba(255,255,255,.8)}
+.mashaal-treasure-card.premium .mashaal-treasure-graphic{background:radial-gradient(circle at 30% 22%,#fff 0 15%,rgba(255,255,255,.5) 16% 24%,transparent 25%),linear-gradient(145deg,#fff,#f0edfb)}
+.mashaal-treasure-graphic img{display:block;width:100%;height:100%;object-fit:contain;filter:none}
+.mashaal-treasure-graphic:has(img){padding:7px}
+.mashaal-treasure-graphic.locked img{filter:grayscale(.72) saturate(.55);opacity:.66}
+.mashaal-reward-requirements{position:relative;width:100%;margin-top:.72rem;padding-top:.68rem;border-top:1px solid rgba(79,66,80,.08);text-align:start}
+.mashaal-reward-requirements>strong{display:block;margin-bottom:.42rem;color:#62555e;font-size:.78rem}
+.mashaal-reward-requirements ul{display:grid;gap:.3rem;margin:0;padding:0;list-style:none}
+.mashaal-reward-requirements li{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:.35rem;color:#746872;font-size:.69rem;line-height:1.25}
+.mashaal-reward-requirements li b{font-size:.68rem;color:#675a66}
+.mashaal-reward-requirements li small{margin:0;padding:.12rem .35rem;border-radius:999px;background:#f2eef1;color:#7b7077;font-size:.62rem;white-space:nowrap}
+.mashaal-reward-requirements li.complete small{background:#edf7ef;color:#4d7959}
+.mashaal-reward-progress{height:7px;margin-top:.58rem;border-radius:999px;background:#ece8ed;overflow:hidden}
+.mashaal-reward-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--mashaal-treasure-lavender),var(--mashaal-treasure-gold));transition:width .25s ease}
+.mashaal-reward-requirements>em{display:block;margin-top:.25rem;color:#81747d;font-size:.64rem;font-style:normal;font-weight:800;text-align:end}
+.mashaal-reward-count{display:block;margin-top:.35rem}
+.mashaal-treasure-card{min-height:330px;justify-content:flex-start}
+@media(min-width:900px) and (pointer:coarse){.mashaal-treasure-card{min-height:350px}.mashaal-reward-requirements li{font-size:.72rem}}
+@media(max-width:900px){.mashaal-treasure-card{min-height:315px}}
+@media(max-width:620px){.mashaal-treasure-tier{padding:.72rem;border-radius:23px}.mashaal-treasure-tier>header{align-items:flex-start}.mashaal-treasure-tier>header p{font-size:.74rem}.mashaal-treasure-card{min-height:300px}.mashaal-reward-requirements li{grid-template-columns:1fr auto}.mashaal-reward-requirements li small{grid-column:1/-1;justify-self:start}}
+@media(prefers-reduced-motion:reduce){.mashaal-reward-progress span{transition:none}}

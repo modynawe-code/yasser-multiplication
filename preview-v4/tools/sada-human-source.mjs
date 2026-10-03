@@ -1,0 +1,139 @@
+import { mkdir,writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { SADA_FILTER,SADA_SOURCE,normalizeSadaRow,rankSadaSpeakerGroups } from './voice/sada-source-config.mjs';
+
+const PAGE_LENGTH=100;
+const MAX_CONSECUTIVE_PAGE_FAILURES=4;
+const MIN_ROWS_BEFORE_EARLY_SELECTION=1000;
+const ROOT=resolve(fileURLToPath(new URL('..',import.meta.url)));
+const OUT=resolve(ROOT,'build/voice/sada');
+
+function arg(name,fallback=null){const i=process.argv.indexOf(`--${name}`);return i>=0?process.argv[i+1]:fallback;}
+function flag(name){return process.argv.includes(`--${name}`);}
+function numArg(name,fallback){const n=Number(arg(name,fallback));return Number.isFinite(n)?n:fallback;}
+function headers(){return process.env.HF_TOKEN?{Authorization:`Bearer ${process.env.HF_TOKEN}`}:{}}
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+
+async function fetchJson(url,{attempts=4}={}){
+  let lastError=null;
+  for(let attempt=1;attempt<=attempts;attempt++){
+    try{
+      const response=await fetch(url,{headers:headers()});
+      if(response.ok)return response.json();
+      const body=await response.text();
+      const retryable=response.status===429||response.status>=500;
+      lastError=new Error(`Hugging Face API ${response.status}: ${body}`);
+      if(!retryable||attempt===attempts)throw lastError;
+    }catch(error){
+      lastError=error;
+      if(attempt===attempts)throw error;
+    }
+    await sleep(Math.min(8000,1200*attempt));
+  }
+  throw lastError||new Error('Hugging Face API request failed');
+}
+
+async function fetchCandidates(startOffset,maxRows,{minCandidateSeconds=0}={}){
+  const rows=[];
+  const failedOffsets=[];
+  let total=null;
+  let consecutiveFailures=0;
+  let earlySelection=false;
+  const endOffset=startOffset+maxRows;
+  for(let offset=startOffset;offset<endOffset;offset+=PAGE_LENGTH){
+    const url=new URL('/rows',SADA_SOURCE.viewerApi);
+    url.search=new URLSearchParams({dataset:SADA_SOURCE.dataset,config:SADA_SOURCE.config,split:SADA_SOURCE.split,offset:String(offset),length:String(Math.min(PAGE_LENGTH,endOffset-offset))});
+    let payload;
+    try{
+      payload=await fetchJson(url);
+      consecutiveFailures=0;
+    }catch(error){
+      failedOffsets.push(offset);
+      consecutiveFailures+=1;
+      console.warn(`SADA metadata page ${offset} unavailable after retries; skipping it. ${error.message}`);
+      if(consecutiveFailures>=MAX_CONSECUTIVE_PAGE_FAILURES){
+        console.warn(`Stopping scan after ${MAX_CONSECUTIVE_PAGE_FAILURES} consecutive unavailable pages; using ${rows.length} rows already collected.`);
+        break;
+      }
+      continue;
+    }
+    if(Number.isFinite(Number(payload.num_rows_total)))total=Number(payload.num_rows_total);
+    const page=(payload.rows||[]).map(normalizeSadaRow);
+    rows.push(...page);
+    console.log(`SADA metadata collected: ${rows.length}${total!==null?` / up to ${Math.min(maxRows,Math.max(0,total-startOffset))}`:''}`);
+    if(minCandidateSeconds>0&&rows.length>=MIN_ROWS_BEFORE_EARLY_SELECTION){
+      const candidate=rankSadaSpeakerGroups(rows)[0];
+      if(candidate&&candidate.totalSeconds>=minCandidateSeconds){
+        earlySelection=true;
+        console.log(`Early human-source candidate found after ${rows.length} rows: ${candidate.key} (${(candidate.totalSeconds/60).toFixed(1)} min eligible).`);
+        break;
+      }
+    }
+    if(page.length<PAGE_LENGTH||(total!==null&&offset+page.length>=total))break;
+  }
+  return {rows,total,failedOffsets,earlySelection};
+}
+
+function safeName(value){return String(value||'clip').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(0,140);}
+
+async function saveJson(name,value){await mkdir(OUT,{recursive:true});await writeFile(resolve(OUT,name),`${JSON.stringify(value,null,2)}\n`,'utf8');}
+
+async function fetchAudio(src,{attempts=3}={}){
+  for(let attempt=1;attempt<=attempts;attempt++){
+    try{
+      const response=await fetch(src,{headers:headers()});
+      if(response.ok)return Buffer.from(await response.arrayBuffer());
+      if(response.status!==429&&response.status<500)return null;
+    }catch{}
+    if(attempt<attempts)await sleep(800*attempt);
+  }
+  return null;
+}
+
+async function downloadGroup(group,{targetMinutes,maxMb}){
+  const dir=resolve(OUT,'raw',safeName(group.key));await mkdir(dir,{recursive:true});
+  let seconds=0,bytes=0,count=0;const files=[];
+  for(const row of group.rows){
+    if(seconds>=targetMinutes*60||bytes>=maxMb*1024*1024)break;
+    const body=await fetchAudio(row.audioSrc);if(!body)continue;
+    if(bytes+body.length>maxMb*1024*1024)break;
+    const file=`${String(count+1).padStart(3,'0')}-${safeName(row.segmentId)}.wav`;
+    await writeFile(resolve(dir,file),body);
+    files.push({file,segmentId:row.segmentId,text:row.text,durationSeconds:row.durationSeconds});
+    seconds+=row.durationSeconds;bytes+=body.length;count+=1;
+  }
+  const attribution=`# SADA human voice source\n\nSource: ${SADA_SOURCE.sourceUrl}\n\nLicense: ${SADA_SOURCE.license}\n\nSelected group: ${group.key}\n\nThis raw material is used only as a human-recorded source for the personal, non-commercial learning app. Do not commit this raw corpus directory.\n`;
+  await writeFile(resolve(OUT,'ATTRIBUTION.md'),attribution,'utf8');
+  await saveJson('selected-speaker.json',{source:SADA_SOURCE,filter:SADA_FILTER,group:{key:group.key,recordingId:group.recordingId,speaker:group.speaker,showName:group.showName},downloaded:{count,seconds,megabytes:Number((bytes/1024/1024).toFixed(2)),files}});
+  return {count,seconds,bytes};
+}
+
+async function main(){
+  const startOffset=Math.max(0,Math.min(7000,numArg('start-offset',0)));
+  const maxRows=Math.max(100,Math.min(7000,numArg('max-rows',6100)));
+  const targetMinutes=Math.max(1,Math.min(30,numArg('target-minutes',8)));
+  const maxMb=Math.max(25,Math.min(500,numArg('max-mb',180)));
+  const minCandidateSeconds=flag('download')?targetMinutes*60*1.25:0;
+  console.log(`Scanning SADA row metadata — offset ${startOffset}, max ${maxRows}; audio is not downloaded during the scan.`);
+  const fetched=await fetchCandidates(startOffset,maxRows,{minCandidateSeconds}),groups=rankSadaSpeakerGroups(fetched.rows);
+  const summary=groups.slice(0,10).map(({rows:clips,...group})=>({...group,minutes:Number((group.totalSeconds/60).toFixed(2))}));
+  const scanName=startOffset?`scan-${startOffset}.json`:'scan-0.json';
+  const scan={source:SADA_SOURCE,filter:SADA_FILTER,startOffset,requestedRows:maxRows,collectedRows:fetched.rows.length,totalRows:fetched.total,failedOffsets:fetched.failedOffsets,earlySelection:fetched.earlySelection,eligibleRows:groups.reduce((n,g)=>n+g.rows.length,0),topGroups:summary};
+  await saveJson(scanName,scan);
+  if(startOffset===0)await saveJson('scan.json',scan);
+  console.table(summary.map(g=>({group:g.key,clips:g.clipCount,minutes:g.minutes,show:g.showName})));
+  if(!groups.length){
+    throw new Error(`No clean adult male Najdi speaker group found in ${fetched.rows.length} collected SADA rows.`);
+  }
+  if(!flag('download')){console.log(`Best candidate: ${groups[0].key}`);return;}
+  const requested=arg('group');const group=requested?groups.find(item=>item.key===requested):groups[0];
+  if(!group)throw new Error(`Requested group not found: ${requested}`);
+  console.log(`Selected human source: ${group.key} (${group.clipCount} eligible clips, ${(group.totalSeconds/60).toFixed(1)} min available).`);
+  const result=await downloadGroup(group,{targetMinutes,maxMb});
+  if(!result.count)throw new Error('Selected SADA speaker had no downloadable audio clips.');
+  if(result.seconds<Math.min(60,targetMinutes*60*.25))throw new Error(`Selected SADA speaker downloaded only ${(result.seconds/60).toFixed(1)} min; insufficient usable human audio.`);
+  console.log(`Downloaded ${result.count} human clips, ${(result.seconds/60).toFixed(1)} min, ${(result.bytes/1024/1024).toFixed(1)} MB.`);
+}
+
+await main();

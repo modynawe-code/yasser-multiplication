@@ -1,0 +1,1 @@
+Mashaal UI is designed for touch-first KG3 interaction: audio-first instructions, low text density, guided retry, qualitative feedback, and off-screen transfer prompts.

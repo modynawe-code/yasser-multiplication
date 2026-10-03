@@ -1,0 +1,35 @@
+name: Import Domino Reference Assets
+
+on:
+  push:
+    branches: [feature/product-ui-reference-v1]
+    paths:
+      - '.github/workflows/import-domino-reference-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/product-ui-reference-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Import pinned MIT domino SVG set
+        run: node preview-v4/tools/import-domino-reference-assets.mjs
+      - name: Commit local assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview-v4/assets/domino/tiles
+          if git diff --cached --quiet; then
+            echo "Assets already current."
+            exit 0
+          fi
+          git commit -m "chore: vendor MIT domino tile assets"
+          git push origin HEAD:feature/product-ui-reference-v1
