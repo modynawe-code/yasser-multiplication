@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOARD,bidAuction,buyProperty,createMonopolyState,drawCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
+import {BOARD,bidAuction,buildHouse,canBuild,buyProperty,createMonopolyState,drawCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
 
 const players=[{id:'a',name:'أ'},{id:'b',name:'ب'}];
 
@@ -85,4 +85,21 @@ test('rent schedules match the live game rules',()=>{
   s.ownership[5]={ownerId:'a',houses:0};s.ownership[15]={ownerId:'a',houses:0};assert.equal(rentFor(s,5),50);
   s.ownership[12]={ownerId:'a',houses:0};s.dice=[3,4];assert.equal(rentFor(s,12),28);
   s.ownership[28]={ownerId:'a',houses:0};assert.equal(rentFor(s,12),70);
+});
+
+
+test('four houses upgrade to a hotel and the board rent level is reflected',()=>{
+  let s=createMonopolyState(players);s.phase='end';s.ownership={21:{ownerId:'a',houses:4},23:{ownerId:'a',houses:4},24:{ownerId:'a',houses:4}};
+  const before=s.players[0].cash;
+  assert.equal(canBuild(s,21),true);
+  s=buildHouse(s,21);
+  assert.equal(s.ownership[21].houses,4);
+  assert.equal(s.ownership[21].hotel,true);
+  assert.equal(s.players[0].cash,before-BOARD[21].build);
+  assert.equal(rentFor(s,21),rentSchedule(21).hotel);
+  assert.equal(rentSchedule(21).hotel,306);
+  assert.equal(canBuild(s,21),false);
+  const saleBefore=s.players[0].cash;
+  s=sellProperty(s,21);
+  assert.equal(s.players[0].cash,saleBefore+Math.floor(BOARD[21].price/2)+5*Math.floor(BOARD[21].build/2));
 });
