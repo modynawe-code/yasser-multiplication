@@ -231,6 +231,10 @@ test('Monopoly event arena overlays the board center and clamps focused movement
   assert.match(controller,/\.mono-game\.overlay-open \.mono-board-wrap\{width:min\(100vw,calc\(64dvh - 24px\)\);height:min\(100vw,calc\(64dvh - 24px\)\)\}/);
   assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto;width:min\(calc\(100% - 16px\),700px\);max-height:min\(36dvh,360px\)/);
   assert.match(controller,/center\?\.append\(byId\('monoControlPanel'\),byId\('monoOverlay'\)\)/);
+  assert.match(controller,/faceValue=Number\.isInteger\(value\)\?value:5/);
+  assert.match(controller,/الرصيد بعد الشراء/);
+  assert.match(controller,/#monoBoardControls\{position:static;grid-row:2/);
+  assert.match(controller,/\.mono-overlay-body\{align-content:start/);
   assert.match(controller,/#monoCenter\.has-event #monoControlPanel\{visibility:hidden\}/);
   assert.match(controller,/\.mono-actions\{display:flex/);
   assert.match(controller,/font:800 clamp\(8px,2\.3vw,14px\)\/1\.05 system-ui/);
