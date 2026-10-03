@@ -51,6 +51,7 @@ export function deriveMonopolyEvent(previous, next, action = '', payload = {}) {
       const startBonus = actorAfter.position < actorBefore.position ? PASS_START_BONUS : 0;
       return {
         type: 'rent', title: 'تم دفع الإيجار', reason: space?.name || 'العقار', amount: rentFor(next, index),
+        payerId: actorAfter.id, ownerId: owner.ownerId,
         transactions: [
           { name: actorAfter.name, role: 'الدافع', before: oldCash + startBonus, after: newCash },
           { name: ownerAfter?.name || 'المالك', role: 'استلم الإيجار', before: Number(ownerBefore?.cash) || 0, after: Number(ownerAfter?.cash) || 0 }
