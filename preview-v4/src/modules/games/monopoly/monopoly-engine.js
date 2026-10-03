@@ -31,8 +31,9 @@ function clone(state){const random=state?.random;const source={...state,random:u
 function activePlayers(state){return state.players.filter(p=>!p.bankrupt);}
 function nextActiveIndex(state,from){for(let i=1;i<=state.players.length;i++){const idx=(from+i)%state.players.length;if(!state.players[idx].bankrupt)return idx;}return from;}
 function ownsGroup(state,ownerId,group){const indexes=BOARD.map((s,i)=>s.type==='property'&&s.group===group?i:-1).filter(i=>i>=0);return indexes.length>0&&indexes.every(i=>state.ownership[i]?.ownerId===ownerId);}
+function propertyRentAtLevel(baseRent,fullSet,houses=0){return Math.round(baseRent*(fullSet?2:1)*(1+Math.max(0,Math.min(4,houses))*1.5));}
 function propertyRent(state,index){const space=BOARD[index],own=state.ownership[index];if(!space||!own)return 0;
-  if(space.type==='property'){const base=space.rent*(ownsGroup(state,own.ownerId,space.group)?2:1);return Math.round(base*(1+(own.houses||0)*1.5));}
+  if(space.type==='property')return propertyRentAtLevel(space.rent,ownsGroup(state,own.ownerId,space.group),own.houses||0);
   if(space.type==='railroad'){const count=Object.entries(state.ownership).filter(([i,o])=>BOARD[Number(i)].type==='railroad'&&o.ownerId===own.ownerId).length;return 25*(2**Math.max(0,count-1));}
   if(space.type==='utility'){const count=Object.entries(state.ownership).filter(([i,o])=>BOARD[Number(i)].type==='utility'&&o.ownerId===own.ownerId).length;return(state.dice?.reduce((a,b)=>a+b,7)||7)*(count>1?10:4);}
   return 0;
@@ -73,4 +74,11 @@ export function tradeProperty(state,index,targetId,offerCash=0,requestCash=0){if
 export function buildHouse(state,index){if(state.status!=='playing'||state.phase!=='end')return state;const next=clone(state);next.random=state.random||Math.random;const p=next.players[next.turnIndex],space=BOARD[index],own=next.ownership[index];if(!space||space.type!=='property'||!own||own.ownerId!==p.id||!ownsGroup(next,p.id,space.group)||(own.houses||0)>=4||p.cash<space.build)return state;p.cash-=space.build;own.houses=(own.houses||0)+1;next.log=`${p.name} طوّر ${space.name} — مستوى ${own.houses}.`;return next;}
 export function endTurn(state){if(state.status!=='playing'||state.phase!=='end')return state;const next=clone(state);next.random=state.random||Math.random;next.turnIndex=nextActiveIndex(next,next.turnIndex);next.phase='roll';next.dice=null;next.pending=null;next.lastCard='';next.log=`دور ${next.players[next.turnIndex].name}. ارمِ النرد.`;return next;}
 export function rentFor(state,index){return propertyRent(state,index);}
+export function rentSchedule(index){
+  const space=BOARD[index];if(!space)return null;
+  if(space.type==='property')return freeze({type:'property',base:space.rent,fullSet:propertyRentAtLevel(space.rent,true,0),houses:freeze([1,2,3,4].map(count=>propertyRentAtLevel(space.rent,true,count))),build:space.build});
+  if(space.type==='railroad')return freeze({type:'railroad',rents:freeze([25,50,100,200])});
+  if(space.type==='utility')return freeze({type:'utility',oneMultiplier:4,bothMultiplier:10});
+  return null;
+}
 export function canBuild(state,index){const p=state.players[state.turnIndex],space=BOARD[index],own=state.ownership[index];return Boolean(state.status==='playing'&&state.phase==='end'&&space?.type==='property'&&own?.ownerId===p?.id&&ownsGroup(state,p.id,space.group)&&(own.houses||0)<4&&p.cash>=space.build);}
