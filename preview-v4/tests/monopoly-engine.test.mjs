@@ -88,6 +88,22 @@ test('rent schedules match the live game rules',()=>{
 });
 
 
+test('complete-set owner can build at the start of their turn without waiting to roll',()=>{
+  let s=createMonopolyState(players);
+  s.ownership={37:{ownerId:'a',houses:0},39:{ownerId:'a',houses:0}};
+  assert.equal(s.phase,'roll');
+  assert.equal(canBuild(s,37),true);
+  const rentBefore=rentFor(s,37);
+  s=buildHouse(s,37);
+  assert.equal(s.ownership[37].houses,1);
+  assert.equal(s.players[0].cash,1500-BOARD[37].build);
+  assert.ok(rentFor(s,37)>rentBefore);
+  assert.equal(canBuild(s,39),true);
+  s.phase='property';
+  assert.equal(canBuild(s,39),false);
+  assert.strictEqual(buildHouse(s,39),s);
+});
+
 test('four houses upgrade to a hotel and the board rent level is reflected',()=>{
   let s=createMonopolyState(players);s.phase='end';s.ownership={21:{ownerId:'a',houses:4},23:{ownerId:'a',houses:4},24:{ownerId:'a',houses:4}};
   const before=s.players[0].cash;
