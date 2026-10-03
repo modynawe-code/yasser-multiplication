@@ -285,3 +285,14 @@ test('Monopoly keeps controls outside the board and clamps focused movement to i
   assert.doesNotMatch(controller,/min-width:\s*430px/);
   assert.doesNotMatch(controller,/monoGame[^\n]*grid-template-rows:auto 1fr/);
 });
+
+test('Monopoly property manager lists every owner and exposes building for completed sets',async()=>{
+  const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
+  assert.match(controller,/for\(const player of state\.players\)/);
+  assert.match(controller,/mono-property-owner-head/);
+  assert.match(controller,/mono-property-group-head/);
+  assert.match(controller,/المجموعة مكتملة/);
+  assert.match(controller,/data-action="build"/);
+  assert.match(controller,/بناء فندق/);
+  assert.match(controller,/إدارة الأملاك/);
+});
