@@ -277,7 +277,7 @@ test('Monopoly event arena overlays the board center and clamps focused movement
   assert.match(controller,/function zoomOutBoard\(\)/);
   assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.34s/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
-  assert.match(controller,/await waitForMotion\(1300\);if\(animationId!==movementAnimationId\)return/);
+  assert.match(controller,/await waitForMotion\(1300\);\}if\(animationId!==movementAnimationId\)return/);
   assert.match(controller,/id="monoSeatOpponents"[\s\S]*id="monoSeatSelf"/);
   assert.match(controller,/grid-template-areas:"tools" "opponents" "board" "self"/);
   assert.match(controller,/id="monoGameTools"[\s\S]*id="monoMuteSound"/);
