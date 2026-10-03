@@ -83,6 +83,6 @@ test('rent schedules match the live game rules',()=>{
   let s=createMonopolyState(players);s.phase='end';s.ownership={21:{ownerId:'a',houses:0},23:{ownerId:'a',houses:0},24:{ownerId:'a',houses:0}};
   assert.equal(rentFor(s,21),36);s.ownership[21].houses=2;assert.equal(rentFor(s,21),144);
   s.ownership[5]={ownerId:'a',houses:0};s.ownership[15]={ownerId:'a',houses:0};assert.equal(rentFor(s,5),50);
-  s.ownership[12]={ownerId:'a',houses:0};s.dice=[3,4];assert.equal(rentFor(s,12),70);
+  s.ownership[12]={ownerId:'a',houses:0};s.dice=[3,4];assert.equal(rentFor(s,12),28);
   s.ownership[28]={ownerId:'a',houses:0};assert.equal(rentFor(s,12),70);
 });
