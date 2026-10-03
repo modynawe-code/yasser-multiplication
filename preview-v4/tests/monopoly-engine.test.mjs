@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOARD,bidAuction,buyProperty,createMonopolyState,drawCard,endTurn,passAuction,rentFor,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
+import {BOARD,bidAuction,buyProperty,createMonopolyState,drawCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
 
 const players=[{id:'a',name:'أ'},{id:'b',name:'ب'}];
 
@@ -73,4 +73,16 @@ test('trade transfers the title and agreed cash',()=>{
   assert.equal(s.ownership[3].ownerId,'b');
   assert.equal(s.players[0].cash,1500-BOARD[3].price-30);
   assert.equal(s.players[1].cash,1530);
+});
+
+test('rent schedules match the live game rules',()=>{
+  const taif=rentSchedule(21);
+  assert.deepEqual({base:taif.base,fullSet:taif.fullSet,houses:taif.houses,build:taif.build},{base:18,fullSet:36,houses:[90,144,198,252],build:150});
+  assert.deepEqual(rentSchedule(5).rents,[25,50,100,200]);
+  assert.deepEqual({one:rentSchedule(12).oneMultiplier,both:rentSchedule(12).bothMultiplier},{one:4,both:10});
+  let s=createMonopolyState(players);s.phase='end';s.ownership={21:{ownerId:'a',houses:0},23:{ownerId:'a',houses:0},24:{ownerId:'a',houses:0}};
+  assert.equal(rentFor(s,21),36);s.ownership[21].houses=2;assert.equal(rentFor(s,21),144);
+  s.ownership[5]={ownerId:'a',houses:0};s.ownership[15]={ownerId:'a',houses:0};assert.equal(rentFor(s,5),50);
+  s.ownership[12]={ownerId:'a',houses:0};s.dice=[3,4];assert.equal(rentFor(s,12),70);
+  s.ownership[28]={ownerId:'a',houses:0};assert.equal(rentFor(s,12),70);
 });
