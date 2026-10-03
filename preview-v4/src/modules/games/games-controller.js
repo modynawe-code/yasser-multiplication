@@ -179,7 +179,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
     host.innerHTML=gameRegistry.list().map(game=>{
       const ready=gameLauncher.canLaunch(game.id),availability=String(game.metadata.availabilityLabel||(ready?'جاهزة':'قريبًا')),icon=String(game.metadata.icon||'🎮');
       return `<button class="game-card ${ready?'ready':'locked'}" data-game-id="${game.id}" ${ready?'':'disabled'}>
-        <span class="game-card-status">${ready?'جاهزة للتجربة':'قريبًا'}</span>
+        <span class="game-card-status">${ready?'جاهزة للعب':'قريبًا'}</span>
         <span class="game-card-icon" aria-hidden="true">${icon}</span>
         <strong>${game.title}</strong>
         <p>${game.metadata.description||''}</p>
