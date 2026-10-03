@@ -35,7 +35,7 @@ function propertyRentAtLevel(baseRent,fullSet,houses=0){return Math.round(baseRe
 function propertyRent(state,index){const space=BOARD[index],own=state.ownership[index];if(!space||!own)return 0;
   if(space.type==='property')return propertyRentAtLevel(space.rent,ownsGroup(state,own.ownerId,space.group),own.houses||0);
   if(space.type==='railroad'){const count=Object.entries(state.ownership).filter(([i,o])=>BOARD[Number(i)].type==='railroad'&&o.ownerId===own.ownerId).length;return 25*(2**Math.max(0,count-1));}
-  if(space.type==='utility'){const count=Object.entries(state.ownership).filter(([i,o])=>BOARD[Number(i)].type==='utility'&&o.ownerId===own.ownerId).length;return(state.dice?.reduce((a,b)=>a+b,7)||7)*(count>1?10:4);}
+  if(space.type==='utility'){const count=Object.entries(state.ownership).filter(([i,o])=>BOARD[Number(i)].type==='utility'&&o.ownerId===own.ownerId).length;return(state.dice?.reduce((a,b)=>a+b,0)||7)*(count>1?10:4);}
   return 0;
 }
 function bankruptIfNeeded(state,playerIndex,creditorId=null){const player=state.players[playerIndex];if(player.cash>=0||player.bankrupt)return;player.bankrupt=true;player.cash=0;Object.entries(state.ownership).forEach(([idx,own])=>{if(own.ownerId!==player.id)return;if(creditorId)state.ownership[idx]={ownerId:creditorId,houses:own.houses||0};else delete state.ownership[idx];});state.log=`${player.name} أفلس وخرج من الجولة.`;const alive=activePlayers(state);if(alive.length===1){state.status='finished';state.winnerId=alive[0].id;state.phase='finished';state.log=`🏆 ${alive[0].name} فاز بالجولة.`;}}
