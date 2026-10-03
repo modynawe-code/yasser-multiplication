@@ -1,1 +1,0 @@
-export const FAMILY_ARCHITECTURE_VERSION=1;

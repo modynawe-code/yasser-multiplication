@@ -1,1 +1,0 @@
-export const MASHAAL_FOUNDATION_COMPLETE=true;

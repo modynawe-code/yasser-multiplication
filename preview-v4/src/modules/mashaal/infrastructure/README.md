@@ -1,1 +1,0 @@
-Mashaal persistence is isolated by learner namespace until the shared learner-scoped repository migration is complete. Existing Yasser/Khaled storage is not rewritten in this foundation change.

@@ -1,1 +1,0 @@
-RPS visual assets. Child artwork remains sourced from the shared participant registry; this folder is reserved for the move artwork supplied for the game.
