@@ -260,7 +260,7 @@ test('Monopoly event arena overlays the board center and clamps focused movement
   assert.match(controller,/id="monoBoardOverview"/);
   assert.match(controller,/prefers-reduced-motion:reduce/);
   assert.match(controller,/movementAnimating/);
-  assert.match(controller,/function openSetup\(\)\{ensureMonopolyShell\(\);state=null;onlineBusy=false;onlineRoom=null;onlineSession\.stop\(\)/);
+  assert.match(controller,/function openSetup\(\)\{ensureMonopolyShell\(\);try\{soundMuted=localStorage\.getItem\(SOUND_KEY\)==='1';\}/);
   assert.match(controller,/addEventListener\?\.\('pageshow',event=>\{if\(event\.persisted&&document\.getElementById\('monopolyGameView'\)\?\.classList\.contains\('active'\)\)openSetup\(\);\}/);
   assert.match(controller,/function isTabletPortrait\(\)/);
   assert.match(controller,/function cameraScaleForMove\(\)/);
