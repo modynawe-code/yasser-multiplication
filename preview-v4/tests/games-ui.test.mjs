@@ -213,7 +213,7 @@ test('PWA shell includes resumable games, registry participants and the shared n
   ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
 });
 
-test('Monopoly keeps controls outside the board and clamps focused movement to its frame',async()=>{
+test('Monopoly event arena overlays the board center and clamps focused movement to its frame',async()=>{
   const catalog=await read('src/modules/games/game-catalog.js');
   const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
   const engine=await read('src/modules/games/monopoly/monopoly-engine.js');
@@ -230,8 +230,8 @@ test('Monopoly keeps controls outside the board and clamps focused movement to i
   assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto/);
   assert.match(controller,/\.mono-game\.overlay-open \.mono-board-wrap\{width:min\(100vw,calc\(64dvh - 24px\)\);height:min\(100vw,calc\(64dvh - 24px\)\)\}/);
   assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto;width:min\(calc\(100% - 16px\),700px\);max-height:min\(36dvh,360px\)/);
-  assert.match(controller,/byId\('monoGame'\)\?\.classList\.add\('overlay-open'\)/);
-  assert.match(controller,/byId\('monoGame'\)\?\.classList\.remove\('overlay-open'\)/);
+  assert.match(controller,/center\?\.append\(byId\('monoControlPanel'\),byId\('monoOverlay'\)\)/);
+  assert.match(controller,/#monoCenter\.has-event #monoControlPanel\{visibility:hidden\}/);
   assert.match(controller,/\.mono-actions\{display:flex/);
   assert.match(controller,/font:800 clamp\(8px,2\.3vw,14px\)\/1\.05 system-ui/);
   assert.match(controller,/font-size:clamp\(10px,1\.25vmin,16px\)/);
