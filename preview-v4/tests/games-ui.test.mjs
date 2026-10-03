@@ -279,6 +279,7 @@ test('Monopoly event arena overlays the board center without camera zoom',async(
   assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-figma-action-card\{width:100%;max-width:380px;min-width:0;min-height:0;height:auto;max-height:none/);
   assert.match(controller,/function showDrawCard\(\)[\s\S]*setOverlay\(title,body,[\s\S]*متابعة وتطبيق الأثر/);
   assert.match(controller,/#monoGame #monoCenter #monoOverlay\{inset:auto 3% 3%;/);
+  assert.match(controller,/#monoGame #monoCenter\.has-event #monoActions\{visibility:hidden/);
   assert.match(controller,/#monoGame #monoMain\{position:absolute;inset:0;width:100%;height:100%;grid-template-rows:auto auto auto minmax\(0,1fr\) auto/);
   assert.match(controller,/mono-overlay--expanded\{max-height:min\(68dvh,620px\)\}/);
   assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-overlay-actions/);
