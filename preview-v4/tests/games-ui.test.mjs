@@ -268,7 +268,8 @@ test('Monopoly keeps controls outside the board and clamps focused movement to i
   assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.34s/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
   assert.match(controller,/await animateTokenMove\(actor\.id,from,to\);if\(animationId!==movementAnimationId\)return;movementAnimating=false;render\(\);await zoomOutBoardTransition\(\)/);
-  assert.match(controller,/grid-template-columns:1\.35fr repeat\(9,minmax\(0,1fr\)\) 1\.35fr/);
+  assert.match(controller,/padding:7%;grid-template-columns:1\.625fr/);
+  assert.match(controller,/grid-template-columns:1\.625fr repeat\(9,minmax\(0,1fr\)\) 1\.625fr/);
   assert.match(controller,/data-action="trade-confirm"/);
   assert.match(controller,/data-action="sell"/);
   assert.doesNotMatch(controller,/min-width:\s*430px/);
