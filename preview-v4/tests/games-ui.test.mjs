@@ -227,6 +227,7 @@ test('Monopoly keeps controls outside the board and clamps focused movement to i
   assert.match(controller,/Math\.min\(0,Math\.max\(wrap\.clientWidth-board\.offsetWidth\*scale/);
   assert.match(controller,/\.mono-overlay\{position:absolute/);
   assert.match(controller,/\.mono-game\.overlay-open::before\{content:"";position:absolute;inset:0;z-index:1;pointer-events:none/);
+  assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto/);
   assert.match(controller,/\.mono-game\.overlay-open \.mono-board-wrap\{width:min\(100vw,calc\(64dvh - 24px\)\);height:min\(100vw,calc\(64dvh - 24px\)\)\}/);
   assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto;width:min\(calc\(100% - 16px\),700px\);max-height:min\(36dvh,360px\)/);
   assert.match(controller,/byId\('monoGame'\)\?\.classList\.add\('overlay-open'\)/);
