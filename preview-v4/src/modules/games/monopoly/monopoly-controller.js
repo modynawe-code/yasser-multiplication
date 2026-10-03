@@ -187,6 +187,7 @@ mono-moving-token{position:absolute;z-index:4;width:clamp(13px,2.7vmin,25px);hei
     /* Keep the board and dice in view while a compact event receipt is open. */
     #monoGame #monoCenter.has-event #monoControlPanel{visibility:visible!important;pointer-events:none}
     #monoGame #monoMain{position:absolute;inset:0;width:100%;height:100%;grid-template-rows:auto auto auto minmax(0,1fr) auto;align-content:start;justify-items:center;padding:clamp(5px,1vmin,12px);gap:clamp(3px,.7vmin,7px)}
+    #monoGame #monoCenter.has-event #monoActions{visibility:hidden}
     #monoGame #monoDice{pointer-events:auto;margin-top:clamp(2px,1vmin,10px)}
     #monoGame #monoActions{pointer-events:auto;align-self:end;z-index:2}
     #monoGame #monoCenter #monoOverlay{inset:auto 3% 3%;width:auto;max-width:560px;max-height:min(68%,420px);margin-inline:auto;padding:clamp(7px,1.2vmin,12px);grid-template-rows:auto minmax(0,1fr) auto;gap:clamp(4px,.7vmin,8px);border-radius:14px;box-shadow:0 5px 16px #10251a45}
