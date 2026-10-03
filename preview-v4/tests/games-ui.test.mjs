@@ -213,7 +213,7 @@ test('PWA shell includes resumable games, registry participants and the shared n
   ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
 });
 
-test('Monopoly event arena overlays the board center and clamps focused movement to its frame',async()=>{
+test('Monopoly event arena overlays the board center without camera zoom',async()=>{
   const catalog=await read('src/modules/games/game-catalog.js');
   const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
   const engine=await read('src/modules/games/monopoly/monopoly-engine.js');
@@ -224,7 +224,6 @@ test('Monopoly event arena overlays the board center and clamps focused movement
   assert.match(controller,/\.mono-board-wrap\{width:min\(100vw,100dvh\);height:min\(100vw,100dvh\)/);
   assert.match(controller,/id="monoControlPanel"/);
   assert.match(controller,/\.mono-control-panel\{width:min\(100%,1000px\)/);
-  assert.match(controller,/Math\.min\(0,Math\.max\(wrap\.clientWidth-board\.offsetWidth\*scale/);
   assert.match(controller,/\.mono-overlay\{position:absolute/);
   assert.match(controller,/\.mono-game\.overlay-open::before\{display:none\}/);
   assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto/);
@@ -233,7 +232,6 @@ test('Monopoly event arena overlays the board center and clamps focused movement
   assert.match(controller,/center\?\.append\(byId\('monoControlPanel'\),byId\('monoOverlay'\)\)/);
   assert.match(controller,/faceValue=Number\.isInteger\(value\)\?value:5/);
   assert.match(controller,/الرصيد بعد الشراء/);
-  assert.match(controller,/#monoBoardControls\{position:static;grid-row:2/);
   assert.match(controller,/\.mono-overlay-body\{align-content:start/);
   assert.match(controller,/#monoCenter\.has-event #monoControlPanel\{visibility:hidden\}/);
   assert.match(controller,/\.mono-actions\{display:flex/);
@@ -246,36 +244,30 @@ test('Monopoly event arena overlays the board center and clamps focused movement
   assert.match(controller,/min-height:44px/);
   assert.match(controller,/mono-deed-facts/);
   assert.match(controller,/mono-dice-roll/);
-  assert.match(controller,/\.mono-board\{transform-origin:top left;transition:transform/);
   assert.match(controller,/\.mono-token-row\{position:absolute;z-index:2;display:grid/);
   assert.match(controller,/\.mono-token-row\[data-edge=bottom\]\{top:2px/);
   assert.match(controller,/\.mono-token-row\[data-edge=top\]\{bottom:2px/);
   assert.match(controller,/class="mono-token-row" data-edge="\$\{edge\}" aria-hidden="true"/);
   assert.match(controller,/function focusBoard\(index\)/);
-  assert.match(controller,/function renderMiniMap\(activeIndex,visible=true\)/);
+  assert.doesNotMatch(controller,/cameraScaleForMove|zoomOutBoardTransition|board\.style\.transform|mono-board-wrap\.is-focused|mono-board-wrap\.is-moving/);
+  assert.match(controller,/function clearBoardHighlight\(\)/);
+  assert.match(controller,/classList\.add\('is-highlight-path','is-highlight-target'\)/);
   assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
-  assert.match(controller,/async function zoomOutBoardTransition\(\)/);
   assert.match(controller,/await waitForMotion\(650\)/);
   assert.match(controller,/await waitForMotion\(movementStepDuration\(\)\)/);
-  assert.match(controller,/await waitForMotion\(620\)/);
-  assert.match(controller,/function cameraScaleForMove\(\)\{const width=globalThis\.innerWidth\|\|0;if\(isPhoneLayout\(\)\)return 2\.15/);
-  assert.match(controller,/movementAnimating=false;render\(\);await zoomOutBoardTransition\(\)/);
+  assert.match(controller,/await waitForMotion\(520\)/);
   assert.match(controller,/data-action="focus-space"/);
-  assert.match(controller,/id="monoBoardOverview"/);
   assert.match(controller,/prefers-reduced-motion:reduce/);
   assert.match(controller,/movementAnimating/);
   assert.match(controller,/function openSetup\(\)\{ensureMonopolyShell\(\);try\{soundMuted=localStorage\.getItem\(SOUND_KEY\)==='1';\}/);
   assert.match(controller,/addEventListener\?\.\('pageshow',event=>\{if\(event\.persisted&&document\.getElementById\('monopolyGameView'\)\?\.classList\.contains\('active'\)\)openSetup\(\);\}/);
   assert.match(controller,/function isTabletPortrait\(\)/);
-  assert.match(controller,/function cameraScaleForMove\(\)/);
   assert.match(controller,/function movementStepDuration\(\)/);
   assert.match(controller,/await waitForMotion\(movementStepDuration\(\)\)/);
   assert.match(controller,/function focusMovement\(index\)/);
-  assert.match(controller,/is-camera-path/);
+  assert.match(controller,/is-highlight-path/);
+  assert.doesNotMatch(controller,/monoFocusPlayer|monoBoardOverview|mono-board-controls|mono-mini-map/);
   assert.match(controller,/if\(reduced\)\{focusMovement\(to\);await waitForMotion\(1200\);return;\}/);
-  assert.match(controller,/\.mono-space\.is-camera-path\{background-color:#d7e4ff;box-shadow:inset 0 0 0 2px #8da9e4\}/);
-  assert.match(controller,/function zoomOutBoard\(\)/);
-  assert.match(controller,/\.mono-board-wrap\.is-moving \.mono-board\{transition-duration:\.34s/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
   assert.match(controller,/await waitForMotion\(1300\);\}if\(animationId!==movementAnimationId\)return/);
   assert.match(controller,/id="monoSeatOpponents"[\s\S]*id="monoSeatSelf"/);
@@ -284,7 +276,9 @@ test('Monopoly event arena overlays the board center and clamps focused movement
   assert.doesNotMatch(controller,/class="mono-center-tools"/);
   assert.doesNotMatch(controller,/addAction\('🎲 ارمِ النرد'/);
   assert.doesNotMatch(controller,/اضغط أحد النردين أو زر الرمي/);
-  assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-figma-action-card\{width:100%;max-width:380px;min-height:0/);
+  assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-figma-action-card\{width:100%;max-width:380px;min-width:0;min-height:0;height:auto;max-height:none/);
+  assert.match(controller,/function showDrawCard\(\)[\s\S]*setOverlay\(title,body,[\s\S]*true\);/);
+  assert.match(controller,/mono-overlay--expanded\{max-height:min\(68dvh,620px\)\}/);
   assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-overlay-actions/);
   assert.match(controller,/bottomPlayer=\(selfId&&state\.players\.find\(player=>player\.id===selfId\)\)\|\|active/);
   assert.match(controller,/mono-seat-properties/);
@@ -310,4 +304,9 @@ test('Monopoly property manager lists every owner and exposes building for compl
   assert.match(controller,/data-action="build"/);
   assert.match(controller,/بناء فندق/);
   assert.match(controller,/إدارة الأملاك/);
+  assert.match(controller,/للعرض · الدور الحالي:/);
+  assert.match(controller,/محطات/);
+  assert.match(controller,/مرافق/);
+  assert.match(controller,/البناء متاح في دور المالك بعد اكتمال مجموعة اللون/);
+  assert.match(controller,/تبادل الأراضي/);
 });
