@@ -27,3 +27,4 @@
 .mono-deed-full-row b,.mono-deed-full-cost b{white-space:nowrap}
 .mono-deed-full-rule{height:0;border:0;border-top:1px solid #333;margin:3px 14px 5px}
 .mono-deed-full-cost{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:4px 14px 8px}
+.mono-deed-full-row.is-selected{font-weight:900;color:#173d2d;border-bottom:1px solid #8bc2a0}.mono-deed-full-owner{margin:0;padding:4px 14px 9px;font-size:.86em;font-weight:750;color:#405747}
