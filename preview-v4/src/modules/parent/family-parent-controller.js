@@ -17,17 +17,15 @@ export function createFamilyParentController({reportCapabilities,onExitToHub,clo
     }
     const session=cloudAuth.getSession?.();
     if(!session?.token){
-      section.innerHTML='<h3>حساب ولي الأمر</h3><p class="muted">الحساب السحابي يحمي سجل التعلم حتى لو مُسحت بيانات الجهاز.</p><div class="family-cloud-auth"><input id="familyCloudEmail" type="email" autocomplete="username" placeholder="البريد الإلكتروني"><input id="familyCloudPassword" type="password" autocomplete="current-password" placeholder="كلمة المرور (10 أحرف أو أكثر)"><div><button class="small-btn" id="familyCloudLogin">دخول</button><button class="small-btn" id="familyCloudRegister">إنشاء حساب</button></div><p class="muted" id="familyCloudStatus"></p></div>';
-      const status=byId('familyCloudStatus'),credentials=()=>({email:byId('familyCloudEmail')?.value||'',password:byId('familyCloudPassword')?.value||''});
-      const run=async mode=>{try{status.textContent='جاري الاتصال…';const c=credentials();if(mode==='login')await cloudAuth.login(c.email,c.password);else await cloudAuth.register(c.email,c.password);status.textContent='تم توثيق ولي الأمر.';render('overview');}catch(error){status.textContent=error.status===429?'محاولات كثيرة. حاول لاحقًا.':'تعذر تسجيل الدخول. تحقق من البيانات.';}};
-      byId('familyCloudLogin').onclick=()=>run('login');byId('familyCloudRegister').onclick=()=>run('register');return;
+      section.innerHTML='<h3>الحفظ بين الأجهزة</h3><p class="muted">اربط الجهاز من «سجل العائلة» باستخدام رمز العائلة نفسه. بعدها يتزامن تقدم الأطفال تلقائيًا بدون بريد أو كلمة مرور.</p><div class="family-cloud-actions"><button class="small-btn" id="familyCloudReconnect">محاولة المزامنة الآن</button></div><p class="muted" id="familyCloudStatus"></p>';
+      const status=byId('familyCloudStatus');
+      byId('familyCloudReconnect').onclick=async()=>{try{status.textContent='جاري الاتصال…';await cloudAuth.reconnectFamily();const result=await cloudSync.sync();status.textContent='تم ربط التقدم بالسجل المشترك ✓';onCloudRestore?.(result);}catch{status.textContent='افتح سجل العائلة واربط هذا الجهاز برمز العائلة أولًا.';}};
+      return;
     }
-    section.innerHTML='<h3>الحفظ السحابي</h3><p class="muted">الحساب موثق. المحاولات وأدلة التعلم والجلسات على السيرفر سجلات Append-only ولا يملك الطفل مسارًا لحذفها.</p><p class="family-cloud-account" id="familyCloudAccount"></p><div class="family-cloud-actions"><button class="small-btn" id="familyCloudSync">مزامنة الآن</button><button class="small-btn" id="familyCloudRestore">استعادة من السحابة</button><button class="small-btn" id="familyCloudLogout">تسجيل خروج</button></div><p class="muted" id="familyCloudStatus"></p>';
-    byId('familyCloudAccount').textContent=session.email||'حساب ولي الأمر';
+    section.innerHTML='<h3>الحفظ بين الأجهزة</h3><p class="muted">هذا الجهاز مربوط بسجل العائلة المشترك. التقدم والمحاولات والجلسات تُحفظ على السيرفر وتُستعاد على الأجهزة المرتبطة بنفس الرمز.</p><div class="family-cloud-actions"><button class="small-btn" id="familyCloudSync">مزامنة الآن</button><button class="small-btn" id="familyCloudRestore">استعادة من السحابة</button></div><p class="muted" id="familyCloudStatus"></p>';
     const status=byId('familyCloudStatus');
     byId('familyCloudSync').onclick=async()=>{try{status.textContent='جاري رفع السجل…';const result=await cloudSync.upload();status.textContent=`تمت المزامنة: ${result.attempts} محاولة، ${result.evidence||0} دليل تعلم، ${result.sessions||0} جلسة.`;}catch{status.textContent='تعذرت المزامنة الآن. البيانات المحلية لم تُحذف.';}};
     byId('familyCloudRestore').onclick=async()=>{try{status.textContent='جاري استعادة السجل…';const result=await cloudSync.restore();status.textContent=`تمت الاستعادة: ${result.attempts||0} محاولة، ${result.evidence||0} دليل تعلم، ${result.sessions||0} جلسة جديدة.`;onCloudRestore?.(result);}catch{status.textContent='تعذرت الاستعادة. لم يتم حذف البيانات المحلية.';}};
-    byId('familyCloudLogout').onclick=async()=>{await cloudAuth.logout();render('overview');};
   }
 
   function resetPanel(content,capability){
