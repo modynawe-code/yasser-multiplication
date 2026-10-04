@@ -11,21 +11,17 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
     steps:
-      - name: Probe valid family registration path
+      - uses: actions/checkout@v4
+      - name: Inspect production D1 schema
+        working-directory: backend
         shell: bash
         run: |
           set -euo pipefail
-          BASE="https://yasser-khaled-family-api.modynawe.workers.dev"
-          ORIGIN="https://modynawe-code.github.io"
-          EMAIL="diag-$(date +%s)-$RANDOM@family.invalid"
-          PASSWORD="$(openssl rand -hex 16)Aa1"
-
-          status=$(curl --silent --show-error --dump-header /tmp/h -o /tmp/b -w "%{http_code}"             -X POST "$BASE/v1/auth/register"             -H "Origin: $ORIGIN"             -H "Content-Type: application/json"             --data "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
-          echo "register_status=$status"
-          cat /tmp/h
-          cat /tmp/b
-          grep -qi "^access-control-allow-origin: $ORIGIN" /tmp/h
-          test "$status" = "201"
-          node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('/tmp/b','utf8')); if(!j.token) process.exit(1);"
+          npx --yes wrangler@4.129.0 d1 migrations list yasser-khaled-family --remote --config wrangler.jsonc
+          npx --yes wrangler@4.129.0 d1 execute yasser-khaled-family --remote --config wrangler.jsonc --command "SELECT name, sql FROM sqlite_master WHERE type='table' AND name IN ('parents','learners','auth_sessions');"
+          npx --yes wrangler@4.129.0 d1 execute yasser-khaled-family --remote --config wrangler.jsonc --command "PRAGMA foreign_key_check;"
