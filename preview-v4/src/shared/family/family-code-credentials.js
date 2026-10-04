@@ -1,6 +1,6 @@
 export const FAMILY_CODE_STORAGE_KEY='family-shared-code-v1';
 const ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const CODE_LENGTH=20;
+const CODE_LENGTH=6;
 
 export function normalizeFamilyCode(value){
   return String(value||'').toUpperCase().replace(/[^A-Z2-9]/g,'').slice(0,CODE_LENGTH);
@@ -34,7 +34,7 @@ export function clearFamilyCode(storage=globalThis.localStorage){
 
 export function formatFamilyCode(value){
   const code=normalizeFamilyCode(value);
-  return code.match(/.{1,5}/g)?.join('-')||'';
+  return code;
 }
 
 async function sha256Hex(value,cryptoImpl=globalThis.crypto){

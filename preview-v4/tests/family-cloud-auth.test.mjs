@@ -33,10 +33,10 @@ test('family code connects without exposing email or password in the UI contract
     throw new Error('unexpected request');
   };
   const client=createFamilyAuthClient({baseUrl:'https://api.example.test',fetchFn,storage:sessionStorage,familyStorage});
-  await client.connectFamilyCode('ABCDE-23456-FGHIJ-789KL');
+  await client.connectFamilyCode('A7K3Q9');
   assert.equal(client.isAuthenticated(),true);
-  assert.equal(familyStorage.getItem('family-shared-code-v1'),'ABCDE23456FGHIJ789KL');
+  assert.equal(familyStorage.getItem('family-shared-code-v1'),'A7K3Q9');
   assert.equal(calls.length,2);
-  assert.doesNotMatch(calls[0].options.body,/ABCDE23456FGHIJ789KL/);
-  assert.doesNotMatch(calls[1].options.body,/ABCDE23456FGHIJ789KL/);
+  assert.doesNotMatch(calls[0].options.body,/A7K3Q9/);
+  assert.doesNotMatch(calls[1].options.body,/A7K3Q9/);
 });

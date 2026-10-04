@@ -65,10 +65,10 @@ test('pairing with a family code persists its family game token for future games
     return{ok:true,status:200,json:async()=>({ok:true})};
   }});
   try{
-    const result=await service.pairFamilyCode('ABCDE-23456-FGHIJ-789KL');
+    const result=await service.pairFamilyCode('A7K3Q9');
     assert.equal(result.ok,true);
     assert.equal(service.isPaired(),true);
-    assert.equal(service.getFamilyCode(),'ABCDE23456FGHIJ789KL');
+    assert.equal(service.getFamilyCode(),'A7K3Q9');
     assert.equal(globalThis.localStorage.getItem(GAME_HISTORY_DEVICE_TOKEN_KEY),'paired-device-token');
     assert.ok(calls.some(item=>item.url.endsWith('/v1/games/history/device')));
   }finally{globalThis.localStorage=old;}
