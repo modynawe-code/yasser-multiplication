@@ -82,7 +82,7 @@ export function ensureGamesShell(){
             <p>نفس الرمز على كل الأجهزة = نفس التقدم والسجل. ما يحتاج بريد ولا كلمة مرور.</p>
           </div>
           <div class="games-history-auth">
-            <input id="gamesHistoryFamilyCode" type="text" inputmode="text" autocomplete="off" maxlength="23" placeholder="مثال: ABCDE-FGHIJ-KLMNO-PQRST" aria-label="رمز العائلة">
+            <input id="gamesHistoryFamilyCode" type="text" inputmode="text" autocomplete="off" maxlength="6" placeholder="مثال: A7K3Q9" aria-label="رمز العائلة">
             <div>
               <button class="btn primary" id="gamesHistoryPairCode">ربط بهذا الرمز</button>
               <button class="btn secondary" id="gamesHistoryCreateCode">إنشاء رمز جديد</button>
