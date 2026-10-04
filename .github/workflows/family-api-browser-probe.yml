@@ -1,0 +1,39 @@
+name: Family API Browser Probe
+
+on:
+  push:
+    branches:
+      - 'diag/family-api-browser-reachability-20261004'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe health and browser CORS
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://yasser-khaled-family-api.modynawe.workers.dev"
+          ORIGIN="https://modynawe-code.github.io"
+
+          echo "=== HEALTH ==="
+          curl --fail --silent --show-error --dump-header /tmp/health.h "$BASE/health" -o /tmp/health.json
+          cat /tmp/health.h
+          cat /tmp/health.json
+
+          echo "=== PREFLIGHT ==="
+          curl --silent --show-error --dump-header /tmp/preflight.h -o /tmp/preflight.body -X OPTIONS "$BASE/v1/auth/register"             -H "Origin: $ORIGIN"             -H "Access-Control-Request-Method: POST"             -H "Access-Control-Request-Headers: content-type"
+          cat /tmp/preflight.h
+          cat /tmp/preflight.body
+          grep -qi "^access-control-allow-origin: $ORIGIN" /tmp/preflight.h
+
+          echo "=== INVALID REGISTER ==="
+          status=$(curl --silent --show-error --dump-header /tmp/register.h -o /tmp/register.json -w "%{http_code}"             -X POST "$BASE/v1/auth/register"             -H "Origin: $ORIGIN"             -H "Content-Type: application/json"             --data '{"email":"bad","password":"bad"}')
+          cat /tmp/register.h
+          cat /tmp/register.json
+          test "$status" = "400"
+          grep -qi "^access-control-allow-origin: $ORIGIN" /tmp/register.h
