@@ -133,6 +133,6 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/" | grep -q 'تعلم العائلة'
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/service-worker.js" > /dev/null
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": true'
 
 # manual deploy trigger: science integration 2026-09-11
