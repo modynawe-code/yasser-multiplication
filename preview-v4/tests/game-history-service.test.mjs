@@ -54,7 +54,7 @@ test('history and stats readers use server endpoints',async()=>{
 });
 
 
-test('pairing a device persists its family game token for future games',async()=>{
+test('pairing with a family code persists its family game token for future games',async()=>{
   const old=globalThis.localStorage;globalThis.localStorage=makeStorage();
   const calls=[];
   const service=createGameHistoryService({fetchImpl:async(url,options)=>{
@@ -65,9 +65,10 @@ test('pairing a device persists its family game token for future games',async()=
     return{ok:true,status:200,json:async()=>({ok:true})};
   }});
   try{
-    const result=await service.pairDevice({email:'parent@example.com',password:'1234567890'});
+    const result=await service.pairFamilyCode('ABCDE-23456-FGHIJ-789KL');
     assert.equal(result.ok,true);
     assert.equal(service.isPaired(),true);
+    assert.equal(service.getFamilyCode(),'ABCDE23456FGHIJ789KL');
     assert.equal(globalThis.localStorage.getItem(GAME_HISTORY_DEVICE_TOKEN_KEY),'paired-device-token');
     assert.ok(calls.some(item=>item.url.endsWith('/v1/games/history/device')));
   }finally{globalThis.localStorage=old;}
