@@ -22,3 +22,21 @@ test('authenticated request sends bearer token and clears it after unauthorized 
   await assert.rejects(()=>client.me());
   assert.equal(header,'Bearer abc');assert.equal(storage.getItem(FAMILY_AUTH_SESSION_KEY),null);
 });
+
+
+test('family code connects without exposing email or password in the UI contract',async()=>{
+  const sessionStorage=memoryStorage(),familyStorage=memoryStorage(),calls=[];
+  const fetchFn=async(url,options)=>{
+    calls.push({url,options});
+    if(url.endsWith('/v1/auth/login'))return{ok:false,status:401,json:async()=>({error:'invalid_credentials'})};
+    if(url.endsWith('/v1/auth/register'))return{ok:true,status:201,json:async()=>({token:'family-session',expiresAt:'2026-12-01T00:00:00Z',parent:{email:'synthetic@family.invalid'}})};
+    throw new Error('unexpected request');
+  };
+  const client=createFamilyAuthClient({baseUrl:'https://api.example.test',fetchFn,storage:sessionStorage,familyStorage});
+  await client.connectFamilyCode('ABCDE-23456-FGHIJ-789KL');
+  assert.equal(client.isAuthenticated(),true);
+  assert.equal(familyStorage.getItem('family-shared-code-v1'),'ABCDE23456FGHIJ789KL');
+  assert.equal(calls.length,2);
+  assert.doesNotMatch(calls[0].options.body,/ABCDE23456FGHIJ789KL/);
+  assert.doesNotMatch(calls[1].options.body,/ABCDE23456FGHIJ789KL/);
+});

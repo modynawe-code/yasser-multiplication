@@ -11,6 +11,7 @@ import { createGameLauncher } from './core/game-launcher.js';
 import { createSpeechService } from '../../shared/audio/speech-service.js';
 import { createFeedbackAudio } from '../../ui/audio/feedback-audio.js';
 import { gameHistoryService } from './history/game-history-service.js';
+import { formatFamilyCode,normalizeFamilyCode } from '../../shared/family/family-code-credentials.js';
 
 function allViews(){return[...document.querySelectorAll('.view')];}
 function show(id){allViews().forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
@@ -138,11 +139,13 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   async function openGameHistory(days=historyDays){
     historyDays=Number(days)||7;show('gamesHistoryView');
     document.querySelectorAll('[data-history-days]').forEach(button=>button.classList.toggle('selected',Number(button.dataset.historyDays)===historyDays));
-    const status=byId('gamesHistoryStatus'),statsHost=byId('gamesHistoryStats'),list=byId('gamesHistoryList'),pair=byId('gamesHistoryPair'),content=byId('gamesHistoryContent');
-    const paired=gameHistoryService.isPaired();
+    const status=byId('gamesHistoryStatus'),statsHost=byId('gamesHistoryStats'),list=byId('gamesHistoryList'),pair=byId('gamesHistoryPair'),content=byId('gamesHistoryContent'),codeCard=byId('gamesHistoryFamilyCodeCard'),codeValue=byId('gamesHistoryFamilyCodeValue');
+    try{await gameHistoryService.ensureFamilyPairing();}catch{}
+    const paired=gameHistoryService.isPaired(),familyCode=gameHistoryService.getFamilyCode();
     if(pair)pair.hidden=paired;if(content)content.hidden=!paired;
+    if(codeCard)codeCard.hidden=!paired||!familyCode;if(codeValue)codeValue.textContent=formatFamilyCode(familyCode);
     if(!paired){
-      if(status){status.textContent='اربط الجهاز مرة واحدة عشان ينحفظ سجل الألعاب على السيرفر.';status.classList.remove('error');}
+      if(status){status.textContent='استخدم نفس رمز العائلة على كل الأجهزة. ما يحتاج بريد أو كلمة مرور.';status.classList.remove('error');}
       return;
     }
     if(status){status.textContent='جاري تحميل سجل السيرفر…';status.classList.remove('error');}
@@ -162,16 +165,22 @@ export function createGamesController({learningAdapter,challengePresentations=nu
       if(list)list.innerHTML='<div class="games-history-empty">تحقق من الاتصال ثم جرّب مرة ثانية.</div>';
     }
   }
-  async function pairGameHistory(createAccount=false){
-    const email=byId('gamesHistoryEmail')?.value||'',password=byId('gamesHistoryPassword')?.value||'',status=byId('gamesHistoryPairStatus');
+  async function pairGameHistory({create=false}={}){
+    const input=byId('gamesHistoryFamilyCode'),status=byId('gamesHistoryPairStatus');
     if(status)status.textContent='جاري الربط…';
     try{
-      await gameHistoryService.pairDevice({email,password,createAccount});
-      if(status)status.textContent='تم الربط ✓';
+      const result=create?await gameHistoryService.createAndPairFamily():await gameHistoryService.pairFamilyCode(normalizeFamilyCode(input?.value||''));
+      if(input)input.value=formatFamilyCode(result.familyCode||'');
+      if(status)status.textContent='تم الربط ✓ احفظ رمز العائلة للأجهزة الثانية.';
       await openGameHistory(historyDays);
     }catch(error){
-      if(status)status.textContent=error?.status===409?'الحساب موجود، استخدم «ربط بحساب موجود».':'تعذر الربط. تحقق من البريد وكلمة المرور.';
+      if(status)status.textContent=error?.message==='invalid_family_code'?'رمز العائلة لازم يكون 20 حرفًا/رقمًا.':'تعذر الربط الآن. تحقق من الاتصال وحاول مرة ثانية.';
     }
+  }
+  async function copyFamilyCode(){
+    const code=gameHistoryService.getFamilyCode(),status=byId('gamesHistoryStatus');if(!code)return;
+    try{await navigator.clipboard.writeText(formatFamilyCode(code));if(status)status.textContent='تم نسخ رمز العائلة ✓';}
+    catch{if(status)status.textContent=`رمز العائلة: ${formatFamilyCode(code)}`;}
   }
 
   function renderCatalog(){
@@ -454,7 +463,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
 
   function bind(){
     if(bound)return;bound=true;ensureGamesShell();renderLobbyParticipants();
-    byId('gamesOpenBtn')?.addEventListener('click',enterHome);byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});byId('gamesHistoryBtn')?.addEventListener('click',()=>openGameHistory(historyDays));byId('gamesHistoryBack')?.addEventListener('click',()=>{renderCatalog();show('gamesHomeView');});byId('gamesHistoryPairLogin')?.addEventListener('click',()=>pairGameHistory(false));byId('gamesHistoryPairRegister')?.addEventListener('click',()=>pairGameHistory(true));document.querySelectorAll('[data-history-days]').forEach(button=>button.addEventListener('click',()=>openGameHistory(Number(button.dataset.historyDays))));
+    byId('gamesOpenBtn')?.addEventListener('click',enterHome);byId('gamesBackToHub')?.addEventListener('click',()=>{leave();onExitToHub?.();});byId('gamesHistoryBtn')?.addEventListener('click',()=>openGameHistory(historyDays));byId('gamesHistoryBack')?.addEventListener('click',()=>{renderCatalog();show('gamesHomeView');});byId('gamesHistoryPairCode')?.addEventListener('click',()=>pairGameHistory());byId('gamesHistoryCreateCode')?.addEventListener('click',()=>pairGameHistory({create:true}));byId('gamesHistoryCopyCode')?.addEventListener('click',copyFamilyCode);byId('gamesHistoryFamilyCode')?.addEventListener('input',event=>{event.target.value=formatFamilyCode(event.target.value);});document.querySelectorAll('[data-history-days]').forEach(button=>button.addEventListener('click',()=>openGameHistory(Number(button.dataset.historyDays))));
     byId('xoLobbyBack')?.addEventListener('click',backToGames);byId('xoLocalStart')?.addEventListener('click',startLocalXo);byId('xoOnlineCreate')?.addEventListener('click',createOnlineRoom);byId('xoOnlineJoin')?.addEventListener('click',joinOnlineRoom);
     byId('xoRoomCodeInput')?.addEventListener('input',event=>{event.target.value=String(event.target.value||'').replace(/\D/g,'').slice(0,6);});
     byId('xoBackToGames')?.addEventListener('click',backToGames);byId('xoReset')?.addEventListener('click',resetXo);byId('xoHearChallenge')?.addEventListener('click',()=>{const challenge=challengeState?.challenge;if(challenge)speech.speak(challenge.spokenPrompt||challenge.prompt||'');});

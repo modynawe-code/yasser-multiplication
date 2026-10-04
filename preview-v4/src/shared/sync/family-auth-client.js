@@ -1,8 +1,9 @@
 import { getFamilyApiBase } from '../config/family-api-config.js';
+import { deriveFamilyCredentials,loadFamilyCode,saveFamilyCode } from '../family/family-code-credentials.js';
 
 export const FAMILY_AUTH_SESSION_KEY='family_cloud_auth_session_v1';
 
-export function createFamilyAuthClient({baseUrl=getFamilyApiBase(),fetchFn=globalThis.fetch,storage=globalThis.sessionStorage}={}){
+export function createFamilyAuthClient({baseUrl=getFamilyApiBase(),fetchFn=globalThis.fetch,storage=globalThis.sessionStorage,familyStorage=globalThis.localStorage}={}){
   const api=String(baseUrl||'').replace(/\/$/,'');
   function load(){try{return JSON.parse(storage?.getItem(FAMILY_AUTH_SESSION_KEY)||'null');}catch{return null;}}
   function save(value){try{if(value)storage?.setItem(FAMILY_AUTH_SESSION_KEY,JSON.stringify(value));else storage?.removeItem(FAMILY_AUTH_SESSION_KEY);}catch{}}
@@ -16,7 +17,27 @@ export function createFamilyAuthClient({baseUrl=getFamilyApiBase(),fetchFn=globa
     if(!result.ok){const error=new Error(payload?.error||`family_api_${result.status}`);error.status=result.status;throw error;}
     return payload;
   }
-  async function establish(path,email,password){const payload=await request(path,{method:'POST',body:{email,password},auth:false});save({token:payload.token,expiresAt:payload.expiresAt,email:payload.parent?.email||email});return payload;}
+  async function establish(path,email,password){
+    const payload=await request(path,{method:'POST',body:{email,password},auth:false});
+    save({token:payload.token,expiresAt:payload.expiresAt,email:payload.parent?.email||email});
+    return payload;
+  }
+  async function connectFamilyCode(value=loadFamilyCode(familyStorage)){
+    const credentials=await deriveFamilyCredentials(value);
+    let payload;
+    try{
+      payload=await establish('/v1/auth/login',credentials.email,credentials.password);
+    }catch(error){
+      if(error?.status!==401)throw error;
+      try{payload=await establish('/v1/auth/register',credentials.email,credentials.password);}
+      catch(registerError){
+        if(registerError?.status!==409)throw registerError;
+        payload=await establish('/v1/auth/login',credentials.email,credentials.password);
+      }
+    }
+    saveFamilyCode(credentials.code,familyStorage);
+    return payload;
+  }
   return{
     isConfigured:()=>Boolean(api),
     getBaseUrl:()=>api,
@@ -24,6 +45,8 @@ export function createFamilyAuthClient({baseUrl=getFamilyApiBase(),fetchFn=globa
     isAuthenticated:()=>Boolean(load()?.token),
     register:(email,password)=>establish('/v1/auth/register',email,password),
     login:(email,password)=>establish('/v1/auth/login',email,password),
+    connectFamilyCode,
+    reconnectFamily:()=>connectFamilyCode(loadFamilyCode(familyStorage)),
     me:()=>request('/v1/me'),
     request,
     async logout(){try{if(load()?.token)await request('/v1/auth/logout',{method:'POST'});}finally{save(null);}}

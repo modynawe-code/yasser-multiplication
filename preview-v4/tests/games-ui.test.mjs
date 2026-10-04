@@ -46,6 +46,18 @@ test('games shell exposes a clear registry-hydrated local vs online XO lobby wit
   assert.doesNotMatch(shell,/تُحفظ المحاولات التعليمية/);
 });
 
+test('family history uses one shared code instead of email and password',async()=>{
+  const shell=await read('src/modules/games/ui/games-shell.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  assert.match(shell,/id="gamesHistoryFamilyCode"/);
+  assert.match(shell,/إنشاء رمز جديد/);
+  assert.match(shell,/ما يحتاج بريد ولا كلمة مرور/);
+  assert.doesNotMatch(shell,/gamesHistoryEmail|gamesHistoryPassword|بريد ولي الأمر/);
+  assert.match(controller,/pairFamilyCode/);
+  assert.match(controller,/createAndPairFamily/);
+  assert.match(controller,/copyFamilyCode/);
+});
+
 test('game participant registry owns optional approved artwork while the XO shell stays learner-neutral',async()=>{
   const registry=await read('src/modules/games/core/game-participant-registry.js');
   assert.match(registry,/listLearnerProfiles/);

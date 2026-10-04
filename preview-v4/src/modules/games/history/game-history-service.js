@@ -1,5 +1,6 @@
 import { getGameRoomApiBase } from '../online/game-room-client.js';
 import { clearGameHistoryDeviceToken,getGameHistoryDeviceToken,setGameHistoryDeviceToken } from './game-history-device-token.js';
+import { deriveFamilyCredentials,generateFamilyCode,loadFamilyCode,saveFamilyCode } from '../../../shared/family/family-code-credentials.js';
 
 const QUEUE_KEY='family-game-history-pending-v1';
 const MAX_QUEUE=100;
@@ -68,8 +69,24 @@ async function authRequest(path,{method='POST',body,token,fetchImpl=globalThis.f
   if(!response.ok)throw parseError(response,payload,'game_history_pair');
   return payload;
 }
+async function establishFamilyAccount(familyCode,fetchImpl){
+  const credentials=await deriveFamilyCredentials(familyCode);
+  let auth;
+  try{
+    auth=await authRequest('/v1/auth/login',{body:{email:credentials.email,password:credentials.password},fetchImpl});
+  }catch(error){
+    if(error?.status!==401)throw error;
+    try{
+      auth=await authRequest('/v1/auth/register',{body:{email:credentials.email,password:credentials.password},fetchImpl});
+    }catch(registerError){
+      if(registerError?.status!==409)throw registerError;
+      auth=await authRequest('/v1/auth/login',{body:{email:credentials.email,password:credentials.password},fetchImpl});
+    }
+  }
+  return{auth,credentials};
+}
 
-export function createGameHistoryService({fetchImpl=globalThis.fetch}={}){
+export function createGameHistoryService({fetchImpl=globalThis.fetch,familyStorage=globalThis.localStorage}={}){
   let flushing=false;
   async function flushPending(){
     if(flushing)return{ok:true,flushing:true};
@@ -97,17 +114,27 @@ export function createGameHistoryService({fetchImpl=globalThis.fetch}={}){
       return{ok:false,queued:true,payload,error};
     }
   }
-  async function pairDevice({email,password,createAccount=false,label='جهاز العائلة'}={}){
-    const credentials={email:String(email||'').trim(),password:String(password||'')};
-    const auth=await authRequest(createAccount?'/v1/auth/register':'/v1/auth/login',{body:credentials,fetchImpl});
+  async function pairFamilyCode(familyCode,{label='جهاز العائلة'}={}){
+    const {auth,credentials}=await establishFamilyAccount(familyCode,fetchImpl);
     try{
       const paired=await authRequest('/v1/games/history/device',{body:{label},token:auth.token,fetchImpl});
       setGameHistoryDeviceToken(paired.deviceToken);
+      saveFamilyCode(credentials.code,familyStorage);
       await flushPending();
-      return{ok:true,deviceId:paired.deviceId,label:paired.label};
+      return{ok:true,deviceId:paired.deviceId,label:paired.label,familyCode:credentials.code};
     }finally{
       if(auth?.token)authRequest('/v1/auth/logout',{body:{},token:auth.token,fetchImpl}).catch(()=>null);
     }
+  }
+  async function createAndPairFamily(){
+    const code=generateFamilyCode();
+    return pairFamilyCode(code);
+  }
+  async function ensureFamilyPairing(){
+    if(getGameHistoryDeviceToken())return{ok:true,alreadyPaired:true,familyCode:loadFamilyCode(familyStorage)};
+    const code=loadFamilyCode(familyStorage);
+    if(!code)return{ok:false,reason:'family_code_required'};
+    return pairFamilyCode(code);
   }
   async function getHistory({limit=30}={}){
     const base=getGameRoomApiBase(),token=getGameHistoryDeviceToken();if(!token)throw new Error('history_device_required');
@@ -124,7 +151,8 @@ export function createGameHistoryService({fetchImpl=globalThis.fetch}={}){
     return body;
   }
   return Object.freeze({
-    recordGameResult,flushPending,getHistory,getStats,pairDevice,
+    recordGameResult,flushPending,getHistory,getStats,pairFamilyCode,createAndPairFamily,ensureFamilyPairing,
+    getFamilyCode:()=>loadFamilyCode(familyStorage),
     isPaired:()=>Boolean(getGameHistoryDeviceToken()),
     unpairDevice:()=>clearGameHistoryDeviceToken(),
     pendingCount:()=>readQueue().length
@@ -134,6 +162,6 @@ export function createGameHistoryService({fetchImpl=globalThis.fetch}={}){
 export const gameHistoryService=createGameHistoryService();
 
 if(typeof globalThis.addEventListener==='function'){
-  globalThis.addEventListener('online',()=>{void gameHistoryService.flushPending();});
-  queueMicrotask(()=>{void gameHistoryService.flushPending();});
+  globalThis.addEventListener('online',()=>{void gameHistoryService.ensureFamilyPairing().then(()=>gameHistoryService.flushPending()).catch(()=>null);});
+  queueMicrotask(()=>{void gameHistoryService.ensureFamilyPairing().then(()=>gameHistoryService.flushPending()).catch(()=>null);});
 }
