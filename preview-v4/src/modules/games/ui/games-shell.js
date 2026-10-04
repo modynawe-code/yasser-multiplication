@@ -78,18 +78,21 @@ export function ensureGamesShell(){
         <p class="games-history-status" id="gamesHistoryStatus" role="status"></p>
         <section class="games-history-pair" id="gamesHistoryPair" hidden>
           <div>
-            <strong>ربط هذا الجهاز بسجل العائلة</strong>
-            <p>مرة واحدة فقط. بعدها كل الألعاب تحفظ نتائجها على السيرفر تلقائيًا.</p>
+            <strong>رمز العائلة</strong>
+            <p>نفس الرمز على كل الأجهزة = نفس التقدم والسجل. ما يحتاج بريد ولا كلمة مرور.</p>
           </div>
           <div class="games-history-auth">
-            <input id="gamesHistoryEmail" type="email" autocomplete="username" placeholder="بريد ولي الأمر">
-            <input id="gamesHistoryPassword" type="password" autocomplete="current-password" placeholder="كلمة المرور (10 أحرف أو أكثر)">
+            <input id="gamesHistoryFamilyCode" type="text" inputmode="text" autocomplete="off" maxlength="23" placeholder="مثال: ABCDE-FGHIJ-KLMNO-PQRST" aria-label="رمز العائلة">
             <div>
-              <button class="btn primary" id="gamesHistoryPairLogin">ربط بحساب موجود</button>
-              <button class="btn secondary" id="gamesHistoryPairRegister">إنشاء حساب وربط</button>
+              <button class="btn primary" id="gamesHistoryPairCode">ربط بهذا الرمز</button>
+              <button class="btn secondary" id="gamesHistoryCreateCode">إنشاء رمز جديد</button>
             </div>
           </div>
           <p class="games-history-pair-status" id="gamesHistoryPairStatus" role="status"></p>
+        </section>
+        <section class="games-history-family-code" id="gamesHistoryFamilyCodeCard" hidden>
+          <div><strong>رمز العائلة</strong><p>استخدمه مرة واحدة في أي جهاز ثاني لفتح نفس التقدم والسجل.</p></div>
+          <div class="games-history-family-code-value"><code id="gamesHistoryFamilyCodeValue"></code><button class="btn secondary" id="gamesHistoryCopyCode">نسخ الرمز</button></div>
         </section>
         <div id="gamesHistoryContent">
         <section class="games-history-leaders">
