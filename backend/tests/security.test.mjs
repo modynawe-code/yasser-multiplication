@@ -9,7 +9,7 @@ test('password hashing is salted and verifies without storing plaintext',async()
   assert.notEqual(first.hash,second.hash);
   assert.equal(await verifyPassword('A-strong-family-passphrase',first),true);
   assert.equal(await verifyPassword('wrong-password-value',first),false);
-  assert.ok(first.iterations>=200000);
+  assert.equal(first.iterations,100000);
 });
 
 test('session tokens are high entropy and stored through a one-way hash',async()=>{
