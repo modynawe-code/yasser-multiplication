@@ -58,14 +58,22 @@ async function throttleKey(request,email){return sha256Base64Url(`${normalizeEma
 async function register(request,env){
   const body=await readJson(request),email=normalizeEmail(body?.email),password=body?.password;
   if(!/^\S+@\S+\.\S+$/.test(email)||!validatePassword(password))return response(request,env,400,{error:'invalid_credentials_format'});
-  const existing=await env.DB.prepare('SELECT id FROM parents WHERE email=?').bind(email).first();
+  let existing;
+  try{existing=await env.DB.prepare('SELECT id FROM parents WHERE email=?').bind(email).first();}
+  catch{return response(request,env,500,{error:'registration_failed',stage:'lookup'});}
   if(existing)return response(request,env,409,{error:'account_exists'});
-  const parentId=randomId('par'),createdAt=nowIso(),passwordRecord=await hashPassword(password);
-  await env.DB.batch([
-    env.DB.prepare('INSERT INTO parents(id,email,password_salt,password_hash,password_iterations,created_at) VALUES(?,?,?,?,?,?)').bind(parentId,email,passwordRecord.salt,passwordRecord.hash,passwordRecord.iterations,createdAt),
-    ...DEFAULT_LEARNERS.map(item=>env.DB.prepare('INSERT INTO learners(id,parent_id,slug,display_name,created_at) VALUES(?,?,?,?,?)').bind(randomId('lrn'),parentId,item.slug,item.displayName,createdAt))
-  ]);
-  return issueSession(request,env,parentId,email,201);
+  const parentId=randomId('par'),createdAt=nowIso();
+  let passwordRecord;
+  try{passwordRecord=await hashPassword(password);}
+  catch{return response(request,env,500,{error:'registration_failed',stage:'password_hash'});}
+  try{
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO parents(id,email,password_salt,password_hash,password_iterations,created_at) VALUES(?,?,?,?,?,?)').bind(parentId,email,passwordRecord.salt,passwordRecord.hash,passwordRecord.iterations,createdAt),
+      ...DEFAULT_LEARNERS.map(item=>env.DB.prepare('INSERT INTO learners(id,parent_id,slug,display_name,created_at) VALUES(?,?,?,?,?)').bind(randomId('lrn'),parentId,item.slug,item.displayName,createdAt))
+    ]);
+  }catch{return response(request,env,500,{error:'registration_failed',stage:'database_create'});}
+  try{return await issueSession(request,env,parentId,email,201);}
+  catch{return response(request,env,500,{error:'registration_failed',stage:'session_issue'});}
 }
 async function issueSession(request,env,parentId,email,status=200){
   const token=randomSessionToken(),tokenHash=await sha256Base64Url(token),id=randomId('ses'),createdAt=nowIso(),ttl=Math.max(1,Math.min(90,Number(env.SESSION_TTL_DAYS||SECURITY_DEFAULTS.sessionTtlDays))),expiresAt=futureIso(ttl);
