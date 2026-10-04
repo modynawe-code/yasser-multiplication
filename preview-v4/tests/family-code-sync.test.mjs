@@ -7,7 +7,7 @@ test('family code is high entropy, normalized and human readable',()=>{
   assert.equal(code.length,6);
   assert.equal(isValidFamilyCode(code),true);
   assert.equal(normalizeFamilyCode(formatFamilyCode(code)),code);
-  assert.match(formatFamilyCode(code),/^[A-Z2-9]{6}$/);
+  assert.match(formatFamilyCode(code),/^[A-Z0-9]{6}$/);
 });
 
 test('same family code always derives the same private account credentials',async()=>{
@@ -19,6 +19,11 @@ test('same family code always derives the same private account credentials',asyn
   assert.ok(first.password.length>10);
   assert.doesNotMatch(first.email,/AB2CD3/i);
   assert.doesNotMatch(first.password,/AB2CD3/i);
+});
+
+test('family code accepts zero and one',async()=>{
+  assert.equal(normalizeFamilyCode('a0b1c2'),'A0B1C2');
+  assert.equal(isValidFamilyCode('A0B1C2'),true);
 });
 
 test('invalid short family code is rejected',async()=>{
