@@ -1,9 +1,9 @@
 export const FAMILY_CODE_STORAGE_KEY='family-shared-code-v1';
-const ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const ALPHABET='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const CODE_LENGTH=6;
 
 export function normalizeFamilyCode(value){
-  return String(value||'').toUpperCase().replace(/[^A-Z2-9]/g,'').slice(0,CODE_LENGTH);
+  return String(value||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,CODE_LENGTH);
 }
 
 export function isValidFamilyCode(value){

@@ -61,13 +61,26 @@ async function post(payload,fetchImpl=globalThis.fetch){
   if(!response.ok)throw parseError(response,body,'game_history');
   return body;
 }
-async function authRequest(path,{method='POST',body,token,fetchImpl=globalThis.fetch}={}){
+async function authRequest(path,{method='POST',body,token,fetchImpl=globalThis.fetch,retries=1}={}){
   const base=getGameRoomApiBase(),headers={'content-type':'application/json','accept':'application/json'};
   if(token)headers.authorization=`Bearer ${token}`;
-  const response=await fetchImpl(`${base}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
-  let payload=null;try{payload=await response.json();}catch{}
-  if(!response.ok)throw parseError(response,payload,'game_history_pair');
-  return payload;
+  let lastError;
+  for(let attempt=0;attempt<=retries;attempt++){
+    try{
+      const response=await fetchImpl(`${base}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
+      let payload=null;try{payload=await response.json();}catch{}
+      if(response.ok)return payload;
+      const error=parseError(response,payload,'game_history_pair');
+      if(response.status<500||attempt===retries)throw error;
+      lastError=error;
+    }catch(error){
+      lastError=error;
+      if(error?.status&&error.status<500)throw error;
+      if(attempt===retries)throw error;
+    }
+    await new Promise(resolve=>setTimeout(resolve,350*(attempt+1)));
+  }
+  throw lastError||new Error('game_history_pair_failed');
 }
 async function establishFamilyAccount(familyCode,fetchImpl){
   const credentials=await deriveFamilyCredentials(familyCode);

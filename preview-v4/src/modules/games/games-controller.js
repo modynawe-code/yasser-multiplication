@@ -174,7 +174,12 @@ export function createGamesController({learningAdapter,challengePresentations=nu
       if(status)status.textContent='تم الربط ✓ احفظ رمز العائلة للأجهزة الثانية.';
       await openGameHistory(historyDays);
     }catch(error){
-      if(status)status.textContent=error?.message==='invalid_family_code'?'رمز العائلة لازم يكون 6 أحرف/أرقام.':'تعذر الربط الآن. تحقق من الاتصال وحاول مرة ثانية.';
+      if(!status)return;
+      if(error?.message==='invalid_family_code')status.textContent='رمز العائلة لازم يكون 6 أحرف/أرقام.';
+      else if(error?.status===429)status.textContent='محاولات كثيرة مؤقتًا. انتظر قليلًا ثم جرّب.';
+      else if(error?.status>=500)status.textContent=`تعذر الربط بسبب خطأ في السيرفر (${error.status}). جرّب مرة ثانية.`;
+      else if(error?.status)status.textContent=`تعذر الربط من السيرفر (${error.status}).`;
+      else status.textContent='تعذر الوصول إلى السيرفر. تحقق من الإنترنت ثم جرّب.';
     }
   }
   async function copyFamilyCode(){
