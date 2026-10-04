@@ -11,8 +11,8 @@ test('frontend preview workflow always publishes GitHub Pages while keeping opti
   assert.match(workflow,/actions\/upload-pages-artifact@v4/);
   assert.match(workflow,/pages:\s*write/);
   assert.match(workflow,/id-token:\s*write/);
-  assert.match(workflow,/__FAMILY_API_DISABLED__=true/);
-  assert.match(workflow,/"cloudSync": false/);
+  assert.match(workflow,/__FAMILY_API_BASE_URL__="https:\/\/yasser-khaled-family-api\.modynawe\.workers\.dev"/);
+  assert.match(workflow,/"cloudSync": true/);
   assert.match(workflow,/wrangler@4\.129\.0 deploy/);
   assert.match(workflow,/if: needs\.build\.outputs\.cloudflare_available == 'true'/);
   assert.doesNotMatch(workflow,/github-pages:\s*[\s\S]*?if: needs\.build\.outputs\.cloudflare_available != 'true'/);
