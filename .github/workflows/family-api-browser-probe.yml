@@ -24,6 +24,8 @@ jobs:
 
           status=$(curl --silent --show-error --dump-header /tmp/h -o /tmp/b -w "%{http_code}"             -X POST "$BASE/v1/auth/register"             -H "Origin: $ORIGIN"             -H "Content-Type: application/json"             --data "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
           echo "register_status=$status"
+          cat /tmp/h
+          cat /tmp/b
           grep -qi "^access-control-allow-origin: $ORIGIN" /tmp/h
           test "$status" = "201"
           node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync('/tmp/b','utf8')); if(!j.token) process.exit(1);"
