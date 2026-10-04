@@ -12,3 +12,18 @@
 .mono-figma-action-rule{width:90%;height:2px;background:#111;justify-self:center}
 .mono-figma-action-card p{margin:0;font-size:clamp(15px,2.4vmin,23px);line-height:1.5;font-weight:850}
 .mono-figma-action-card small{font-size:clamp(12px,1.7vmin,16px);line-height:1.5;color:#282828;font-weight:750}
+
+/* Full deed card: open rent rows with no inner boxes, based on the Monopoly title-deed reference. */
+.mono-center.overlay-deed-open{overflow:visible;z-index:8}
+.mono-overlay.mono-overlay--deed{inset:-18% -14%;padding:clamp(8px,1.4vmin,16px);gap:clamp(5px,.9vmin,10px)}
+.mono-overlay--deed .mono-overlay-body{display:flex;align-items:center;justify-content:center;overflow:auto}
+.mono-deed.mono-deed--full{width:min(100%,380px);margin:0 auto;box-sizing:border-box;border:2px solid #161616;border-radius:2px;background:#fff;padding:0;display:block;color:#171717;font-size:clamp(14px,1.9vmin,18px);line-height:1.28}
+.mono-deed-full-head{display:grid;justify-items:center;gap:3px;padding:clamp(9px,1.4vmin,15px) 12px;background:var(--deed-band,#8bcbd4);text-align:center}
+.mono-deed-full-head small{font-size:.8em;font-weight:800}
+.mono-deed-full-head strong{font-size:1.35em;font-weight:950}
+.mono-deed-full-section{padding:7px 14px 3px}
+.mono-deed-full-section> b{display:block;margin-bottom:2px}
+.mono-deed-full-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 0}
+.mono-deed-full-row b,.mono-deed-full-cost b{white-space:nowrap}
+.mono-deed-full-rule{height:0;border:0;border-top:1px solid #333;margin:3px 14px 5px}
+.mono-deed-full-cost{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:4px 14px 8px}
