@@ -100,6 +100,17 @@ syncCapabilities.register('mashaal',{
 
 const cloudAuth=createFamilyAuthClient();
 const cloudSync=createFamilySyncService({authClient:cloudAuth,capabilityRegistry:syncCapabilities});
+
+async function restoreFamilyCloudOnStart(){
+  if(!cloudAuth.isConfigured())return false;
+  try{
+    if(!cloudAuth.isAuthenticated())await cloudAuth.reconnectFamily();
+    await cloudSync.sync();
+    return true;
+  }catch{return false;}
+}
+await restoreFamilyCloudOnStart();
+
 const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
 let gameRewardRuntime=null;
@@ -184,5 +195,16 @@ presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()
 presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
 cabinet.start();familyParent.start();games.start();independentGames.start();hubVisuals.warm();hub.start();registerServiceWorker();
 void localBackup.flush();
-globalThis.addEventListener?.('pagehide',()=>{void localBackup.flush();});
-globalThis.addEventListener?.('visibilitychange',()=>{if(globalThis.document?.visibilityState==='hidden')void localBackup.flush();});
+let familyCloudUploading=false;
+async function flushFamilyCloud(){
+  if(familyCloudUploading||!cloudAuth.isConfigured())return;
+  familyCloudUploading=true;
+  try{
+    if(!cloudAuth.isAuthenticated())await cloudAuth.reconnectFamily();
+    await cloudSync.upload();
+  }catch{}finally{familyCloudUploading=false;}
+}
+globalThis.setInterval?.(()=>{void flushFamilyCloud();},30000);
+globalThis.addEventListener?.('online',()=>{void flushFamilyCloud();});
+globalThis.addEventListener?.('pagehide',()=>{void localBackup.flush();void flushFamilyCloud();});
+globalThis.addEventListener?.('visibilitychange',()=>{if(globalThis.document?.visibilityState==='hidden'){void localBackup.flush();void flushFamilyCloud();}});
