@@ -1,0 +1,36 @@
+name: Backend Family Registration Hotfix
+
+on:
+  push:
+    branches:
+      - 'fix/backend-family-registration-1101-20261004'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
+      API_BASE: https://yasser-khaled-family-api.modynawe.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply D1 migrations
+        run: npx --yes wrangler@4.129.0 d1 migrations apply yasser-khaled-family --remote --config wrangler.jsonc
+        working-directory: backend
+      - name: Deploy backend hotfix
+        run: npx --yes wrangler@4.129.0 deploy --config wrangler.jsonc
+        working-directory: backend
+      - name: Probe registration stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          EMAIL="diag-$(date +%s)-$RANDOM@family.invalid"
+          PASSWORD="$(openssl rand -hex 16)Aa1"
+          status=$(curl --silent --show-error --dump-header /tmp/h -o /tmp/b -w "%{http_code}"             -X POST "$API_BASE/v1/auth/register"             -H "Origin: https://modynawe-code.github.io"             -H "Content-Type: application/json"             --data "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+          echo "register_status=$status"
+          cat /tmp/h
+          cat /tmp/b
