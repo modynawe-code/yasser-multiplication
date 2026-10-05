@@ -23,6 +23,6 @@ test('Khaled literacy offers the existing lesson plus the two supplied videos',a
   assert.match(module,/KHALED_LITERACY_VIDEOS=VIDEOS/);
   assert.match(home,/3 فيديوهات • مراجعة الحروف والمقاطع/);
   assert.equal(hash(existing),'bd13d76879655adc6ff70aa434dfa77585a14c6bf86e7ff9083781020498e3d9');
-  assert.equal(hash(unitReview),'46b474a608e7d89ef698cc118363777a06ec8a8f622dd5bd3fab32d18c2b94db');
-  assert.equal(hash(spelling),'389503663544462d43cfb7f0f4f140d2bab9e7d2548c9d7902ddac4f39098488');
+  assert.equal(hash(unitReview),'bba24a8519ec3ce08ec7d665e7b66919daeeef163f1b6f7a76f3d9bedb819b97');
+  assert.equal(hash(spelling),'7e04b8b8e23540cf03d4554ba882a7db6484104ce7b876238642c4310f4024ed');
 });
