@@ -1,7 +1,8 @@
 const VIDEOS=Object.freeze([
   {id:'unit1-letters',title:'مراجعة حروف الوحدة الأولى: أسرتي',description:'مراجعة الأصوات القصيرة والطويلة ثم تدريب على قراءة الكلمات.',path:'assets/khaled/literacy/unit-1-family-letters-review.mp4'},
   {id:'unit1-review',title:'مراجعة الوحدة الأولى: الحروف والمقاطع',description:'مراجعة الحروف بالأصوات القصيرة والطويلة، والمقطع الساكن وقراءة حرفين.',path:'assets/khaled/literacy/unit-1-family-review-2.mp4'},
-  {id:'syllable-spelling',title:'قراءة المقاطع الصوتية بالتهجئة',description:'تدريب على قراءة المقاطع والوقوف وقفة خفيفة على الحرف الساكن.',path:'assets/khaled/literacy/syllable-spelling.mp4'}
+  {id:'syllable-spelling',title:'قراءة المقاطع الصوتية بالتهجئة',description:'تدريب على قراءة المقاطع والوقوف وقفة خفيفة على الحرف الساكن.',path:'assets/khaled/literacy/syllable-spelling.mp4'},
+  {id:'silent-letter-reading',title:'طريقة قراءة الحرف الساكن',description:'تدريب على قراءة الحرف الساكن مع الحركات من خلال أمثلة مثل مب، بل، رم، دم.',path:'assets/khaled/literacy/silent-letter-reading.mp4'}
 ]);
 
 function ensureStyle(){
