@@ -1,12 +1,12 @@
 const VIDEOS=Object.freeze([
-  {id:'unit1-letters',title:'مراجعة حروف الوحدة الأولى: أسرتي',description:'مراجعة الأصوات القصيرة والطويلة ثم تدريب على قراءة الكلمات.',path:'assets/khaled/literacy/unit-1-family-letters-review.mp4'},
-  {id:'unit1-review',title:'مراجعة الوحدة الأولى: الحروف والمقاطع',description:'مراجعة الحروف بالأصوات القصيرة والطويلة، والمقطع الساكن وقراءة حرفين.',path:'assets/khaled/literacy/unit-1-family-review-2.mp4'},
-  {id:'syllable-spelling',title:'قراءة المقاطع الصوتية بالتهجئة',description:'تدريب على قراءة المقاطع والوقوف وقفة خفيفة على الحرف الساكن.',path:'assets/khaled/literacy/syllable-spelling.mp4'},
-  {id:'silent-letter-reading',title:'طريقة قراءة الحرف الساكن',description:'تدريب على قراءة الحرف الساكن مع الحركات من خلال أمثلة مثل مب، بل، رم، دم.',path:'assets/khaled/literacy/silent-letter-reading.mp4'},
-  {id:'noon-reading',title:'نشاط قرائي: حرف ن',description:'تدريب على قراءة حرف النون بالحركات والمقاطع والكلمات.',path:'assets/khaled/literacy/noon-reading.mp4'},
-  {id:'noon-summary',title:'ملخص حرف ن',description:'مراجعة حرف النون وأشكاله وأصواته القصيرة والطويلة.',path:'assets/khaled/literacy/noon-summary.mp4'},
-  {id:'word-reading-practice',title:'تدريب على قراءة الكلمات',description:'قراءة كلمات بالحركات والمدود، مثل نمر ورمل ونار وباب.',path:'assets/khaled/literacy/word-reading-practice.mp4'},
-  {id:'reading-progression',title:'التدرج في قراءة الحروف والمقاطع والكلمات',description:'تدريب متدرج من قراءة الحرف إلى المقطع والكلمة بالحركات والمدود.',path:'assets/khaled/literacy/reading-progression.mp4'}
+  {id:'unit1-letters',title:'مراجعة حروف الوحدة الأولى: أسرتي',description:'مراجعة الأصوات القصيرة والطويلة ثم تدريب على قراءة الكلمات.',duration:74.833,poster:'assets/khaled/literacy/unit-1-family-letters-review.jpg',path:'assets/khaled/literacy/unit-1-family-letters-review.mp4'},
+  {id:'unit1-review',title:'مراجعة الوحدة الأولى: الحروف والمقاطع',description:'مراجعة الحروف بالأصوات القصيرة والطويلة، والمقطع الساكن وقراءة حرفين.',duration:124.203,poster:'assets/khaled/literacy/unit-1-family-review-2.jpg',path:'assets/khaled/literacy/unit-1-family-review-2.mp4'},
+  {id:'syllable-spelling',title:'قراءة المقاطع الصوتية بالتهجئة',description:'تدريب على قراءة المقاطع والوقوف وقفة خفيفة على الحرف الساكن.',duration:37.433,poster:'assets/khaled/literacy/syllable-spelling.jpg',path:'assets/khaled/literacy/syllable-spelling.mp4'},
+  {id:'silent-letter-reading',title:'طريقة قراءة الحرف الساكن',description:'تدريب على قراءة الحرف الساكن مع الحركات من خلال أمثلة مثل مب، بل، رم، دم.',duration:30.696,poster:'assets/khaled/literacy/silent-letter-reading.jpg',path:'assets/khaled/literacy/silent-letter-reading.mp4'},
+  {id:'noon-reading',title:'نشاط قرائي: حرف ن',description:'تدريب على قراءة حرف النون بالحركات والمقاطع والكلمات.',duration:29.094,poster:'assets/khaled/literacy/noon-reading.jpg',path:'assets/khaled/literacy/noon-reading.mp4'},
+  {id:'noon-summary',title:'ملخص حرف ن',description:'مراجعة حرف النون وأشكاله وأصواته القصيرة والطويلة.',duration:126.9,poster:'assets/khaled/literacy/noon-summary.jpg',path:'assets/khaled/literacy/noon-summary.mp4'},
+  {id:'word-reading-practice',title:'تدريب على قراءة الكلمات',description:'قراءة كلمات بالحركات والمدود، مثل نمر ورمل ونار وباب.',duration:41.889,poster:'assets/khaled/literacy/word-reading-practice.jpg',path:'assets/khaled/literacy/word-reading-practice.mp4'},
+  {id:'reading-progression',title:'التدرج في قراءة الحروف والمقاطع والكلمات',description:'تدريب متدرج من قراءة الحرف إلى المقطع والكلمة بالحركات والمدود.',duration:194.2,poster:'assets/khaled/literacy/reading-progression.jpg',path:'assets/khaled/literacy/reading-progression.mp4'}
 ]);
 
 function ensureStyle(){
@@ -19,7 +19,7 @@ function ensureStyle(){
 }
 
 function lessonButtons(){
-  return VIDEOS.map((video,index)=>`<button class="khaled-literacy-lesson${index===0?' active':''}" type="button" data-literacy-video="${video.id}" aria-pressed="${index===0?'true':'false'}"><small>فيديو ${index+1}</small><strong>${video.title}</strong><span>${video.description}</span></button>`).join('');
+  return VIDEOS.map((video,index)=>`<button class="khaled-literacy-lesson" type="button" data-literacy-video="${video.id}"><span class="khaled-literacy-thumb"><img src="${video.poster}" alt="" loading="lazy" width="240" height="160"><span class="khaled-literacy-duration" dir="ltr">${formatTime(video.duration)}</span><span class="khaled-literacy-play" aria-hidden="true">▶</span></span><span class="khaled-literacy-card-copy"><small>الدرس ${index+1}</small><strong>${video.title}</strong></span></button>`).join('');
 }
 
 function ensureView(){
@@ -36,14 +36,16 @@ function ensureView(){
         <div><div class="kicker">لغتي • أول ابتدائي</div><h1 id="khaledLiteracyTitle">فيديوهات لغتي</h1><p>اختر الدرس وشغّله داخل التطبيق.</p></div>
         <button class="icon-btn" id="khaledLiteracyBack" type="button">العودة لمواد خالد</button>
       </header>
-      <div class="khaled-literacy-lessons" aria-label="فيديوهات لغتي">${lessonButtons()}</div>
+      <div id="khaledLiteracyLibrary"><div class="khaled-literacy-lessons" aria-label="فيديوهات لغتي">${lessonButtons()}</div></div>
+      <section id="khaledLiteracyWatch" hidden aria-label="مشاهدة الدرس">
+      <button id="khaledLiteracyToLessons" class="icon-btn" type="button">← العودة للدروس</button>
       <section class="khaled-literacy-now" aria-live="polite">
         <h2 id="khaledLiteracyNowTitle">${first.title}</h2>
         <p id="khaledLiteracyNowDescription">${first.description}</p>
       </section>
       <div class="khaled-literacy-player">
         <video id="khaledLiteracyVideo" controls playsinline preload="metadata" aria-label="فيديو ${first.title}">
-          <source src="${first.path}" type="video/mp4">
+          
           المتصفح لا يدعم تشغيل الفيديو.
         </video>
       </div>
@@ -62,7 +64,8 @@ function ensureView(){
         </div>
         <p id="khaledLiteracyStatus" role="status" hidden></p>
       </div>
-      <p class="khaled-literacy-note">الفيديوهات تعمل داخل التطبيق، بدون انتقال إلى موقع خارجي.</p>
+      <nav class="khaled-literacy-navigation" aria-label="التنقل بين الدروس"><button id="khaledLiteracyPrevious" type="button">الدرس السابق</button><span id="khaledLiteracyPosition"></span><button id="khaledLiteracyNext" type="button">الدرس التالي</button></nav>
+      </section>
     </div>`;
   document.querySelector('main')?.appendChild(view);
   return view;
@@ -82,9 +85,19 @@ function selectVideo(view,id){
   if(title)title.textContent=entry.title;
   if(description)description.textContent=entry.description;
   player.pause();
+  player.poster=entry.poster;
   player.src=entry.path;
   player.setAttribute('aria-label',`فيديو ${entry.title}`);
   player.load();
+  const index=VIDEOS.indexOf(entry);
+  view.dataset.selectedVideo=entry.id;
+  view.querySelector('#khaledLiteracyLibrary').hidden=true;
+  view.querySelector('#khaledLiteracyWatch').hidden=false;
+  view.querySelector('#khaledLiteracyPrevious').disabled=index===0;
+  view.querySelector('#khaledLiteracyNext').disabled=index===VIDEOS.length-1;
+  view.querySelector('#khaledLiteracyPosition').textContent=`${index+1} / ${VIDEOS.length}`;
+  view.querySelector('#khaledLiteracyToLessons').focus();
+  window.scrollTo({top:0,behavior:'instant'});
 }
 
 function formatTime(seconds){
@@ -158,9 +171,22 @@ export function createKhaledLiteracyController({showView,onBack}={}){
     if(!bound){
       bindKhaledLiteracyControls(view);
       view.querySelectorAll('[data-literacy-video]').forEach(button=>button.addEventListener('click',()=>selectVideo(view,button.dataset.literacyVideo)));
+      view.querySelector('#khaledLiteracyToLessons').addEventListener('click',()=>{
+        view.querySelector('#khaledLiteracyVideo').pause();
+        view.querySelector('#khaledLiteracyWatch').hidden=true;
+        view.querySelector('#khaledLiteracyLibrary').hidden=false;
+        view.querySelector(`[data-literacy-video="${view.dataset.selectedVideo}"]`)?.focus();
+      });
+      for(const [control,delta] of [['Previous',-1],['Next',1]])view.querySelector(`#khaledLiteracy${control}`).addEventListener('click',()=>{
+        const index=VIDEOS.findIndex(video=>video.id===view.dataset.selectedVideo);
+        const next=VIDEOS[index+delta];
+        if(next)selectVideo(view,next.id);
+      });
       document.getElementById('khaledLiteracyBack')?.addEventListener('click',()=>{view.querySelector('#khaledLiteracyVideo')?.pause();onBack?.();});
       bound=true;
     }
+    view.querySelector('#khaledLiteracyWatch').hidden=true;
+    view.querySelector('#khaledLiteracyLibrary').hidden=false;
     showView?.('khaledLiteracyView');
   }
   return{open};

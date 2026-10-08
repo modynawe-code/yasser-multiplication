@@ -30,3 +30,29 @@
 @media(max-width:420px){.khaled-literacy-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.khaled-literacy-actions button:first-child{grid-column:1/-1}.khaled-literacy-actions label{grid-column:1/-1;justify-content:center}.khaled-literacy-actions button{padding:10px 6px;font-size:14px}.khaled-literacy-timeline{gap:8px}.khaled-literacy-timeline output{font-size:14px}}
 @media(max-width:700px){.khaled-literacy-shell{padding:16px;border-radius:22px}.khaled-literacy-header{flex-direction:column-reverse;gap:12px}.khaled-literacy-header .icon-btn{align-self:flex-start}.khaled-literacy-lessons{grid-template-columns:1fr}.khaled-literacy-lesson{min-height:0}.khaled-literacy-player{padding:10px;min-height:180px;border-radius:18px}.khaled-literacy-player video{max-height:60dvh}}
 @media(prefers-reduced-motion:reduce){.khaled-literacy-shell{scroll-behavior:auto}}
+/* Compact lesson library and dedicated watch screen. */
+.khaled-literacy-shell [hidden]{display:none!important}
+.khaled-literacy-lessons{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0}
+.khaled-literacy-lesson{padding:0;min-height:0;overflow:hidden;gap:0;border-radius:16px}
+.khaled-literacy-thumb{position:relative;display:block;height:148px;background:#edf0f5;overflow:hidden}
+.khaled-literacy-thumb img{display:block;width:100%;height:100%;object-fit:contain}
+.khaled-literacy-lesson .khaled-literacy-duration{position:absolute;bottom:8px;left:8px;background:#16253a;color:white;border-radius:6px;padding:2px 6px;font-size:12px}
+.khaled-literacy-lesson .khaled-literacy-play{position:absolute;right:8px;bottom:8px;background:#fff;color:#815a17;border-radius:50%;width:30px;height:30px;display:grid;place-items:center}
+.khaled-literacy-card-copy{display:flex;flex-direction:column;gap:4px;padding:12px}
+.khaled-literacy-card-copy strong{font-size:15px;line-height:1.5}
+#khaledLiteracyWatch{max-width:780px;margin:auto}
+#khaledLiteracyToLessons{margin-bottom:14px}
+.khaled-literacy-now p{font-size:14px;font-weight:500}
+.khaled-literacy-player{padding:8px;min-height:0}
+.khaled-literacy-player video{max-height:52dvh;width:100%;border-radius:12px}
+.khaled-literacy-controls{padding:8px 12px;margin-top:8px;border-radius:14px}
+.khaled-literacy-actions{display:flex;gap:6px;justify-content:center;margin-top:2px}
+.khaled-literacy-actions button,.khaled-literacy-actions select{padding:8px 10px;min-height:44px;font-size:14px}
+.khaled-literacy-actions button:first-child{min-width:100px}
+.khaled-literacy-actions label{font-size:13px;gap:4px}
+.khaled-literacy-navigation{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}
+.khaled-literacy-navigation button{min-height:44px;border:1px solid #d9c49d;background:#fff8eb;border-radius:12px;padding:8px 14px;color:#16253a;font:inherit;font-size:14px;font-weight:750;cursor:pointer}
+.khaled-literacy-navigation button:disabled{opacity:.4;cursor:default}
+.khaled-literacy-navigation span{font-size:13px;direction:ltr;color:#697384}
+@media(max-width:700px){.khaled-literacy-shell{padding:12px}.khaled-literacy-lessons{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.khaled-literacy-thumb{height:112px}.khaled-literacy-card-copy{padding:9px}.khaled-literacy-card-copy strong{font-size:14px}.khaled-literacy-header p{font-size:14px}.khaled-literacy-player video{max-height:50dvh}}
+@media(max-width:420px){.khaled-literacy-actions{display:flex}.khaled-literacy-actions label{justify-content:center}.khaled-literacy-actions button{font-size:13px}.khaled-literacy-timeline output{font-size:12px}}
