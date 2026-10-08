@@ -21,11 +21,12 @@ function setup(){
   bindKhaledLiteracyControls(view);
   return {player,...controls};
 }
-test('seven lessons include Noon and word reading videos',()=>{
-  assert.equal(KHALED_LITERACY_VIDEOS.length,7);
-  assert.equal(new Set(KHALED_LITERACY_VIDEOS.map(v=>v.id)).size,7);
+test('eight lessons include the new reading progression video',()=>{
+  assert.equal(KHALED_LITERACY_VIDEOS.length,8);
+  assert.equal(new Set(KHALED_LITERACY_VIDEOS.map(v=>v.id)).size,8);
   assert.equal(KHALED_LITERACY_VIDEOS[4].path,'assets/khaled/literacy/noon-reading.mp4');
   assert.equal(KHALED_LITERACY_VIDEOS[5].path,'assets/khaled/literacy/noon-summary.mp4');
+  assert.equal(KHALED_LITERACY_VIDEOS[7].path,'assets/khaled/literacy/reading-progression.mp4');
   assert.equal(KHALED_LITERACY_VIDEOS[6].path,'assets/khaled/literacy/word-reading-practice.mp4');
 });
 test('time display, seek and ten-second jumps stay within the video',()=>{

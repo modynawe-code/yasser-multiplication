@@ -7,7 +7,7 @@ const read=path=>readFile(new URL(`../${path}`,import.meta.url));
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 
 test('Khaled literacy offers the existing lessons plus the supplied literacy videos',async()=>{
-  const [module,home,existing,unitReview,spelling,silentLetter,noonReading,noonSummary,wordReading]=await Promise.all([
+  const [module,home,existing,unitReview,spelling,silentLetter,noonReading,noonSummary,wordReading,progression]=await Promise.all([
     read('src/modules/khaled/literacy/khaled-literacy.js').then(bytes=>bytes.toString('utf8')),
     read('src/modules/khaled/ui/khaled-home-shell.js').then(bytes=>bytes.toString('utf8')),
     read('assets/khaled/literacy/unit-1-family-letters-review.mp4'),
@@ -16,7 +16,8 @@ test('Khaled literacy offers the existing lessons plus the supplied literacy vid
     read('assets/khaled/literacy/silent-letter-reading.mp4'),
     read('assets/khaled/literacy/noon-reading.mp4'),
     read('assets/khaled/literacy/noon-summary.mp4'),
-    read('assets/khaled/literacy/word-reading-practice.mp4')
+    read('assets/khaled/literacy/word-reading-practice.mp4'),
+    read('assets/khaled/literacy/reading-progression.mp4')
   ]);
   assert.match(module,/assets\/khaled\/literacy\/unit-1-family-letters-review\.mp4/);
   assert.match(module,/assets\/khaled\/literacy\/unit-1-family-review-2\.mp4/);
@@ -27,10 +28,12 @@ test('Khaled literacy offers the existing lessons plus the supplied literacy vid
   assert.match(module,/قراءة المقاطع الصوتية بالتهجئة/);
   assert.match(module,/طريقة قراءة الحرف الساكن/);
   assert.match(module,/KHALED_LITERACY_VIDEOS=VIDEOS/);
-  assert.match(home,/7 فيديوهات • الحروف والمقاطع والقراءة/);
+  assert.match(home,/8 فيديوهات • الحروف والمقاطع والقراءة/);
   assert.ok(noonReading.length>0);
   assert.ok(noonSummary.length>0);
   assert.ok(wordReading.length>0);
+  assert.ok(progression.length>0);
+  assert.match(module,/التدرج في قراءة الحروف والمقاطع والكلمات/);
   assert.match(module,/تدريب على قراءة الكلمات/);
   assert.match(module,/نشاط قرائي: حرف ن/);
   assert.match(module,/ملخص حرف ن/);
