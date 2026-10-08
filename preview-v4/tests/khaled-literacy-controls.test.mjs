@@ -21,11 +21,12 @@ function setup(){
   bindKhaledLiteracyControls(view);
   return {player,...controls};
 }
-test('six lessons include both Noon videos',()=>{
-  assert.equal(KHALED_LITERACY_VIDEOS.length,6);
-  assert.equal(new Set(KHALED_LITERACY_VIDEOS.map(v=>v.id)).size,6);
+test('seven lessons include Noon and word reading videos',()=>{
+  assert.equal(KHALED_LITERACY_VIDEOS.length,7);
+  assert.equal(new Set(KHALED_LITERACY_VIDEOS.map(v=>v.id)).size,7);
   assert.equal(KHALED_LITERACY_VIDEOS[4].path,'assets/khaled/literacy/noon-reading.mp4');
   assert.equal(KHALED_LITERACY_VIDEOS[5].path,'assets/khaled/literacy/noon-summary.mp4');
+  assert.equal(KHALED_LITERACY_VIDEOS[6].path,'assets/khaled/literacy/word-reading-practice.mp4');
 });
 test('time display, seek and ten-second jumps stay within the video',()=>{
   const {player,Time,Seek,Forward,Rewind}=setup();
@@ -60,3 +61,4 @@ test('failed playback gives a message; switching video clears it',async()=>{
   assert.equal(Status.hidden,false);assert.match(Status.textContent,/تعذر التشغيل/);
   player.emit('emptied');assert.equal(Status.hidden,true);
 });
+

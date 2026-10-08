@@ -4,7 +4,8 @@ const VIDEOS=Object.freeze([
   {id:'syllable-spelling',title:'قراءة المقاطع الصوتية بالتهجئة',description:'تدريب على قراءة المقاطع والوقوف وقفة خفيفة على الحرف الساكن.',path:'assets/khaled/literacy/syllable-spelling.mp4'},
   {id:'silent-letter-reading',title:'طريقة قراءة الحرف الساكن',description:'تدريب على قراءة الحرف الساكن مع الحركات من خلال أمثلة مثل مب، بل، رم، دم.',path:'assets/khaled/literacy/silent-letter-reading.mp4'},
   {id:'noon-reading',title:'نشاط قرائي: حرف ن',description:'تدريب على قراءة حرف النون بالحركات والمقاطع والكلمات.',path:'assets/khaled/literacy/noon-reading.mp4'},
-  {id:'noon-summary',title:'ملخص حرف ن',description:'مراجعة حرف النون وأشكاله وأصواته القصيرة والطويلة.',path:'assets/khaled/literacy/noon-summary.mp4'}
+  {id:'noon-summary',title:'ملخص حرف ن',description:'مراجعة حرف النون وأشكاله وأصواته القصيرة والطويلة.',path:'assets/khaled/literacy/noon-summary.mp4'},
+  {id:'word-reading-practice',title:'تدريب على قراءة الكلمات',description:'قراءة كلمات بالحركات والمدود، مثل نمر ورمل ونار وباب.',path:'assets/khaled/literacy/word-reading-practice.mp4'}
 ]);
 
 function ensureStyle(){
@@ -166,3 +167,4 @@ export function createKhaledLiteracyController({showView,onBack}={}){
 
 export const KHALED_LITERACY_VIDEOS=VIDEOS;
 export const KHALED_LITERACY_VIDEO_PATH=VIDEOS[0].path;
+
