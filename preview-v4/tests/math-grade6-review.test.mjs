@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MATH_QUESTIONS,SOURCES,gradeAnswer,summarize,WORKSHEET_QUESTIONS,REVIEW_CONTENT_QUESTIONS,motivationFor} from '../src/modules/yasser/reviews/math-grade6-data.js';
+import {MATH_QUESTIONS,SOURCES,gradeAnswer,summarize,WORKSHEET_QUESTIONS,REVIEW_CONTENT_QUESTIONS,motivationFor,reviewHistorySummary} from '../src/modules/yasser/reviews/math-grade6-data.js';
 test('every question has an exact pair of source pages',()=>{assert.equal(MATH_QUESTIONS.length,42);assert.equal(new Set(MATH_QUESTIONS.map(q=>q.id)).size,42);for(const q of MATH_QUESTIONS){assert.equal(q.source.questions,SOURCES.questions);assert.equal(q.source.answers,SOURCES.answers);assert.equal(q.source.questionPage,q.source.answerPage);assert.ok(q.page>=2&&q.page<=6);assert.ok(gradeAnswer(q,q.fields.map(f=>f.answer)).every(Boolean));}});
 test('Arabic and English input preserves the meaning of powers and prime factors',()=>{const find=id=>MATH_QUESTIONS.find(q=>q.id===id);assert.deepEqual(gradeAnswer(find('operations'),['56']),[true]);assert.deepEqual(gradeAnswer(find('operations'),['٥٦']),[true]);assert.deepEqual(gradeAnswer(find('power'),['٥³']),[true]);assert.deepEqual(gradeAnswer(find('power'),['53']),[false]);assert.deepEqual(gradeAnswer(find('factors-18'),['3*2*3']),[true]);assert.deepEqual(gradeAnswer(find('factors-18'),['2×9']),[false]);assert.deepEqual(gradeAnswer(find('operations'),['eval(56)']),[false]);});
 test('compound questions earn one point only when complete',()=>{const table=MATH_QUESTIONS.find(q=>q.table);const responses={[table.id]:{correct:gradeAnswer(table,['5+3','8','6+3','8'])}};assert.deepEqual(summarize([table],responses),{correct:0,wrong:1,unanswered:0,total:1,percent:0});responses[table.id].correct=gradeAnswer(table,['5+3','8','6+3','9']);assert.equal(summarize([table],responses).correct,1);});
@@ -15,4 +15,12 @@ test('encouragement tracks actual consecutive correct answers and resets on mist
  const r={a:{correct:[true]},b:{correct:[true]},c:{correct:[true]}};assert.match(motivationFor(r),/3 إجابات صحيحة متتالية/);
  r.d={correct:[true,false]};assert.doesNotMatch(motivationFor(r),/متتالية/);assert.match(motivationFor(r),/ياسر|تتعلم/);
  r.e={correct:[true]};assert.doesNotMatch(motivationFor(r),/متتالية/);
+});
+
+test('history compares full exams only and preserves older and retry attempts',()=>{
+ const attempt=(mode,ids,percent)=>({finished:true,mode,ids,summary:{percent}});
+ const full=MATH_QUESTIONS.map(q=>q.id);
+ const history=[attempt('exam',full,50),attempt('train',full,100),attempt('exam',full.slice(0,15),100),attempt('exam',[full[0]],100),attempt('exam',full,75)];
+ assert.deepEqual(reviewHistorySummary(history),{total:5,exams:4,training:1,bestFullExam:75,improvement:25});
+ assert.deepEqual(reviewHistorySummary([]),{total:0,exams:0,training:0,bestFullExam:null,improvement:null});
 });

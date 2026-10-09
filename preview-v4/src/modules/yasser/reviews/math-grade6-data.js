@@ -60,3 +60,10 @@ export function motivationFor(responses){
 export function normalizeAnswer(value){return String(value??'').replace(/³/g,'^3').normalize('NFKC').replace(/[٠-٩]/g,c=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(c))).replace(/[۰-۹]/g,c=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(c))).replace(/[\s\u200e\u200f\u202a-\u202e\u2066-\u2069ـ]/g,'').replace(/[أإآ]/g,'ا').replace(/[xX*]/g,'×').replace(/−/g,'-');}
 export function gradeAnswer(question,values){return question.fields.map((f,i)=>f.accepted.some(a=>normalizeAnswer(a)===normalizeAnswer(values?.[i])));}
 export function summarize(questions,responses){let correct=0,wrong=0,unanswered=0;for(const q of questions){const r=responses[q.id];if(!r){unanswered++;continue;}if(r.correct.every(Boolean))correct++;else wrong++;}return{correct,wrong,unanswered,total:questions.length,percent:Math.round(correct/questions.length*100)};}
+
+export function reviewHistorySummary(history){
+ const completed=history.filter(h=>h.finished&&h.summary);
+ const fullExams=completed.filter(h=>h.mode==='exam'&&h.ids.length===MATH_QUESTIONS.length&&MATH_QUESTIONS.every(q=>h.ids.includes(q.id)));
+ const last=fullExams.at(-1),previous=fullExams.at(-2);
+ return {total:completed.length,exams:completed.filter(h=>h.mode==='exam').length,training:completed.filter(h=>h.mode==='train').length,bestFullExam:fullExams.length?Math.max(...fullExams.map(h=>h.summary.percent)):null,improvement:last&&previous?last.summary.percent-previous.summary.percent:null};
+}
