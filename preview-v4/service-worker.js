@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-189`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-190`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -42,6 +42,8 @@ const MASHAAL_ARABIC_COLORING_ASSETS=[
   './assets/oer/openmoji/coloring/rabbit.svg','./assets/oer/openmoji/coloring/duck.svg','./assets/oer/openmoji/coloring/crocodile.svg','./assets/oer/openmoji/coloring/fox.svg','./assets/oer/openmoji/coloring/camel.svg'
 ];
 const APP_SHELL=[
+  './src/modules/yasser/reviews/math-grade6.js','./src/modules/yasser/reviews/math-grade6-data.js','./src/modules/yasser/reviews/math-grade6.css',
+  './assets/reviews/math-grade6/championships.webp','./assets/reviews/math-grade6/books.webp',
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css','./src/ui/styles/typography.css',
   './src/main.js','./src/domain/constants.js','./src/domain/state-model.js','./src/domain/mastery.js','./src/domain/question-bank.js',
