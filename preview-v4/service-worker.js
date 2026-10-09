@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-192`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-193`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -43,6 +43,7 @@ const MASHAAL_ARABIC_COLORING_ASSETS=[
 ];
 const APP_SHELL=[
   './src/modules/yasser/reviews/math-grade6.js','./src/modules/yasser/reviews/math-grade6-data.js','./src/modules/yasser/reviews/math-grade6.css',
+  './src/modules/yasser/reviews/review-engine.js','./src/modules/yasser/reviews/review-runtime.js','./src/modules/yasser/reviews/grade6-reviews.js','./src/modules/yasser/reviews/digital-grade6-data.js','./src/modules/yasser/reviews/arabic-grade6-data.js','./src/modules/yasser/reviews/english-grade6-data.js','./src/modules/yasser/reviews/science-grade6-data.js','./src/modules/yasser/reviews/social-grade6-data.js','./src/modules/yasser/reviews/islamic-grade6-data.js','./assets/reviews/grade6/arabic-poem.webp','./assets/reviews/grade6/arabic-reading.webp','./assets/reviews/grade6/digital-arrow.webp','./assets/reviews/grade6/digital-bar.webp','./assets/reviews/grade6/digital-chest.webp','./assets/reviews/grade6/digital-controller.webp','./assets/reviews/grade6/digital-cube.webp','./assets/reviews/grade6/digital-cylinder.webp','./assets/reviews/grade6/digital-house.webp','./assets/reviews/grade6/digital-line.webp','./assets/reviews/grade6/digital-pie.webp','./assets/reviews/grade6/digital-viewcube.webp','./assets/reviews/grade6/digital-workplane.webp','./assets/reviews/grade6/english-animal-1.webp','./assets/reviews/grade6/english-animal-2.webp','./assets/reviews/grade6/english-animal-3.webp','./assets/reviews/grade6/english-animal-4.webp','./assets/reviews/grade6/english-animal-5.webp','./assets/reviews/grade6/english-balance.webp','./assets/reviews/grade6/english-welcome-1.webp','./assets/reviews/grade6/english-welcome-2.webp','./assets/reviews/grade6/english-welcome-3.webp','./assets/reviews/grade6/english-welcome-4.webp','./assets/reviews/grade6/english-welcome-5.webp','./assets/reviews/grade6/science-animal-cell.webp','./assets/reviews/grade6/science-photosynthesis.webp','./assets/reviews/grade6/science-plants.webp',
   './assets/reviews/math-grade6/championships.webp','./assets/reviews/math-grade6/books.webp',
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css','./src/ui/styles/typography.css',

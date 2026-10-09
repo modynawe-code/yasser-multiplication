@@ -53,6 +53,11 @@ function ensureYasserSubjectGateway(){
         <span class="subject-choice-copy"><strong>اختبارات ومراجعات سادس · الرياضيات</strong><small>مراجعة نخبة الشمال • تدريب واختبار • حفظ التقدم</small></span>
         <span class="subject-choice-action">ابدأ</span>
       </button>
+      <button class="subject-choice subject-choice-science" id="introGrade6Reviews" type="button">
+        <span class="subject-choice-mark" aria-hidden="true">٦</span>
+        <span class="subject-choice-copy"><strong>مراجعات سادس · باقي المواد</strong><small>كل مادة مستقلة • تدريب واختبار • سجل المحاولات</small></span>
+        <span class="subject-choice-action">ابدأ</span>
+      </button>
       <button class="subject-choice subject-choice-lessons" id="introMathLessons" type="button">
         <span class="subject-choice-mark" aria-hidden="true">د</span>
         <span class="subject-choice-copy"><strong>دروس الرياضيات</strong><small>34 درسًا • شرح سادس ابتدائي بالفيديو</small></span>
@@ -153,6 +158,10 @@ export function ensureYasserHomeShell(){
   document.getElementById('introMathReview')?.addEventListener('click',async()=>{
     const {openYasserMathReview}=await import('../reviews/math-grade6.js');
     openYasserMathReview({onBack:showYasserIntro});
+  });
+  document.getElementById('introGrade6Reviews')?.addEventListener('click',async()=>{
+    const {openGrade6Reviews}=await import('../reviews/grade6-reviews.js');
+    openGrade6Reviews({onBack:showYasserIntro});
   });
   document.getElementById('introMathLessons')?.addEventListener('click',async()=>{
     const {openYasserMathLessons}=await import('../math/yasser-math-lessons.js');
