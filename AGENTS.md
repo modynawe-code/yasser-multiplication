@@ -99,3 +99,7 @@
 ## Permanent Principle
 
 `Context → Evidence → Root Cause → Smallest Safe Solution → Implementation → Validation`
+
+## Gold Vault
+
+Before working on خزنة الذهب / gold-vault, read docs/gold-vault/AGREEMENT.md and inspect docs/gold-vault/design-reference.png. Maintain requirement IDs and verification status in docs/gold-vault/VALIDATION.md. Reuse existing online room infrastructure and shared dice presentation; do not replace the approved visual direction without user approval.

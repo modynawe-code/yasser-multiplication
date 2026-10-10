@@ -1,3 +1,4 @@
+import {diePips} from '../games/shared/dice-presentation.js';
 import {drawParticipants,normalizeParticipants} from './selection-engine.js';
 import {answerDotsBoxesEdge,createDotsBoxesGame,pickDotsBoxesEdge,startDotsBoxesGame} from './dots-boxes-engine.js';
 import {isPlayableGameQuestion,loadGameQuestionBank,nextGameQuestion,orderCurriculumQuestions,saveGameQuestionBank} from './question-bank.js?v=20260929-bank1';
@@ -11,8 +12,7 @@ import {ensureInteractiveGamesShell} from './interactive-games-shell.js?v=202609
 function byId(id){return document.getElementById(id);}
 function showView(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
 const arabicNumber=value=>new Intl.NumberFormat('ar-SA').format(value);
-const DIE_PIPS=Object.freeze({1:['center'],2:['top-left','bottom-right'],3:['top-left','center','bottom-right'],4:['top-left','top-right','bottom-left','bottom-right'],5:['top-left','top-right','center','bottom-left','bottom-right'],6:['top-left','top-right','middle-left','middle-right','bottom-left','bottom-right']});
-const diePips=face=>(DIE_PIPS[face]||DIE_PIPS[5]).map(position=>`<i class="pip pip-${position}${face===5&&position==='center'?' pip-accent':''}" aria-hidden="true"></i>`).join('');
+
 
 export function createInteractiveGamesController({onBeforeEnter,onExitToHub,random=Math.random}={}){
   const storedSetup=loadIndependentGameSetup();

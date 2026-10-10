@@ -1,3 +1,4 @@
+import {createVaultState,applyVaultAction,GAME_ID as VAULT_ID} from '../../preview-v4/src/modules/games/gold-vault/gold-vault-engine.js';
 import { addFamilyWordCategoriesRoomPlayer, applyFamilyWordCategoriesRoomAction, createInitialFamilyWordCategoriesRoomState, projectFamilyWordCategoriesRoomState } from './family-word-categories-engine.mjs';
 import { bidAuction, buildHouse, buyProperty, createMonopolyState, drawCard, endTurn, passAuction, payJail, rollDice, sellProperty, skipProperty, tradeProperty } from '../../preview-v4/src/modules/games/monopoly/monopoly-engine.js';
 import {
@@ -281,7 +282,10 @@ export function applyMonopolyRoomAction(state,{playerId,type,payload={}}={}){
   return next===state?{ok:false,reason:'invalid-action'}:{ok:true,state:next};
 }
 
+function initialVaultRoom(id,{displayName=id}={}){return {gameId:VAULT_ID,status:'waiting',players:[{id,name:displayName}]};}
+function addVaultPlayer(state,id,{displayName=id}={}){if(state.status!=='waiting'||state.players.length!==1)return {ok:false,reason:'room-not-waiting'};if(state.players.some(p=>p.id===id))return {ok:false,reason:'player-already-in-room'};return {ok:true,state:createVaultState([...state.players,{id,name:displayName}])};}
 const RULES=Object.freeze({
+ 'gold-vault':Object.freeze({gameId:VAULT_ID,maxPlayers:2,maxSpectators:8,createInitialState:initialVaultRoom,addPlayer:addVaultPlayer,applyAction:applyVaultAction}),
   xo:Object.freeze({
     gameId:'xo',
     maxPlayers:2,

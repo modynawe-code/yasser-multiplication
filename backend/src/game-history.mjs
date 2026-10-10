@@ -22,6 +22,7 @@ function isoOrNull(value){
 function uniq(values){return[...new Set((values||[]).map(x=>String(x||'')).filter(Boolean))];}
 function terminalOutcome(gameId,state){
   if(!state||typeof state!=='object')return null;
+  if(gameId==='gold-vault'){if(state.status!=='finished')return null;return {winnerIds:state.winner?[state.winner]:[],draw:!state.winner,scores:Object.fromEntries(state.players.map(p=>[p.id,Object.values(state.cells).filter(id=>id===p.id).length])),details:{round:state.round,mode:state.mode,moveCount:state.moveCount}};}
   if(gameId==='xo'){
     if(state.status==='won'&&state.winner)return{winnerIds:[state.winner],scores:{},details:{round:state.round||1,moveCount:state.moveCount||0}};
     if(state.status==='draw')return{winnerIds:[],draw:true,scores:{},details:{round:state.round||1,moveCount:state.moveCount||0}};

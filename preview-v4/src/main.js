@@ -1,3 +1,4 @@
+import {createGoldVaultController} from './modules/games/gold-vault/gold-vault-controller.js';
 import { createLocalStorageRepository } from './infrastructure/storage/local-storage-repository.js';
 import { createInitialState,normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
 import { createAppController } from './ui/app-controller.js';
@@ -171,7 +172,8 @@ const familyParent=createFamilyParentController({
   cloudAuth,cloudSync,onCloudRestore:result=>{if(result?.requiresReload)window.location.reload();},onExitToHub:()=>hub?.show()
 });
 
-function leaveLearningAreas(){cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
+let goldVault=null;
+function leaveLearningAreas(){goldVault?.leave();cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
 
 learnerRuntimes.register('yasser',{leave:()=>yasser.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode');if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();}});
 learnerRuntimes.register('khaled',{leave:()=>khaled.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}});
@@ -183,6 +185,7 @@ hub=createHubController({onBeforeShow:()=>{independentGames?.leave();learnerRunt
 
 games=createGamesController({learningAdapter:gameLearning,challengePresentations,onBeforeEnter:()=>{independentGames?.leave();learnerRuntimes.leaveAll();leaveLearningAreas();},onExitToHub:()=>hub?.show()});
 independentGames=createInteractiveGamesController({onBeforeEnter:()=>{learnerRuntimes.leaveAll();leaveLearningAreas();games?.leave();},onExitToHub:()=>hub?.show()});
+goldVault=createGoldVaultController({onBeforeEnter:()=>{independentGames?.leave();learnerRuntimes.leaveAll();leaveLearningAreas();games?.leave();},onExit:()=>independentGames?.enter()});
 
 function exitKhaledToHub(){
   khaled.leave();
@@ -193,7 +196,7 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub'])docume
 mashaal.start();
 presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
 presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
-cabinet.start();familyParent.start();games.start();independentGames.start();hubVisuals.warm();hub.start();registerServiceWorker();
+cabinet.start();familyParent.start();games.start();independentGames.start();goldVault.start();hubVisuals.warm();hub.start();registerServiceWorker();
 void localBackup.flush();
 let familyCloudUploading=false;
 async function flushFamilyCloud(){
