@@ -188,3 +188,8 @@ body.independent-games-mode{background:#dce5df;color:#101713}
 @media(max-width:520px){.parcel-scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.parcel-scoreboard strong{font-size:12px}.parcel-ready,.parcel-passing,.parcel-winner{padding:14px}.parcel-main-action{min-height:58px!important;font-size:18px!important}}
 
 .parcel-player-setup{width:min(100%,560px)}.parcel-add-form{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.parcel-add-form input{min-width:0;min-height:52px;padding:9px 13px;border:2px solid #101713;border-radius:14px;background:#fff;font:inherit;font-weight:800;direction:rtl}.parcel-add-form button{min-width:96px;min-height:52px;margin:0!important}.parcel-setup-list{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:7px}.parcel-setup-list span{padding:7px 11px;border:2px solid #101713;border-radius:999px;background:#ffd64d;font-size:13px;font-weight:900}@media(max-width:520px){.parcel-add-form{grid-template-columns:1fr}.parcel-add-form button{width:100%}}
+
+/* Gold Vault catalog tile: title stays legible; whole coin fits the tile. */
+.independent-game-art.gold-vault-art{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10% 7% 8%;background:linear-gradient(145deg,#fff3c5,#e9c36e);box-shadow:inset 0 0 0 2px #c68b31,inset 0 0 0 5px #fff3c9}
+.gold-vault-art .gold-vault-tile-title{display:block;position:relative;z-index:1;text-align:center;direction:rtl;line-height:1.08;font-size:clamp(16px,3.6vw,36px);font-weight:900;color:#70430b;text-shadow:0 1px 0 #fff6d5}
+.independent-game-art.gold-vault-art img{position:static;width:92%;height:62%;object-fit:contain;border-radius:0;filter:drop-shadow(0 3px 2px #875c2d45)}
