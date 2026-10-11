@@ -297,9 +297,9 @@ test('Monopoly retains board alignment and readable event controls with interact
   assert.match(controller,/#monoGame #monoMain\{position:absolute;inset:0;width:100%;height:100%;grid-template-rows:auto auto auto minmax\(0,1fr\) auto/);
   assert.match(controller,/mono-overlay--expanded\{max-height:min\(68dvh,620px\)\}/);
   assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-overlay-actions/);
-  assert.match(controller,/bottomPlayer=\(selfId&&state\.players\.find\(player=>player\.id===selfId\)\)\|\|active/);
+  assert.match(controller,/bottomPlayer=\(selfId&&state\.players\.find\(player=>player\.id===selfId\)\)\|\|state\.players\[0\]/);
   assert.match(controller,/mono-seat-properties/);
-  assert.match(controller,/data-manage-property=\"\$\{index\}\"/);
+  assert.match(controller,/data-manage-property=\"\$\{owned\[0\]\.index\}\"/);
   assert.match(controller,/style=\"--player-color:\$\{color\}\"/);
   assert.match(controller,/mono-event-transfer/);
   assert.doesNotMatch(controller,/return '<details class=\"\$\{classes\}/);

@@ -92,7 +92,7 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
     function endPointer(event){const wasGesture=Boolean(gesture);pointers.delete(event.pointerId);if(pointers.size<2)gesture=null;if(wasGesture)return;const now=performance.now();if(now-lastTap<320){overview();suppressClickUntil=now+400;}lastTap=now;}
     w?.addEventListener('pointerup',endPointer);w?.addEventListener('pointercancel',event=>{pointers.delete(event.pointerId);gesture=null;});
     w?.addEventListener('click',event=>{if(!event.target.closest('#monoCenter')&&performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
-    const reset=document.createElement('button');reset.type='button';reset.className='mono-camera-reset';reset.textContent='اللوحة كاملة';reset.setAttribute('aria-label','إعادة عرض اللوحة كاملة');reset.addEventListener('click',overview);w?.appendChild(reset);
+    const reset=document.createElement('button');reset.type='button';reset.className='mono-camera-reset';reset.textContent='اللوحة كاملة';reset.setAttribute('aria-label','إعادة عرض اللوحة كاملة');reset.addEventListener('click',overview);const tools=getElement('monoGameTools');if(tools){const toolbar=document.createElement('div');toolbar.className='mono-toolbar';tools.before(toolbar);toolbar.append(tools,reset);}else w?.appendChild(reset);
   }
   return{install,roll,focus,overview,money,ownership,announce,sound,unlockAudio,decorateCard,cancel};
 }
