@@ -1,6 +1,6 @@
 import {createVaultState,applyVaultAction,GAME_ID as VAULT_ID} from '../../preview-v4/src/modules/games/gold-vault/gold-vault-engine.js';
 import { addFamilyWordCategoriesRoomPlayer, applyFamilyWordCategoriesRoomAction, createInitialFamilyWordCategoriesRoomState, projectFamilyWordCategoriesRoomState } from './family-word-categories-engine.mjs';
-import { bidAuction, buildHouse, buyProperty, createMonopolyState, drawCard, endTurn, passAuction, payJail, rollDice, sellProperty, skipProperty, tradeProperty } from '../../preview-v4/src/modules/games/monopoly/monopoly-engine.js';
+import { bidAuction, buildHouse, buyProperty, createMonopolyState, drawCard, endTurn, passAuction, payJail, rollDice, sellProperty, skipProperty, tradeProperty, pickMonopolyCard, flipMonopolyCard, proposeMonopolyTrade, respondMonopolyTrade } from '../../preview-v4/src/modules/games/monopoly/monopoly-engine.js';
 import {
   CLASSIC_MOVE_STATE,
   classicAbleToPlay,
@@ -265,6 +265,8 @@ export function applyMonopolyRoomAction(state,{playerId,type,payload={}}={}){
   const action=String(type||''),turnPlayer=state.players[state.turnIndex],auctionPlayer=state.auction?.nextIndex===undefined?null:state.players[state.auction.nextIndex];
   if(action==='bid'||action==='pass-auction'){
     if(auctionPlayer?.id!==playerId)return{ok:false,reason:'not-your-turn'};
+  }else if(action==='trade-accept'||action==='trade-reject'){
+    if(state.tradeOffer?.targetId!==playerId)return{ok:false,reason:'trade-recipient-only'};
   }else if(turnPlayer?.id!==playerId)return{ok:false,reason:'not-your-turn'};
   let next=state;
   if(action==='roll')next=rollDice(state);
@@ -273,13 +275,16 @@ export function applyMonopolyRoomAction(state,{playerId,type,payload={}}={}){
   else if(action==='skip')next=skipProperty(state);
   else if(action==='bid')next=bidAuction(state,payload.amount);
   else if(action==='pass-auction')next=passAuction(state);
+  else if(action==='card-pick')next=pickMonopolyCard(state);
+  else if(action==='card-flip')next=flipMonopolyCard(state);
   else if(action==='card')next=drawCard(state);
   else if(action==='end')next=endTurn(state);
   else if(action==='sell')next=sellProperty(state,Number(payload.index));
   else if(action==='build')next=buildHouse(state,Number(payload.index));
-  else if(action==='trade')next=tradeProperty(state,Number(payload.index),String(payload.targetId||''),payload.offerCash,payload.requestCash);
+  else if(action==='trade')next=proposeMonopolyTrade(state,Number(payload.index),String(payload.targetId||''),payload.offerCash??0,payload.requestCash??0);
+  else if(action==='trade-accept'||action==='trade-reject')next=respondMonopolyTrade(state,playerId,action==='trade-accept');
   else return{ok:false,reason:'unsupported-action'};
-  return next===state?{ok:false,reason:'invalid-action'}:{ok:true,state:next};
+  return next===state?{ok:false,reason:'invalid-action'}:{ok:true,state:{...next,presentation:{sequence:(state.presentation?.sequence||0)+1,action,actorId:playerId}}};
 }
 
 function initialVaultRoom(id,{displayName=id}={}){return {gameId:VAULT_ID,status:'waiting',players:[{id,name:displayName}]};}

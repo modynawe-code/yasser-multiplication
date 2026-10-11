@@ -15,6 +15,7 @@ function ownershipChanges(previous, next) {
 
 function inferAction(previous, next, action) {
   if (action) return action;
+  if(next?.presentation?.sequence!==previous?.presentation?.sequence&&next?.presentation?.action)return next.presentation.action;
   if (previous?.phase === 'roll' && next?.phase !== 'roll') return 'roll';
   if (previous?.phase === 'card' && next?.phase === 'end') return 'card';
   const changes = ownershipChanges(previous, next);
@@ -100,6 +101,15 @@ export function deriveMonopolyEvent(previous, next, action = '', payload = {}) {
     };
   }
 
+  if(kind==='build'){
+    const index=Number.isInteger(payload.index)?payload.index:Object.keys(next.ownership||{}).map(Number).find(i=>next.ownership[i]?.houses!==previous.ownership?.[i]?.houses||next.ownership[i]?.hotel!==previous.ownership?.[i]?.hotel);
+    const space=BOARD[index];if(!space)return null;
+    return {type:'build',title:next.ownership[index]?.hotel?'تم بناء الفندق':'تم بناء البيت',reason:space.name,amount:oldCash-newCash,transactions:[{name:actorAfter.name,before:oldCash,after:newCash}]};
+  }
+  if(kind==='trade-accept'&&ownershipChanges(previous,next).length){
+    return {type:'trade',title:'تم قبول التبادل',reason:next.log,transactions:next.players.map(p=>({name:p.name,before:player(previous,p.id)?.cash??p.cash,after:p.cash})).filter(row=>row.before!==row.after)};
+  }
+  if(kind==='jail'&&oldCash!==newCash)return{type:'payment',title:'الخروج من السجن',reason:'تم دفع رسوم الخروج',amount:oldCash-newCash,transactions:[{name:actorAfter.name,before:oldCash,after:newCash}]};
   return null;
 }
 

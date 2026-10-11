@@ -1,0 +1,47 @@
+/* A single final layout layer, scoped to Monopoly. */
+#monoGame.mono-game{align-content:center;grid-template-rows:auto auto auto auto;gap:8px}
+#monoGame #monoSeatOpponents,#monoGame #monoSeatSelf{align-self:center;overflow:visible;flex-wrap:wrap}
+#monoGame #monoBoardWrap{overflow:hidden;touch-action:none;isolation:isolate;border-radius:6px}
+#monoGame .mono-board{will-change:transform}
+#monoGame #monoBoardWrap>#monoCenter{position:absolute;inset:18.3%;display:block;z-index:6;pointer-events:none;overflow:visible;background:transparent;grid-row:auto;grid-column:auto}
+#monoGame #monoControlPanel{position:absolute;inset:0;pointer-events:none}
+#monoGame #monoMain{pointer-events:none;padding-top:8px}
+#monoGame #monoDice,#monoGame #monoActions,#monoGame #monoOverlay{pointer-events:auto}
+#monoGame #monoCenter #monoOverlay{bottom:3%;max-height:66%;background:#fffefa}
+#monoGame #monoCenter #monoOverlay.mono-overlay--expanded{max-height:86%}
+#monoGame .mono-die{--cube-size:clamp(38px,9vw,66px);width:calc(var(--cube-size) + 14px);height:calc(var(--cube-size) + 14px);display:grid;place-items:center;perspective:600px;border:0;border-radius:14px;background:transparent;box-shadow:none;padding:7px;touch-action:none;overflow:visible}
+#monoGame .mono-die:disabled{opacity:1}
+.mono-cube{position:relative;display:block;width:var(--cube-size);height:var(--cube-size);transform-style:preserve-3d;pointer-events:none}
+.mono-cube-face{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);align-items:center;justify-items:center;padding:6px;box-sizing:border-box;border:2px solid #244634;border-radius:9px;background:linear-gradient(135deg,#fffefa,#ded8c9);backface-visibility:hidden;box-shadow:inset 0 0 9px #fff9}
+.mono-cube-face-0{transform:translateZ(calc(var(--cube-size)/2))}
+.mono-cube-face-1{transform:rotateY(180deg) translateZ(calc(var(--cube-size)/2))}
+.mono-cube-face-2{transform:rotateY(90deg) translateZ(calc(var(--cube-size)/2))}
+.mono-cube-face-3{transform:rotateY(-90deg) translateZ(calc(var(--cube-size)/2))}
+.mono-cube-face-4{transform:rotateX(90deg) translateZ(calc(var(--cube-size)/2))}
+.mono-cube-face-5{transform:rotateX(-90deg) translateZ(calc(var(--cube-size)/2))}
+#monoGame .mono-dice{gap:24px;filter:drop-shadow(0 7px 4px #183b2b35)}
+#monoGame .mono-player-seat{position:relative;min-width:100px}
+.mono-camera-reset{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);z-index:8;min-height:44px;border:1px solid #a4b8aa;border-radius:12px;background:#fffefa;color:#214634;font:800 11px system-ui;padding:5px 10px}
+.mono-announcement{position:absolute;top:18%;left:5%;right:5%;z-index:15;border:2px solid #26724d;border-radius:16px;background:#fffefa;color:#184931;box-shadow:0 8px 24px #173d2d33;text-align:center;padding:12px;font:900 clamp(15px,4vw,25px)/1.3 system-ui;pointer-events:none}
+.mono-announcement--win{background:#fff3c7;border-color:#b28226;top:35%}
+.mono-announcement--bankrupt{border-color:#bc4242;color:#852b2b}
+.mono-money-flight{position:absolute;z-index:10;left:50%;top:-8px;transform:translateX(-50%);white-space:nowrap;font:950 17px system-ui;background:#fffefa;border-radius:12px;padding:4px 8px;box-shadow:0 2px 9px #173d2d22;pointer-events:none;animation:mono-money-float .8s ease-out both}
+.mono-money-flight.is-payment{color:#b43737}.mono-money-flight.is-reward{color:#207148}
+@keyframes mono-money-float{from{opacity:0;translate:0 10px}30%{opacity:1}to{opacity:0;translate:0 -30px}}
+.mono-deck-area{display:flex;justify-content:center;gap:10px;padding:9px 0}
+.mono-interactive-card{min-height:100px;width:min(100%,230px);margin-inline:auto;border:3px solid #244634;border-radius:14px;background:#eaf0e5;color:#244634;font:900 clamp(15px,4vw,22px)/1.3 system-ui;box-shadow:3px 4px 0 #8ea58e,6px 8px 0 #b1bfb0;display:grid;place-items:center;gap:8px;padding:12px;box-sizing:border-box;cursor:pointer;touch-action:manipulation}
+.mono-interactive-card img{width:40px;height:40px;object-fit:contain}.mono-interactive-card small{font-size:12px}
+.mono-interactive-card.is-face{background:#fffefa;text-align:center;min-height:125px;cursor:default;font-size:clamp(13px,3.7vw,19px)}
+.mono-card-wait{margin:0;text-align:center;font-size:12px;color:#58675d}
+#monoGame .mono-space[data-type=chest].is-highlight-target,#monoGame .mono-space[data-type=chance].is-highlight-target{box-shadow:inset 0 0 0 3px #bd8b24;background:#fff1b866}
+@media(orientation:landscape){#monoGame.mono-game{grid-template-rows:minmax(0,1fr);align-content:stretch}#monoGame .mono-die{--cube-size:clamp(40px,8dvh,66px)}}
+@media(max-width:520px) and (orientation:portrait){#monoGame.mono-game{padding:3px;gap:7px}#monoGame .mono-player-seat-head{font-size:12px}#monoGame .mono-space{font-size:11px}#monoGame .mono-log,#monoGame .mono-dice-total{font-size:12px}#monoGame #monoDice{margin-top:4px}#monoGame #monoCenter #monoOverlay .mono-overlay-actions button{font-size:12px;padding-inline:8px}#monoGame .mono-camera-reset{min-height:44px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.mono-money-flight{animation:none}#monoGame .mono-board{transition:none!important}}
+
+.mono-cash-transfer{position:absolute;top:0;left:0;z-index:30;pointer-events:none;background:#fff0ad;border:2px solid #b38e35;border-radius:20px;padding:6px 12px;font:900 15px system-ui;color:#684a12;box-shadow:0 4px 12px #684a1233;margin-left:-30px;margin-top:-15px}
+.mono-dice-await .mono-cube{animation:mono-await .65s ease-in-out infinite alternate}
+@keyframes mono-await{to{translate:0 -7px}}
+#monoGame .mono-player-token{min-width:30px;min-height:30px}
+#monoGame .mono-token{width:clamp(13px,3.2vmin,24px);height:clamp(13px,3.2vmin,24px);font-size:clamp(9px,1.9vmin,13px)}
+#monoGame .mono-moving-token{width:clamp(19px,4.3vmin,29px);height:clamp(19px,4.3vmin,29px);font-size:13px;box-shadow:0 3px 9px #0007}
+@media(prefers-reduced-motion:reduce){.mono-dice-await .mono-cube{animation:none}}

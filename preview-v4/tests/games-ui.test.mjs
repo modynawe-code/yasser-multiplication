@@ -225,7 +225,7 @@ test('PWA shell includes resumable games, registry participants and the shared n
   ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
 });
 
-test('Monopoly event arena overlays the board center without camera zoom',async()=>{
+test('Monopoly retains board alignment and readable event controls with interactive presentation',async()=>{
   const catalog=await read('src/modules/games/game-catalog.js');
   const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
   const engine=await read('src/modules/games/monopoly/monopoly-engine.js');
@@ -242,7 +242,7 @@ test('Monopoly event arena overlays the board center without camera zoom',async(
   assert.match(controller,/\.mono-game\.overlay-open \.mono-board-wrap\{width:min\(100vw,calc\(64dvh - 24px\)\);height:min\(100vw,calc\(64dvh - 24px\)\)\}/);
   assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto;width:min\(calc\(100% - 16px\),700px\);max-height:min\(36dvh,360px\)/);
   assert.match(controller,/center\?\.append\(byId\('monoControlPanel'\),byId\('monoOverlay'\)\)/);
-  assert.match(controller,/faceValue=Number\.isInteger\(value\)\?value:5/);
+  assert.match(controller,/faceValue=Number\.isInteger\(value\)\?value:1/);
   assert.match(controller,/الرصيد بعد الشراء/);
   assert.match(controller,/\.mono-overlay-body\{align-content:start/);
   assert.match(controller,/#monoGame #monoCenter\.has-event #monoControlPanel\{visibility:visible!important/);
@@ -261,7 +261,9 @@ test('Monopoly event arena overlays the board center without camera zoom',async(
   assert.match(controller,/\.mono-token-row\[data-edge=top\]\{bottom:2px/);
   assert.match(controller,/class="mono-token-row" data-edge="\$\{edge\}" aria-hidden="true"/);
   assert.match(controller,/function focusBoard\(index\)/);
-  assert.doesNotMatch(controller,/cameraScaleForMove|zoomOutBoardTransition|board\.style\.transform|mono-board-wrap\.is-focused|mono-board-wrap\.is-moving/);
+  const interaction=await read('src/modules/games/monopoly/monopoly-interaction.js');
+  assert.match(interaction,/cameraTransform/);
+  assert.match(controller,/await interaction\.roll\(next\.dice\)/);
   assert.match(controller,/function clearBoardHighlight\(\)/);
   assert.match(controller,/classList\.add\('is-highlight-path','is-highlight-target'\)/);
   assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
@@ -271,7 +273,7 @@ test('Monopoly event arena overlays the board center without camera zoom',async(
   assert.match(controller,/data-action="focus-space"/);
   assert.match(controller,/prefers-reduced-motion:reduce/);
   assert.match(controller,/movementAnimating/);
-  assert.match(controller,/function openSetup\(\)\{ensureMonopolyShell\(\);try\{soundMuted=localStorage\.getItem\(SOUND_KEY\)==='1';\}/);
+  assert.match(controller,/function openSetup\(\)\{[\s\S]*interaction\.cancel\(\)/);
   assert.match(controller,/addEventListener\?\.\('pageshow',event=>\{if\(event\.persisted&&document\.getElementById\('monopolyGameView'\)\?\.classList\.contains\('active'\)\)openSetup\(\);\}/);
   assert.match(controller,/function isTabletPortrait\(\)/);
   assert.match(controller,/function movementStepDuration\(\)/);
@@ -281,7 +283,7 @@ test('Monopoly event arena overlays the board center without camera zoom',async(
   assert.doesNotMatch(controller,/monoFocusPlayer|monoBoardOverview|mono-board-controls|mono-mini-map/);
   assert.match(controller,/if\(reduced\)\{focusMovement\(to\);await waitForMotion\(1200\);return;\}/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
-  assert.match(controller,/await waitForMotion\(1300\);\}if\(animationId!==movementAnimationId\)return/);
+  assert.doesNotMatch(controller,/waitForMotion\(1300\)/);
   assert.match(controller,/id="monoSeatOpponents"[\s\S]*id="monoSeatSelf"/);
   assert.match(controller,/grid-template-areas:"tools" "opponents" "board" "self"/);
   assert.match(controller,/id="monoGameTools"[\s\S]*id="monoMuteSound"/);
@@ -289,7 +291,7 @@ test('Monopoly event arena overlays the board center without camera zoom',async(
   assert.doesNotMatch(controller,/addAction\('🎲 ارمِ النرد'/);
   assert.doesNotMatch(controller,/اضغط أحد النردين أو زر الرمي/);
   assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-figma-action-card\{width:100%;max-width:380px;min-width:0;min-height:0;height:auto;max-height:none/);
-  assert.match(controller,/function showDrawCard\(\)[\s\S]*setOverlay\(title,body,[\s\S]*متابعة وتطبيق الأثر/);
+  assert.match(controller,/function showDrawCard\(\)[\s\S]*تأكيد وتطبيق الأثر[\s\S]*setOverlay\(title,body,/);
   assert.match(controller,/#monoGame #monoCenter #monoOverlay\{inset:auto 3% 3%;/);
   assert.match(controller,/#monoGame #monoCenter\.has-event #monoActions\{visibility:hidden/);
   assert.match(controller,/#monoGame #monoMain\{position:absolute;inset:0;width:100%;height:100%;grid-template-rows:auto auto auto minmax\(0,1fr\) auto/);

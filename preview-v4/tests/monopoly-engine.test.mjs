@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOARD,bidAuction,buildHouse,canBuild,buyProperty,createMonopolyState,drawCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
+import {BOARD,bidAuction,buildHouse,canBuild,buyProperty,createMonopolyState,drawCard,pickMonopolyCard,flipMonopolyCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
 
 const players=[{id:'a',name:'أ'},{id:'b',name:'ب'}];
 
@@ -59,7 +59,7 @@ test('community chest resolves as an overlay card action',()=>{
   s=rollDice(s,[1,1]);
   assert.equal(s.players[0].position,2);
   assert.equal(s.phase,'card');
-  s=drawCard(s);
+  s=drawCard(flipMonopolyCard(pickMonopolyCard(s)));
   assert.equal(s.phase,'end');
   assert.equal(s.players[0].cash,1600);
   assert.match(s.log,/استلم 100/);

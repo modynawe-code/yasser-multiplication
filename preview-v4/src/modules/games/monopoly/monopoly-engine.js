@@ -44,7 +44,7 @@ function resolveLanding(state){const p=state.players[state.turnIndex],space=BOAR
   if(space.type==='start'||space.type==='free'||space.type==='jail'){state.phase='end';state.log=`${p.name} وصل إلى ${space.name}.`;return;}
   if(space.type==='tax'){debit(state,state.turnIndex,space.amount);if(state.status==='playing'){state.phase='end';state.log=`${p.name} دفع ${space.amount}.`;}return;}
   if(space.type==='gotojail'){p.position=10;p.jailed=true;p.jailTurns=0;state.phase='end';state.log=`${p.name} دخل السجن.`;return;}
-  if(space.type==='chance'||space.type==='chest'){const deck=space.type==='chest'?CHEST:CHANCE;const card=deck[Math.floor(state.random()*deck.length)];state.pending={type:'card',card:{...card}};state.phase='card';state.log=`${p.name} يسحب بطاقة ${space.name}.`;return;}
+  if(space.type==='chance'||space.type==='chest'){const deck=space.type==='chest'?CHEST:CHANCE;const card=deck[Math.floor(state.random()*deck.length)];state.pending={type:'card',stage:'deck',card:{...card}};state.phase='card';state.log=`${p.name} يسحب بطاقة ${space.name}.`;return;}
   if(space.type==='property'||space.type==='railroad'||space.type==='utility'){
     const own=state.ownership[p.position];if(!own){state.phase='property';state.pending={type:'buy',index:p.position};state.log=`${space.name} متاحة للشراء بـ ${space.price}.`;return;}
     if(own.ownerId===p.id){state.phase='end';state.log=`${space.name} ملك ${p.name}.`;return;}
@@ -68,7 +68,7 @@ export function skipProperty(state){if(state.status!=='playing'||state.phase!=='
 function finishAuction(state){const auction=state.auction,index=auction?.index,winner=state.players.find(p=>p.id===auction?.bidderId);if(winner&&auction.bid>0){winner.cash-=auction.bid;state.ownership[index]={ownerId:winner.id,houses:0};state.log=`${winner.name} رسا عليه مزاد ${BOARD[index].name} بـ ${auction.bid}.`;}else state.log=`انتهى المزاد دون شراء ${BOARD[index]?.name||'العقار'}.`;state.phase='end';state.pending=null;state.auction=null;}
 export function bidAuction(state,amount=10){if(state.status!=='playing'||state.phase!=='auction'||!state.auction)return state;const next=clone(state);next.random=state.random||Math.random;const a=next.auction,p=next.players[a.nextIndex],bid=Math.max(a.bid+10,Number(amount)||0);if(!p||p.bankrupt||p.cash<bid)return state;a.bid=bid;a.bidderId=p.id;a.passes=0;a.nextIndex=nextActiveIndex(next,a.nextIndex);next.log=`${p.name} زايد إلى ${bid}.`;return next;}
 export function passAuction(state){if(state.status!=='playing'||state.phase!=='auction'||!state.auction)return state;const next=clone(state);next.random=state.random||Math.random;next.auction.passes++;next.auction.nextIndex=nextActiveIndex(next,next.auction.nextIndex);if(next.auction.passes>=activePlayers(next).length)finishAuction(next);else next.log=`${next.players[next.auction.nextIndex].name} يتخذ قراره في المزاد.`;return next;}
-export function drawCard(state){if(state.status!=='playing'||state.phase!=='card'||state.pending?.type!=='card')return state;const next=clone(state);next.random=state.random||Math.random;const {card}=next.pending,p=next.players[next.turnIndex];next.lastCard=card.text;if(card.cash>0)p.cash+=card.cash;if(card.cash<0)debit(next,next.turnIndex,-card.cash);if(next.status!=='playing')return next;if(Number.isInteger(card.moveTo)){if(card.jail){p.position=10;p.jailed=true;p.jailTurns=0;}else{if(p.position>card.moveTo)p.cash+=(card.collect||0);p.position=card.moveTo;}}next.pending=null;next.phase='end';next.log=card.text;return next;}
+export function drawCard(state){if(state.status!=='playing'||state.phase!=='card'||state.pending?.type!=='card'||(state.pending.stage&&state.pending.stage!=='face'))return state;const next=clone(state);next.random=state.random||Math.random;const {card}=next.pending,p=next.players[next.turnIndex];next.lastCard=card.text;if(card.cash>0)p.cash+=card.cash;if(card.cash<0)debit(next,next.turnIndex,-card.cash);if(next.status!=='playing')return next;if(Number.isInteger(card.moveTo)){if(card.jail){p.position=10;p.jailed=true;p.jailTurns=0;}else{if(p.position>card.moveTo)p.cash+=(card.collect||0);p.position=card.moveTo;}}next.pending=null;next.phase='end';next.log=card.text;return next;}
 export function sellProperty(state,index){if(state.status!=='playing'||state.phase!=='end')return state;const next=clone(state);next.random=state.random||Math.random;const p=next.players[next.turnIndex],own=next.ownership[index],space=BOARD[index];if(!own||own.ownerId!==p.id||!space||!['property','railroad','utility'].includes(space.type))return state;const houseCredit=((own.houses||0)+(own.hotel?1:0))*Math.floor((space.build||0)/2),saleCredit=Math.floor(space.price/2);p.cash+=houseCredit+saleCredit;delete next.ownership[index];next.log=`${p.name} باع ${space.name} واستلم ${saleCredit+houseCredit}.`;return next;}
 export function tradeProperty(state,index,targetId,offerCash=0,requestCash=0){if(state.status!=='playing'||state.phase!=='end')return state;const current=state.players[state.turnIndex],target=state.players.find(p=>p.id===String(targetId)),own=state.ownership[index],space=BOARD[index],give=Math.max(0,Math.floor(Number(offerCash)||0)),receive=Math.max(0,Math.floor(Number(requestCash)||0));if(!current||!target||target.id===current.id||target.bankrupt||!own||own.ownerId!==current.id||!space||!['property','railroad','utility'].includes(space.type)||current.cash<give||target.cash<receive)return state;const next=clone(state);next.random=state.random||Math.random;next.players[next.turnIndex].cash+=receive-give;const other=next.players.find(p=>p.id===target.id);other.cash+=give-receive;next.ownership[index]={...next.ownership[index],ownerId:target.id};next.log=`تم تبادل ${space.name} بين ${current.name} و${target.name}.`;return next;}
 const BUILD_PHASES=new Set(['roll','end']);
@@ -83,3 +83,29 @@ export function rentSchedule(index){
   return null;
 }
 export function canBuild(state,index){const p=state.players[state.turnIndex],space=BOARD[index],own=state.ownership[index];return Boolean(state.status==='playing'&&BUILD_PHASES.has(state.phase)&&space?.type==='property'&&own?.ownerId===p?.id&&ownsGroup(state,p.id,space.group)&&!own.hotel&&(own.houses||0)<=4&&p.cash>=space.build);}
+
+export function pickMonopolyCard(state){
+  if(state.status!=='playing'||state.phase!=='card'||state.pending?.stage!=='deck')return state;
+  const next=clone(state);next.pending.stage='back';return next;
+}
+export function flipMonopolyCard(state){
+  if(state.status!=='playing'||state.phase!=='card'||state.pending?.type!=='card'||!['back',undefined].includes(state.pending.stage))return state;
+  const next=clone(state);next.pending.stage='face';return next;
+}
+export function proposeMonopolyTrade(state,index,targetId,offerCash=0,requestCash=0){
+  if(state.tradeOffer)return state;
+  const give=Number(offerCash),receive=Number(requestCash);
+  if(!Number.isSafeInteger(give)||give<0||!Number.isSafeInteger(receive)||receive<0)return state;
+  if(tradeProperty(state,index,targetId,give,receive)===state)return state;
+  const next=clone(state);next.tradeOffer={index,targetId,fromId:state.players[state.turnIndex].id,offerCash:give,requestCash:receive};
+  next.phase='trade';next.log='بانتظار قبول الطرف الآخر للتبادل.';return next;
+}
+export function respondMonopolyTrade(state,playerId,accept){
+  const offer=state.tradeOffer;
+  if(state.status!=='playing'||state.phase!=='trade'||!offer||offer.targetId!==playerId)return state;
+  const next=clone(state);next.phase='end';delete next.tradeOffer;
+  if(!accept){next.log='تم رفض عرض التبادل.';return next;}
+  const traded=tradeProperty(next,offer.index,offer.targetId,offer.offerCash,offer.requestCash);
+  if(traded===next){next.log='تعذر التبادل؛ تغير الرصيد أو الملكية.';return next;}
+  return traded;
+}
