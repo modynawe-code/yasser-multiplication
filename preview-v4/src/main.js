@@ -1,3 +1,5 @@
+import { finishStartupShell } from './startup-shell.js';
+import { runStartupSync } from './shared/sync/startup-sync.js';
 import {createGoldVaultController} from './modules/games/gold-vault/gold-vault-controller.js';
 import { createLocalStorageRepository } from './infrastructure/storage/local-storage-repository.js';
 import { createInitialState,normalizeState,applyYasserAttemptEvent } from './domain/state-model.js';
@@ -99,7 +101,8 @@ syncCapabilities.register('mashaal',{
   applySession:(state,session)=>appendCloudSession(state,session,{learnerId:'mashaal'})
 });
 
-const cloudAuth=createFamilyAuthClient();
+let startupSignal;
+const cloudAuth=createFamilyAuthClient({getRequestSignal:()=>startupSignal});
 const cloudSync=createFamilySyncService({authClient:cloudAuth,capabilityRegistry:syncCapabilities});
 
 async function restoreFamilyCloudOnStart(){
@@ -110,7 +113,7 @@ async function restoreFamilyCloudOnStart(){
     return true;
   }catch{return false;}
 }
-await restoreFamilyCloudOnStart();
+await runStartupSync(restoreFamilyCloudOnStart,{setSignal:signal=>{startupSignal=signal;}});
 
 const yasser=createAppController({repository:yasserRepository});
 const khaled=createKhaledController({repository:khaledRepository});
@@ -196,7 +199,7 @@ for(const id of ['khaledIntroBack','khaledHomeToHub','khaledResultToHub'])docume
 mashaal.start();
 presentLearningStatus('yasser',rewardService.evaluate('yasser',yasser.getState()));
 presentLearningStatus('khaled',rewardService.evaluate('khaled',khaled.getState()));
-cabinet.start();familyParent.start();games.start();independentGames.start();goldVault.start();hubVisuals.warm();hub.start();registerServiceWorker();
+cabinet.start();familyParent.start();games.start();independentGames.start();goldVault.start();hubVisuals.warm();hub.start();finishStartupShell();registerServiceWorker();
 void localBackup.flush();
 let familyCloudUploading=false;
 async function flushFamilyCloud(){

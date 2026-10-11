@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-198`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-199`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -47,7 +47,7 @@ const APP_SHELL=[
   './assets/reviews/math-grade6/championships.webp','./assets/reviews/math-grade6/books.webp',
   './','./index.html','./style.css','./manifest.webmanifest',
   './src/ui/styles/parent-report.css','./src/ui/styles/character-scale.css','./src/ui/styles/character-system.css','./src/ui/styles/learning-navigation.css','./src/ui/styles/typography.css',
-  './src/main.js','./src/domain/constants.js','./src/domain/state-model.js','./src/domain/mastery.js','./src/domain/question-bank.js',
+  './src/main.js','./src/startup-shell.js','./src/shared/sync/startup-sync.js','./src/domain/constants.js','./src/domain/state-model.js','./src/domain/mastery.js','./src/domain/question-bank.js',
   './src/application/attempt-service.js','./src/application/training-engine.js','./src/application/progress-service.js',
   './src/infrastructure/storage/local-storage-repository.js','./src/platform/pwa/register-service-worker.js',
   './src/ui/dom.js','./src/ui/renderers.js','./src/ui/app-controller.js','./src/ui/audio/feedback-audio.js',
@@ -160,6 +160,11 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE_VERSION);
+    // Versioned same-origin static resources do not need a network round trip on every opening.
+    if(new URL(event.request.url).origin===self.location.origin&&['script','style','image','font'].includes(event.request.destination)){
+      const cached=await cache.match(event.request);
+      if(cached)return cached;
+    }
     if(isSaudiCurrencyImage(event.request)||isVerifiedQuranPageImage(event.request)||isTajawalFontAsset(event.request))return runtimeCacheAsset(event.request,cache);
     try{
       const response=await fetch(event.request,{cache:'no-store'});

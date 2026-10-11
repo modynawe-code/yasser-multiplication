@@ -3,7 +3,7 @@ import { deriveFamilyCredentials,loadFamilyCode,saveFamilyCode } from '../family
 
 export const FAMILY_AUTH_SESSION_KEY='family_cloud_auth_session_v1';
 
-export function createFamilyAuthClient({baseUrl=getFamilyApiBase(),fetchFn=globalThis.fetch,storage=globalThis.sessionStorage,familyStorage=globalThis.localStorage}={}){
+export function createFamilyAuthClient({baseUrl=getFamilyApiBase(),fetchFn=globalThis.fetch,storage=globalThis.sessionStorage,familyStorage=globalThis.localStorage,getRequestSignal=()=>undefined}={}){
   const api=String(baseUrl||'').replace(/\/$/,'');
   function load(){try{return JSON.parse(storage?.getItem(FAMILY_AUTH_SESSION_KEY)||'null');}catch{return null;}}
   function save(value){try{if(value)storage?.setItem(FAMILY_AUTH_SESSION_KEY,JSON.stringify(value));else storage?.removeItem(FAMILY_AUTH_SESSION_KEY);}catch{}}
@@ -11,8 +11,11 @@ export function createFamilyAuthClient({baseUrl=getFamilyApiBase(),fetchFn=globa
     if(!api)throw new Error('family_api_not_configured');
     const session=load(),headers={'content-type':'application/json'};
     if(auth){if(!session?.token)throw new Error('family_auth_required');headers.authorization=`Bearer ${session.token}`;}
-    const result=await fetchFn(`${api}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});
+    const signal=getRequestSignal();
+    if(signal?.aborted)throw new Error('family_startup_timeout');
+    const result=await fetchFn(`${api}${path}`,{method,headers,signal,body:body===undefined?undefined:JSON.stringify(body)});
     let payload=null;try{payload=await result.json();}catch{}
+    if(signal?.aborted)throw new Error('family_startup_timeout');
     if(result.status===401&&auth)save(null);
     if(!result.ok){const error=new Error(payload?.error||`family_api_${result.status}`);error.status=result.status;throw error;}
     return payload;
