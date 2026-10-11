@@ -50,12 +50,15 @@ function extensionAbsolute(path){return new URL(path,self.location.href).href;}
 
 self.addEventListener('install',event=>{event.waitUntil((async()=>{
   const cache=await caches.open(EXTENSION_CACHE_VERSION);
-  for(const path of EXTENSION_ASSETS){
-    const request=new Request(extensionAbsolute(path),{cache:'reload'});
-    const response=await fetch(request);
-    if(!response.ok)throw new Error(`Extension precache failed: ${path} ${response.status}`);
-    await cache.put(request,response);
-  }
+  const pending=[...EXTENSION_ASSETS];
+  await Promise.all(Array.from({length:4},async()=>{
+    while(pending.length){
+      const path=pending.shift(),request=new Request(extensionAbsolute(path),{cache:'reload'});
+      const response=await fetch(request);
+      if(!response.ok)throw new Error(`Extension precache failed: ${path} ${response.status}`);
+      await cache.put(request,response);
+    }
+  }));
 })());});
 
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{

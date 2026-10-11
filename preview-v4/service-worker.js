@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-200`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-201`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -138,11 +138,17 @@ async function runtimeCacheAsset(request,cache){
 
 self.addEventListener('install',event=>{event.waitUntil((async()=>{
   const cache=await caches.open(CACHE_VERSION);
-  for(const path of APP_SHELL){
-    const request=new Request(absolute(path),{cache:'reload'}),response=await fetch(request);
-    if(!response.ok)throw new Error(`Precache failed: ${path} ${response.status}`);
-    await cache.put(request,response);
-  }
+  // Parallelize existing offline assets; obsolete optional paths must not block updates.
+  const pending=[...APP_SHELL];
+  const required=new Set(['./','./index.html','./src/main.js','./style.css']);
+  await Promise.all(Array.from({length:8},async()=>{
+    while(pending.length){
+      const path=pending.shift();
+      const request=new Request(absolute(path),{cache:'reload'}),response=await fetch(request);
+      if(!response.ok){if(required.has(path)||response.status!==404)throw new Error(`Precache failed: ${path} ${response.status}`);continue;}
+      await cache.put(request,response);
+    }
+  }));
   await self.skipWaiting();
 })());});
 

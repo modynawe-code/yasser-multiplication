@@ -6,10 +6,10 @@ export function diceCubeMarkup(value=1){
   const [x,y]=DICE_ORIENTATIONS[value]||DICE_ORIENTATIONS[1];
   return `<span class="mono-cube" style="transform:rotateX(-12deg) rotateY(14deg) rotateX(${x}deg) rotateY(${y}deg)">${[1,6,3,4,2,5].map((face,i)=>`<span class="mono-cube-face mono-cube-face-${i}">${dicePips(face)}</span>`).join('')}</span>`;
 }
-export function cameraTransform(width,height,target,scale){
+export function cameraTransform(width,height,target,scale,anchor={x:.5,y:.5}){
   const z=Math.max(1,Math.min(2.8,scale));
-  const tx=Math.max(width*(1-z),Math.min(0,width/2-target.x*z));
-  const ty=Math.max(height*(1-z),Math.min(0,height/2-target.y*z));
+  const tx=Math.max(width*(1-z),Math.min(0,width*anchor.x-target.x*z));
+  const ty=Math.max(height*(1-z),Math.min(0,height*anchor.y-target.y*z));
   return {scale:z,x:tx,y:ty};
 }
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -37,8 +37,8 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
     else if(kind==='build'){noise(0,.08,.09);tone(700,.12,.16,.04,'triangle');}
     else if(kind==='turn'){tone(440,0,.11,.04);tone(660,.12,.15,.04);}
   }
-  function camera(target=null,z=1,instant=false){const b=board();if(!b)return;const t=cameraTransform(b.offsetWidth,b.offsetHeight,target||{x:b.offsetWidth/2,y:b.offsetHeight/2},z);scale=t.scale;pan={x:t.x,y:t.y};b.style.transformOrigin='0 0';b.style.transition=instant||reduced()?'none':'transform 420ms cubic-bezier(.22,.7,.2,1)';b.style.transform=`translate(${pan.x}px,${pan.y}px) scale(${scale})`;}
-  function focus(index,z=1.65){const tile=board()?.querySelector(`[data-index="${index}"]`);if(tile)camera({x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2},z);}
+  function camera(target=null,z=1,instant=false,anchor){const b=board();if(!b)return;const t=cameraTransform(b.offsetWidth,b.offsetHeight,target||{x:b.offsetWidth/2,y:b.offsetHeight/2},z,anchor);scale=t.scale;pan={x:t.x,y:t.y};b.style.transformOrigin='0 0';b.style.transition=instant||reduced()?'none':'transform 420ms cubic-bezier(.22,.7,.2,1)';b.style.transform=`translate(${pan.x}px,${pan.y}px) scale(${scale})`;}
+  function focus(index,z=1.65){const b=board(),tile=b?.querySelector(`[data-index="${index}"]`);if(!tile)return;const target={x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2};const edge=value=>value<.25?.11:value>.75?.89:.5;camera(target,z,false,{x:edge(target.x/b.offsetWidth),y:edge(target.y/b.offsetHeight)});}
   function overview(){camera();}
   async function roll(values){
     const ticket=epoch;const dice=[...getElement('monoDice')?.querySelectorAll('.mono-die')||[]];

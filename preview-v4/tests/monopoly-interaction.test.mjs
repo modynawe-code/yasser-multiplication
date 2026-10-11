@@ -61,3 +61,12 @@ test('server shares deck/back/face progression and refuses another player to fli
   state=applyMonopolyRoomAction(state,{playerId:'a',type:'card-flip'}).state;assert.equal(state.pending.stage,'face');
   const applied=applyMonopolyRoomAction(state,{playerId:'a',type:'card'});assert.equal(applied.ok,true);assert.equal(applied.state.phase,'end');
 });
+
+test('camera keeps perimeter landing tiles outside the stationary event arena',()=>{
+  for(const target of [{x:46,y:200},{x:354,y:200},{x:200,y:46},{x:200,y:354}]){
+    const edge=v=>v<.25?.11:v>.75?.89:.5;
+    const t=cameraTransform(400,400,target,1.65,{x:edge(target.x/400),y:edge(target.y/400)});
+    const x=(target.x*t.scale+t.x)/400,y=(target.y*t.scale+t.y)/400;
+    assert.ok(x<.183||x>.817||y<.183||y>.817);
+  }
+});
