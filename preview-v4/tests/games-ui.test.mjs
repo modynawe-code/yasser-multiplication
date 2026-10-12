@@ -267,9 +267,7 @@ test('Monopoly retains board alignment and readable event controls with interact
   assert.match(controller,/function clearBoardHighlight\(\)/);
   assert.match(controller,/classList\.add\('is-highlight-path','is-highlight-target'\)/);
   assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
-  assert.match(controller,/await waitForMotion\(120\)/);
-  assert.match(controller,/await waitForMotion\(movementStepDuration\(\)\)/);
-  assert.match(controller,/await waitForMotion\(260\)/);
+  assert.match(controller,/await interaction.followSegment/);
   assert.match(controller,/data-action="focus-space"/);
   assert.match(controller,/prefers-reduced-motion:reduce/);
   assert.match(controller,/movementAnimating/);
@@ -277,11 +275,9 @@ test('Monopoly retains board alignment and readable event controls with interact
   assert.match(controller,/addEventListener\?\.\('pageshow',event=>\{if\(event\.persisted&&document\.getElementById\('monopolyGameView'\)\?\.classList\.contains\('active'\)\)openSetup\(\);\}/);
   assert.match(controller,/function isTabletPortrait\(\)/);
   assert.match(controller,/function movementStepDuration\(\)/);
-  assert.match(controller,/await waitForMotion\(movementStepDuration\(\)\)/);
   assert.match(controller,/function focusMovement\(index\)/);
   assert.match(controller,/is-highlight-path/);
   assert.doesNotMatch(controller,/monoFocusPlayer|monoBoardOverview|mono-board-controls|mono-mini-map/);
-  assert.match(controller,/if\(reduced\)\{focusMovement\(to\);await waitForMotion\(1200\);return;\}/);
   assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
   assert.doesNotMatch(controller,/waitForMotion\(1300\)/);
   assert.match(controller,/id="monoSeatOpponents"[\s\S]*id="monoSeatSelf"/);
