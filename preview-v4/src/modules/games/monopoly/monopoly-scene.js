@@ -6,6 +6,13 @@ export function movementRoute(from,to,{backward=false,teleport=false}={}){
   return Array.from({length:distance},(_,i)=>(from+(backward?-1:1)*(i+1)+40)%40);
 }
 export function boardEdge(index){return index<10?'bottom':index<20?'left':index<30?'top':'right';}
+export function inwardDirection(index){
+  if(index===0)return{x:-1,y:-1};
+  if(index===10)return{x:1,y:-1};
+  if(index===20)return{x:1,y:1};
+  if(index===30)return{x:-1,y:1};
+  const edge=boardEdge(index);return{x:edge==='left'?1:edge==='right'?-1:0,y:edge==='top'?1:edge==='bottom'?-1:0};
+}
 export function movementSegments(from,route){
   const points=[from,...route],segments=[];
   for(let i=0;i<points.length;){

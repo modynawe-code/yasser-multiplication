@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {movementRoute,movementSegments,eventArea,boardEdge} from '../src/modules/games/monopoly/monopoly-scene.js';
+import {movementRoute,movementSegments,eventArea,boardEdge,inwardDirection} from '../src/modules/games/monopoly/monopoly-scene.js';
 import {cameraTransform} from '../src/modules/games/monopoly/monopoly-interaction.js';
 
 test('presentation route handles passing start, reverse cards and jail without inventing a roll',()=>{
@@ -15,6 +15,14 @@ test('camera segments remain on one board edge and cover long routes in small gr
    assert.deepEqual(segments.flatMap(s=>s.indexes),[from,...route]);
    for(const segment of segments){assert.ok(segment.indexes.length<=4);assert.equal(new Set(segment.indexes.map(boardEdge)).size,1);}
  }
+});
+test('shared corner pieces spread toward the board interior instead of neighboring property cells',()=>{
+ const expected=[[-1,-1],[1,-1],[1,1],[-1,1]];
+ [0,10,20,30].forEach((index,i)=>{
+  const d=inwardDirection(index);assert.deepEqual([d.x,d.y],expected[i]);
+  const points=Array.from({length:4},(_,slot)=>({x:d.x*slot*36,y:d.y*slot*36}));
+  for(let a=0;a<4;a++)for(let b=a+1;b<4;b++)assert.ok(Math.hypot(points[a].x-points[b].x,points[a].y-points[b].y)>32);
+ });
 });
 test('event card leaves a clear arrival lane on every edge at phone and tablet sizes',()=>{
  for(const size of [354,384,700,768])for(const edge of ['top','bottom','left','right']){
