@@ -15,7 +15,7 @@ export function cameraTransform(width,height,target,scale,anchor={x:.5,y:.5}){
 }
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 export function createMonopolyInteraction({getElement=id=>document.getElementById(id),isMuted=()=>false,onRoll=()=>{},canRoll=()=>false}={}){
-  let diceBuffers=null,diceDecode=null,diceSoundIndex=0,zoomFrame=0,manualCamera=false;const recordingBytes=Promise.all([1,2,3].map(n=>fetch(new URL(`./assets/audio/dice-roll-${n}.mp3`,import.meta.url)).then(r=>{if(!r.ok)throw new Error('Dice audio unavailable');return r.arrayBuffer();}))).catch(()=>[]);
+  let diceBuffers=null,diceDecode=null,diceSoundIndex=0,zoomFrame=0,manualCamera=false,cameraAnimation=null;const recordingBytes=Promise.all([1,2,3].map(n=>fetch(new URL(`./assets/audio/dice-roll-${n}.mp3`,import.meta.url)).then(r=>{if(!r.ok)throw new Error('Dice audio unavailable');return r.arrayBuffer();}))).catch(()=>[]);
   let audio=null,epoch=0,scale=1,pan={x:0,y:0},installed=false,lastTap=0,suppressClickUntil=0;
   const cardEffects=new Set();
   const effects=new Set(),voices=new Set(),pointers=new Map();
@@ -43,13 +43,26 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
   function syncZoom(instant=false){
     cancelAnimationFrame(zoomFrame);const b=board(),w=wrap();if(!b||!w)return;
     if(instant){w.style.setProperty('--mono-zoom',scale);return;}
-    const start=performance.now(),ticket=epoch;
-    const tick=now=>{if(ticket!==epoch)return;const matrix=getComputedStyle(b).transform,match=matrix.match(/^matrix\(([^,]+)/);w.style.setProperty('--mono-zoom',match?Number(match[1]):scale);if(now-start<600)zoomFrame=requestAnimationFrame(tick);else w.style.setProperty('--mono-zoom',scale);};zoomFrame=requestAnimationFrame(tick);
+    const ticket=epoch,animation=cameraAnimation;
+    const tick=()=>{if(ticket!==epoch||animation!==cameraAnimation)return;const matrix=getComputedStyle(b).transform,match=matrix.match(/^matrix\(([^,]+)/);w.style.setProperty('--mono-zoom',match?Number(match[1]):scale);if(animation?.playState==='running')zoomFrame=requestAnimationFrame(tick);};tick();
   }
-  function camera(target=null,z=1,instant=false,anchor){const b=board();if(!b)return;const t=cameraTransform(b.offsetWidth,b.offsetHeight,target||{x:b.offsetWidth/2,y:b.offsetHeight/2},z,anchor);scale=t.scale;pan={x:t.x,y:t.y};b.style.transformOrigin='0 0';b.style.transition=instant||reduced()?'none':'transform 550ms cubic-bezier(.22,.7,.2,1)';b.style.transform=`translate(${pan.x}px,${pan.y}px) scale(${scale})`;syncZoom(instant||reduced());}
+  function camera(target=null,z=1,instant=false,anchor){
+    const b=board();if(!b)return Promise.resolve();
+    const before=getComputedStyle(b).transform;
+    cameraAnimation?.cancel();
+    const t=cameraTransform(b.offsetWidth,b.offsetHeight,target||{x:b.offsetWidth/2,y:b.offsetHeight/2},z,anchor);
+    scale=t.scale;pan={x:t.x,y:t.y};b.style.transformOrigin='0 0';b.style.transition='none';
+    const after=`translate(${pan.x}px,${pan.y}px) scale(${scale})`;b.style.transform=after;
+    const values=before.match(/^matrix\((.+)\)$/)?.[1].split(',').map(Number);
+    const settled=values&&Math.abs(values[0]-scale)<.0001&&Math.abs(values[4]-pan.x)<.01&&Math.abs(values[5]-pan.y)<.01;
+    if(instant||reduced()||settled||!b.animate){cameraAnimation=null;syncZoom(true);return Promise.resolve();}
+    const animation=b.animate([{transform:before==='none'?'translate(0px,0px) scale(1)':before},{transform:after}],{duration:550,easing:'cubic-bezier(.22,.7,.2,1)'});
+    cameraAnimation=animation;effects.add(animation);syncZoom();
+    return animation.finished.catch(()=>{}).finally(()=>{effects.delete(animation);if(cameraAnimation===animation){cameraAnimation=null;cancelAnimationFrame(zoomFrame);wrap()?.style.setProperty('--mono-zoom',scale);}});
+  }
   function focus(index,z=1.3){const b=board(),tile=b?.querySelector(`[data-index="${index}"]`);if(!tile)return;const target={x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2};const edge=value=>value<.25?.12:value>.75?.88:.5;camera(target,z,false,{x:edge(target.x/b.offsetWidth),y:edge(target.y/b.offsetHeight)});}
   function overview(){manualCamera=false;camera();}
-  async function followSegment(indexes){if(manualCamera)return;const b=board();if(!b)return;const tiles=indexes.map(i=>b.querySelector(`[data-index="${i}"]`)).filter(Boolean);if(!tiles.length)return;const points=tiles.map(tile=>({x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2}));const target={x:(Math.min(...points.map(p=>p.x))+Math.max(...points.map(p=>p.x)))/2,y:(Math.min(...points.map(p=>p.y))+Math.max(...points.map(p=>p.y)))/2};camera(target,1.35);if(!reduced())await wait(570);}
+  async function followSegment(indexes){if(manualCamera)return;const b=board();if(!b)return;const tiles=indexes.map(i=>b.querySelector(`[data-index="${i}"]`)).filter(Boolean);if(!tiles.length)return;const points=tiles.map(tile=>({x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2}));const target={x:(Math.min(...points.map(p=>p.x))+Math.max(...points.map(p=>p.x)))/2,y:(Math.min(...points.map(p=>p.y))+Math.max(...points.map(p=>p.y)))/2};await camera(target,1.35);}
   function progress(text,name,color){const w=wrap();if(!w)return;let node=getElement('monoTurnProgress');if(!node){node=document.createElement('p');node.id='monoTurnProgress';node.className='mono-turn-progress';node.setAttribute('role','status');node.setAttribute('aria-live','polite');w.appendChild(node);}node.textContent=text;node.style.setProperty('--player-color',color||'#244634');node.dataset.playerName=name||'';}
   function eventScene(index){const b=board(),w=wrap(),overlay=getElement('monoOverlay');if(!b||!w||!overlay||overlay.hidden)return;const edge=boardEdge(Number(index)),area=eventArea(w.clientWidth,w.clientHeight,edge);overlay.style.left=area.x+'px';overlay.style.right='auto';overlay.style.top=area.y+'px';overlay.style.width=area.width+'px';overlay.style.maxHeight=area.height+'px';overlay.style.transform='none';overlay.dataset.landingEdge=edge;manualCamera=false;focus(index,1.25);}
   async function roll(values){
