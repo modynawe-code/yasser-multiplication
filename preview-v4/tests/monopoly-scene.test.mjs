@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {movementRoute,movementSegments,eventArea,boardEdge,inwardDirection} from '../src/modules/games/monopoly/monopoly-scene.js';
+import {movementRoute,movementSegments,eventArea,boardEdge,inwardDirection,pieceOffset} from '../src/modules/games/monopoly/monopoly-scene.js';
 import {cameraTransform} from '../src/modules/games/monopoly/monopoly-interaction.js';
 
 test('presentation route handles passing start, reverse cards and jail without inventing a roll',()=>{
@@ -20,7 +20,7 @@ test('shared corner pieces spread toward the board interior instead of neighbori
  const expected=[[-1,-1],[1,-1],[1,1],[-1,1]];
  [0,10,20,30].forEach((index,i)=>{
   const d=inwardDirection(index);assert.deepEqual([d.x,d.y],expected[i]);
-  const points=Array.from({length:4},(_,slot)=>({x:d.x*slot*36,y:d.y*slot*36}));
+  const points=Array.from({length:4},(_,slot)=>pieceOffset(index,slot));
   for(let a=0;a<4;a++)for(let b=a+1;b<4;b++)assert.ok(Math.hypot(points[a].x-points[b].x,points[a].y-points[b].y)>32);
  });
 });

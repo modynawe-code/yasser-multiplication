@@ -13,6 +13,14 @@ export function inwardDirection(index){
   if(index===30)return{x:-1,y:1};
   const edge=boardEdge(index);return{x:edge==='left'?1:edge==='right'?-1:0,y:edge==='top'?1:edge==='bottom'?-1:0};
 }
+export function pieceOffset(index,slot){
+  const d=inwardDirection(index);
+  if(index%10===0&&slot>0&&slot<4){
+    const positions=[[0,0],[1,1],[2,1],[1,2]];
+    return{x:d.x*positions[slot][0]*36,y:d.y*positions[slot][1]*36};
+  }
+  return{x:d.x*slot*36,y:d.y*slot*36};
+}
 export function movementSegments(from,route){
   const points=[from,...route],segments=[];
   for(let i=0;i<points.length;){
@@ -23,7 +31,7 @@ export function movementSegments(from,route){
   return segments;
 }
 export function eventArea(width,height,edge){
-  const gap=10,status=46,reserve=Math.max(90,(edge==='left'||edge==='right'?width:height)*.2+24);
+  const gap=10,status=46,reserve=Math.max(90,(edge==='left'||edge==='right'?width:height)*.2+32);
   let x=gap,y=status,w=width-gap*2,h=height-status-gap;
   if(edge==='bottom')h-=reserve;
   else if(edge==='top'){y=Math.max(status,reserve);h=height-y-gap;}

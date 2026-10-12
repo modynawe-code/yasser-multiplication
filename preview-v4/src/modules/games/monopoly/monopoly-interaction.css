@@ -86,7 +86,7 @@
 #monoGame .mono-piece .mono-token,#monoGame .mono-moving-token{width:calc(32px / var(--mono-zoom,1));height:calc(32px / var(--mono-zoom,1));font-size:calc(16px / var(--mono-zoom,1));border:calc(2px / var(--mono-zoom,1)) solid #fff;box-sizing:border-box;border-radius:50%;background:var(--token);color:white;display:grid;place-items:center;box-shadow:0 2px 5px #0005}
 #monoGame .mono-piece.is-active{z-index:11}
 #monoGame .mono-piece.is-active .mono-token,#monoGame .mono-moving-token{box-shadow:0 0 0 calc(2px / var(--mono-zoom,1)) var(--token),0 3px 8px #0005}
-#monoGame .mono-piece-name{display:none;position:absolute;bottom:calc(100% + 4px / var(--mono-zoom,1));left:50%;transform:translateX(-50%);white-space:nowrap;max-width:calc(90px / var(--mono-zoom,1));overflow:hidden;text-overflow:ellipsis;background:#fffefa;color:#173d2d;border:calc(1px / var(--mono-zoom,1)) solid var(--token);border-radius:calc(5px / var(--mono-zoom,1));padding:calc(2px / var(--mono-zoom,1)) calc(5px / var(--mono-zoom,1));font:800 calc(11px / var(--mono-zoom,1))/1.2 system-ui}
+#monoGame .mono-piece-name{display:none;position:absolute;bottom:calc(100% + 4px / var(--mono-zoom,1));left:50%;transform:translateX(-50%);white-space:nowrap;max-width:calc(72px / var(--mono-zoom,1));box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;background:#fffefa;color:#173d2d;border:calc(1px / var(--mono-zoom,1)) solid var(--token);border-radius:calc(5px / var(--mono-zoom,1));padding:calc(2px / var(--mono-zoom,1)) calc(5px / var(--mono-zoom,1));font:800 calc(11px / var(--mono-zoom,1))/1.2 system-ui}
 #monoGame .mono-piece.is-active .mono-piece-name{display:block}
 #monoGame .mono-moving-token{transition:left 360ms ease-in-out,top 360ms ease-in-out}
 #monoGame .mono-turn-progress{position:absolute;top:5px;left:8px;right:8px;z-index:16;max-width:440px;margin:0 auto;padding:7px 9px;border-inline-start:4px solid var(--player-color);border-radius:7px;background:#fffefa;box-shadow:0 2px 8px #0002;color:#173d2d;text-align:center;font:800 13px/1.3 system-ui;pointer-events:none}
@@ -98,3 +98,5 @@
 #monoGame .mono-piece[data-edge=top] .mono-piece-name{bottom:auto;top:calc(100% + 4px / var(--mono-zoom,1))}
 
 #monoGame .mono-piece-link{position:absolute;left:50%;top:50%;height:calc(1.5px / var(--mono-zoom,1));transform-origin:0 50%;background:var(--token);opacity:.6;z-index:-1}
+
+#monoGame #monoControlPanel{background:transparent;border:0;box-shadow:none}

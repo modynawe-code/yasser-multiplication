@@ -5,7 +5,7 @@ import {listGameParticipants} from '../core/game-participant-registry.js';
 import {gameHistoryService} from '../history/game-history-service.js';
 import {createMonopolyInteraction,diceCubeMarkup} from './monopoly-interaction.js';
 import {pickMonopolyCard,flipMonopolyCard,proposeMonopolyTrade,respondMonopolyTrade} from './monopoly-engine.js';
-import {movementRoute,movementSegments,boardEdge,inwardDirection} from './monopoly-scene.js';
+import {movementRoute,movementSegments,boardEdge,pieceOffset} from './monopoly-scene.js';
 import {deriveMonopolyEvent,dicePips} from './monopoly-presentation.js';
 
 const FIGMA_SPACE_ICONS=Object.freeze({chance:new URL('./assets/figma-icons/chance.png',import.meta.url).href,chest:new URL('./assets/figma-icons/community-chest.png',import.meta.url).href,railroad:new URL('./assets/figma-icons/railroad.png',import.meta.url).href,utilityElectricity:new URL('./assets/figma-icons/utility-electricity.png',import.meta.url).href,utilityWater:new URL('./assets/figma-icons/utility-water.png',import.meta.url).href});
@@ -277,10 +277,30 @@ export function createMonopolyController({onBack}={}){
  async function resumeOnlineRoom(){onlineBusy=true;status('جارٍ استعادة الغرفة…');try{await onlineSession.resume({learnerId:selectedOnline||null});}catch(error){status(onlineErrorMessage(error));}finally{onlineBusy=false;if(state&&!movementAnimating)render();}}
  async function startOnlineRoom(){onlineBusy=true;status('جارٍ بدء الجولة…');try{await onlineSession.start();}catch(error){status(onlineErrorMessage(error));}finally{onlineBusy=false;if(state&&!movementAnimating)render();}}
  function startNew(){const players=chosenPlayers();if(players.length<2){status('اختر لاعبين على الأقل.');return;}playMode='local';activeEvent=null;lastOnlineVersion=null;onlineSession.stop();state=createMonopolyState(players);recordedWinner='';clearSave();resetBoardFocus();save(state);byId('monoSetup').hidden=true;byId('monoGame').hidden=false;overlayMode='';render();announceTurn();}
- function resume(){const loaded=loadSave();if(!loaded){status('ما لقيت جولة محفوظة قابلة للمتابعة.');return;}state=loaded;activeEvent=null;recordedWinner='';resetBoardFocus();byId('monoSetup').hidden=true;byId('monoGame').hidden=false;overlayMode='';render();}
+ function resume(){const loaded=loadSave();if(!loaded){status('ما لقيت جولة محفوظة قابلة للمتابعة.');return;}state=loaded;activeEvent=null;recordedWinner='';resetBoardFocus();byId('monoSetup').hidden=true;byId('monoGame').hidden=false;overlayMode='';render();announceTurn();}
  function ownerColor(ownerId){const i=state.players.findIndex(p=>p.id===ownerId);return TOKEN_COLORS[Math.max(0,i)%TOKEN_COLORS.length];}
  function renderBoard(){const board=byId('monoBoard');if(!board||!state)return;board.querySelectorAll('.mono-space,.mono-moving-token,.mono-piece').forEach(n=>n.remove());BOARD.forEach((space,index)=>{const [row,col,edge]=coordinate(index),own=state.ownership[index],tokens=state.players.filter(p=>!p.bankrupt&&p.position===index),houseCount=Math.max(0,Math.min(4,own?.houses||0)),level=own?.hotel?5:houseCount;const cell=document.createElement('button');cell.type='button';cell.className=`mono-space ${own?'owned':''}`;cell.style.gridRow=String(row);cell.style.gridColumn=String(col);cell.dataset.group=space.group||'';cell.dataset.type=space.type;cell.dataset.edge=edge;cell.dataset.index=String(index);cell.dataset.houses=String(houseCount);cell.dataset.hotel=String(Boolean(own?.hotel));cell.setAttribute('aria-label',`${space.name}${space.price?`، السعر ${space.price}`:''}${own?`، ملك ${state.players.find(p=>p.id===own.ownerId)?.name||'لاعب'}`:''}${level?`, ${level===5?'فندق':'منازل '+digits.format(level)}، الإيجار ${digits.format(rentFor(state,index))}`:''}`);if(own)cell.style.setProperty('--owner',ownerColor(own.ownerId));if(space.group)cell.style.setProperty('--band',GROUP_COLOR[space.group]);const buildingMarkup=level?'<span class="mono-board-buildings'+(level===5?' is-hotel':'')+'" aria-hidden="true">'+(level===5?buildingArtwork(-1):buildingArtwork(1).repeat(level))+'</span>':'';cell.innerHTML=`${['property','railroad','utility'].includes(space.type)?'<span class="mono-band"></span>':''}<strong>${spaceDisplay(space)}</strong>${buildingMarkup}<span class="mono-token-row" data-edge="${edge}" aria-hidden="true">${tokens.map(p=>{const i=state.players.findIndex(x=>x.id===p.id);return`<span class="mono-token" data-player-id="${escapeHtml(p.id)}" style="--token:${TOKEN_COLORS[i%TOKEN_COLORS.length]}" title="${escapeHtml(p.name)}">${escapeHtml(p.name.slice(0,1))}</span>`;}).join('')}</span>`;cell.addEventListener('click',()=>{if(state?.phase==='card'&&(state.pending?.stage||'back')==='deck'&&index===state.players[state.turnIndex].position)handleAction('card-pick');else showSpace(index);});board.appendChild(cell);});renderPieces();}
- function renderPieces(){const board=byId('monoBoard');if(!board||!state)return;board.querySelectorAll('.mono-token-row').forEach(node=>node.remove());const actor=state.players[state.turnIndex];const placed=[];const players=state.players.filter(p=>!p.bankrupt).sort((a,b)=>(b.id===actor?.id)-(a.id===actor?.id));for(const p of players){const tile=board.querySelector(`[data-index="${p.position}"]`);if(!tile)continue;const edge=boardEdge(p.position),direction=inwardDirection(p.position),dx=direction.x,dy=direction.y;const cx=tile.offsetLeft+tile.offsetWidth/2,cy=tile.offsetTop+tile.offsetHeight/2;let slot=0;while(slot<8&&placed.some(q=>Math.hypot(cx+dx*slot*36-q.x,cy+dy*slot*36-q.y)<36))slot++;placed.push({x:cx+dx*slot*36,y:cy+dy*slot*36});const node=document.createElement('span');node.className='mono-piece'+(p.id===actor?.id?' is-active':'');node.dataset.playerId=p.id;node.dataset.edge=edge;node.style.setProperty('--token',ownerColor(p.id));node.style.left=`calc(${cx}px + ${dx*slot*36-16}px / var(--mono-zoom,1))`;node.style.top=`calc(${cy}px + ${dy*slot*36-16}px / var(--mono-zoom,1))`;node.innerHTML=`${slot?`<span class="mono-piece-link" style="width:calc(${Math.hypot(dx,dy)*slot*36}px / var(--mono-zoom,1));transform:rotate(${Math.atan2(-dy,-dx)*180/Math.PI}deg)"></span>`:''}<span class="mono-token" data-player-id="${escapeHtml(p.id)}" title="${escapeHtml(p.name)}">${escapeHtml(p.name.slice(0,1))}</span><span class="mono-piece-name">${escapeHtml(p.name)}</span>`;board.appendChild(node);}}
+ function renderPieces(){
+   const board=byId('monoBoard');if(!board||!state)return;
+   board.querySelectorAll('.mono-token-row').forEach(node=>node.remove());
+   const actor=state.players[state.turnIndex],placed=[];
+   const players=state.players.filter(p=>!p.bankrupt).sort((a,b)=>(b.id===actor?.id)-(a.id===actor?.id));
+   for(const p of players){
+     const tile=board.querySelector(`[data-index="${p.position}"]`);if(!tile)continue;
+     const edge=boardEdge(p.position),cx=tile.offsetLeft+tile.offsetWidth/2,cy=tile.offsetTop+tile.offsetHeight/2;
+     let slot=0,offset=pieceOffset(p.position,0);
+     while(slot<8&&placed.some(q=>Math.hypot(cx+offset.x-q.x,cy+offset.y-q.y)<36)){slot++;offset=pieceOffset(p.position,slot);}
+     placed.push({x:cx+offset.x,y:cy+offset.y});
+     const node=document.createElement('span');node.className='mono-piece'+(p.id===actor?.id?' is-active':'');node.dataset.playerId=p.id;node.dataset.edge=edge;
+     node.style.setProperty('--token',ownerColor(p.id));
+     node.style.left=`calc(${cx}px + ${offset.x-16}px / var(--mono-zoom,1))`;
+     node.style.top=`calc(${cy}px + ${offset.y-16}px / var(--mono-zoom,1))`;
+     const link=slot?`<span class="mono-piece-link" style="width:calc(${Math.hypot(offset.x,offset.y)}px / var(--mono-zoom,1));transform:rotate(${Math.atan2(-offset.y,-offset.x)*180/Math.PI}deg)"></span>`:'';
+     node.innerHTML=`${link}<span class="mono-token" data-player-id="${escapeHtml(p.id)}" title="${escapeHtml(p.name)}">${escapeHtml(p.name.slice(0,1))}</span><span class="mono-piece-name">${escapeHtml(p.name)}</span>`;
+     board.appendChild(node);
+   }
+ }
+
  function isPhoneLayout(){const width=globalThis.innerWidth||0,height=globalThis.innerHeight||0;return width<=699||(height<=520&&width<=1000);}
  function isTabletPortrait(){const width=globalThis.innerWidth||0,height=globalThis.innerHeight||0;return width>=700&&width<1100&&(globalThis.matchMedia?.('(orientation: portrait)').matches??height>width);}
  function movementStepDuration(){return 480;}
@@ -305,12 +325,12 @@ export function createMonopolyController({onBack}={}){
        const wanted=segments.findLastIndex(segment=>segment.start<=step);
        if(wanted!==segmentIndex){segmentIndex=wanted;await interaction.followSegment(segments[wanted].indexes);if(generation!==transitionGeneration)return;}
        const index=route[step];place(index);focusMovement(index);
-       interaction.progress(`${movingPlayer.name} · باقي ${digits.format(route.length-step)} خطوات`,movingPlayer.name,ownerColor(playerId));
+       interaction.progress(`${movingPlayer.name} · الخطوات المتبقية: ${digits.format(route.length-step)}`,movingPlayer.name,ownerColor(playerId));
        await waitForMotion(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches?120:movementStepDuration());
      }
      interaction.progress(`وصل ${movingPlayer.name} إلى ${BOARD[to].name}`,movingPlayer.name,ownerColor(playerId));
      await waitForMotion(800);
-   }finally{token.remove();byId('monoGame')?.classList.remove('mono-is-moving');if(standing)standing.style.visibility='';if(generation===transitionGeneration){board.querySelectorAll('.mono-space.is-highlight-target,.mono-space.is-highlight-path').forEach(n=>n.classList.remove('is-highlight-target','is-highlight-path'));destination?.classList.add('is-highlight-target');movementFocusIndex=to;}}
+   }finally{token.remove();if(generation===transitionGeneration)byId('monoGame')?.classList.remove('mono-is-moving');if(standing)standing.style.visibility='';if(generation===transitionGeneration){board.querySelectorAll('.mono-space.is-highlight-target,.mono-space.is-highlight-path').forEach(n=>n.classList.remove('is-highlight-target','is-highlight-path'));destination?.classList.add('is-highlight-target');movementFocusIndex=to;}}
  }
 
  function renderPlayers(){
@@ -492,7 +512,7 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
    else if(action==='trade-accept'||action==='trade-reject')void act(s=>respondMonopolyTrade(s,s.tradeOffer?.targetId,action==='trade-accept'),action);
    else if(action==='end')void act(endTurn,'end');
  }
- function announceTurn(){if(!state)return;const p=state.players[state.turnIndex],self=onlineSession.snapshot?.selfPlayerId;interaction.progress('دور '+p.name+' · ارمِ النرد',p.name,ownerColor(p.id));interaction.announce(playMode==='online'&&self!==p.id?'دور '+p.name+' · تابع الحركة':'دور '+p.name+' · ارمِ النرد','turn');}
+ function announceTurn(){if(!state)return;const p=state.players[state.turnIndex],self=onlineSession.snapshot?.selfPlayerId;interaction.progress(state.phase==='roll'?'دور '+p.name+' · ارمِ النرد':'وصل '+p.name+' إلى '+BOARD[p.position].name,p.name,ownerColor(p.id));interaction.announce(playMode==='online'&&self!==p.id?'دور '+p.name+' · تابع الحركة':'دور '+p.name+' · ارمِ النرد','turn');}
  async function presentTransition(previous,next,action,payload={},key=''){
    if(presentedEvents.has(key))return;presentedEvents.add(key);if(presentedEvents.size>100)presentedEvents.delete(presentedEvents.values().next().value);
    const generation=transitionGeneration;movementAnimating=true;hideOverlay();
