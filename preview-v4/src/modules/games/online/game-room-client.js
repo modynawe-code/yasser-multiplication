@@ -16,8 +16,8 @@ export function createGameRoomClient({baseUrl=getGameRoomApiBase(),fetchImpl=glo
   const base=String(baseUrl||'').replace(/\/$/,'');
   async function request(path,{method='GET',body,token}={}){
     const headers={'content-type':'application/json'};if(token)headers['x-game-token']=token;const familyToken=getGameHistoryDeviceToken();if(familyToken)headers['x-family-game-token']=familyToken;
-    const response=await fetchImpl(`${base}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
-    return parseResponse(response);
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+    try{const response=await fetchImpl(`${base}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:controller.signal});return await parseResponse(response);}finally{clearTimeout(timer);}
   }
   return Object.freeze({
     createRoom({gameId='xo',learnerId,displayName}={}){return request('/v1/games/rooms',{method:'POST',body:{gameId,learnerId,displayName}});},

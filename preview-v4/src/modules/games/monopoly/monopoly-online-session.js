@@ -9,6 +9,7 @@ export function createMonopolyOnlineSession({roomClient,onRoom,onError,pollInter
     start(){return session.submit('start');},
     refresh(){return session.refresh();},
     resume(options){return session.resume(options);},
+    savedResume(learnerId=null){return session.savedResume(learnerId);},
     hasResume(learnerId=null){return session.hasResume(learnerId);},
     stop(options){return session.stop(options);},
     forget(){return session.forget();},

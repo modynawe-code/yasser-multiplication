@@ -272,7 +272,7 @@ test('Monopoly retains board alignment and readable event controls with interact
   assert.match(controller,/prefers-reduced-motion:reduce/);
   assert.match(controller,/movementAnimating/);
   assert.match(controller,/function openSetup\(\)\{[\s\S]*interaction\.cancel\(\)/);
-  assert.match(controller,/addEventListener\?\.\('pageshow',event=>\{if\(event\.persisted&&document\.getElementById\('monopolyGameView'\)\?\.classList\.contains\('active'\)\)openSetup\(\);\}/);
+  assert.match(controller,/installMonopolyRecovery/);
   assert.match(controller,/function isTabletPortrait\(\)/);
   assert.match(controller,/function movementStepDuration\(\)/);
   assert.match(controller,/function focusMovement\(index\)/);

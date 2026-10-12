@@ -5,6 +5,8 @@ import { historyFamilyForDeviceToken,recordOnlineRoomMatch } from './game-histor
 export { addXoRoomGuest, applyXoRoomAction, createInitialXoRoomState } from './game-room-rules.mjs';
 
 const ROOM_TTL_MINUTES=30;
+const MONOPOLY_TTL_MINUTES=24*60;
+const roomTtl=gameId=>gameId==='family-monopoly'?MONOPOLY_TTL_MINUTES:ROOM_TTL_MINUTES;
 const MAX_RECENT_ROOMS_PER_IP=10;
 const MAX_JOIN_ATTEMPTS=20;
 const JOIN_WINDOW_MINUTES=10;
@@ -81,7 +83,7 @@ async function createRoom(request,env,respond,readJson){
   if(!rules||!validLearner(learnerId))return respond(400,{error:'invalid_game_room'});
   const throttle=await allowCreate(request,env);if(!throttle.ok)return respond(429,{error:'too_many_rooms'});
   const historyFamilyId=await historyFamilyForDeviceToken(request,env);
-  const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),state=rules.createInitialState(playerId,{learnerId,displayName});
+  const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(roomTtl(gameId)),state=rules.createInitialState(playerId,{learnerId,displayName});
   let code=null;
   for(let attempt=0;attempt<12;attempt++){
     const candidate=generateRoomCode();
@@ -124,7 +126,7 @@ async function joinRoom(request,env,respond,readJson){
   const playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso();
   const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,participation_role,authority_role,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,displayName,tokenHash,seat,participationRole,'guest',joinedAt,joinedAt).run();
   if(Number(insert?.meta?.changes||0)!==1)return fail(409,participationRole==='spectator'?'spectator_join_conflict':'room_full');
-  const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(next.state.status,JSON.stringify(next.state),joinedAt,futureIso(ROOM_TTL_MINUTES),row.id,row.version).run();
+  const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(next.state.status,JSON.stringify(next.state),joinedAt,futureIso(roomTtl(row.game_id)),row.id,row.version).run();
   if(Number(update?.meta?.changes||0)!==1){
     await env.DB.prepare('DELETE FROM game_room_players WHERE room_id=? AND player_id=?').bind(row.id,playerId).run().catch(()=>null);
     return fail(409,'room_changed');
@@ -138,6 +140,12 @@ async function getRoom(request,env,respond,code){
   const row=await roomByCode(env,code);if(!row||Date.parse(row.expires_at)<=Date.now())return respond(404,{error:'room_not_found'});
   const player=await playerForToken(env,row.id,request.headers.get('x-game-token')||'');if(!player)return respond(401,{error:'invalid_game_token'});
   env.DB.prepare('UPDATE game_room_players SET last_seen_at=? WHERE room_id=? AND player_id=?').bind(nowIso(),row.id,player.player_id).run().catch(()=>null);
+  // Renew an authenticated Monopoly presence at most every five minutes.
+  if(row.game_id==='family-monopoly'&&row.status!=='closed'&&Date.parse(row.expires_at)<Date.now()+(MONOPOLY_TTL_MINUTES-5)*60000){
+    const expiresAt=futureIso(MONOPOLY_TTL_MINUTES);
+    await env.DB.prepare('UPDATE game_rooms SET expires_at=MAX(expires_at,?) WHERE id=?').bind(expiresAt,row.id).run();
+    row.expires_at=expiresAt;
+  }
   await ensureRoomHistory(env,row);
   return respond(200,{room:await roomPayload(env,row,player.player_id)});
 }
@@ -151,7 +159,7 @@ async function submitAction(request,env,respond,readJson,code){
   if(!Number.isInteger(expectedVersion)||expectedVersion!==Number(row.version))return respond(409,{error:'version_conflict',room:await roomPayload(env,row,player.player_id)});
   let state;try{state=JSON.parse(row.state_json);}catch{return respond(500,{error:'invalid_room_state'});}
   const result=rules.applyAction(state,{playerId:player.player_id,type,payload});if(!result.ok)return respond(409,{error:result.reason,room:await roomPayload(env,row,player.player_id)});
-  const updatedAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(result.state.status,JSON.stringify(result.state),updatedAt,expiresAt,row.id,row.version).run();
+  const updatedAt=nowIso(),expiresAt=futureIso(roomTtl(row.game_id)),update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(result.state.status,JSON.stringify(result.state),updatedAt,expiresAt,row.id,row.version).run();
   if(Number(update?.meta?.changes||0)!==1){const fresh=await roomByCode(env,code);return respond(409,{error:'version_conflict',room:await roomPayload(env,fresh,player.player_id)});}
   const fresh=await roomByCode(env,code);await ensureRoomHistory(env,fresh);return respond(200,{room:await roomPayload(env,fresh,player.player_id)});
 }

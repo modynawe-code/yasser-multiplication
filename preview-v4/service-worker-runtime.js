@@ -67,7 +67,6 @@ self.addEventListener('activate',event=>{event.waitUntil((async()=>{
   await Promise.all(stale.map(key=>caches.delete(key)));
   if(stale.length){
     await self.clients.claim();
-    const windows=await self.clients.matchAll({type:'window'});
-    await Promise.all(windows.map(client=>client.navigate(client.url).catch(()=>null)));
+    // Keep active games open; the updated assets load on the next navigation.
   }
 })());});
