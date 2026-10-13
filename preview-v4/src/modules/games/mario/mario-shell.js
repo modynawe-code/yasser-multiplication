@@ -6,7 +6,7 @@ function ensureStyle(href,key){
 export function ensureMarioShell(){
   if(document.getElementById('marioGameView'))return;
   const main=document.querySelector('main');if(!main)return;
-  ensureStyle('src/modules/games/mario/mario.css?v=tablet-gamepad-support-5','mario-game');
+  ensureStyle('src/modules/games/mario/mario.css?v=touch-controls-6','mario-game');
   const host=document.createElement('div');
   host.innerHTML=`
     <section id="marioGameView" class="view">
@@ -35,8 +35,8 @@ export function ensureMarioShell(){
               <button data-mario-button="RIGHT" aria-label="يمين"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
             </div>
             <div class="mario-face-buttons">
-              <button data-mario-button="B" aria-label="زر B">B</button>
-              <button data-mario-button="A" aria-label="زر A">A</button>
+              <button data-mario-button="B" aria-label="B: ركض وإطلاق">B<small>ركض</small></button>
+              <button data-mario-button="A" aria-label="A: قفز">A<small>قفز</small></button>
             </div>
             <div class="mario-center-buttons">
               <button data-mario-button="SELECT" aria-label="اختيار">اختيار</button>

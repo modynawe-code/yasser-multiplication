@@ -32,6 +32,8 @@ export function createMarioController({showView,onBack}={}){
   let bound=false,browser=null,loaded=false,paused=false,loadToken=0;
   let gamepadFrame=0;
   const heldInputs=new Map();
+  const touchPointers=new Map();
+  let viewportBound=false;
   let heldGamepadInputs=new Map();
   const KEY_BUTTONS=Object.freeze({ArrowUp:'UP',ArrowDown:'DOWN',ArrowLeft:'LEFT',ArrowRight:'RIGHT',KeyZ:'B',KeyX:'A',Enter:'START',ShiftRight:'SELECT'});
   function status(message,error=false){const node=byId('marioStatus');if(node){node.textContent=message;node.classList.toggle('error',error);}}
@@ -40,20 +42,40 @@ export function createMarioController({showView,onBack}={}){
     const button=globalThis.jsnes?.Controller?.[`BUTTON_${name}`];if(button===undefined)return;
     let sources=heldInputs.get(name);
     if(down){
-      if(!loaded||!browser?.nes)return;
+      if(!loaded||paused||!browser?.nes)return;
       if(!sources){sources=new Set();heldInputs.set(name,sources);}
       if(sources.has(source))return;
       if(!sources.size)browser.nes.buttonDown(1,button);
       sources.add(source);
+      markHeld(name,true);
       return;
     }
     if(!sources||!sources.has(source))return;
     sources.delete(source);
-    if(!sources.size){heldInputs.delete(name);browser?.nes?.buttonUp(1,button);}
+    if(!sources.size){heldInputs.delete(name);browser?.nes?.buttonUp(1,button);markHeld(name,false);}
+  }
+  function markHeld(name,held){
+    const node=document.querySelector(`[data-mario-button="${name}"]`);
+    node?.classList.toggle('is-held',held);node?.setAttribute('aria-pressed',String(held));
+  }
+  function fitViewport(){
+    const view=byId('marioGameView');if(!view)return;
+    const viewport=globalThis.visualViewport;
+    view.style.setProperty('--mario-viewport-height',`${viewport?.height??globalThis.innerHeight}px`);
+    view.style.setProperty('--mario-viewport-top',`${viewport?.offsetTop??0}px`);
+  }
+  function trackViewport(enabled){
+    if(enabled===viewportBound)return;viewportBound=enabled;
+    const method=enabled?'addEventListener':'removeEventListener';
+    globalThis[method]?.('resize',fitViewport);
+    globalThis.visualViewport?.[method]('resize',fitViewport);
+    globalThis.visualViewport?.[method]('scroll',fitViewport);
+    if(enabled)fitViewport();
   }
   function releaseAll(){
     if(browser?.nes){for(const name of heldInputs.keys()){const button=globalThis.jsnes?.Controller?.[`BUTTON_${name}`];if(button!==undefined)browser.nes.buttonUp(1,button);}}
-    heldInputs.clear();heldGamepadInputs.clear();
+    for(const name of heldInputs.keys())markHeld(name,false);
+    heldInputs.clear();heldGamepadInputs.clear();touchPointers.clear();
   }
   function pollGamepads(){
     gamepadFrame=0;
@@ -87,15 +109,23 @@ export function createMarioController({showView,onBack}={}){
     status('انفصلت يد التحكم. اللمس ولوحة المفاتيح ما زالا يعملان.');
   }
   function press(name,event){
-    if(!loaded||!browser?.nes)return;
+    if(!loaded||paused||!browser?.nes)return;
+    touchPointers.set(event.pointerId,{name,node:event.currentTarget});
     setInput(name,event.pointerId,true);
     try{event.currentTarget.setPointerCapture(event.pointerId);}catch{}
   }
-  function release(name,event){setInput(name,event.pointerId,false);}
+  function movePointer(event){
+    const held=touchPointers.get(event.pointerId);if(!held)return;
+    const rect=held.node.getBoundingClientRect();
+    // Moving out releases this button; it never presses an adjacent target.
+    const inside=event.clientX>=rect.left&&event.clientX<rect.right&&event.clientY>=rect.top&&event.clientY<rect.bottom;
+    setInput(held.name,event.pointerId,inside);
+  }
+  function release(name,event){setInput(name,event.pointerId,false);touchPointers.delete(event.pointerId);}
   function onKeyDown(event){
     const name=KEY_BUTTONS[event.code];
     if(!name||event.target?.closest?.('button,a,input,textarea,select,[contenteditable="true"]'))return;
-    if(!loaded||event.repeat)return;
+    if(!loaded||paused||event.repeat)return;
     event.preventDefault();setInput(name,`key:${event.code}`,true);
   }
   function onKeyUp(event){
@@ -130,7 +160,7 @@ export function createMarioController({showView,onBack}={}){
     if(paused){browser.start();paused=false;byId('marioPause').textContent='إيقاف مؤقت';status('اللعبة مستمرة.');}
     else{releaseAll();browser.stop();paused=true;byId('marioPause').textContent='متابعة اللعب';status('اللعبة متوقفة مؤقتًا.');}
   }
-  function reset(){if(!browser||!loaded)return;releaseAll();browser.nes.reset();if(paused){browser.start();paused=false;byId('marioPause').textContent='إيقاف مؤقت';}status('رجعنا لبداية اللعبة.');}
+  function reset(){if(!browser||!loaded)return;releaseAll();if(!globalThis.confirm('ترجع لبداية اللعبة؟ بتفقد المرحلة الحالية.'))return;browser.nes.reset();if(paused){browser.start();paused=false;byId('marioPause').textContent='إيقاف مؤقت';}status('رجعنا لبداية اللعبة.');}
   function clearImmersive(exitNative=false){
     const view=byId('marioGameView'),button=byId('marioFullscreen');
     view?.classList.remove('mario-fullscreen');
@@ -145,13 +175,13 @@ export function createMarioController({showView,onBack}={}){
     view.classList.add('mario-fullscreen');
     const button=byId('marioFullscreen');if(button){button.textContent='تصغير الشاشة';button.setAttribute('aria-pressed','true');}
     try{if(view.requestFullscreen)await view.requestFullscreen({navigationUI:'hide'});}catch{}
-    try{await globalThis.screen?.orientation?.lock?.('landscape');}catch{}
+    fitViewport();
     status('الشاشة كاملة. لفّ الجهاز بالعرض لمساحة لعب أوسع.');
   }
-  function cleanup(){loadToken+=1;stopGamepadPolling();releaseAll();clearImmersive(true);browser?.destroy();browser=null;loaded=false;paused=false;document.body.classList.remove('mario-game-mode');}
+  function cleanup(){trackViewport(false);loadToken+=1;stopGamepadPolling();releaseAll();clearImmersive(true);browser?.destroy();browser=null;loaded=false;paused=false;document.body.classList.remove('mario-game-mode');}
   function bind(){
     if(bound)return;bound=true;
-    byId('marioBackToGames')?.addEventListener('click',()=>{cleanup();onBack?.();});
+    byId('marioBackToGames')?.addEventListener('click',()=>{releaseAll();if(loaded&&!globalThis.confirm('تطلع من اللعبة؟ بتفقد المرحلة الحالية.'))return;cleanup();onBack?.();});
     byId('marioPause')?.addEventListener('click',togglePause);byId('marioReset')?.addEventListener('click',reset);byId('marioFullscreen')?.addEventListener('click',()=>void toggleFullscreen());
     document.addEventListener('keydown',onKeyDown);document.addEventListener('keyup',onKeyUp);
     globalThis.addEventListener?.('gamepadconnected',onGamepadConnected);globalThis.addEventListener?.('gamepaddisconnected',onGamepadDisconnected);
@@ -159,6 +189,8 @@ export function createMarioController({showView,onBack}={}){
     globalThis.addEventListener?.('blur',releaseAll);
     document.querySelectorAll('[data-mario-button]').forEach(button=>{
       const name=button.dataset.marioButton;
+      button.setAttribute('aria-pressed','false');
+      button.addEventListener('pointermove',movePointer);
       button.addEventListener('pointerdown',event=>{event.preventDefault();press(name,event);});
       for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,event=>{event.preventDefault();release(name,event);});
       button.addEventListener('contextmenu',event=>event.preventDefault());
@@ -167,7 +199,7 @@ export function createMarioController({showView,onBack}={}){
     setControlsEnabled(false);
   }
   return Object.freeze({
-    start(){ensureMarioShell();document.body.classList.add('mario-game-mode');bind();startGamepadPolling();showView?.('marioGameView');if(globalThis.matchMedia?.('(pointer: coarse) and (max-width: 1600px)').matches)void toggleFullscreen().catch(()=>{});void loadRom();},
+    start(){ensureMarioShell();document.body.classList.add('mario-game-mode');bind();startGamepadPolling();showView?.('marioGameView');trackViewport(true);void loadRom();},
     leave:cleanup
   });
 }
