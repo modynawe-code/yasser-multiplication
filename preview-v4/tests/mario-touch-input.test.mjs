@@ -18,12 +18,14 @@ test('Mario touch input isolates pointers, releases outside targets and respects
   }
   const names=['UP','LEFT','DOWN','RIGHT','A','B','SELECT','START'];
   const buttons=Object.fromEntries(names.map(name=>[name,new Target(name)]));
-  const ids=Object.fromEntries(['marioGameView','marioScreen','marioStatus','marioPause','marioReset','marioFullscreen','marioBackToGames'].map(id=>[id,new Target()]));
+  const ids=Object.fromEntries(['marioGameView','marioScreen','marioStatus','marioPause','marioReset','marioFullscreen','marioBackToGames','marioSave','marioSaveStatus'].map(id=>[id,new Target()]));
   const document=new Target();Object.assign(document,{visibilityState:'visible',body:new Target(),baseURI:'https://example.test/',getElementById:id=>ids[id],querySelector:selector=>buttons[selector.match(/"([A-Z]+)"/)?.[1]],querySelectorAll:()=>Object.values(buttons)});
   const viewport=new Target();Object.assign(viewport,{height:900,offsetTop:0});
   const events=new Target(),calls=[];
-  const saved=new Map();
-  const globals={document,visualViewport:viewport,innerHeight:900,confirm:()=>false,addEventListener:events.addEventListener.bind(events),removeEventListener:events.removeEventListener.bind(events),fetch:async()=>({ok:true,arrayBuffer:async()=>new Uint8Array([0x4e,0x45,0x53,0x1a,...Array(12).fill(0)]).buffer}),jsnes:{Controller:Object.fromEntries(names.map(name=>[`BUTTON_${name}`,name])),Browser:class{nes={buttonDown:(_,name)=>calls.push(['down',name]),buttonUp:(_,name)=>calls.push(['up',name]),reset:()=>calls.push(['reset'])};loadROM(){}destroy(){}start(){}stop(){}}}};
+  const saved=new Map(),stored=new Map();
+  let timerCallback,restores=0;
+  const snapshot=()=>({cpu:{mem:Array(65536).fill(0)},ppu:{buffer:Array(256*240).fill(0)},mmap:{},papu:{},controllers:{}});
+  const globals={localStorage:{getItem:key=>stored.get(key)??null,setItem:(key,value)=>stored.set(key,value)},setInterval:callback=>{timerCallback=callback;return 1;},clearInterval:()=>{},document,visualViewport:viewport,innerHeight:900,confirm:()=>false,addEventListener:events.addEventListener.bind(events),removeEventListener:events.removeEventListener.bind(events),fetch:async()=>({ok:true,arrayBuffer:async()=>new Uint8Array([0x4e,0x45,0x53,0x1a,...Array(12).fill(0)]).buffer}),jsnes:{Controller:Object.fromEntries(names.map(name=>[`BUTTON_${name}`,name])),Browser:class{nes={buttonDown:(_,name)=>calls.push(['down',name]),buttonUp:(_,name)=>calls.push(['up',name]),reset:()=>calls.push(['reset']),toJSON:snapshot,fromJSON:()=>restores++};loadROM(){}destroy(){}start(){}stop(){}}}};
   for(const [key,value] of Object.entries(globals)){saved.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{value,writable:true,configurable:true});}
   let back=0;const controller=createMarioController({onBack:()=>back++});
   try{
@@ -47,14 +49,21 @@ test('Mario touch input isolates pointers, releases outside targets and respects
     assert.equal(calls.length,count,'paused game must ignore input');
     ids.marioPause.fire('click');pointer('LEFT','pointerdown',7);events.fire('blur');
     assert.equal(buttons.LEFT.attributes['aria-pressed'],'false');
-    pointer('B','pointerdown',8);document.visibilityState='hidden';document.fire('visibilitychange');
+    ids.marioPause.fire('click');pointer('B','pointerdown',8);document.visibilityState='hidden';document.fire('visibilitychange');
     assert.equal(buttons.B.attributes['aria-pressed'],'false');document.visibilityState='visible';
     ids.marioReset.fire('click');assert.equal(calls.some(call=>call[0]==='reset'),false);
-    ids.marioBackToGames.fire('click');assert.equal(back,0);
+    timerCallback();assert.equal(stored.size,1,'automatic lifecycle save is stored');
     viewport.height=620;viewport.fire('resize');assert.equal(ids.marioGameView.attributes['--mario-viewport-height'],'620px');
     globalThis.confirm=()=>true;ids.marioReset.fire('click');assert.deepEqual(calls.at(-1),['reset']);
     ids.marioBackToGames.fire('click');assert.equal(back,1);
     assert.equal(viewport.listeners.get('resize').length,0,'leaving removes viewport listeners');
+    controller.start();await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(restores,1);assert.equal(ids.marioPause.textContent,'متابعة اللعب');
+    assert.equal(ids.marioSaveStatus.textContent,'تم استعادة آخر حفظ');
+    const afterRestore=calls.length;pointer('A','pointerdown',9);assert.equal(calls.length,afterRestore);
+    ids.marioPause.fire('click');pointer('A','pointerdown',10);assert.deepEqual(calls.at(-1),['down','A']);
+    events.fire('pagehide');assert.equal(ids.marioPause.textContent,'متابعة اللعب');
+    assert.equal(buttons.A.attributes['aria-pressed'],'false');
   }finally{
     controller.leave();for(const [key,descriptor] of saved)descriptor?Object.defineProperty(globalThis,key,descriptor):delete globalThis[key];
   }

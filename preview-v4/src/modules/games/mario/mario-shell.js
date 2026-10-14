@@ -6,7 +6,7 @@ function ensureStyle(href,key){
 export function ensureMarioShell(){
   if(document.getElementById('marioGameView'))return;
   const main=document.querySelector('main');if(!main)return;
-  ensureStyle('src/modules/games/mario/mario.css?v=touch-controls-6','mario-game');
+  ensureStyle('src/modules/games/mario/mario.css?v=save-state-7','mario-game');
   const host=document.createElement('div');
   host.innerHTML=`
     <section id="marioGameView" class="view">
@@ -17,8 +17,10 @@ export function ensureMarioShell(){
             <button class="mario-back" id="marioBackToGames">رجوع للألعاب</button>
             <button class="mario-action" id="marioPause" disabled>إيقاف مؤقت</button>
             <button class="mario-action mario-fullscreen-toggle" id="marioFullscreen" type="button" aria-pressed="false">ملء الشاشة</button>
+            <button class="mario-action" id="marioSave" disabled>حفظ الآن</button>
             <button class="mario-action" id="marioReset" disabled>إعادة البداية</button>
           </nav>
+          <span class="mario-save-status" id="marioSaveStatus" role="status">الحفظ تلقائي على هذا الجهاز</span>
         </header>
         <div class="mario-layout mario-stage" aria-label="مساحة اللعب">
           <section class="mario-screen-panel" aria-label="شاشة اللعبة">

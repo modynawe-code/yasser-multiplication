@@ -1,4 +1,5 @@
 import { ensureMarioShell } from './mario-shell.js';
+import {marioRomFingerprint,readMarioSave,writeMarioSave,MARIO_SAVE_INTERVAL_MS} from './mario-save.js';
 
 const byId=id=>document.getElementById(id);
 const GAMEPAD_BUTTONS=Object.freeze({0:'A',1:'B',8:'SELECT',9:'START',12:'UP',13:'DOWN',14:'LEFT',15:'RIGHT'});
@@ -30,14 +31,52 @@ function loadJsnes(){
 
 export function createMarioController({showView,onBack}={}){
   let bound=false,browser=null,loaded=false,paused=false,loadToken=0;
-  let gamepadFrame=0;
+  let gamepadFrame=0,saveTimer=0,romId='';
+  let saveBlocked=false;
   const heldInputs=new Map();
   const touchPointers=new Map();
   let viewportBound=false;
   let heldGamepadInputs=new Map();
   const KEY_BUTTONS=Object.freeze({ArrowUp:'UP',ArrowDown:'DOWN',ArrowLeft:'LEFT',ArrowRight:'RIGHT',KeyZ:'B',KeyX:'A',Enter:'START',ShiftRight:'SELECT'});
   function status(message,error=false){const node=byId('marioStatus');if(node){node.textContent=message;node.classList.toggle('error',error);}}
-  function setControlsEnabled(enabled){document.querySelectorAll('[data-mario-button]').forEach(button=>{button.disabled=!enabled;});const pause=byId('marioPause'),reset=byId('marioReset');if(pause)pause.disabled=!enabled;if(reset)reset.disabled=!enabled;}
+  function setControlsEnabled(enabled){document.querySelectorAll('[data-mario-button]').forEach(button=>{button.disabled=!enabled;});const pause=byId('marioPause'),reset=byId('marioReset');if(pause)pause.disabled=!enabled;if(reset)reset.disabled=!enabled;const save=byId('marioSave');if(save)save.disabled=!enabled;}
+  function saveProgress(manual=false){
+    if(!loaded||!browser?.nes||(!manual&&saveBlocked))return false;
+    let result;
+    try{result=writeMarioSave(globalThis.localStorage,romId,browser.nes);}catch{result={ok:false};}
+    const label=byId('marioSaveStatus');
+    if(result.ok){
+      saveBlocked=false;
+      const time=new Date(result.savedAt).toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+      if(label){label.textContent=`آخر حفظ: ${time}`;label.classList.remove('error');}
+      if(manual)status('تم حفظ اللعبة. تقدر تطلع وتكمل من هنا.');
+    }else{
+      if(label){label.textContent='تعذر الحفظ على هذا المتصفح';label.classList.add('error');}
+      status('تعذر حفظ اللعبة. قد تكون مساحة المتصفح ممتلئة؛ لا تغلقها قبل نجاح الحفظ.',true);
+    }
+    return result.ok;
+  }
+  function stopAutosave(){if(saveTimer)globalThis.clearInterval(saveTimer);saveTimer=0;}
+  function startAutosave(){
+    stopAutosave();saveTimer=globalThis.setInterval(()=>{if(!paused&&document.visibilityState!=='hidden')saveProgress();},MARIO_SAVE_INTERVAL_MS);
+  }
+  function suspendAndSave(){
+    if(!loaded||!browser)return;
+    releaseAll();
+    if(!paused){browser.stop();paused=true;byId('marioPause').textContent='متابعة اللعب';}
+    saveProgress();
+  }
+  function paintSavedFrame(state){
+    const canvas=byId('marioScreen')?.querySelector?.('canvas');if(!canvas)return;
+    const context=canvas.getContext('2d');if(!context)return;
+    const frame=context.createImageData(256,240);
+    for(let i=0;i<state.ppu.buffer.length;i++){
+      const color=state.ppu.buffer[i],offset=i*4;
+      frame.data[offset]=color&255;frame.data[offset+1]=(color>>>8)&255;
+      frame.data[offset+2]=(color>>>16)&255;frame.data[offset+3]=255;
+    }
+    context.putImageData(frame,0,0);
+  }
   function setInput(name,source,down){
     const button=globalThis.jsnes?.Controller?.[`BUTTON_${name}`];if(button===undefined)return;
     let sources=heldInputs.get(name);
@@ -134,7 +173,7 @@ export function createMarioController({showView,onBack}={}){
   }
   async function loadRom(){
     const token=++loadToken;
-    status('نحمّل اللعبة…');
+    stopAutosave();saveBlocked=false;status('نحمّل اللعبة…');
     try{
       const jsnes=await loadJsnes();
       const response=await fetch(new URL('assets/games/super-mario-bros.nes',document.baseURI));
@@ -146,9 +185,25 @@ export function createMarioController({showView,onBack}={}){
       const screen=byId('marioScreen');screen.replaceChildren();
       try{
         browser=new jsnes.Browser({container:screen,onError:()=>status('تعذر تشغيل اللعبة. أعدوا فتحها وجربوا مرة ثانية.',true)});
-        browser.loadROM(bytes);loaded=true;paused=false;setControlsEnabled(true);
+        browser.loadROM(bytes);romId=marioRomFingerprint(bytes);loaded=true;paused=false;setControlsEnabled(true);
       }catch(error){browser?.destroy();browser=null;throw error;}
-      byId('marioPause').textContent='إيقاف مؤقت';status('اللعبة جاهزة. العبوا باللمس أو لوحة المفاتيح أو يد التحكم.');
+      let restored=false;
+      let saved;
+      try{saved=readMarioSave(globalThis.localStorage,romId);}catch{saved={status:'unavailable'};}
+      if(saved.status==='ready'){
+        browser.stop();
+        try{
+          browser.nes.fromJSON(saved.saved.state);paused=true;restored=true;
+          paintSavedFrame(saved.saved.state);
+          byId('marioSaveStatus').textContent='تم استعادة آخر حفظ';byId('marioSaveStatus').classList.remove('error');
+        }catch{browser.loadROM(bytes);paused=false;saved={status:'invalid'};}
+      }
+      byId('marioPause').textContent=restored?'متابعة اللعب':'إيقاف مؤقت';
+      if(restored)status('رجعنا لآخر حفظ. اضغط متابعة اللعب عشان تكمل.');
+      else if(saved.status!=='empty'){
+        saveBlocked=true;status('تعذر استعادة الحفظ السابق. تقدر تبدأ من جديد؛ الحفظ القديم يبقى إلى أن تضغط حفظ الآن أو إعادة البداية.',true);
+      }else status('اللعبة جاهزة. تقدمك ينحفظ تلقائيًا على هذا الجهاز.');
+      startAutosave();
     }catch(error){
       if(token!==loadToken)return;
       loaded=false;setControlsEnabled(false);
@@ -158,9 +213,9 @@ export function createMarioController({showView,onBack}={}){
   function togglePause(){
     if(!browser||!loaded)return;
     if(paused){browser.start();paused=false;byId('marioPause').textContent='إيقاف مؤقت';status('اللعبة مستمرة.');}
-    else{releaseAll();browser.stop();paused=true;byId('marioPause').textContent='متابعة اللعب';status('اللعبة متوقفة مؤقتًا.');}
+    else{releaseAll();browser.stop();paused=true;byId('marioPause').textContent='متابعة اللعب';if(saveProgress())status('اللعبة متوقفة ومحفوظة.');}
   }
-  function reset(){if(!browser||!loaded)return;releaseAll();if(!globalThis.confirm('ترجع لبداية اللعبة؟ بتفقد المرحلة الحالية.'))return;browser.nes.reset();if(paused){browser.start();paused=false;byId('marioPause').textContent='إيقاف مؤقت';}status('رجعنا لبداية اللعبة.');}
+  function reset(){if(!browser||!loaded)return;releaseAll();if(!globalThis.confirm('تبدأ من جديد وتستبدل الحفظ الحالي؟'))return;browser.nes.reset();saveBlocked=false;const saved=saveProgress(true);if(paused){browser.start();paused=false;byId('marioPause').textContent='إيقاف مؤقت';}if(saved)status('رجعنا لبداية اللعبة وحفظناها.');}
   function clearImmersive(exitNative=false){
     const view=byId('marioGameView'),button=byId('marioFullscreen');
     view?.classList.remove('mario-fullscreen');
@@ -178,15 +233,17 @@ export function createMarioController({showView,onBack}={}){
     fitViewport();
     status('الشاشة كاملة. لفّ الجهاز بالعرض لمساحة لعب أوسع.');
   }
-  function cleanup(){trackViewport(false);loadToken+=1;stopGamepadPolling();releaseAll();clearImmersive(true);browser?.destroy();browser=null;loaded=false;paused=false;document.body.classList.remove('mario-game-mode');}
+  function cleanup(){releaseAll();saveProgress();stopAutosave();trackViewport(false);loadToken+=1;stopGamepadPolling();releaseAll();clearImmersive(true);browser?.destroy();browser=null;loaded=false;paused=false;document.body.classList.remove('mario-game-mode');}
   function bind(){
     if(bound)return;bound=true;
-    byId('marioBackToGames')?.addEventListener('click',()=>{releaseAll();if(loaded&&!globalThis.confirm('تطلع من اللعبة؟ بتفقد المرحلة الحالية.'))return;cleanup();onBack?.();});
+    byId('marioBackToGames')?.addEventListener('click',()=>{releaseAll();if(loaded&&!saveProgress()&&!globalThis.confirm('تعذر حفظ تقدمك. تطلع بدون حفظ؟'))return;cleanup();onBack?.();});
+    byId('marioSave')?.addEventListener('click',()=>saveProgress(true));
     byId('marioPause')?.addEventListener('click',togglePause);byId('marioReset')?.addEventListener('click',reset);byId('marioFullscreen')?.addEventListener('click',()=>void toggleFullscreen());
     document.addEventListener('keydown',onKeyDown);document.addEventListener('keyup',onKeyUp);
     globalThis.addEventListener?.('gamepadconnected',onGamepadConnected);globalThis.addEventListener?.('gamepaddisconnected',onGamepadDisconnected);
     document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&byId('marioGameView')?.classList.contains('mario-fullscreen'))clearImmersive();});
-    globalThis.addEventListener?.('blur',releaseAll);
+    globalThis.addEventListener?.('blur',suspendAndSave);
+    globalThis.addEventListener?.('pagehide',suspendAndSave);
     document.querySelectorAll('[data-mario-button]').forEach(button=>{
       const name=button.dataset.marioButton;
       button.setAttribute('aria-pressed','false');
@@ -195,7 +252,7 @@ export function createMarioController({showView,onBack}={}){
       for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,event=>{event.preventDefault();release(name,event);});
       button.addEventListener('contextmenu',event=>event.preventDefault());
     });
-    globalThis.document?.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')releaseAll();});
+    globalThis.document?.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')suspendAndSave();});
     setControlsEnabled(false);
   }
   return Object.freeze({

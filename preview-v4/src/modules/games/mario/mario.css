@@ -47,7 +47,7 @@ body.mario-game-mode{margin:0;overflow:hidden;overscroll-behavior:none}
 .mario-controls p{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 @media(orientation:portrait){
   .mario-header{grid-template-columns:1fr;gap:8px}
-  .mario-header-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;gap:6px}
+  .mario-header-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;gap:6px}
   .mario-header-actions button{min-width:0;padding:6px 3px;font-size:clamp(10px,1.8vw,13px)}
   .mario-header span{font-size:10px}
 }
@@ -77,3 +77,6 @@ body.mario-game-mode{margin:0;overflow:hidden;overscroll-behavior:none}
   .mario-face-buttons button:last-child{margin-bottom:32px}
 }
 @media(prefers-reduced-motion:reduce){#marioGameView button{transition:none}}
+
+.mario-header .mario-save-status{display:block;grid-column:1/-1;font-size:11px;color:#9ac5a9;text-align:center}
+.mario-header .mario-save-status.error{color:#ffb5b5}

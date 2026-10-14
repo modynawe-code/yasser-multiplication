@@ -44,7 +44,7 @@ test('Mario screen loads its bundled ROM and provides touch and pause controls',
   assert.match(css,/user-select:none/);
   assert.match(css,/-webkit-touch-callout:none/);
   const worker=await read('service-worker.js');
-  assert.ok(worker.includes('mario.css?v=touch-controls-6'));
+  assert.ok(worker.includes('mario.css?v=save-state-7'));
   assert.match(worker,/shell-\d+/);
   assert.match(controller,/\.destroy\(\)/);
   assert.match(css,/touch-action:none/);
