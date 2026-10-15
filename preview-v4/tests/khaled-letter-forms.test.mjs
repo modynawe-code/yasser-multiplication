@@ -23,6 +23,17 @@ test('All 28 letters have real paths for all applicable forms and valid examples
   for(const e of examplesFor(l)){assert.equal(Array.from(e.word)[e.index],l.char);assert.ok(availableForms(l).includes(e.form));}
  }
 });
+test('Every video explanation has its matching example still for all 28 letters',async()=>{
+ assert.equal(LETTER_VIDEO_AUDIO_CLIPS.length,28);
+ for(const letter of LETTERS){
+  const clip=LETTER_VIDEO_AUDIO_BY_ID[letter.audio];
+  assert.ok(clip&&clip.letter===letter.char,letter.char+' has a matching video recording');
+  assert.ok(letter.videoWord,letter.char+' has the example shown in the video');
+  assert.ok(Array.from(letter.videoWord).some(char=>letter.char==='ا'?'اأإآ'.includes(char):char===letter.char),letter.char+' occurs in its video example');
+  const still=await readFile(new URL(`../assets/images/khaled/letter-forms/video/${letter.audio}.jpg`,import.meta.url));
+  assert.ok(still.length>5000,letter.char+' has a usable source-video still');
+ }
+});
 test('Tracing cannot skip to the end or pass by scribbling on a single point',()=>{
  const samples=Array.from({length:50},(_,i)=>({x:i*5,y:100}));
  assert.equal(advanceCheckpoint(samples,0,{x:245,y:100}),0);
@@ -44,6 +55,8 @@ test('Activity is linked from Khaled literacy and its dependencies are available
  for(const path of ['letter-forms.js','lesson-audio.js','letter-data.js','letter-video-audio-manifest.js','writing-paths.js','tracing.js','letter-forms.css'])assert.ok(sw.includes('/letter-forms/'+path),path);
  assert.ok(sw.includes('assets/khaled/letter-forms/connection-hands.png'));
  assert.ok(sw.includes('KHALED_LETTER_VIDEO_AUDIO_ASSETS'));
+ assert.ok(sw.includes('KHALED_LETTER_VIDEO_STILL_ASSETS'));
+ assert.match(sw,/shell-217/);
 });
 
 test('Each Arabic letter has its own extracted voice clip and valid source interval',async()=>{
@@ -113,7 +126,8 @@ test('Human explanations and response lines resolve to the shared recording inve
   assert.ok(recordingContract.includes(humanVoiceAssetPath(line.text).split('/').at(-1)),id+' has the correct recording filename');
   if(['question','writing'].includes(id))assert.ok(controller.includes(`data-line="${id}"`),id+' has a play control');
  }
- assert.equal((controller.match(/data-action="play-letter-explanation"/g)||[]).length,2,'the per-letter recording is available on the forms and connections stages');
+ assert.equal((controller.match(/data-action="play-letter-explanation"/g)||[]).length,1,'the source recording has one control in the video example panel');
+ assert.equal((controller.match(/\$\{videoExample\(\)\}/g)||[]).length,2,'the matching example panel appears on the forms and connections stages');
  assert.match(controller,/audio\.respond\('correct','correct'\)/);
  assert.match(controller,/audio\.respond\('wrong','retry'\)/);
 });
