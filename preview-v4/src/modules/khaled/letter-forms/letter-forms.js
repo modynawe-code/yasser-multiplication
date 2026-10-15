@@ -1,6 +1,7 @@
 import {LETTERS,FORM_LABELS,availableForms,examplesFor,formText,loadProgress,STORAGE_KEY} from './letter-data.js';
 import {writingPaths} from './writing-paths.js';
 import {mountTracing} from './tracing.js';
+import {createLetterLessonAudio} from './lesson-audio.js';
 
 const rootPath='src/modules/khaled/letter-forms/';
 const stages=['أشكال الحرف','الاتصال','اختر الشكل','اكتب الحرف'];
@@ -9,6 +10,7 @@ const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;
 const hand=(connected,side)=>`<span class="lf-hand ${connected?'open':'closed'} ${side}" aria-hidden="true"></span>`;
 function glyph(letter,form){return `<svg viewBox="0 0 500 340" class="lf-glyph" aria-hidden="true">${writingPaths(letter.char,form).map(d=>`<path d="${d}"/>`).join('')}</svg>`;}
 export function createLetterFormsController({showView,onBack}){
+ const audio=createLetterLessonAudio();
  let view,progress,letter=LETTERS[0],stage=0,form='isolated',tracing=null,mode='guided',question=null,answered=false,attempts=0;
  let saveFailed=false;
  try{progress=loadProgress(localStorage);}catch{progress=loadProgress({getItem:()=>null});}
@@ -30,7 +32,7 @@ export function createLetterFormsController({showView,onBack}){
   progress.letters[letter.char]||={};stage=0;form='isolated';mode='guided';question=null;exampleIndex=null;
   const last=progress.lesson;
   if(resume&&last?.char===letter.char){stage=[0,1,2,3].includes(last.stage)?last.stage:0;form=availableForms(letter).includes(last.form)?last.form:'isolated';mode=last.mode==='free'?'free':'guided';}
-  save();render();
+  save();render();void audio.playLetter(letter.audio);
  }
  function formButtons(){return `<div class="lf-form-tabs" aria-label="أشكال الحرف">${availableForms(letter).map(f=>`<button type="button" data-form="${f}" aria-pressed="${form===f}"><span dir="rtl">${formText(letter.char,f)}</span><small>${FORM_LABELS[f]}</small></button>`).join('')}</div>`;}
  function example(){return examplesFor(letter).find(e=>e.form===form);}
@@ -38,19 +40,20 @@ export function createLetterFormsController({showView,onBack}){
   // One continuous text node preserves Arabic shaping; CSS highlight uses Range paint.
   return `<strong class="lf-example-word" data-index="${e.index}">${e.word}</strong><span>${e.position} · ${FORM_LABELS[e.form]}</span>`;
  }
- function formsPanel(){const e=example();return `<section class="lf-model"><h2>حرف ${letter.name}</h2>${formButtons()}<div class="lf-reference">${hand(form==='final'||form==='medial','right')}${glyph(letter,form)}${hand(form==='initial'||form==='medial','left')}</div><p class="lf-help">اليد المفتوحة تعني اتصالًا في هذا الشكل، والمغلقة تعني انفصالًا.</p>${e?`<div class="lf-example">${wordMarkup(e)}</div>`:'<p>هذا شكل الحرف وهو منفصل.</p>'}<p>${letter.dual?'قد يتصل من الجهتين؛ حسب الحرفين المجاورين.':'يتصل بما قبله إذا سمح الحرف السابق، ولا يتصل بما بعده.'}</p></section>`;}
+ function formsPanel(){const e=example();return `<section class="lf-model"><h2>حرف ${letter.name}</h2>${formButtons()}<div class="lf-reference">${hand(form==='final'||form==='medial','right')}${glyph(letter,form)}${hand(form==='initial'||form==='medial','left')}</div><p class="lf-help">اليد المفتوحة تعني اتصالًا في هذا الشكل، والمغلقة تعني انفصالًا.</p>${e?`<div class="lf-example">${wordMarkup(e)}</div>`:'<p>هذا شكل الحرف وهو منفصل.</p>'}<p>${letter.dual?'قد يتصل من الجهتين؛ حسب الحرفين المجاورين.':'يتصل بما قبله إذا سمح الحرف السابق، ولا يتصل بما بعده.'}</p><div class="lf-audio-actions"><button type="button" data-action="play-letter" aria-label="إعادة نطق حرف ${letter.name}">اسمع نطق الحرف</button><button type="button" data-action="play-narration" data-line="forms">اسمع الشرح</button></div><small class="lf-audio-credit">تسجيل نطق الحرف: وزارة الأوقاف والشؤون الإسلامية بدولة قطر</small><p class="lf-audio-status" role="status" aria-live="polite"></p></section>`;}
  function connectionsPanel(){
   const examples=examplesFor(letter),e=examples.find(e=>e.form===form)||examples[0];
-  return `<section class="lf-model"><h2>وين يتصل حرف ${letter.name}؟</h2><div class="lf-example-tabs">${examples.map((item,i)=>`<button type="button" data-example="${i}" aria-pressed="${item===e}">${item.word}</button>`).join('')}</div><div class="lf-reference">${hand(e.before,'right')}${glyph(letter,e.form)}${hand(e.after,'left')}</div><div class="lf-example">${wordMarkup(e)}</div><div class="lf-connection-labels"><span>${e.before?'يتصل بالحرف السابق':'منفصل عن السابق'}</span><span>${e.after?'يتصل بالحرف التالي':'منفصل عن التالي'}</span></div><p class="lf-help">نقرأ ونكتب من اليمين إلى اليسار. مكان الحرف وحده ما يحدد اتصاله.</p></section>`;
+  return `<section class="lf-model"><h2>وين يتصل حرف ${letter.name}؟</h2><div class="lf-example-tabs">${examples.map((item,i)=>`<button type="button" data-example="${i}" aria-pressed="${item===e}">${item.word}</button>`).join('')}</div><div class="lf-reference">${hand(e.before,'right')}${glyph(letter,e.form)}${hand(e.after,'left')}</div><div class="lf-example">${wordMarkup(e)}</div><div class="lf-connection-labels"><span>${e.before?'يتصل بالحرف السابق':'منفصل عن السابق'}</span><span>${e.after?'يتصل بالحرف التالي':'منفصل عن التالي'}</span></div><p class="lf-help">نقرأ ونكتب من اليمين إلى اليسار. مكان الحرف وحده ما يحدد اتصاله.</p><button type="button" data-action="play-narration" data-line="connections">اسمع الشرح</button><p class="lf-audio-status" role="status" aria-live="polite"></p></section>`;
  }
  let exampleIndex=null;
  function questionPanel(){
   if(!question){const list=examplesFor(letter),previous=progress.letters[letter.char].lastQuestion??-1;question=list[(previous+1)%list.length];progress.letters[letter.char].lastQuestion=(previous+1)%list.length;save();answered=false;attempts=0;}
   const opts=availableForms(letter).map(f=>({f,order:Math.random()})).sort((a,b)=>a.order-b.order);
-  return `<section class="lf-model"><h2>اختر شكل ${letter.char} في هذه الكلمة</h2><div class="lf-example">${wordMarkup(question)}</div><p>انتبه للحرف اللي قبله واللي بعده.</p><div class="lf-choices">${opts.map(({f})=>`<button type="button" data-answer="${f}" aria-label="${FORM_LABELS[f]}">${glyph(letter,f)}</button>`).join('')}</div><p class="lf-feedback" role="status">اختر الشكل المناسب.</p><button data-action="next-question" type="button" hidden>كلمة ثانية</button></section>`;
+  return `<section class="lf-model"><h2>اختر شكل ${letter.char} في هذه الكلمة</h2><div class="lf-example">${wordMarkup(question)}</div><p>انتبه للحرف اللي قبله واللي بعده.</p><button type="button" data-action="play-narration" data-line="question">اسمع الشرح</button><p class="lf-audio-status" role="status" aria-live="polite"></p><div class="lf-choices">${opts.map(({f})=>`<button type="button" data-answer="${f}" aria-label="${FORM_LABELS[f]}">${glyph(letter,f)}</button>`).join('')}</div><p class="lf-feedback" role="status">اختر الشكل المناسب.</p><button data-action="next-question" type="button" hidden>كلمة ثانية</button></section>`;
  }
- function writingPanel(){return `<section class="lf-model lf-writing"><h2>اكتب ${letter.char} · ${FORM_LABELS[form]}</h2>${formButtons()}<div class="lf-writing-controls"><button type="button" data-mode="guided" aria-pressed="${mode==='guided'}">أتتبع</button><button type="button" data-mode="free" aria-pressed="${mode==='free'}">أكتب بنفسي</button><button type="button" data-action="demo">شاهد الكتابة</button><button type="button" data-action="clear">امسح</button></div><p class="lf-feedback" role="status">${mode==='guided'?'ابدأ من الدائرة واتبع المسار. ارفع إصبعك بين أجزاء الحرف.':'اكتب وقارن بالنموذج؛ الكتابة الحرة لا تحصل على حكم آلي.'}</p><div class="lf-tracing-host"></div><div class="lf-writing-footer"><label><input type="checkbox" data-action="guide" checked> إظهار النموذج</label><span>الأرقام لترتيب أجزاء الكتابة · الخط الداكن هو السطر</span></div></section>`;}
+ function writingPanel(){return `<section class="lf-model lf-writing"><h2>اكتب ${letter.char} · ${FORM_LABELS[form]}</h2>${formButtons()}<button type="button" data-action="play-narration" data-line="writing">اسمع الشرح</button><p class="lf-audio-status" role="status" aria-live="polite"></p><div class="lf-writing-controls"><button type="button" data-mode="guided" aria-pressed="${mode==='guided'}">أتتبع</button><button type="button" data-mode="free" aria-pressed="${mode==='free'}">أكتب بنفسي</button><button type="button" data-action="demo">شاهد الكتابة</button><button type="button" data-action="clear">امسح</button></div><p class="lf-feedback" role="status">${mode==='guided'?'ابدأ من الدائرة واتبع المسار. ارفع إصبعك بين أجزاء الحرف.':'اكتب وقارن بالنموذج؛ الكتابة الحرة لا تحصل على حكم آلي.'}</p><div class="lf-tracing-host"></div><div class="lf-writing-footer"><label><input type="checkbox" data-action="guide" checked> إظهار النموذج</label><span>الأرقام لترتيب أجزاء الكتابة · الخط الداكن هو السطر</span></div></section>`;}
  function render(){
+  audio.stop();
   const active=document.activeElement;
   const focusAttribute=['data-form','data-stage','data-example','data-mode'].find(a=>active?.hasAttribute(a));
   const focusValue=focusAttribute?active.getAttribute(focusAttribute):null;
@@ -61,7 +64,7 @@ export function createLetterFormsController({showView,onBack}){
   if(stage===1&&exampleIndex!==null){const e=examplesFor(letter)[exampleIndex];if(e){view.querySelector('.lf-reference').innerHTML=hand(e.before,'right')+glyph(letter,e.form)+hand(e.after,'left');view.querySelector('.lf-example').innerHTML=wordMarkup(e);const labels=view.querySelectorAll('.lf-connection-labels span');labels[0].textContent=e.before?'يتصل بالحرف السابق':'منفصل عن السابق';labels[1].textContent=e.after?'يتصل بالحرف التالي':'منفصل عن التالي';view.querySelectorAll('[data-example]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.example)===exampleIndex)));}}
   if(stage===3){
    const key=`${letter.char}:${form}:${mode}`;
-   tracing=mountTracing(view.querySelector('.lf-tracing-host'),{paths:writingPaths(letter.char,form),mode,draft:progress.drafts[key],onSave:d=>{progress.drafts[key]=d;save();},onComplete:()=>{record('writing',form);view.querySelector('.lf-feedback').textContent='أكملت تتبع هذا الشكل! جرّب كتابته بنفسك.';}});
+   tracing=mountTracing(view.querySelector('.lf-tracing-host'),{paths:writingPaths(letter.char,form),mode,draft:progress.drafts[key],onSave:d=>{progress.drafts[key]=d;save();},onComplete:()=>{record('writing',form);const complete=Object.keys(progress.letters[letter.char]?.writing||{}).length===availableForms(letter).length;if(complete)void audio.respond('achievement','complete');else audio.playFeedback('correct');view.querySelector('.lf-feedback').textContent=complete?`رائع! أكملت أشكال حرف ${letter.name}.`:'أكملت تتبع هذا الشكل! جرّب كتابته بنفسك.';}});
   }
   highlightWords();
   if(focusAttribute)view.querySelector(`[${focusAttribute}="${focusValue}"]`)?.focus({preventScroll:true});
@@ -82,25 +85,27 @@ export function createLetterFormsController({showView,onBack}){
   if(b.dataset.mode){mode=b.dataset.mode;render();return;}
   if(b.dataset.answer){
    if(answered)return;attempts++;
-   if(b.dataset.answer===question.form){answered=true;record(attempts===1?'independent':'assisted',`${question.word}:${question.index}`);b.classList.add('lf-correct');feedback('صحيح! هذا هو شكل الحرف في الكلمة.');view.querySelector('[data-action="next-question"]').hidden=false;}
-   else{b.classList.add('lf-retry');b.setAttribute('aria-pressed','false');feedback(`حاول مرة ثانية: ${question.before?'يتصل بما قبله':'لا يتصل بما قبله'}، و${question.after?'يتصل بما بعده':'لا يتصل بما بعده'}.`);}
+   if(b.dataset.answer===question.form){answered=true;record(attempts===1?'independent':'assisted',`${question.word}:${question.index}`);b.classList.add('lf-correct');void audio.respond('correct','correct');feedback('صحيح! هذا هو شكل الحرف في الكلمة.');view.querySelector('[data-action="next-question"]').hidden=false;}
+   else{b.classList.add('lf-retry');b.setAttribute('aria-pressed','false');void audio.respond('wrong','retry');feedback(`حاول مرة ثانية: ${question.before?'يتصل بما قبله':'لا يتصل بما قبله'}، و${question.after?'يتصل بما بعده':'لا يتصل بما بعده'}.`);}
    return;
   }
   switch(b.dataset.action){
-   case 'back':dispose();onBack();break;
-   case 'letters':picker();break;
+   case 'back':audio.stop();dispose();onBack();break;
+   case 'letters':audio.stop();picker();break;
    case 'resume':openLetter(progress.last,true);break;
    case 'next':if(stage===3){openLetter(LETTERS[(LETTERS.indexOf(letter)+1)%LETTERS.length].char);}else{stage++;question=null;exampleIndex=null;render();}break;
    case 'previous':stage=Math.max(0,stage-1);question=null;exampleIndex=null;render();break;
    case 'next-question':question=null;render();break;
    case 'demo':tracing?.demo();break;
    case 'clear':tracing?.clear();feedback(mode==='guided'?'ابدأ من الدائرة واتبع المسار.':'اكتب وقارن بالنموذج.');break;
+   case 'play-letter':void audio.playLetter(letter.audio);break;
+   case 'play-narration':{const status=b.closest('.lf-model')?.querySelector('.lf-audio-status');if(status)status.textContent='جارٍ تشغيل الشرح المسجل…';void audio.playNarration(b.dataset.line).then(played=>{if(status?.isConnected)status.textContent=played?'انتهى الشرح المسجل.':'تسجيل الشرح البشري غير متوفر بعد.';});break;}
    case 'guide':tracing?.showGuide(b.checked);break;
   }
  }
  return {open(){
   if(!document.querySelector('link[data-module-style="letter-forms"]')){const l=document.createElement('link');l.rel='stylesheet';l.href=rootPath+'letter-forms.css';l.dataset.moduleStyle='letter-forms';document.head.append(l);}
-  if(!view){view=document.createElement('section');view.id='khaledLetterFormsView';view.className='view lf-view';view.dir='rtl';document.querySelector('main').append(view);view.addEventListener('click',click);window.addEventListener('pagehide',()=>{tracing?.save();save();});document.addEventListener('visibilitychange',()=>{if(document.hidden){tracing?.save();save();}});}
+  if(!view){view=document.createElement('section');view.id='khaledLetterFormsView';view.className='view lf-view';view.dir='rtl';document.querySelector('main').append(view);view.addEventListener('click',click);window.addEventListener('pagehide',()=>{audio.stop();tracing?.save();save();});document.addEventListener('visibilitychange',()=>{if(document.hidden){audio.stop();tracing?.save();save();}});}
   picker();showView('khaledLetterFormsView');view.querySelector('h1')?.focus();window.scrollTo(0,0);
  }};
 }

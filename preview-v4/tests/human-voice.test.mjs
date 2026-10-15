@@ -51,6 +51,8 @@ test('recording inventory remains available as an optional future source and rel
   assert.match(tool,/createAdvancedKhaledRound/);
   assert.match(tool,/games\.rps\.turn\.yasser/);
   assert.match(tool,/games:xo/);
+  assert.match(tool,/khaled\.letter-forms\.explain\.forms/);
+  assert.match(tool,/khaled\.letter-forms\.feedback\.correct/);
   assert.match(tool,/requireCompleteHumanCoverageForRelease/);
   assert.equal(pkg.scripts['voice:inventory'],'node tools/build-human-voice-corpus.mjs');
   assert.equal(pkg.scripts['voice:release-check'],'node tools/build-human-voice-corpus.mjs --strict');
