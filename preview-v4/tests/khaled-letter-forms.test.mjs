@@ -5,6 +5,7 @@ import {LETTERS,availableForms,connectionAt,examplesFor,loadProgress} from '../s
 import {writingPaths} from '../src/modules/khaled/letter-forms/writing-paths.js';
 import {advanceCheckpoint} from '../src/modules/khaled/letter-forms/tracing.js';
 import {createLetterLessonAudio,LETTER_FORM_NARRATION} from '../src/modules/khaled/letter-forms/lesson-audio.js';
+import {LETTER_VIDEO_AUDIO_CLIPS,LETTER_VIDEO_AUDIO_BY_ID} from '../src/modules/khaled/letter-forms/letter-video-audio-manifest.js';
 import {humanVoiceAssetPath} from '../src/shared/audio/human-voice-assets.js';
 
 test('Arabic neighbours determine forms, including disconnected middle and final letters',()=>{
@@ -40,8 +41,24 @@ test('Activity is linked from Khaled literacy and its dependencies are available
  const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
  const [literacy,sw]=await Promise.all([read('src/modules/khaled/literacy/khaled-literacy.js'),read('service-worker.js')]);
  assert.match(literacy,/id="khaledLetterFormsOpen"/);
- for(const path of ['letter-forms.js','lesson-audio.js','letter-data.js','writing-paths.js','tracing.js','letter-forms.css'])assert.ok(sw.includes('/letter-forms/'+path),path);
+ for(const path of ['letter-forms.js','lesson-audio.js','letter-data.js','letter-video-audio-manifest.js','writing-paths.js','tracing.js','letter-forms.css'])assert.ok(sw.includes('/letter-forms/'+path),path);
  assert.ok(sw.includes('assets/khaled/letter-forms/connection-hands.png'));
+ assert.ok(sw.includes('KHALED_LETTER_VIDEO_AUDIO_ASSETS'));
+});
+
+test('Each Arabic letter has its own extracted voice clip and valid source interval',async()=>{
+ const expected=LETTERS.map(letter=>[letter.char,letter.audio]);
+ assert.deepEqual(LETTER_VIDEO_AUDIO_CLIPS.map(({letter,id})=>[letter,id]),expected);
+ let previousEnd=0;
+ for(const clip of LETTER_VIDEO_AUDIO_CLIPS){
+  assert.ok(clip.start>=previousEnd,clip.id+' intervals do not overlap');
+  assert.ok(clip.end-clip.start>=8,clip.id+' has a usable narration duration');
+  previousEnd=clip.end;
+  const bytes=await readFile(new URL(`../assets/audio/khaled/letter-forms/video/${clip.id}.mp3`,import.meta.url));
+  assert.ok(bytes.length>4096,clip.id+' audio file is present');
+  assert.equal(bytes.toString('ascii',0,3),'ID3',clip.id+' is MP3');
+ }
+ assert.equal(Object.keys(LETTER_VIDEO_AUDIO_BY_ID).length,28);
 });
 
 test('Letter playback uses the existing recorded Arabic-letter assets and feedback stops it',async()=>{
@@ -64,6 +81,21 @@ test('Letter playback uses the existing recorded Arabic-letter assets and feedba
  assert.equal(await audio.playLetter('../sad'),false);
 });
 
+test('Letter-specific video narration plays its matching clip and invalid ids are rejected',async()=>{
+ const created=[];
+ class FakeAudio{
+  constructor(src){this.src=src;created.push(this);}
+  addEventListener(name,handler){if(name==='ended')this.ended=handler;}
+  play(){this.ended?.();}
+  pause(){}
+ }
+ const audio=createLetterLessonAudio({AudioClass:FakeAudio,effects:{correct:()=>0,wrong:()=>0,achievement:()=>0}});
+ assert.equal(await audio.playLetterExplanation('tha'),true);
+ assert.equal(created[0].src,'./assets/audio/khaled/letter-forms/video/tha.mp3');
+ assert.equal(await audio.playLetterExplanation('../tha'),false);
+ assert.equal(await audio.playLetterExplanation('unknown'),false);
+});
+
 test('Human explanations and response lines resolve to the shared recording inventory without TTS',async()=>{
  const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
  const [audio,recordingContract,inventory,controller]=await Promise.all([read('src/modules/khaled/letter-forms/lesson-audio.js'),read('assets/audio/khaled/letter-forms/README.md'),read('tools/build-human-voice-corpus.mjs'),read('src/modules/khaled/letter-forms/letter-forms.js')]);
@@ -79,8 +111,9 @@ test('Human explanations and response lines resolve to the shared recording inve
  for(const [id,line] of Object.entries(LETTER_FORM_NARRATION)){
   assert.ok(inventory.includes(line.text),id+' appears in human recording inventory');
   assert.ok(recordingContract.includes(humanVoiceAssetPath(line.text).split('/').at(-1)),id+' has the correct recording filename');
-  if(['forms','connections','question','writing'].includes(id))assert.ok(controller.includes(`data-line="${id}"`),id+' has a play control');
+  if(['question','writing'].includes(id))assert.ok(controller.includes(`data-line="${id}"`),id+' has a play control');
  }
+ assert.equal((controller.match(/data-action="play-letter-explanation"/g)||[]).length,2,'the per-letter recording is available on the forms and connections stages');
  assert.match(controller,/audio\.respond\('correct','correct'\)/);
  assert.match(controller,/audio\.respond\('wrong','retry'\)/);
 });

@@ -1,5 +1,6 @@
 import { createFeedbackAudio } from '../../../ui/audio/feedback-audio.js';
 import { humanVoiceAssetPath } from '../../../shared/audio/human-voice-assets.js';
+import { LETTER_VIDEO_AUDIO_BY_ID,LETTER_VIDEO_AUDIO_ROOT } from './letter-video-audio-manifest.js';
 
 const LETTER_AUDIO_ROOT='./assets/audio/mashaal/arabic-letters/';
 
@@ -54,6 +55,11 @@ export function createLetterLessonAudio({AudioClass=globalThis.Audio,effects=cre
     return playFile(`${LETTER_AUDIO_ROOT}${letterId}.mp3`);
   }
 
+  async function playLetterExplanation(letterId){
+    if(!/^[a-z]+$/.test(String(letterId||''))||!LETTER_VIDEO_AUDIO_BY_ID[letterId])return false;
+    return playFile(`${LETTER_VIDEO_AUDIO_ROOT}${letterId}.mp3`);
+  }
+
   async function playNarration(lineId){
     const line=LETTER_FORM_NARRATION[lineId];
     return line?playFile(`./${humanVoiceAssetPath(line.text)}`):false;
@@ -78,5 +84,5 @@ export function createLetterLessonAudio({AudioClass=globalThis.Audio,effects=cre
     return token===generation&&spoken;
   }
 
-  return Object.freeze({playLetter,playNarration,playFeedback,respond,stop});
+  return Object.freeze({playLetter,playLetterExplanation,playNarration,playFeedback,respond,stop});
 }
