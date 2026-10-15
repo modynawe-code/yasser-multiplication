@@ -28,11 +28,14 @@ test('Every video explanation has its matching example still for all 28 letters'
  for(const letter of LETTERS){
   const clip=LETTER_VIDEO_AUDIO_BY_ID[letter.audio];
   assert.ok(clip&&clip.letter===letter.char,letter.char+' has a matching video recording');
+  assert.ok(Number.isFinite(clip.imageTime),letter.char+' has a curated source-frame time');
   assert.ok(letter.videoWord,letter.char+' has the example shown in the video');
   assert.ok(Array.from(letter.videoWord).some(char=>letter.char==='ا'?'اأإآ'.includes(char):char===letter.char),letter.char+' occurs in its video example');
   const still=await readFile(new URL(`../assets/images/khaled/letter-forms/video/${letter.audio}.jpg`,import.meta.url));
   assert.ok(still.length>5000,letter.char+' has a usable source-video still');
  }
+ const extractor=await readFile(new URL('../tools/extract-khaled-letter-video-audio.mjs',import.meta.url),'utf8');
+ assert.match(extractor,/clip\.imageTime/,'re-extraction keeps audio and its matched example image together');
 });
 test('Tracing cannot skip to the end or pass by scribbling on a single point',()=>{
  const samples=Array.from({length:50},(_,i)=>({x:i*5,y:100}));
@@ -56,7 +59,7 @@ test('Activity is linked from Khaled literacy and its dependencies are available
  assert.ok(sw.includes('assets/khaled/letter-forms/connection-hands.png'));
  assert.ok(sw.includes('KHALED_LETTER_VIDEO_AUDIO_ASSETS'));
  assert.ok(sw.includes('KHALED_LETTER_VIDEO_STILL_ASSETS'));
- assert.match(sw,/shell-217/);
+ assert.match(sw,/shell-218/);
 });
 
 test('Each Arabic letter has its own extracted voice clip and valid source interval',async()=>{
