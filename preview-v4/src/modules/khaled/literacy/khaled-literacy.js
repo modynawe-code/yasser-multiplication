@@ -33,10 +33,10 @@ function ensureView(){
   view.innerHTML=`
     <div class="khaled-literacy-shell">
       <header class="khaled-literacy-header">
-        <div><div class="kicker">لغتي • أول ابتدائي</div><h1 id="khaledLiteracyTitle">فيديوهات لغتي</h1><p>اختر الدرس وشغّله داخل التطبيق.</p></div>
+        <div><div class="kicker">لغتي • أول ابتدائي</div><h1 id="khaledLiteracyTitle">لغتي</h1><p>تدرّب على الحروف أو اختر درس فيديو.</p></div>
         <button class="icon-btn" id="khaledLiteracyBack" type="button">العودة لمواد خالد</button>
       </header>
-      <div id="khaledLiteracyLibrary"><div class="khaled-literacy-lessons" aria-label="فيديوهات لغتي">${lessonButtons()}</div></div>
+      <div id="khaledLiteracyLibrary"><section class="khaled-literacy-activity-entry"><span class="literacy-letter-mark" aria-hidden="true">صـ</span><div><h2>أشكال الحروف وكتابتها</h2><p>٢٨ حرفًا · اتصال بالأيدي · تدريب كتابة باللمس</p></div><button id="khaledLetterFormsOpen" type="button">ابدأ التدريب</button></section><h2>فيديوهات لغتي</h2><div class="khaled-literacy-lessons" aria-label="فيديوهات لغتي">${lessonButtons()}</div></div>
       <section id="khaledLiteracyWatch" hidden aria-label="مشاهدة الدرس">
       <button id="khaledLiteracyToLessons" class="icon-btn" type="button">← العودة للدروس</button>
       <section class="khaled-literacy-now" aria-live="polite">
@@ -165,10 +165,20 @@ export function bindKhaledLiteracyControls(view){
 
 export function createKhaledLiteracyController({showView,onBack}={}){
   let bound=false;
+  let letterController=null;
   function open(){
     ensureStyle();
     const view=ensureView();
     if(!bound){
+      view.querySelector('#khaledLetterFormsOpen').addEventListener('click',async(event)=>{
+        const button=event.currentTarget;button.disabled=true;
+        try{
+          const {createLetterFormsController}=await import('../letter-forms/letter-forms.js');
+          letterController||=createLetterFormsController({showView,onBack:open});
+          letterController.open();
+        }catch(error){button.textContent='تعذر الفتح؛ اضغط للمحاولة مجددًا';console.error('Letter forms load failed',error);}
+        finally{button.disabled=false;}
+      });
       bindKhaledLiteracyControls(view);
       view.querySelectorAll('[data-literacy-video]').forEach(button=>button.addEventListener('click',()=>selectVideo(view,button.dataset.literacyVideo)));
       view.querySelector('#khaledLiteracyToLessons').addEventListener('click',()=>{
