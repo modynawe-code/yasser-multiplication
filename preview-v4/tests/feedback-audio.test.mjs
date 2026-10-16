@@ -15,5 +15,5 @@ test('feedback sounds stay brief and low gain',()=>{
 });
 
 test('required feedback cues are defined',()=>{
-  assert.deepEqual(Object.keys(SOUND_PATTERNS).sort(),['achievement','correct','wrong']);
+  assert.deepEqual(Object.keys(SOUND_PATTERNS).sort(),['achievement','attention','correct','portal','tap','wrong']);
 });

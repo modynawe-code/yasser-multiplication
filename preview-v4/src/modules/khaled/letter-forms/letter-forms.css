@@ -169,3 +169,28 @@
 .lf-landmark-one:after,.lf-landmark-three:after{width:100px;height:22px;top:20px;left:-4px}
 @keyframes lf-island-launch{0%{transform:translateY(0) scale(1)}38%{transform:translateY(-13px) scale(1.055)}100%{transform:translateY(2px) scale(.97);opacity:.94}}
 @keyframes lf-jump-hop{0%{transform:translateY(18px) scale(.8);opacity:0}35%{transform:translateY(-32px) scale(1.05);opacity:1}75%{transform:translateY(-24px) scale(1)}100%{transform:translateY(4px) scale(.95);opacity:0}}
+
+/* Short game-like teaching motions: hands demonstrate connection, Khaled cues the next action. */
+.lf-reference .lf-hand{transition:transform .25s ease}
+.lf-reference.lf-demo-running.lf-hand-demo-connect .lf-hand.right{animation:lf-hand-in-right .52s cubic-bezier(.2,.8,.3,1) both}
+.lf-reference.lf-demo-running.lf-hand-demo-connect .lf-hand.left{animation:lf-hand-in-left .52s cubic-bezier(.2,.8,.3,1) both}
+.lf-reference.lf-demo-running.lf-hand-demo-separate .lf-hand.right{animation:lf-hand-out-right .52s cubic-bezier(.2,.8,.3,1) both}
+.lf-reference.lf-demo-running.lf-hand-demo-separate .lf-hand.left{animation:lf-hand-out-left .52s cubic-bezier(.2,.8,.3,1) both}
+.lf-reference.lf-demo-running .lf-glyph{animation:lf-glyph-bounce .52s ease-out both}
+.lf-mentor img{transform-origin:50% 100%}
+.lf-mentor-stage-0 img{animation:lf-mentor-point .8s ease-out .12s both}
+.lf-mentor-stage-1 img{animation:lf-mentor-look .85s ease-out .12s both}
+.lf-mentor-stage-2 img{animation:lf-mentor-cheer .75s ease-out .12s both}
+.lf-mentor-stage-3 img{animation:lf-mentor-trace .85s ease-out .12s both}
+.lf-demo-button{min-height:40px!important;padding:6px 12px!important;border-radius:999px!important;background:#eaf7ff!important;color:#1767ac!important;font-size:13px!important}
+.lf-hand-tip{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px}
+@keyframes lf-hand-in-right{0%,100%{transform:translateX(0)}45%{transform:translateX(-17px)}70%{transform:translateX(-13px)}}
+@keyframes lf-hand-in-left{0%,100%{transform:scaleX(-1) translateX(0)}45%{transform:scaleX(-1) translateX(-17px)}70%{transform:scaleX(-1) translateX(-13px)}}
+@keyframes lf-hand-out-right{0%,100%{transform:translateX(0)}45%{transform:translateX(17px)}70%{transform:translateX(13px)}}
+@keyframes lf-hand-out-left{0%,100%{transform:scaleX(-1) translateX(0)}45%{transform:scaleX(-1) translateX(17px)}70%{transform:scaleX(-1) translateX(13px)}}
+@keyframes lf-glyph-bounce{0%,100%{transform:scale(1)}45%{transform:scale(1.035)}70%{transform:scale(.99)}}
+@keyframes lf-mentor-point{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-5px) rotate(-8deg)}68%{transform:translateY(0) rotate(5deg)}}
+@keyframes lf-mentor-look{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-4px) rotate(8deg)}65%{transform:translateY(0) rotate(-6deg)}}
+@keyframes lf-mentor-cheer{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-9px) scale(1.06)}75%{transform:translateY(0) scale(.98)}}
+@keyframes lf-mentor-trace{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-4px) rotate(-6deg)}70%{transform:translateY(0) rotate(4deg)}}
+@media(prefers-reduced-motion:reduce){.lf-reference.lf-demo-running .lf-hand,.lf-reference.lf-demo-running .lf-glyph,.lf-mentor img{animation:none!important}}
