@@ -10,13 +10,15 @@ export const SOUND_PATTERNS={
   achievement:[
     {frequency:520,duration:.07,gain:.024},
     {frequency:660,duration:.08,gain:.027,delay:.055},
-    {frequency:820,duration:.11,gain:.030,delay:.115}
+    {frequency:820,duration:.09,gain:.030,delay:.115},
+    {frequency:880,duration:.14,gain:.028,delay:.19}
   ],
-  tap:[{frequency:520,duration:.025,gain:.012},{frequency:650,duration:.035,gain:.01,delay:.018}],
+  tap:[{frequency:510,duration:.025,gain:.013},{frequency:690,duration:.04,gain:.012,delay:.024}],
   portal:[
     {frequency:360,duration:.06,gain:.014},
     {frequency:540,duration:.07,gain:.018,delay:.045},
-    {frequency:760,duration:.1,gain:.019,delay:.095}
+    {frequency:760,duration:.08,gain:.02,delay:.095},
+    {frequency:880,duration:.11,gain:.016,delay:.15}
   ],
   attention:[
     {frequency:660,duration:.07,gain:.014},
@@ -53,7 +55,8 @@ export function createFeedbackAudio({contextFactory=defaultContextFactory}={}){
       const noteStart=start+(note.delay||0);
       const noteEnd=noteStart+note.duration;
 
-      oscillator.type='sine';
+      // Original game-like electronic tones: bright triangle chimes and a soft sine retry.
+      oscillator.type=patternName==='wrong'?'sine':'triangle';
       oscillator.frequency.setValueAtTime(note.frequency,noteStart);
       gain.gain.setValueAtTime(.0001,noteStart);
       gain.gain.exponentialRampToValueAtTime(note.gain,noteStart+.012);
