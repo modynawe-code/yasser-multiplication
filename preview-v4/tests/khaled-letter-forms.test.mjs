@@ -60,8 +60,10 @@ test('Activity is linked from Khaled literacy and its dependencies are available
  assert.ok(sw.includes('KHALED_LETTER_VIDEO_AUDIO_ASSETS'));
  assert.ok(sw.includes('KHALED_LETTER_VIDEO_STILL_ASSETS'));
  assert.ok(sw.includes('KHALED_LETTER_MASCOT_ASSET'));
+ assert.ok(sw.includes('KHALED_LETTER_WORLD_ASSET'));
  assert.match(sw,/assets\/images\/khaled\/letter-forms\/avatar-block\.webp/);
- assert.match(sw,/shell-219/);
+ assert.match(sw,/assets\/images\/khaled\/letter-forms\/world-sky\.webp/);
+ assert.match(sw,/shell-220/);
 });
 
 test('Each Arabic letter has its own extracted voice clip and valid source interval',async()=>{
@@ -134,6 +136,10 @@ test('Human explanations and response lines resolve to the shared recording inve
  assert.equal((controller.match(/data-action="play-letter-explanation"/g)||[]).length,1,'the source recording has one control in the video example panel');
  assert.equal((controller.match(/\$\{videoExample\(letter\)\}/g)||[]).length,1,'the matching video word cannot be confused with a separate practice example');
  assert.match(controller,/الصورة والتسجيل لهذا المثال من المقطع نفسه/);
+ assert.match(controller,/lf-world-hud/);
+ assert.match(controller,/lf-map-heading/);
+ assert.match(controller,/lf-mentor/);
+ assert.match(controller,/lf-reward-pop/);
  assert.match(controller,/audio\.respond\('correct','correct'\)/);
  assert.match(controller,/audio\.respond\('wrong','retry'\)/);
 });
