@@ -1,0 +1,66 @@
+# One-shot import gate for Mashaal's five-surah offline Quran set.
+name: Import Mashaal Quran Set
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/product-ui-reference-v1
+    paths:
+      - .github/workflows/import-mashaal-al-ikhlas.yml
+      - preview-v4/tools/fetch-mashaal-recitation-set.mjs
+
+permissions:
+  contents: write
+
+jobs:
+  import-official-recitation-set:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout product UI branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/product-ui-reference-v1
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Import five reviewed KFGQPC recitations and Mushaf pages
+        working-directory: preview-v4
+        run: node tools/fetch-mashaal-recitation-set.mjs
+
+      - name: Verify generated Quran set
+        working-directory: preview-v4
+        run: |
+          for surah in 1 111 112 113 114; do
+            grep -q '"surahNumber": '"$surah" src/modules/mashaal/curriculum/recitation-media-data.js
+          done
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-111-al-masad.mp3
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-112-al-ikhlas.mp3
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-113-al-falaq.mp3
+          test -s assets/recitation/ibrahim-al-akhdar-hafs-114-an-nas.mp3
+          test -s assets/recitation/kfqc-hafs-page-1.svg
+          test -s assets/recitation/kfqc-hafs-page-603.svg
+          test -s assets/recitation/kfqc-hafs-page-604.svg
+
+      - name: Run current learning-app regression suite
+        working-directory: preview-v4
+        run: npm test
+
+      - name: Commit verified offline Quran media
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview-v4/assets/recitation/
+          git add preview-v4/src/modules/mashaal/curriculum/recitation-media-data.js
+          if git diff --cached --quiet; then
+            echo "Verified Quran media already matches the branch; nothing to commit."
+          else
+            git commit -m "Add Mashaal verified five-surah Quran media"
+            git push origin HEAD:feature/product-ui-reference-v1
+          fi

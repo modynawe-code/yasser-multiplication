@@ -17,6 +17,7 @@ import {
 } from './renderers.js';
 import { createSceneController } from './visual/scene-controller.js';
 import { createFeedbackAudio } from './audio/feedback-audio.js';
+import { createSpeechService } from '../shared/audio/speech-service.js';
 import { createParentAccessGate } from '../shared/security/parent-access.js';
 
 function show(id){
@@ -45,12 +46,29 @@ export function createAppController({repository}){
   let session=null;
   const visuals=createSceneController();
   const audio=createFeedbackAudio();
+  const speech=createSpeechService();
   const parentAccess=createParentAccessGate();
 
   const persist=()=>repository.save(state);
   const refreshHome=()=>renderHome({state,$,all});
 
+  function setQuestionInteraction(enabled){
+    $('questionCard').setAttribute('aria-busy',String(!enabled));
+    all('#answers .answer').forEach(button=>{button.disabled=!enabled;});
+    $('answerInput').disabled=!enabled;
+    $('submitAnswer').disabled=!enabled;
+  }
+
+  function updateSessionProgress(){
+    const total=Math.max(session?.questions.length||0,1);
+    const completed=Math.min(session?.answers.length||0,total);
+    const progress=Math.round((completed/total)*100);
+    $('sessionProgress').style.width=`${progress}%`;
+    $('sessionProgressTrack').setAttribute('aria-valuenow',String(progress));
+  }
+
   function goHome(){
+    speech.stop();
     document.body.classList.remove('intro-mode','hub-mode','khaled-mode');
     session=null;
     refreshHome();
@@ -70,6 +88,7 @@ export function createAppController({repository}){
   }
 
   function start(mode,customQuestions=null){
+    speech.stop();
     document.body.classList.remove('intro-mode','hub-mode','khaled-mode');
     session=createSession({mode,state,selectedTables:state.selected,customQuestions});
     $('sessionTitle').textContent=mode==='exam'?'الاختبار المكثف':'تدريب اليوم';
@@ -90,20 +109,33 @@ export function createAppController({repository}){
 
     const question=session.questions[session.index];
     const correct=question.table*question.multiplier;
+    const spokenPrompt=`كم ناتج ${question.table} ضرب ${question.multiplier}؟`;
 
     $('sessionMeta').textContent=`${selectedText(state.selected)} • ${session.index+1} من ${session.questions.length}`;
-    $('sessionProgress').style.width=`${(session.index/session.questions.length)*100}%`;
-    $('streakBadge').textContent=`🔥 ${session.streak} متتالية`;
+    $('sessionStep').textContent=`السؤال ${session.index+1} من ${session.questions.length}`;
+    $('sessionFocus').textContent=selectedText(state.selected);
+    updateSessionProgress();
+    $('streakCount').textContent=session.streak;
     $('questionText').textContent=`${question.table} × ${question.multiplier} = ؟`;
     $('feedback').textContent='';
     $('feedback').className='feedback';
+    delete $('questionCard').dataset.feedback;
+    $('questionCard').classList.remove('question-enter');
     $('answers').innerHTML='';
     $('freeAnswer').style.display='none';
+    delete $('answerInput').dataset.outcome;
+    setQuestionInteraction(true);
+
+    setTimeout(()=>{
+      const active=session?.questions?.[session.index];
+      if(active===question)speech.speak({id:`yasser.multiply.${question.table}x${question.multiplier}`,text:spokenPrompt});
+    },180);
 
     const useFree=session.mode==='exam'||session.index%4!==0;
     if(useFree){
       $('freeAnswer').style.display='flex';
       $('answerInput').value='';
+      requestAnimationFrame(()=>$('questionCard').classList.add('question-enter'));
       setTimeout(()=>$('answerInput').focus(),30);
       return;
     }
@@ -115,13 +147,21 @@ export function createAppController({repository}){
       button.onclick=()=>submit(value,button);
       $('answers').appendChild(button);
     });
+    requestAnimationFrame(()=>$('questionCard').classList.add('question-enter'));
   }
 
   function submit(value,button=null){
+    speech.stop();
     const result=submitSessionAnswer({session,state,answer:value});
     if(!result.accepted)return;
 
     persist();
+    setQuestionInteraction(false);
+    updateSessionProgress();
+
+    if(button){
+      button.classList.add('selected');
+    }
 
     if(session.mode==='exam'){
       setTimeout(renderQuestion,150);
@@ -132,20 +172,32 @@ export function createAppController({repository}){
     let visualHold=0;
 
     if(attempt.isCorrect){
-      $('feedback').textContent='ممتاز ✓';
+      $('feedback').textContent='إجابة صحيحة، ممتاز يا ياسر';
       $('feedback').className='feedback good';
+      $('questionCard').dataset.feedback='correct';
       button?.classList.add('good');
+      if(button)button.dataset.outcome='correct';
+      else $('answerInput').dataset.outcome='correct';
       audio.correct();
       visualHold=visuals.render('correct');
     }else{
       $('feedback').textContent=`الصحيح ${attempt.table} × ${attempt.multiplier} = ${attempt.correctAnswer} — برجع لك عليها`;
       $('feedback').className='feedback bad';
+      $('questionCard').dataset.feedback='wrong';
       button?.classList.add('bad');
+      if(button){
+        button.dataset.outcome='wrong';
+        const correctButton=all('#answers .answer').find(item=>Number(item.textContent)===attempt.correctAnswer);
+        if(correctButton){
+          correctButton.classList.add('good');
+          correctButton.dataset.outcome='correct';
+        }
+      }else $('answerInput').dataset.outcome='wrong';
       audio.wrong();
       visualHold=visuals.render('wrong');
     }
 
-    $('streakBadge').textContent=`🔥 ${session.streak} متتالية`;
+    $('streakCount').textContent=session.streak;
 
     const fallbackHold=attempt.isCorrect?1700:2400;
     setTimeout(renderQuestion,(visualHold||fallbackHold)+100);
@@ -154,6 +206,7 @@ export function createAppController({repository}){
   function finish(){
     if(!session)return;
 
+    speech.stop();
     state.sessions.unshift(buildSessionRecord(session));
     state.sessions=state.sessions.slice(0,100);
     persist();
@@ -162,25 +215,32 @@ export function createAppController({repository}){
     const pct=completed?Math.round((session.correct/completed)*100):0;
 
     $('resultPct').textContent=`${pct}%`;
+    $('resultScore').style.setProperty('--score',`${pct}%`);
+    $('resultScore').setAttribute('aria-valuenow',String(pct));
     $('resultCorrect').textContent=session.correct;
     $('resultWrong').textContent=session.wrong;
     $('resultStreak').textContent=session.bestStreak;
-    $('resultTitle').textContent=pct>=90?'ممتاز يا ياسر 🏆':pct>=75?'تقدم ممتاز يا ياسر':'نكمل تدريب ونرفع المستوى';
+    $('resultTitle').textContent=pct>=90?'أبدعت يا ياسر':pct>=75?'تقدم ممتاز يا ياسر':'نكمل تدريب ونرفع المستوى';
+    $('resultSummary').textContent=pct>=90?'أتقنت الجولة بدقة عالية.':pct>=75?'نتيجتك قوية، ومراجعة بسيطة ترفع الإتقان.':'كل محاولة تقربك من الإتقان.';
 
     const weak=getWeakQuestions(session);
     session.lastWeak=weak;
     session.completed=true;
     $('weakTags').innerHTML=weak.length
       ?weak.map(item=>`<span class="tag">${item.table}×${item.multiplier} • ${item.count} خطأ</span>`).join('')
-      :'<span class="tag">بدون أخطاء ✓</span>';
+      :'<span class="tag">أنهيت الجولة بدون أخطاء</span>';
+    $('retryWeak').textContent=weak.length?'تدرب على المسائل الصعبة':'ابدأ جولة جديدة';
 
     refreshHome();
     show('resultView');
     visuals.result(pct);
     audio.achievement();
+    const resultVoice=pct>=90?'ممتاز يا ياسر':pct>=75?'تقدم ممتاز يا ياسر':'نكمل تدريب ونرفع المستوى';
+    speech.speak({id:pct>=90?'yasser.result.excellent':pct>=75?'yasser.result.good':'yasser.result.keep-going',text:resultVoice});
   }
 
   function leave(){
+    speech.stop();
     if(session&&!session.completed&&session.answers.length){
       state.sessions.unshift(buildSessionRecord(session,{incomplete:true}));
       state.sessions=state.sessions.slice(0,100);
@@ -252,7 +312,7 @@ export function createAppController({repository}){
     $('backHome').onclick=goHome;
     $('retryWeak').onclick=()=>{
       const weak=session?.lastWeak||[];
-      if(!weak.length)return goHome();
+      if(!weak.length)return start('practice');
       start('practice',createWeakPracticeQuestions(weak));
     };
 

@@ -1,0 +1,138 @@
+/* Reusable Mashaal interaction engines: touch-first, tablet-safe, with tap alternatives. */
+#mashaalActivityView .mashaal-interaction-host{display:block;width:min(100%,920px);margin:4px auto 8px}
+#mashaalActivityView .mashaal-drop-zone{min-height:128px;padding:10px;border:3px dashed #c9a9c4;border-radius:22px;background:#fff9fd;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;align-items:stretch}
+#mashaalActivityView .mashaal-sequence-slot{position:relative;min-height:102px;border:2px solid #e3d6e0;border-radius:17px;background:#fff;display:grid;place-items:center;padding:5px}
+#mashaalActivityView .mashaal-sequence-slot>span:first-child{font-size:27px;font-weight:950;color:#8c7587}
+#mashaalActivityView .mashaal-sequence-slot>b{position:absolute;top:5px;right:5px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#765276;color:#fff}
+#mashaalActivityView .mashaal-drag-tray{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:10px}
+#mashaalActivityView .mashaal-drag-card{min-width:0;min-height:112px;padding:6px;border:2px solid #dccddd;border-radius:18px;background:#fff;display:grid;gap:4px;place-items:center;touch-action:none;transition:opacity .15s ease,border-color .15s ease}
+#mashaalActivityView .mashaal-drag-card.dragging{z-index:4;border-color:#765276;touch-action:none}
+#mashaalActivityView .mashaal-drag-card:disabled{opacity:.36}
+#mashaalActivityView .mashaal-interaction-card-visual{display:grid;place-items:center;width:100%;height:76px;pointer-events:none}
+#mashaalActivityView .mashaal-interaction-card-visual>*{max-width:100%;max-height:100%}
+#mashaalActivityView .mashaal-interaction-card-label{font-size:16px;font-weight:900;line-height:1.15}
+
+#mashaalActivityView .mashaal-memory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;width:min(100%,660px);margin-inline:auto}
+#mashaalActivityView .mashaal-memory-card{position:relative;min-height:126px;border:2px solid #d9c8d6;border-radius:20px;background:#fff;overflow:hidden}
+#mashaalActivityView .mashaal-memory-back,#mashaalActivityView .mashaal-memory-face{position:absolute;inset:0;display:grid;place-items:center}
+#mashaalActivityView .mashaal-memory-back{font-size:42px;font-weight:950;background:linear-gradient(145deg,#f7eaf4,#eef4ff);color:#765276}
+#mashaalActivityView .mashaal-memory-face{opacity:0;transform:scale(.9);padding:8px}
+#mashaalActivityView .mashaal-memory-card[data-open="true"] .mashaal-memory-back,#mashaalActivityView .mashaal-memory-card[data-matched="true"] .mashaal-memory-back{opacity:0}
+#mashaalActivityView .mashaal-memory-card[data-open="true"] .mashaal-memory-face,#mashaalActivityView .mashaal-memory-card[data-matched="true"] .mashaal-memory-face{opacity:1;transform:none}
+#mashaalActivityView .mashaal-memory-card[data-matched="true"]{border-color:#7bbd9c;background:#effaf5}
+
+#mashaalActivityView .mashaal-trace-board{width:min(100%,700px);margin-inline:auto;border:2px solid #dfd0dc;border-radius:24px;background:#fff;overflow:hidden;touch-action:none}
+#mashaalActivityView .mashaal-trace-svg{display:block;width:100%;height:auto;aspect-ratio:5/3}
+#mashaalActivityView .mashaal-trace-guide{fill:none;stroke:#d6c0d1;stroke-width:26;stroke-linecap:round;stroke-dasharray:4 7}
+#mashaalActivityView .mashaal-trace-trail{fill:none;stroke:#765276;stroke-width:15;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+#mashaalActivityView .mashaal-trace-status{text-align:center;font-size:17px;font-weight:900;margin:7px 0}
+#mashaalActivityView .mashaal-trace-fallback{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-weight:850}
+#mashaalActivityView .mashaal-trace-dots{display:flex;gap:7px;direction:ltr}
+#mashaalActivityView .mashaal-trace-dot{width:46px;height:46px;border-radius:50%;border:2px solid #ccb8c8;background:#fff;font-weight:950}
+#mashaalActivityView .mashaal-trace-dot[data-done="true"]{background:#effaf5;border-color:#71b993;color:#126b4d}
+
+#mashaalActivityView .mashaal-letter-hunt-banner{width:min(100%,720px);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 14px;border-radius:20px;background:linear-gradient(145deg,#fff8fc,#f4f7ff);border:2px solid #eadbe8}
+#mashaalActivityView .mashaal-letter-hunt-banner strong{display:grid;place-items:center;width:72px;height:72px;border-radius:22px;background:#fff;border:2px solid #d9c7d5;font-size:42px;color:#765276}
+#mashaalActivityView .mashaal-letter-hunt-banner span{font-size:18px;font-weight:950}
+#mashaalActivityView .mashaal-letter-hunt-field{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,880px);margin-inline:auto}
+#mashaalActivityView .mashaal-hunt-card{position:relative;min-height:126px;padding:7px;border:2px solid #dfd2dd;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center}
+#mashaalActivityView .mashaal-hunt-card[data-found="true"]{border-color:#71b993;background:#effaf5}
+#mashaalActivityView .mashaal-hunt-card[data-found="true"]::after{content:"✓";position:absolute;top:7px;left:7px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#16815b;color:#fff;font-weight:950}
+#mashaalActivityView .mashaal-hunt-card[data-miss="true"]{animation:mashaalHuntMiss .32s ease;border-color:#d98181;background:#fff2f2}
+#mashaalActivityView .mashaal-hunt-status{text-align:center;font-size:18px;font-weight:950;margin:8px 0 0;min-height:26px}
+
+#mashaalActivityView .mashaal-kitchen-counter{width:max-content;min-width:112px;margin:0 auto 8px;padding:7px 14px;border-radius:999px;background:#fff7fd;border:2px solid #e3d3df;font-size:20px;font-weight:950}
+#mashaalActivityView .mashaal-kitchen-bowl{position:relative;width:min(100%,480px);height:150px;margin:0 auto 12px;border-radius:20px 20px 100px 100px;background:linear-gradient(#fff,#eef3fb);border:4px solid #b7c6dc;border-top-width:7px;overflow:hidden}
+#mashaalActivityView .mashaal-kitchen-bowl::after{content:"";position:absolute;left:12%;right:12%;bottom:8px;height:18px;border-radius:50%;background:rgba(96,119,153,.12)}
+#mashaalActivityView .mashaal-kitchen-bowl-items{position:absolute;inset:18px 22px 24px;display:flex;align-items:flex-end;justify-content:center;gap:8px;flex-wrap:wrap;z-index:2}
+#mashaalActivityView .mashaal-kitchen-placed-item{transform:scale(.9)}
+#mashaalActivityView .mashaal-kitchen-tray{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;width:min(100%,800px);margin-inline:auto}
+#mashaalActivityView .mashaal-kitchen-item{min-height:116px;border:2px solid #dfd2dd;border-radius:20px;background:#fff;display:grid;place-items:center;touch-action:none}
+#mashaalActivityView .mashaal-kitchen-item.dragging{z-index:4;border-color:#765276}
+#mashaalActivityView .mashaal-kitchen-item[data-used="true"]{opacity:.28}
+
+@keyframes mashaalHuntMiss{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+#mashaalActivityView .mashaal-animal-grid,#mashaalActivityView .mashaal-habitat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;width:min(100%,760px);margin-inline:auto}
+#mashaalActivityView .mashaal-habitat-grid{margin-top:14px;padding-top:14px;border-top:2px dashed #dfd1dc}
+#mashaalActivityView .mashaal-animal-card,#mashaalActivityView .mashaal-habitat-card{min-height:128px;border:2px solid #ded0db;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center;padding:7px;touch-action:none}
+#mashaalActivityView .mashaal-animal-card[aria-pressed="true"]{border-width:4px;border-color:#765276;background:#fff7fd}
+#mashaalActivityView .mashaal-animal-card.dragging{z-index:4;border-color:#765276}
+#mashaalActivityView .mashaal-animal-card[data-matched="true"],#mashaalActivityView .mashaal-habitat-card[data-matched="true"]{border-color:#71b993;background:#effaf5;opacity:.72}
+#mashaalActivityView .mashaal-habitat-status,#mashaalActivityView .mashaal-color-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:9px 0 0}
+
+#mashaalActivityView .mashaal-animal-sort-host{width:min(100%,860px)}
+#mashaalActivityView .mashaal-animal-sort-tray{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:min(100%,760px);margin:0 auto 14px}
+#mashaalActivityView .mashaal-animal-sort-card{min-height:118px;padding:7px;border:2px solid #ded0db;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center;touch-action:none}
+#mashaalActivityView .mashaal-animal-sort-card[aria-pressed="true"]{border-width:4px;border-color:#765276;background:#fff7fd}
+#mashaalActivityView .mashaal-animal-sort-card.dragging{z-index:4;border-color:#765276}
+#mashaalActivityView .mashaal-animal-sort-card[data-placed="true"]{opacity:.28}
+#mashaalActivityView .mashaal-animal-sort-bins{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(100%,720px);margin-inline:auto}
+#mashaalActivityView .mashaal-animal-sort-bin{min-height:150px;padding:12px;border:3px dashed #cab8c7;border-radius:24px;background:#fffafc;display:grid;grid-template-rows:auto 1fr;gap:9px;place-items:center}
+#mashaalActivityView .mashaal-animal-sort-bin strong{font-size:20px;color:#664d65}
+#mashaalActivityView .mashaal-animal-sort-bin-items{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;min-height:75px}
+#mashaalActivityView .mashaal-animal-sort-placed{display:grid;place-items:center;width:68px;height:68px;border-radius:16px;background:#fff;border:1px solid #e6dce4}
+#mashaalActivityView .mashaal-animal-sort-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:9px 0 0}
+
+#mashaalActivityView .mashaal-color-goal{display:flex;align-items:center;justify-content:center;gap:12px;width:min(100%,520px);margin:0 auto 8px;font-size:18px;font-weight:950}
+#mashaalActivityView .mashaal-color-beaker{position:relative;width:190px;height:150px;margin:0 auto 12px;border:5px solid #9fb2c8;border-top:0;border-radius:0 0 42px 42px;background:linear-gradient(180deg,rgba(255,255,255,.8),#eef4fb);overflow:hidden}
+#mashaalActivityView .mashaal-color-beaker::before{content:"";position:absolute;left:-14px;right:-14px;top:0;height:12px;border:5px solid #9fb2c8;border-radius:50%;background:#fff}
+#mashaalActivityView .mashaal-color-mixture{position:absolute;inset:25px 12px 12px;display:flex;align-items:flex-end;justify-content:center;gap:4px}
+#mashaalActivityView .mashaal-color-beaker[data-result="orange"]{background:linear-gradient(180deg,#fff7ef,#f2a05d)}
+#mashaalActivityView .mashaal-color-tray{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:min(100%,600px);margin-inline:auto}
+#mashaalActivityView .mashaal-color-pot{min-height:118px;border:2px solid #ddd0da;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center;padding:7px}
+#mashaalActivityView .mashaal-color-pot[aria-pressed="true"]{border-width:4px;border-color:#765276;background:#fff8fc}
+
+#mashaalActivityView .mashaal-story-host{width:min(100%,780px)}
+#mashaalActivityView .mashaal-story-progress{width:max-content;margin:0 auto 8px;padding:5px 12px;border-radius:999px;background:#f3edf6;color:#765276;font-weight:950}
+#mashaalActivityView .mashaal-story-scene{width:min(100%,420px);min-height:180px;margin:0 auto 8px;display:grid;place-items:center;border:2px solid #eadce8;border-radius:26px;background:linear-gradient(145deg,#fffafd,#f5f8ff)}
+#mashaalActivityView .mashaal-story-scene .mashaal-visual{width:128px;height:128px;border-radius:30px}
+#mashaalActivityView .mashaal-story-prompt{text-align:center;font-size:22px;line-height:1.45;margin:8px 0 12px}
+#mashaalActivityView .mashaal-story-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(100%,560px);margin-inline:auto}
+#mashaalActivityView .mashaal-story-choice{min-height:132px;padding:8px;border:2px solid #dfd2dd;border-radius:20px;background:#fff;display:grid;gap:5px;place-items:center}
+#mashaalActivityView .mashaal-story-choice[data-correct="true"]{border-color:#71b993;background:#effaf5}
+#mashaalActivityView .mashaal-story-choice[data-miss="true"]{border-color:#d98181;background:#fff2f2;animation:mashaalHuntMiss .32s ease}
+#mashaalActivityView .mashaal-story-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:8px 0 0}
+
+#mashaalActivityView .mashaal-maze-host{width:min(100%,640px)}
+#mashaalActivityView .mashaal-maze-board{--maze-size:5;display:grid;grid-template-columns:repeat(var(--maze-size),minmax(0,1fr));gap:5px;width:min(92vw,430px);aspect-ratio:1;margin:0 auto 12px;padding:7px;border:3px solid #d8c9d5;border-radius:24px;background:#f8f4f8}
+#mashaalActivityView .mashaal-maze-cell{position:relative;border-radius:10px;background:#fff;display:grid;place-items:center;min-width:0;min-height:0;overflow:hidden}
+#mashaalActivityView .mashaal-maze-cell[data-wall="true"]{background:repeating-linear-gradient(45deg,#9a7892 0 8px,#87647f 8px 16px)}
+#mashaalActivityView .mashaal-maze-cell[data-goal="true"]{background:#eef9fb;box-shadow:inset 0 0 0 2px #78b8c9}
+#mashaalActivityView .mashaal-maze-cell[data-player="true"]{box-shadow:inset 0 0 0 3px #765276;background:#fff8fc}
+#mashaalActivityView .mashaal-maze-cell .mashaal-visual{width:70%;height:70%;min-width:0;min-height:0;border-radius:12px}
+#mashaalActivityView .mashaal-maze-controls{direction:ltr;display:grid;grid-template-columns:repeat(4,64px);justify-content:center;gap:9px}
+#mashaalActivityView .mashaal-maze-move{width:64px;height:58px;border:2px solid #d7c8d3;border-radius:17px;background:#fff;font-size:28px;font-weight:950;color:#5b4860;touch-action:manipulation}
+#mashaalActivityView .mashaal-maze-move:active{transform:scale(.95);background:#f4edf4}
+#mashaalActivityView .mashaal-maze-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:8px 0 0}
+
+#mashaalActivityView .mashaal-picture-puzzle-host{width:min(100%,720px)}
+#mashaalActivityView .mashaal-puzzle-preview{width:118px;height:86px;margin:0 auto 10px;border:2px solid #ddcfda;border-radius:16px;background:#fff;overflow:hidden}
+#mashaalActivityView .mashaal-puzzle-preview img{width:100%;height:100%;object-fit:cover;display:block}
+#mashaalActivityView .mashaal-puzzle-image-controls{display:flex;justify-content:center;margin:-2px auto 10px}
+#mashaalActivityView .mashaal-puzzle-next-image{min-width:140px;min-height:44px}
+#mashaalActivityView .mashaal-picture-puzzle-board{--puzzle-cols:2;--puzzle-rows:2;display:grid;grid-template-columns:repeat(var(--puzzle-cols),minmax(0,1fr));grid-template-rows:repeat(var(--puzzle-rows),minmax(0,1fr));gap:6px;width:min(82vw,420px);aspect-ratio:1;margin:0 auto 10px;padding:7px;border:3px solid #d8c9d5;border-radius:24px;background:#f6f1f6}
+#mashaalActivityView .mashaal-picture-puzzle-tile{min-width:0;min-height:0;border:2px solid #fff;border-radius:14px;background-repeat:no-repeat;background-color:#fff;box-shadow:0 5px 12px rgba(67,48,75,.12);touch-action:manipulation}
+#mashaalActivityView .mashaal-picture-puzzle-tile[data-selected="true"]{outline:5px solid #765276;outline-offset:2px;transform:scale(.96)}
+#mashaalActivityView .mashaal-picture-puzzle-status{text-align:center;font-size:18px;font-weight:950;min-height:28px;margin:8px 0 0}
+
+@media(max-width:760px){
+  #mashaalActivityView .mashaal-drop-zone,#mashaalActivityView .mashaal-drag-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-letter-hunt-field,#mashaalActivityView .mashaal-kitchen-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-animal-grid,#mashaalActivityView .mashaal-habitat-grid{grid-template-columns:1fr}
+  #mashaalActivityView .mashaal-color-tray{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-story-choices{grid-template-columns:1fr 1fr}
+  #mashaalActivityView .mashaal-memory-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-letter-hunt-field,#mashaalActivityView .mashaal-kitchen-tray{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-animal-grid,#mashaalActivityView .mashaal-habitat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:430px){
+  #mashaalActivityView .mashaal-memory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-animal-sort-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mashaalActivityView .mashaal-animal-sort-bins{grid-template-columns:1fr}
+  #mashaalActivityView .mashaal-drop-zone,#mashaalActivityView .mashaal-drag-tray{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  #mashaalActivityView .mashaal-memory-face,#mashaalActivityView .mashaal-drag-card{transition:none!important}
+  #mashaalActivityView .mashaal-hunt-card[data-miss="true"],#mashaalActivityView .mashaal-story-choice[data-miss="true"]{animation:none!important}
+}

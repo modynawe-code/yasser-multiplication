@@ -1,0 +1,1 @@
+Mashaal data files contain curated curriculum metadata and child-facing labels. Detailed instructional content must keep source provenance and release status separate from unverified drafts.

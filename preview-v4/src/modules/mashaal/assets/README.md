@@ -1,0 +1,1 @@
+Mashaal artwork is intentionally isolated from curriculum and logic. Approved high-resolution character assets can be added later without changing learner/curriculum state.

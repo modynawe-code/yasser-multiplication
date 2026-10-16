@@ -25,7 +25,11 @@ function formatSessionDate(value){
 export function selectedText(selected){return selected.map(n=>`جدول ${n}`).join(' + ');}
 
 export function renderHome({state,$,all}){
-  all('.table-chip').forEach(button=>button.classList.toggle('selected',state.selected.includes(Number(button.dataset.table))));
+  all('.table-chip').forEach(button=>{
+    const selected=state.selected.includes(Number(button.dataset.table));
+    button.classList.toggle('selected',selected);
+    button.setAttribute('aria-pressed',String(selected));
+  });
   $('focusSummary').textContent=selectedText(state.selected);
   $('miniAttempts').textContent=state.totalAttempts;
   $('miniErrors').textContent=state.totalWrong;

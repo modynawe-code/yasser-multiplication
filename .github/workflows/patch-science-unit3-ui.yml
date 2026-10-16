@@ -1,0 +1,46 @@
+name: Patch Science Unit 3 UI
+
+on:
+  push:
+    branches: [feature/product-ui-reference-v1]
+    paths:
+      - '.github/workflows/patch-science-unit3-ui.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/product-ui-reference-v1
+      - name: Patch science UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('preview-v4/src/modules/yasser/science/yasser-science.js')
+          s=p.read_text(encoding='utf-8')
+          old="import {YASSER_SCIENCE_UNIT2_VISUAL_ASSETS} from './science-unit2-visuals.generated.js';"
+          new=old+"\nimport {YASSER_SCIENCE_UNIT3_VISUAL_ASSETS} from './science-unit3-visuals.generated.js';"
+          if 'YASSER_SCIENCE_UNIT3_VISUAL_ASSETS' not in s:
+              s=s.replace(old,new)
+          old_assets="const SCIENCE_ASSETS=Object.freeze({...YASSER_SCIENCE_ASSETS,...YASSER_SCIENCE_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT2_VISUAL_ASSETS});"
+          new_assets="const SCIENCE_ASSETS=Object.freeze({...YASSER_SCIENCE_ASSETS,...YASSER_SCIENCE_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT2_VISUAL_ASSETS,...YASSER_SCIENCE_UNIT3_VISUAL_ASSETS});"
+          s=s.replace(old_assets,new_assets)
+          old_label="document.getElementById('scienceChapterName').textContent=chapter.label.replace('الفصل 3:','الفصل الثالث —').replace('الفصل 1:','الفصل الأول —');"
+          new_label="document.getElementById('scienceChapterName').textContent=chapter.label.replace('الفصل 1:','الفصل الأول —').replace('الفصل 2:','الفصل الثاني —').replace('الفصل 3:','الفصل الثالث —').replace('الفصل 4:','الفصل الرابع —').replace('الفصل 5:','الفصل الخامس —').replace('الفصل 6:','الفصل السادس —');"
+          s=s.replace(old_label,new_label)
+          if 'YASSER_SCIENCE_UNIT3_VISUAL_ASSETS' not in s or 'الفصل الخامس —' not in s:
+              raise SystemExit('Unit 3 UI patch did not apply')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview-v4/src/modules/yasser/science/yasser-science.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "feat(science): connect unit 3 visuals to Yasser UI"
+          git push origin HEAD:feature/product-ui-reference-v1

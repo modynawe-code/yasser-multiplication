@@ -1,0 +1,1 @@
+Mashaal application code composes KG3 skills with reusable activity engines. It must not duplicate Yasser/Khaled session engines or expose percentage/error pressure in child-facing UI.

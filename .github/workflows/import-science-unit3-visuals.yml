@@ -1,0 +1,40 @@
+name: Import Science Unit 3 Visuals
+
+on:
+  push:
+    branches: [feature/product-ui-reference-v1]
+    paths:
+      - 'preview-v4/tools/import-science-unit3-visuals.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/product-ui-reference-v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install visual extraction dependencies
+        run: pip install pymupdf pillow requests
+      - name: Extract verified Unit 3 visuals
+        run: python preview-v4/tools/import-science-unit3-visuals.py
+      - name: Upload crop review sheet
+        uses: actions/upload-artifact@v4
+        with:
+          name: science-unit3-crop-review
+          path: /tmp/science-unit3-crop-review.jpg
+          retention-days: 3
+      - name: Commit generated visual assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview-v4/assets/science/yasser/unit3 preview-v4/src/modules/yasser/science/science-unit3-visuals.generated.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "feat(science): import verified unit 3 visual assets"
+          git push origin HEAD:feature/product-ui-reference-v1

@@ -4,8 +4,8 @@ import { setVisualImage, setCompositeImage, preloadVisualAssets } from './charac
 const TARGETS={
   intro:{yasser:'introYasser',assistant:'introAssistant'},
   home:{yasser:'homeYasser',assistant:'homeAssistant'},
-  learn:{yasser:'learnYasser',assistant:'learnAssistant'},
-  session:{yasser:'sessionYasser',assistant:'sessionAssistant'},
+  learn:{yasser:'learnYasser',assistant:'learnAssistant',composite:'learnComposite'},
+  session:{yasser:'sessionYasser',assistant:'sessionAssistant',composite:'sessionComposite'},
   result:{yasser:'resultYasser',assistant:'resultAssistant',composite:'resultCelebration'}
 };
 
@@ -130,6 +130,7 @@ export function createSceneController({getElement=document.getElementById.bind(d
 
   function warm(){
     preloadVisualAssets([
+      {character:'yasser',state:'welcome'},
       {character:'yasser',state:'encourage'},
       {character:'yasser',state:'thinking'},
       {character:'yasser',state:'celebrate'},
@@ -137,6 +138,8 @@ export function createSceneController({getElement=document.getElementById.bind(d
       {character:'assistant',state:'idle'},
       {character:'assistant',state:'thinking'},
       {character:'assistant',state:'celebrate'},
+      {group:'composite',state:'thinking'},
+      {group:'composite',state:'correct'},
       {group:'composite',state:'celebration'}
     ]);
   }

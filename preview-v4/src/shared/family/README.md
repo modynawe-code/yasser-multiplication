@@ -1,0 +1,1 @@
+Family composition reads learner and curriculum registries; it does not own child-specific learning logic.

@@ -33,3 +33,17 @@ test('Khaled feedback is announced accessibly and touch layout has Galaxy Tab la
   assert.match(css,/@media \(orientation:landscape\) and \(min-width:700px\) and \(max-height:900px\)/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
+
+test('Khaled reuses semantic answer, progress and completion states',async()=>{
+  const shell=await read('src/modules/hub/learning-shell.js');
+  const controller=await read('src/modules/khaled/ui/khaled-controller.js');
+  const css=await read('src/modules/khaled/ui/khaled-device-hardening.css');
+  assert.match(shell,/id="khaledSessionProgressTrack" role="progressbar"[^>]*aria-valuenow="0"/);
+  assert.match(shell,/id="khaledResultScore" role="progressbar"/);
+  assert.match(controller,/updateProgress\(session\.index\+1\)/);
+  assert.match(controller,/button\.dataset\.outcome='correct'/);
+  assert.match(controller,/button\.dataset\.outcome='wrong'/);
+  assert.match(controller,/khaledResultScore[^\n]*--score/);
+  assert.match(css,/data-outcome="correct"/);
+  assert.match(css,/data-feedback="wrong"/);
+});

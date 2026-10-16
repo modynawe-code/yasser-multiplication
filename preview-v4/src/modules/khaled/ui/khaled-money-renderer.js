@@ -9,7 +9,7 @@ function ensureStyle(){
   document.head.appendChild(link);
 }
 
-const TYPES=Object.freeze(['money-recognition','count-money','money-model','equal-money-amounts','use-money']);
+const TYPES=Object.freeze(['money-recognition','count-money','money-model','equal-money-amounts','use-money','compare-money-amounts','money-can-buy','money-change']);
 export function isMoneyQuestion(question){return TYPES.includes(question?.type);}
 
 function moneyPiece(value){
@@ -30,6 +30,9 @@ function optionButton({answers,option,submitAnswer}){
   button.onclick=()=>submitAnswer(option.value,button);
   answers.appendChild(button);
 }
+function clickableMoneySide({value,label,coins,submitAnswer}){
+  return `<button class="khaled-money-side" data-answer-value="${value}" aria-label="${label}">${moneySet(coins)}</button>`;
+}
 
 export function renderMoneyQuestion({question,visual,answers,createAnswerButton,submitAnswer}){
   ensureStyle();
@@ -45,6 +48,15 @@ export function renderMoneyQuestion({question,visual,answers,createAnswerButton,
   }else if(question.type==='use-money'){
     visual.innerHTML=`<div class="khaled-price-tag"><small>السعر</small><strong>${question.price}</strong><span>ريال</span></div>`;
     question.options.forEach(option=>optionButton({answers,option,submitAnswer}));
+  }else if(question.type==='compare-money-amounts'){
+    visual.innerHTML=`<div class="khaled-money-compare">${clickableMoneySide({value:'left',label:`المبلغ الأيسر ${question.leftAmount} ريال`,coins:question.left,submitAnswer})}<span class="khaled-money-versus">أكبر؟</span>${clickableMoneySide({value:'right',label:`المبلغ الأيمن ${question.rightAmount} ريال`,coins:question.right,submitAnswer})}</div>`;
+    visual.querySelectorAll('[data-answer-value]').forEach(button=>button.onclick=()=>submitAnswer(button.dataset.answerValue,button));
+  }else if(question.type==='money-can-buy'){
+    visual.innerHTML=`<div class="khaled-money-story"><section><small>معك</small>${moneySet(question.coins)}</section><div class="khaled-price-tag compact"><small>السعر</small><strong>${question.price}</strong><span>ريال</span></div></div>`;
+    question.options.forEach(option=>answers.appendChild(createAnswerButton(option.value,option.label)));
+  }else if(question.type==='money-change'){
+    visual.innerHTML=`<div class="khaled-money-story"><section><small>دفعت</small>${moneySet(question.paidCoins)}</section><div class="khaled-price-tag compact"><small>السعر</small><strong>${question.price}</strong><span>ريال</span></div></div>`;
+    question.options.forEach(value=>answers.appendChild(createAnswerButton(value,`${value} ريال`)));
   }
   hydrate(visual);
   hydrate(answers);

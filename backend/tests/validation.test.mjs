@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateAttemptBatch, validateAttemptPayload, validateSessionPayload } from '../src/validation.mjs';
+import { validateAttemptBatch, validateAttemptPayload, validateEvidenceBatch, validateEvidencePayload, validateSessionPayload } from '../src/validation.mjs';
 
 const valid={attemptId:'kha-1',learnerId:'khaled',skillId:'numbers-0-5',questionId:'q1',questionType:'count-select',answer:2,correctAnswer:3,isCorrect:false,createdAt:'2026-09-05T17:00:00.000Z'};
 
-test('attempt validation accepts only known learner slugs and bounded payloads',()=>{
+test('attempt validation accepts safe generic learner slugs and bounded payloads',()=>{
   assert.equal(validateAttemptPayload(valid).ok,true);
-  assert.equal(validateAttemptPayload({...valid,learnerId:'someone-else'}).ok,false);
+  assert.equal(validateAttemptPayload({...valid,learnerId:'mashaal'}).ok,true);
+  assert.equal(validateAttemptPayload({...valid,learnerId:'future-child'}).ok,true);
+  assert.equal(validateAttemptPayload({...valid,learnerId:'Bad/Slug'}).ok,false);
   assert.equal(validateAttemptPayload({...valid,createdAt:'not-a-date'}).ok,false);
   assert.equal(validateAttemptPayload({...valid,responseMs:-1}).ok,false);
 });
@@ -23,7 +25,27 @@ test('attempt sync batch has a hard request-size count limit',()=>{
   assert.equal(validateAttemptBatch({attempts:Array.from({length:251},(_,i)=>({...valid,attemptId:`x-${i}`}))}).ok,false);
 });
 
-test('learning session validation rejects unknown learner identity',()=>{
-  assert.equal(validateSessionPayload({sessionId:'s1',learnerId:'yasser',total:10}).ok,true);
-  assert.equal(validateSessionPayload({sessionId:'s1',learnerId:'intruder',total:10}).ok,false);
+test('generic learning evidence accepts safe child-owned identities and bounded payloads',()=>{
+  const evidence={evidenceId:'ev-1',learnerId:'mashaal',skillId:'count-and-quantity',type:'activity-completion',payload:{completed:true},createdAt:'2026-09-08T05:00:00.000Z'};
+  assert.equal(validateEvidencePayload(evidence).ok,true);
+  assert.equal(validateEvidencePayload({...evidence,learnerId:'future-child',evidenceId:'ev-2'}).ok,true);
+  assert.equal(validateEvidencePayload({...evidence,learnerId:'../bad'}).ok,false);
+  assert.equal(validateEvidenceBatch({evidence:[evidence]}).ok,true);
+  assert.equal(validateEvidenceBatch({evidence:Array.from({length:251},(_,i)=>({...evidence,evidenceId:`ev-${i}`}))}).ok,false);
+});
+
+test('learning session validation accepts exact payloads and remains compatible with legacy clients',()=>{
+  const exact={sessionId:'s1',learnerId:'yasser',total:10,session:{endedAt:'2026-09-08T10:00:00Z',mode:'practice',completed:10,masteryScore:90}};
+  const validated=validateSessionPayload(exact);
+  assert.equal(validated.ok,true);
+  assert.equal(JSON.parse(validated.value.sessionJson).masteryScore,90);
+  assert.equal(validateSessionPayload({sessionId:'s2',learnerId:'mashaal',total:4}).ok,true);
+  assert.equal(validateSessionPayload({sessionId:'s3',learnerId:'future-child',total:4}).ok,true);
+  assert.equal(validateSessionPayload({sessionId:'s4',learnerId:'../intruder',total:10}).ok,false);
+});
+
+test('learning session validation rejects oversized exact payloads',()=>{
+  const result=validateSessionPayload({sessionId:'huge',learnerId:'yasser',session:{text:'x'.repeat(50001)}});
+  assert.equal(result.ok,false);
+  assert.equal(result.error,'session_payload_too_large');
 });

@@ -9,13 +9,14 @@ test('root contains no unused legacy app bundle or stylesheet',async()=>{
   await assert.rejects(access(rootUrl('style.css')));
 });
 
-test('repository documents main as the only current source of truth and release gates',async()=>{
+test('repository documents main as source of truth and current production release gates',async()=>{
   const readme=await readFile(rootUrl('README.md'),'utf8');
   const status=await readFile(rootUrl('docs/PROJECT-STATUS.md'),'utf8');
   assert.match(readme,/preview-v4\//);
   assert.match(status,/`main` is the only current source of truth/);
   assert.match(status,/Seven approved original Khaled PNG assets/);
   assert.doesNotMatch(status,/Original Khaled PNG binaries/);
-  assert.match(status,/Cloud production deployment/);
+  assert.match(status,/Cloudflare Worker \+ D1 production backend is live/);
+  assert.match(status,/Production smoke verification/);
   assert.match(status,/Physical Galaxy Tab validation/);
 });

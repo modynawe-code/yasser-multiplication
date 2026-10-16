@@ -1,0 +1,329 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
+
+test('games platform is composed as an isolated feature module',async()=>{
+  const main=await read('src/main.js');
+  assert.match(main,/createGamesController/);
+  assert.match(main,/createGameLearningAdapter/);
+  assert.match(main,/learningAdapter:gameLearning/);
+  assert.match(main,/games\.start\(\)/);
+  assert.match(main,/games\?\.leave\(\)/);
+});
+
+test('games shell exposes a clear registry-hydrated local vs online XO lobby without learner hardcoding',async()=>{
+  const shell=await read('src/modules/games/ui/games-shell.js');
+  assert.match(shell,/gamesOpenBtn/);
+  assert.match(shell,/id="gamesHomeView"/);
+  assert.match(shell,/اختر اللعبة اللي تبغاها وابدأ التحدي/);
+  assert.doesNotMatch(shell,/النظام قابلًا للتوسع/);
+  assert.match(shell,/id="xoLobbyView"/);
+  assert.match(shell,/على نفس الجهاز/);
+  assert.match(shell,/اختاروا لاعبين/);
+  assert.match(shell,/data-xo-lobby-mode-button="local"/);
+  assert.match(shell,/data-xo-lobby-mode-button="online"/);
+  assert.match(shell,/data-xo-lobby-panel="online"[^>]*hidden/);
+  assert.match(shell,/مين يلعب من هذا الجهاز/);
+  assert.match(shell,/id="xoLocalPlayers"/);
+  assert.match(shell,/id="xoOnlinePlayers"/);
+  assert.match(shell,/id="xoLocalStart"/);
+  assert.match(shell,/id="xoOnlineCreate"/);
+  assert.match(shell,/id="xoOnlineJoin"/);
+  assert.match(shell,/maxlength="6"/);
+  assert.match(shell,/id="xoGameView"/);
+  assert.match(shell,/id="xoMatchTitle"/);
+  assert.match(shell,/data-xo-player-slot="0"/);
+  assert.match(shell,/data-xo-player-slot="1"/);
+  assert.match(shell,/class="xo-layout"/);
+  assert.match(shell,/id="xoChallenge"/);
+  assert.match(shell,/id="xoHearChallenge"/);
+  assert.match(shell,/games-open-family\.css/);
+  assert.doesNotMatch(shell,/assets\/visual\/original\/yasser/);
+  assert.doesNotMatch(shell,/assets\/visual\/original\/khaled/);
+  assert.doesNotMatch(shell,/data-xo-learner="(?:yasser|khaled)"/);
+  assert.doesNotMatch(shell,/تُحفظ المحاولات التعليمية/);
+});
+
+test('family history uses one shared code instead of email and password',async()=>{
+  const shell=await read('src/modules/games/ui/games-shell.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  assert.match(shell,/id="gamesHistoryFamilyCode"/);
+  assert.match(shell,/إنشاء رمز جديد/);
+  assert.match(shell,/ما يحتاج بريد ولا كلمة مرور/);
+  assert.doesNotMatch(shell,/gamesHistoryEmail|gamesHistoryPassword|بريد ولي الأمر/);
+  assert.match(controller,/pairFamilyCode/);
+  assert.match(controller,/createAndPairFamily/);
+  assert.match(controller,/copyFamilyCode/);
+});
+
+test('game participant registry owns optional approved artwork while the XO shell stays learner-neutral',async()=>{
+  const registry=await read('src/modules/games/core/game-participant-registry.js');
+  assert.match(registry,/listLearnerProfiles/);
+  assert.match(registry,/getLearnerProfile/);
+  assert.match(registry,/createPlayerContext/);
+  assert.match(registry,/presentation\?\.symbol/);
+  assert.match(registry,/presentation\?\.avatar/);
+  assert.match(registry,/assets\/visual\/original\/yasser\/welcome\.png/);
+  assert.match(registry,/assets\/visual\/original\/khaled\/khaled-point-thumbsup\.png/);
+  assert.match(registry,/yasser\/celebrate\.png/);
+  assert.match(registry,/khaled\/khaled-celebration\.png/);
+  assert.match(registry,/avatar=artwork\.avatar\|\|profileAvatar\|\|null/);
+});
+
+test('XO controller uses shared player eligibility, online room and learning boundaries without learner-controller coupling',async()=>{
+  const controller=await read('src/modules/games/games-controller.js');
+  assert.match(controller,/getGameParticipant/);
+  assert.match(controller,/createGamePlayerService/);
+  assert.match(controller,/gamePlayers\.listEligible/);
+  assert.match(controller,/gameParticipantMarkup/);
+  assert.match(controller,/createGamePlayerService\(\{learningAdapter\}\)/);
+  assert.match(controller,/data-xo-local-learner/);
+  assert.match(controller,/data-xo-online-learner/);
+  assert.match(controller,/createXoState/);
+  assert.match(controller,/passXoTurn/);
+  assert.match(controller,/playXoMove/);
+  assert.match(controller,/createGameRoomClient/);
+  assert.match(controller,/createXoOnlineSession/);
+  assert.match(controller,/normalizeOnlineXoRoom/);
+  assert.match(controller,/createSpeechService/);
+  assert.match(controller,/learningAdapter\?\.recordChallenge/);
+  assert.match(controller,/onlineSession\.hasResume\(\)/);
+  assert.match(controller,/onlineSession\.resume\(\)/);
+  assert.match(controller,/بانتظار اللاعب الثاني…/);
+  assert.match(controller,/انتظر شوي…/);
+  assert.match(controller,/rematchReady/);
+  assert.match(controller,/xoReset.*hidden/);
+  assert.match(controller,/xoPlayAgain/);
+  assert.doesNotMatch(controller,/players:\s*\['yasser','khaled'\]/);
+  assert.doesNotMatch(controller,/اختر ياسر أو خالد/);
+  assert.doesNotMatch(controller,/khaled-controller/);
+  assert.doesNotMatch(controller,/app-controller/);
+  assert.doesNotMatch(controller,/local-storage-repository/);
+});
+
+test('family picture puzzle is launched in the browser and no longer links to an APK',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  const serviceWorker=await read('service-worker.js');
+  const puzzle=await read('src/modules/games/puzzle/puzzle-controller.js');
+  assert.match(catalog,/family-pixel-puzzle/);
+  assert.match(catalog,/تركيب الصور/);
+  assert.match(catalog,/داخل الموقع/);
+  assert.match(catalog,/puzzle-controller\.js/);
+  assert.match(controller,/puzzleController\.start\(\)/);
+  assert.match(puzzle,/pointerdown/);
+  assert.match(puzzle,/family-pixel-puzzle/);
+  assert.doesNotMatch(catalog,/تحميل مباشر/);
+  assert.doesNotMatch(controller,/Family_Pixel_Puzzle_0\.41\.apk/);
+  assert.doesNotMatch(serviceWorker,/isDirectApkDownload/);
+});
+
+test('RPS is lazy-loaded as an independent fun-game module',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  const shell=await read('src/modules/games/rps/rps-shell.js');
+  assert.match(catalog,/rock-paper-scissors/);
+  assert.match(catalog,/load:\(\)=>import\('\.\/rps\/rps-controller\.js'\)/);
+  assert.match(controller,/gameRegistry\.get\('rock-paper-scissors'\)/);
+  assert.match(controller,/rpsController\.start\(\)/);
+  assert.match(shell,/id="rpsGameView"/);
+  assert.match(shell,/أول لاعب يجمع 3 نقاط يفوز/);
+  assert.match(shell,/data-rps-choice="rock"/);
+  assert.match(shell,/data-rps-choice="paper"/);
+  assert.match(shell,/data-rps-choice="scissors"/);
+});
+
+test('RPS presentation is a full arena rather than a page card',async()=>{
+  const shell=await read('src/modules/games/rps/rps-shell.js');
+  const controller=await read('src/modules/games/rps/rps-controller.js');
+  const css=await read('src/modules/games/rps/rps.css');
+  assert.match(shell,/class="rps-hud"/);
+  assert.match(shell,/class="rps-arena-grid"/);
+  assert.match(shell,/class="rps-turn-player"/);
+  assert.match(shell,/class="rps-handoff-visual"/);
+  assert.match(shell,/class="rps-battle"/);
+  assert.match(shell,/id="rpsPointPop"/);
+  assert.match(shell,/id="rpsFinalScore"/);
+  assert.match(controller,/setStageState\('choosing'\)/);
+  assert.match(controller,/setStageState\('handoff'\)/);
+  assert.match(controller,/setStageState\('reveal'\)/);
+  assert.match(controller,/setStageState\('finish'\)/);
+  assert.match(controller,/createRpsAudio/);
+  assert.doesNotMatch(controller,/createSpeechService/);
+  assert.match(css,/height:100dvh/);
+  assert.match(css,/width:min\(1180px,100%\)/);
+  assert.match(css,/rpsMoveInLeft/);
+  assert.match(css,/rpsMoveInRight/);
+  assert.match(css,/rpsImpact/);
+});
+
+test('XO tablet landscape is one-screen and lobby is compact at laptop/tablet heights',async()=>{
+  const css=await read('src/modules/games/ui/games.css');
+  const openFamilyCss=await read('src/modules/games/ui/games-open-family.css');
+  assert.match(css,/body\.games-mode \.topbar\{display:none\}/);
+  assert.match(css,/body\.xo-game-mode\{overflow:hidden\}/);
+  assert.match(css,/height:100dvh/);
+  assert.match(css,/grid-template-columns:minmax\(340px/);
+  assert.match(css,/\.xo-token\{width:82%;height:82%/);
+  assert.match(css,/\.xo-lobby-shell\{height:100dvh/);
+  assert.match(css,/\.xo-local-choice/);
+  assert.match(openFamilyCss,/xo-local-players/);
+  assert.match(openFamilyCss,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(openFamilyCss,/@media\(orientation:landscape\) and \(min-width:850px\) and \(max-height:820px\)/);
+});
+
+test('family Monopoly is advertised and wired for online play with offline assets',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
+  const onlineSession=await read('src/modules/games/monopoly/monopoly-online-session.js');
+  const serviceWorker=await read('service-worker.js');
+  assert.match(catalog,/id:'family-monopoly',[\s\S]*?playModes:\['local','online'\],[\s\S]*?networkMode:'turn-based'/);
+  assert.match(controller,/id="monoCreateRoom"/);
+  assert.match(controller,/id="monoJoinRoom"/);
+  assert.match(controller,/function startOnlineRoom\(\)/);
+  assert.match(controller,/data-action="build"/);
+  assert.match(onlineSession,/gameId:'family-monopoly'/);
+  for(const path of ['src/modules/games/monopoly/monopoly-engine.js','src/modules/games/monopoly/monopoly-controller.js','src/modules/games/monopoly/monopoly-online-session.js'])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
+});
+
+test('PWA shell includes resumable games, registry participants and the shared natural voice architecture',async()=>{
+  const serviceWorker=await read('service-worker.js');
+  assert.match(serviceWorker,/shell-\d+/);
+  for(const path of [
+    'src/shared/audio/human-voice-assets.js',
+    'src/shared/audio/human-voice-policy.js',
+    'src/shared/audio/natural-voice-profile.js',
+    'src/shared/audio/voice-manifest.js',
+    'src/shared/audio/voice-service.js',
+    'src/shared/audio/providers/local-audio-provider.js',
+    'src/shared/audio/providers/cloud-tts-provider.js',
+    'src/shared/audio/providers/native-tts-provider.js',
+    'src/shared/audio/providers/browser-tts-provider.js',
+    'src/shared/audio/speech-service.js',
+    'src/modules/games/games-controller.js',
+    'src/modules/games/core/game-participant-registry.js',
+    'src/modules/games/learning/game-learning-providers.js',
+    'src/modules/games/online/game-room-client.js',
+    'src/modules/games/online/game-room-resume-store.js',
+    'src/modules/games/xo/xo-online-session.js',
+    'src/modules/games/ui/games-shell.js',
+    'src/modules/games/ui/games.css',
+    'src/modules/games/ui/games-open-family.css',
+    'src/modules/games/xo/xo-engine.js',
+    'src/modules/games/rps/rps-engine.js',
+    'src/modules/games/rps/rps-graphics.js',
+    'src/modules/games/rps/rps-audio.js',
+    'src/modules/games/rps/rps-controller.js',
+    'src/modules/games/rps/rps-shell.js',
+    'src/modules/games/rps/rps.css',
+    'src/modules/games/puzzle/puzzle-engine.js',
+    'src/modules/games/puzzle/puzzle-controller.js',
+    'src/modules/games/puzzle/puzzle-shell.js',
+    'src/modules/games/puzzle/puzzle.css'
+  ])assert.ok(serviceWorker.includes(`./${path}`),`missing ${path}`);
+});
+
+test('Monopoly retains board alignment and readable event controls with interactive presentation',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
+  const engine=await read('src/modules/games/monopoly/monopoly-engine.js');
+  assert.match(catalog,/id:'family-monopoly'/);
+  assert.match(engine,/export const BOARD=freeze\(\[/);
+  assert.match(engine,/property\('نيوم'/);
+  assert.match(controller,/#monopolyGameView \[hidden\]\{display:none!important\}/);
+  assert.match(controller,/\.mono-board-wrap\{width:min\(100vw,100dvh\);height:min\(100vw,100dvh\)/);
+  assert.match(controller,/id="monoControlPanel"/);
+  assert.match(controller,/\.mono-control-panel\{width:min\(100%,1000px\)/);
+  assert.match(controller,/\.mono-overlay\{position:absolute/);
+  assert.match(controller,/\.mono-game\.overlay-open::before\{display:none\}/);
+  assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto/);
+  assert.match(controller,/\.mono-game\.overlay-open \.mono-board-wrap\{width:min\(100vw,calc\(64dvh - 24px\)\);height:min\(100vw,calc\(64dvh - 24px\)\)\}/);
+  assert.match(controller,/\.mono-overlay\{position:absolute;inset:auto 8px 8px;z-index:20;isolation:isolate;pointer-events:auto;width:min\(calc\(100% - 16px\),700px\);max-height:min\(36dvh,360px\)/);
+  assert.match(controller,/center\?\.append\(byId\('monoControlPanel'\),byId\('monoOverlay'\)\)/);
+  assert.match(controller,/faceValue=Number\.isInteger\(value\)\?value:1/);
+  assert.match(controller,/الرصيد بعد الشراء/);
+  assert.match(controller,/\.mono-overlay-body\{align-content:start/);
+  assert.match(controller,/#monoGame #monoCenter\.has-event #monoControlPanel\{visibility:visible!important/);
+  assert.match(controller,/\.mono-actions\{display:flex/);
+  assert.match(controller,/font:800 clamp\(8px,2\.3vw,14px\)\/1\.05 system-ui/);
+  assert.match(controller,/font-size:clamp\(10px,1\.25vmin,16px\)/);
+  assert.match(controller,/\.mono-space\{font-size:clamp\(8px,2\.55vw,13px\)\}/);
+  assert.match(controller,/\.mono-space-name\{display:-webkit-box;max-width:100%;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2/);
+  assert.match(controller,/white-space:nowrap;max-width:100%/);
+  assert.match(controller,/function spaceDisplay\(space\).*mono-space-name/);
+  assert.match(controller,/min-height:44px/);
+  assert.match(controller,/mono-deed-facts/);
+  assert.match(controller,/mono-dice-roll/);
+  assert.match(controller,/\.mono-token-row\{position:absolute;z-index:2;display:grid/);
+  assert.match(controller,/\.mono-token-row\[data-edge=bottom\]\{top:2px/);
+  assert.match(controller,/\.mono-token-row\[data-edge=top\]\{bottom:2px/);
+  assert.match(controller,/class="mono-token-row" data-edge="\$\{edge\}" aria-hidden="true"/);
+  assert.match(controller,/function focusBoard\(index\)/);
+  const interaction=await read('src/modules/games/monopoly/monopoly-interaction.js');
+  assert.match(interaction,/cameraTransform/);
+  assert.match(controller,/await interaction\.roll\(next\.dice\)/);
+  assert.match(controller,/function clearBoardHighlight\(\)/);
+  assert.match(controller,/classList\.add\('is-highlight-path','is-highlight-target'\)/);
+  assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
+  assert.match(controller,/await interaction.followSegment/);
+  assert.match(controller,/data-action="focus-space"/);
+  assert.match(controller,/prefers-reduced-motion:reduce/);
+  assert.match(controller,/movementAnimating/);
+  assert.match(controller,/function openSetup\(\)\{[\s\S]*interaction\.cancel\(\)/);
+  assert.match(controller,/installMonopolyRecovery/);
+  assert.match(controller,/function isTabletPortrait\(\)/);
+  assert.match(controller,/function movementStepDuration\(\)/);
+  assert.match(controller,/function focusMovement\(index\)/);
+  assert.match(controller,/is-highlight-path/);
+  assert.doesNotMatch(controller,/monoFocusPlayer|monoBoardOverview|mono-board-controls|mono-mini-map/);
+  assert.match(controller,/tile\.offsetLeft\+tile\.offsetWidth\/2/);
+  assert.doesNotMatch(controller,/waitForMotion\(1300\)/);
+  assert.match(controller,/id="monoSeatOpponents"[\s\S]*id="monoSeatSelf"/);
+  assert.match(controller,/grid-template-areas:"tools" "opponents" "board" "self"/);
+  assert.match(controller,/id="monoGameTools"[\s\S]*id="monoMuteSound"/);
+  assert.doesNotMatch(controller,/class="mono-center-tools"/);
+  assert.doesNotMatch(controller,/addAction\('🎲 ارمِ النرد'/);
+  assert.doesNotMatch(controller,/اضغط أحد النردين أو زر الرمي/);
+  assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-figma-action-card\{width:100%;max-width:380px;min-width:0;min-height:0;height:auto;max-height:none/);
+  assert.match(controller,/function showDrawCard\(\)[\s\S]*تأكيد وتطبيق الأثر[\s\S]*setOverlay\(title,body,/);
+  assert.match(controller,/#monoGame #monoCenter #monoOverlay\{inset:auto 3% 3%;/);
+  assert.match(controller,/#monoGame #monoCenter\.has-event #monoActions\{visibility:hidden/);
+  assert.match(controller,/#monoGame #monoMain\{position:absolute;inset:0;width:100%;height:100%;grid-template-rows:auto auto auto minmax\(0,1fr\) auto/);
+  assert.match(controller,/mono-overlay--expanded\{max-height:min\(68dvh,620px\)\}/);
+  assert.match(controller,/#monoGame #monoCenter #monoOverlay \.mono-overlay-actions/);
+  assert.match(controller,/bottomPlayer=\(selfId&&state\.players\.find\(player=>player\.id===selfId\)\)\|\|state\.players\[0\]/);
+  assert.match(controller,/mono-seat-properties/);
+  assert.match(controller,/data-manage-property=\"\$\{owned\[0\]\.index\}\"/);
+  assert.match(controller,/style=\"--player-color:\$\{color\}\"/);
+  assert.match(controller,/mono-event-transfer/);
+  assert.doesNotMatch(controller,/return '<details class=\"\$\{classes\}/);
+  assert.match(controller,/button\.textContent=soundMuted\?'تشغيل الصوت':'كتم الصوت'/);
+  assert.match(controller,/padding:calc\(7\.09375% - var\(--mono-board-border-width\)\) calc\(7\.15625% - var\(--mono-board-border-width\)\) calc\(7\.15625% - var\(--mono-board-border-width\)\) calc\(7\.09375% - var\(--mono-board-border-width\)\);display:grid/);
+  assert.match(controller,/\.mono-board\{--mono-board-border-width:7px\}/);
+  assert.match(controller,/\.mono-board\{--mono-board-border-width:3px\}/);
+  assert.match(controller,/\.mono-space\.owned::before\{content:"";position:absolute;inset:0;box-sizing:border-box;border:clamp\(2px,\.45vmin,5px\) solid var\(--owner,#333\)/);
+  assert.doesNotMatch(controller,/\.mono-space\.owned\{box-shadow:inset/);
+  assert.match(controller,/grid-template-columns:1\.625fr repeat\(9,minmax\(0,1fr\)\) 1\.625fr/);
+  assert.match(controller,/data-action="trade-confirm"/);
+  assert.match(controller,/data-action="sell"/);
+  assert.doesNotMatch(controller,/min-width:\s*430px/);
+  assert.doesNotMatch(controller,/monoGame[^\n]*grid-template-rows:auto 1fr/);
+});
+
+test('Monopoly property manager lists every owner and exposes building for completed sets',async()=>{
+  const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
+  assert.match(controller,/for\(const player of state\.players\)/);
+  assert.match(controller,/mono-property-owner-head/);
+  assert.match(controller,/mono-property-group-head/);
+  assert.match(controller,/المجموعة مكتملة/);
+  assert.match(controller,/data-action="build"/);
+  assert.match(controller,/بناء فندق/);
+  assert.match(controller,/إدارة الأملاك/);
+  assert.match(controller,/للعرض · الدور الحالي:/);
+  assert.match(controller,/محطات/);
+  assert.match(controller,/مرافق/);
+  assert.match(controller,/البناء متاح في دور المالك بعد اكتمال مجموعة اللون/);
+  assert.match(controller,/تبادل الأراضي/);
+});

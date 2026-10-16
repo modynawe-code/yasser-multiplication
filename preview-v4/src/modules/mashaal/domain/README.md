@@ -1,0 +1,1 @@
+Mashaal domain code owns KG3-specific progress semantics only. Shared learner identity, curriculum registration and generic activity primitives stay outside this module.

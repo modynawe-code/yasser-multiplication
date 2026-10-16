@@ -1,7 +1,7 @@
 import { KHALED_SKILLS } from './curriculum.js';
 import { appendAttemptEvent, createAttemptId, createLedgerBaseline, normalizeAttemptLog, normalizeLedgerBaseline, summarizeAttemptLedger } from '../../../shared/data/attempt-ledger.js';
 
-export const KHALED_SCHEMA_VERSION=2;
+export const KHALED_SCHEMA_VERSION=3;
 
 function blankSkill(){return{attempts:0,correct:0,wrong:0,recent:[],last:null};}
 
@@ -36,7 +36,7 @@ export function normalizeKhaledState(candidate){
   state.totalCorrect=Number(state.totalCorrect||0);
   state.totalWrong=Number(state.totalWrong||0);
   state.attemptLog=normalizeAttemptLog(state.attemptLog);
-  state.ledgerBaseline=normalizeLedgerBaseline(state.ledgerBaseline,sourceVersion<KHALED_SCHEMA_VERSION?{
+  state.ledgerBaseline=normalizeLedgerBaseline(state.ledgerBaseline,sourceVersion<2?{
     attempts:state.totalAttempts,
     correct:state.totalCorrect,
     wrong:state.totalWrong
@@ -59,7 +59,7 @@ export function applyKhaledAttemptEvent(state,event){
   return appendAttemptEvent(state,{...event,learnerId:'khaled',isCorrect,createdAt,at:createdAt});
 }
 
-export function recordKhaledAttempt(state,{skillId,isCorrect,question,answer,createdAt=new Date().toISOString()}){
+export function recordKhaledAttempt(state,{skillId,isCorrect,question,answer,learningCycleId=null,attemptNumber=1,usedHint=false,questionCompleted=false,createdAt=new Date().toISOString()}){
   const skill=state.skills[skillId];
   if(!skill)throw new Error(`Unknown Khaled skill state: ${skillId}`);
   state.totalAttempts+=1;
@@ -68,7 +68,7 @@ export function recordKhaledAttempt(state,{skillId,isCorrect,question,answer,cre
   else{state.totalWrong+=1;skill.wrong+=1;}
   skill.recent=[...skill.recent,isCorrect].slice(-10);
   skill.last=createdAt;
-  const event={attemptId:createAttemptId('kha'),schemaVersion:1,learnerId:'khaled',skillId,questionId:question.id,questionType:question.type,answer,correctAnswer:question.correctAnswer,isCorrect:Boolean(isCorrect),createdAt,at:createdAt};
+  const event={attemptId:createAttemptId('kha'),schemaVersion:2,learnerId:'khaled',skillId,questionId:question.id,questionType:question.type,learningCycleId:learningCycleId||question.id,attemptNumber:Math.max(1,Number(attemptNumber||1)),usedHint:Boolean(usedHint),questionCompleted:Boolean(questionCompleted),answer,correctAnswer:question.correctAnswer,isCorrect:Boolean(isCorrect),createdAt,at:createdAt};
   appendAttemptEvent(state,event);
   return event;
 }

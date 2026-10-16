@@ -1,80 +1,89 @@
-import { getOverallProgress, getProgressRows } from '../../application/progress-service.js';
 import { KHALED_SKILLS } from '../khaled/domain/curriculum.js';
+import { MASHAAL_KG3_DOMAINS } from '../mashaal/curriculum/kg3-curriculum.js';
+import { buildMashaalParentSummary } from '../mashaal/application/parent-summary.js';
+import { summarizeLearningAttempts,summarizeLearningWindows,learningLevel } from '../../shared/progress/learning-metrics.js';
 
 function pct(correct,total){return total?Math.round(correct/total*100):0;}
-function formatDate(value){
-  try{return new Date(value).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'});}catch{return value||'—';}
+function formatDate(value){try{return new Date(value).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'});}catch{return value||'—';}}
+function metricCard(label,value,sub=''){return `<div class="parent-card"><span>${label}</span><strong>${value}</strong>${sub?`<small>${sub}</small>`:''}</div>`;}
+function windowStrip(label,summary){return `<article class="family-window-card"><h3>${label}</h3><dl><div><dt>الأسئلة</dt><dd>${summary.questions}</dd></div><div><dt>صح من أول مرة</dt><dd>${summary.firstTryAccuracy}%</dd></div><div><dt>النجاح النهائي</dt><dd>${summary.finalSuccessRate}%</dd></div><div><dt>الإتقان</dt><dd>${summary.masteryScore}%</dd></div></dl></article>`;}
+function skillSummary(log,learnerId,skillId){const summary=summarizeLearningAttempts(log,{learnerId,skillId});return{summary,level:learningLevel(summary)};}
+function mashaalStatusClass(status){return status==='mastered'?'master':status==='developing'?'practice':'none';}
+
+export function familyYasserOverview(state={}){
+  const windows=summarizeLearningWindows(state.attemptLog||[],{learnerId:'yasser'});
+  return `<section class="family-period-section" data-family-overview-learner="yasser"><h3>ياسر</h3><div class="parent-cards family-summary-cards">${metricCard('أسئلة ياسر',windows.all.questions)}</div><div class="family-window-grid">${windowStrip('اليوم',windows.today)}${windowStrip('هذا الأسبوع',windows.week)}${windowStrip('كل الوقت',windows.all)}</div></section>`;
 }
 
-function khaledSkillStatus(item){
-  const accuracy=pct(item.correct,item.attempts);
-  const recent=item.recent||[];
-  const recentAccuracy=recent.length?pct(recent.filter(Boolean).length,recent.length):0;
-  if(!item.attempts)return{label:'لم يبدأ',className:'none'};
-  if(item.attempts>=10&&accuracy>=85&&recent.length>=5&&recentAccuracy>=80)return{label:'متقن مبدئيًا',className:'master'};
-  if(accuracy>=70)return{label:'يتقدم',className:'practice'};
-  return{label:'يحتاج تدريب',className:'practice'};
+export function familyKhaledOverview(state={}){
+  const windows=summarizeLearningWindows(state.attemptLog||[],{learnerId:'khaled'});
+  return `<section class="family-period-section khaled-period" data-family-overview-learner="khaled"><h3>خالد</h3><div class="parent-cards family-summary-cards">${metricCard('أسئلة خالد',windows.all.questions)}</div><div class="family-window-grid">${windowStrip('اليوم',windows.today)}${windowStrip('هذا الأسبوع',windows.week)}${windowStrip('كل الوقت',windows.all)}</div></section>`;
 }
 
-export function familyOverview(yasserState,khaledState){
-  const yasser=getOverallProgress(yasserState);
-  const khaledAccuracy=pct(khaledState.totalCorrect,khaledState.totalAttempts);
-  const khaledStarted=KHALED_SKILLS.filter(skill=>(khaledState.skills[skill.id]?.attempts||0)>0).length;
-  const totalAttempts=yasser.attempts+khaledState.totalAttempts;
-  const totalWrong=yasser.wrong+khaledState.totalWrong;
-  return`<h2>تقرير ياسر وخالد</h2>
-    <p class="muted">ملخص موحد للتقدم المحفوظ على هذا الجهاز. سجل الأخطاء تاريخي ولا يختفي عند تحسن الإجابة لاحقًا.</p>
-    <div class="parent-tools"><button class="small-btn" id="familyExportBtn">تنزيل نسخة احتياطية موحدة</button></div>
-    <div class="parent-cards family-summary-cards">
-      <div class="parent-card"><span>المحاولات معًا</span><strong>${totalAttempts}</strong></div>
-      <div class="parent-card"><span>الأخطاء التاريخية</span><strong>${totalWrong}</strong></div>
-      <div class="parent-card"><span>دقة ياسر</span><strong>${yasser.accuracy}%</strong></div>
-      <div class="parent-card"><span>دقة خالد</span><strong>${khaledAccuracy}%</strong></div>
-    </div>
-    <div class="family-learner-summary-grid">
-      <article class="family-learner-summary yasser"><div><span>ياسر</span><strong>جدول الضرب</strong></div><dl><div><dt>محاولات</dt><dd>${yasser.attempts}</dd></div><div><dt>جداول متقنة</dt><dd>${yasser.masteredTables}/10</dd></div><div><dt>أخطاء</dt><dd>${yasser.wrong}</dd></div></dl></article>
-      <article class="family-learner-summary khaled"><div><span>خالد</span><strong>رياضيات أول ابتدائي</strong></div><dl><div><dt>محاولات</dt><dd>${khaledState.totalAttempts}</dd></div><div><dt>مهارات بدأها</dt><dd>${khaledStarted}/${KHALED_SKILLS.length}</dd></div><div><dt>أخطاء</dt><dd>${khaledState.totalWrong}</dd></div></dl></article>
-    </div>`;
+export function familyMashaalOverview(state={}){
+  const summary=buildMashaalParentSummary(state),evidence=Array.isArray(state.evidenceLog)?state.evidenceLog.length:0;
+  return `<article class="family-learner-summary mashaal" data-family-overview-learner="mashaal"><div><span>مشاعل</span><strong>روضة ثالثة</strong></div><dl><div><dt>أدلة تعلم</dt><dd>${evidence}</dd></div><div><dt>مهارات موثقة</dt><dd>${summary.totalSkills}</dd></div><div><dt>أنشطة جاهزة</dt><dd>${summary.readySkills}</dd></div><div><dt>التقييم</dt><dd>نمائي</dd></div></dl></article>`;
+}
+
+export function familyGenericOverview(_state={},profile={}){
+  const name=profile?.displayName||'الطفل',stage=profile?.presentation?.subtitle||profile?.stage||'مسار تعلم';
+  return `<article class="family-learner-summary generic" data-family-overview-learner="${profile?.id||''}"><div><span>${name}</span><strong>${stage}</strong></div><p class="muted">ملف الطفل محفوظ، وسيظهر ملخص مرحلته المتخصص عند تركيب مزود التقرير الخاص بها.</p></article>`;
+}
+
+export function familyOverviewEntries(entries=[]){
+  const markup=(Array.isArray(entries)?entries:[]).map(item=>item?.markup||'').filter(Boolean).join('');
+  return `<h2>تقرير الأطفال</h2><p class="muted">لكل طفل مساره وطريقة تقييمه المناسبة لمرحلته. سجل التعلم التاريخي لا يُمحى عند التحسن لاحقًا.</p><div class="parent-tools"><button class="small-btn" id="familyExportBtn">تنزيل نسخة احتياطية موحدة</button></div>${markup||'<p class="muted">لا توجد ملفات تعلم مسجلة بعد.</p>'}`;
+}
+
+export function familyOverview(yasserState,khaledState,mashaalState={}){
+  return familyOverviewEntries([
+    {markup:familyYasserOverview(yasserState)},
+    {markup:familyKhaledOverview(khaledState)},
+    {markup:familyMashaalOverview(mashaalState)}
+  ]);
 }
 
 export function familyYasserReport(state){
-  const overall=getOverallProgress(state);
-  const rows=getProgressRows(state).map(row=>`<tr><td><b>جدول ${row.table}</b></td><td>${row.attempts}</td><td>${row.wrong}</td><td>${row.accuracy}%</td><td>${row.mastery}%</td></tr>`).join('');
-  return`<h2>ياسر — جدول الضرب</h2><div class="parent-cards"><div class="parent-card"><span>المحاولات</span><strong>${overall.attempts}</strong></div><div class="parent-card"><span>الدقة</span><strong>${overall.accuracy}%</strong></div><div class="parent-card"><span>الأخطاء</span><strong>${overall.wrong}</strong></div><div class="parent-card"><span>المتقن</span><strong>${overall.masteredTables}/10</strong></div></div><div class="table-scroll"><table class="table-report"><thead><tr><th>الجدول</th><th>محاولات</th><th>أخطاء</th><th>دقة</th><th>إتقان</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const windows=summarizeLearningWindows(state.attemptLog,{learnerId:'yasser'}),rows=[];let mastered=0;
+  for(let table=1;table<=10;table++){const {summary,level}=skillSummary(state.attemptLog,'yasser',`table-${table}`);if(['mastered','expert'].includes(level.id))mastered++;rows.push(`<tr><td><b>جدول ${table}</b></td><td>${summary.questions}</td><td>${summary.historicalErrors}</td><td>${summary.firstTryAccuracy}%</td><td>${summary.finalSuccessRate}%</td><td>${summary.masteryScore}%</td><td><span class="level ${level.id}">${level.label}</span></td></tr>`);}
+  return`<h2>ياسر — جدول الضرب</h2><p class="muted">الدقة تقيس أول محاولة. النجاح النهائي يكافئ التصحيح، والإتقان يعطي للتصحيح وزنًا أقل.</p><div class="parent-cards">${metricCard('أسئلة اليوم',windows.today.questions)}${metricCard('إتقان الأسبوع',`${windows.week.masteryScore}%`)}${metricCard('الأخطاء التاريخية',windows.all.historicalErrors)}${metricCard('جداول متقنة',`${mastered}/10`)}</div><div class="table-scroll"><table class="table-report"><thead><tr><th>الجدول</th><th>أسئلة</th><th>الأخطاء التاريخية</th><th>أول محاولة</th><th>نجاح نهائي</th><th>إتقان</th><th>المستوى</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
 
 export function familyKhaledReport(state){
-  const accuracy=pct(state.totalCorrect,state.totalAttempts);
-  const cards=KHALED_SKILLS.map(skill=>{
-    const item=state.skills[skill.id]||{attempts:0,correct:0,wrong:0,recent:[]};
-    const status=khaledSkillStatus(item);
-    const skillAccuracy=pct(item.correct,item.attempts);
-    return`<article class="family-skill-card"><div class="family-skill-head"><span class="khaled-skill-symbol">${skill.symbol}</span><div><strong>${skill.title}</strong><small>${skill.shortTitle}</small></div><em class="level ${status.className}">${status.label}</em></div><div class="family-skill-metrics"><span>محاولات <b>${item.attempts}</b></span><span>أخطاء <b>${item.wrong}</b></span><span>دقة <b>${skillAccuracy}%</b></span></div></article>`;
-  }).join('');
-  return`<h2>خالد — رياضيات أول ابتدائي</h2><p class="muted">الحالة هنا تدريبية. «متقن مبدئيًا» تتطلب عددًا كافيًا من المحاولات مع ثبات الدقة في الأسئلة الأخيرة.</p><div class="parent-cards"><div class="parent-card"><span>المحاولات</span><strong>${state.totalAttempts}</strong></div><div class="parent-card"><span>الدقة</span><strong>${accuracy}%</strong></div><div class="parent-card"><span>الصحيح</span><strong>${state.totalCorrect}</strong></div><div class="parent-card"><span>الأخطاء</span><strong>${state.totalWrong}</strong></div></div><div class="family-skill-grid">${cards}</div>`;
+  const windows=summarizeLearningWindows(state.attemptLog,{learnerId:'khaled'}),cards=KHALED_SKILLS.map(skill=>{const {summary,level}=skillSummary(state.attemptLog,'khaled',skill.id);return`<article class="family-skill-card"><div class="family-skill-head"><span class="khaled-skill-symbol">${skill.symbol}</span><div><strong>${skill.title}</strong><small>${skill.shortTitle}</small></div><em class="level ${level.id}">${level.label}</em></div><div class="family-skill-metrics"><span>أسئلة <b>${summary.questions}</b></span><span>أول محاولة <b>${summary.firstTryAccuracy}%</b></span><span>نجاح نهائي <b>${summary.finalSuccessRate}%</b></span><span>إتقان <b>${summary.masteryScore}%</b></span><span>الأخطاء التاريخية <b>${summary.historicalErrors}</b></span></div></article>`;}).join('');
+  return`<h2>خالد — رياضيات أول ابتدائي</h2><p class="muted">المستويات: يتعلم ← يتقدم ← متقن ← خبير. التصحيح يرفع النجاح النهائي، لكنه لا يتحول إلى «صح من أول مرة».</p><div class="parent-cards">${metricCard('أسئلة اليوم',windows.today.questions)}${metricCard('إتقان الأسبوع',`${windows.week.masteryScore}%`)}${metricCard('صحح بعد خطأ',windows.all.correctedAfterError)}${metricCard('الأخطاء التاريخية',windows.all.historicalErrors)}</div><div class="family-skill-grid">${cards}</div>`;
 }
 
-export function familySessions(yasserState,khaledState){
-  const yasser=(yasserState.sessions||[]).map(session=>({
-    learner:'ياسر',
-    at:session.endedAt,
-    label:session.mode==='exam'?'اختبار جدول الضرب':'تدريب جدول الضرب',
-    correct:Number(session.correct||0),
-    wrong:Number(session.wrong||0),
-    total:Number(session.completed||0),
-    incomplete:Boolean(session.incomplete)
-  }));
-  const khaled=(khaledState.sessions||[]).map(session=>({
-    learner:'خالد',
-    at:session.at,
-    label:KHALED_SKILLS.find(skill=>skill.id===session.skillId)?.title||'رياضيات خالد',
-    correct:Number(session.correct||0),
-    wrong:Number(session.wrong||0),
-    total:Number(session.total||0),
-    incomplete:Boolean(session.incomplete)
-  }));
-  const sessions=[...yasser,...khaled].sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,30);
-  if(!sessions.length)return'<h2>آخر الجلسات</h2><p class="muted">لا توجد جلسات مسجلة حتى الآن.</p>';
-  const rows=sessions.map(session=>`<tr><td>${formatDate(session.at)}</td><td><b>${session.learner}</b></td><td>${session.label}${session.incomplete?' • غير مكتمل':''}</td><td>${session.total}</td><td>${session.correct}</td><td>${session.wrong}</td><td>${pct(session.correct,session.total)}%</td></tr>`).join('');
-  return`<h2>آخر الجلسات</h2><p class="muted">مرتبة من الأحدث إلى الأقدم لكلا الطفلين.</p><div class="table-scroll"><table class="table-report"><thead><tr><th>الوقت</th><th>الطفل</th><th>النشاط</th><th>محاولات</th><th>صحيح</th><th>أخطاء</th><th>الدقة</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+export function familyMashaalReport(state={}){
+  const evidenceCount=Array.isArray(state.evidenceLog)?state.evidenceLog.length:0,summary=buildMashaalParentSummary(state);
+  const domains=summary.domains.map(domain=>{const skills=domain.skills.map(skill=>{const badge=skill.contentReady?skill.statusLabel:skill.contentLabel,className=skill.contentReady?mashaalStatusClass(skill.status):'none';return`<div class="mashaal-parent-skill"><div><strong>${skill.title}</strong><small>${skill.contentLabel}</small></div><em class="level ${className}">${badge}</em></div>`;}).join('');return`<article class="family-skill-card mashaal-domain-report"><div class="family-skill-head"><div><strong>${domain.childTitle}</strong><small>${domain.title}</small></div><em class="level none">${domain.ready}/${domain.skills.length} جاهزة</em></div><div class="mashaal-parent-skill-list">${skills}</div></article>`;}).join('');
+  return`<h2>مشاعل — روضة ثالثة</h2><p class="muted">التقييم نمائي: «لم تبدأ / تتطور / متقنة»، بدون نسب مئوية. التلاوة لا تستخدم نطقًا صناعيًا.</p><div class="parent-cards">${metricCard('أدلة التعلم',evidenceCount)}${metricCard('المهارات الموثقة',summary.totalSkills)}${metricCard('أنشطة جاهزة',summary.readySkills)}${metricCard('بانتظار ملف الإخلاص',summary.awaitingApprovedHumanAudio)}</div><div class="family-skill-grid">${domains}</div>`;
+}
+
+export function familyGenericLearnerReport(profile){const name=profile?.displayName||'الطفل',stage=profile?.presentation?.subtitle||profile?.stage||'مسار تعلم';return`<h2>${name} — ${stage}</h2><p class="muted">هذا الطفل مسجل في منصة التعلم، لكن تقرير مرحلته المتخصص لم يُركب بعد. يبقى ملفه منفصلًا ولا يتم إسقاط تقييم مرحلة أخرى عليه.</p>`;}
+
+export function familyYasserSessions(state={}){
+  return (state.sessions||[]).map(session=>({learnerId:'yasser',learner:'ياسر',at:session.endedAt,label:session.mode==='exam'?'اختبار جدول الضرب':'تدريب جدول الضرب',total:Number(session.completed||0),firstTry:Number(session.firstTryCorrect??session.correct??0),corrected:Number(session.correctedAfterError||0),unresolved:Number(session.unresolved??session.wrong??0),mastery:Number(session.masteryScore??pct(session.correct,session.completed)),incomplete:Boolean(session.incomplete),developmental:false}));
+}
+
+export function familyKhaledSessions(state={}){
+  return (state.sessions||[]).map(session=>({learnerId:'khaled',learner:'خالد',at:session.at,label:KHALED_SKILLS.find(skill=>skill.id===session.skillId)?.title||'رياضيات خالد',total:Number(session.total||0),firstTry:Number(session.firstTryCorrect??session.correct??0),corrected:Number(session.correctedAfterError||0),unresolved:Number(session.unresolved??session.wrong??0),mastery:Number(session.masteryScore??session.pct??0),incomplete:Boolean(session.incomplete),developmental:false}));
+}
+
+export function familyMashaalSessions(state={}){
+  return (state.sessions||[]).map(session=>({learnerId:'mashaal',learner:'مشاعل',at:session.endedAt||session.at||session.startedAt,label:'نشاط روضة',total:Number(session.total||session.completed||0),incomplete:Boolean(session.incomplete),developmental:true}));
+}
+
+export function familyGenericSessions(state={},profile={}){
+  return (state.sessions||[]).map(session=>({learnerId:profile?.id||'',learner:profile?.displayName||'الطفل',at:session.endedAt||session.at||session.startedAt,label:session.label||profile?.presentation?.subtitle||'نشاط تعلم',total:Number(session.total||session.completed||0),incomplete:Boolean(session.incomplete),developmental:true}));
+}
+
+export function familySessionEntries(entries=[]){
+  const sessions=(Array.isArray(entries)?entries:[]).filter(Boolean).sort((a,b)=>new Date(b.at)-new Date(a.at)).slice(0,30);if(!sessions.length)return'<h2>آخر الجلسات</h2><p class="muted">لا توجد جلسات مسجلة حتى الآن.</p>';
+  const rows=sessions.map(session=>`<tr><td>${formatDate(session.at)}</td><td><b>${session.learner}</b></td><td>${session.label}${session.incomplete?' • غير مكتمل':''}</td><td>${session.total}</td><td>${session.developmental?'—':session.firstTry}</td><td>${session.developmental?'—':session.corrected}</td><td>${session.developmental?'—':session.unresolved}</td><td>${session.developmental?'نمائي':`${session.mastery}%`}</td></tr>`).join('');
+  return`<h2>آخر الجلسات</h2><p class="muted">التصحيح يظهر منفصلًا عن الإجابة الصحيحة من أول مرة، والمسارات النمائية لا تُحوّل إلى نسب مدرسية.</p><div class="table-scroll"><table class="table-report"><thead><tr><th>الوقت</th><th>الطفل</th><th>النشاط</th><th>عدد</th><th>أول مرة</th><th>بعد تصحيح</th><th>تحتاج مراجعة</th><th>التقييم</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+export function familySessions(yasserState,khaledState,mashaalState={}){
+  return familySessionEntries([...familyYasserSessions(yasserState),...familyKhaledSessions(khaledState),...familyMashaalSessions(mashaalState)]);
 }

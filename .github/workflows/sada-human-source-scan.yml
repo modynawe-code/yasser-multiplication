@@ -1,0 +1,28 @@
+name: SADA Human Source Selection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  select-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Select one clean adult male Najdi source and download bounded clips
+        run: node tools/sada-human-source.mjs --start-offset 0 --max-rows 6100 --download --target-minutes 8 --max-mb 180
+        working-directory: preview-v4
+      - name: Upload selected human source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sada-human-source-selection
+          path: preview-v4/build/voice/sada/
+          if-no-files-found: warn
+          retention-days: 7
