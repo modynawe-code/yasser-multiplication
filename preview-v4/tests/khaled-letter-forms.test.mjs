@@ -61,8 +61,12 @@ test('Activity is linked from Khaled literacy and its dependencies are available
  assert.ok(sw.includes('KHALED_LETTER_VIDEO_STILL_ASSETS'));
  assert.ok(sw.includes('KHALED_LETTER_MASCOT_ASSET'));
  assert.ok(sw.includes('KHALED_LETTER_WORLD_ASSET'));
+ assert.ok(sw.includes('KHALED_LETTER_ISLAND_ASSET'));
  assert.match(sw,/assets\/images\/khaled\/letter-forms\/avatar-block\.webp/);
  assert.match(sw,/assets\/images\/khaled\/letter-forms\/world-sky\.webp/);
+ assert.match(sw,/assets\/images\/khaled\/letter-forms\/island-platform\.webp/);
+ const island=await readFile(new URL('../assets/images/khaled/letter-forms/island-platform.webp',import.meta.url));
+ assert.ok(island.length>30000,'the floating voxel island artwork is bundled for offline play');
  assert.match(sw,/shell-220/);
 });
 
