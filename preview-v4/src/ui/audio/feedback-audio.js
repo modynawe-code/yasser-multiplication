@@ -11,6 +11,16 @@ export const SOUND_PATTERNS={
     {frequency:520,duration:.07,gain:.024},
     {frequency:660,duration:.08,gain:.027,delay:.055},
     {frequency:820,duration:.11,gain:.030,delay:.115}
+  ],
+  tap:[{frequency:520,duration:.025,gain:.012},{frequency:650,duration:.035,gain:.01,delay:.018}],
+  portal:[
+    {frequency:360,duration:.06,gain:.014},
+    {frequency:540,duration:.07,gain:.018,delay:.045},
+    {frequency:760,duration:.1,gain:.019,delay:.095}
+  ],
+  attention:[
+    {frequency:660,duration:.07,gain:.014},
+    {frequency:880,duration:.09,gain:.016,delay:.08}
   ]
 };
 
@@ -61,6 +71,9 @@ export function createFeedbackAudio({contextFactory=defaultContextFactory}={}){
   return{
     correct:()=>play('correct'),
     wrong:()=>play('wrong'),
-    achievement:()=>play('achievement')
+    achievement:()=>play('achievement'),
+    tap:()=>play('tap'),
+    portal:()=>play('portal'),
+    attention:()=>play('attention')
   };
 }

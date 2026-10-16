@@ -74,6 +74,7 @@ export function createLetterLessonAudio({AudioClass=globalThis.Audio,effects=cre
     if(kind==='correct')return effects.correct();
     if(kind==='wrong')return effects.wrong();
     if(kind==='achievement')return effects.achievement();
+    if(kind==='tap'||kind==='portal'||kind==='attention')return effects[kind]?.()||false;
     return false;
   }
 
@@ -84,5 +85,5 @@ export function createLetterLessonAudio({AudioClass=globalThis.Audio,effects=cre
     return token===generation&&spoken;
   }
 
-  return Object.freeze({playLetter,playLetterExplanation,playNarration,playFeedback,respond,stop});
+  return Object.freeze({playLetter,playLetterExplanation,playNarration,playFeedback,playEffect,respond,stop});
 }
