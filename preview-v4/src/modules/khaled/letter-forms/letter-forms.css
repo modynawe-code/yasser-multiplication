@@ -112,3 +112,60 @@
 @keyframes lf-reward-drop{0%{opacity:0;transform:translateY(-18px) scale(.65)}65%{opacity:1;transform:translateY(3px) scale(1.08)}100%{transform:translateY(0) scale(1)}}
 @media(max-width:700px){.lf-view{padding:7px;background-attachment:scroll!important;background-position:center top!important}.lf-shell{background:linear-gradient(180deg,#dff4ffed 0 15%,#f8fcfff4 15% 100%)!important;padding:12px}.lf-world-hud{gap:6px;padding:7px;font-size:11px}.lf-world-hud>span{padding:4px 8px}.lf-world-rank{margin-inline-start:0!important}.lf-map-heading{align-items:flex-start;flex-direction:column;gap:2px}.lf-letter-grid{row-gap:14px}.lf-letter-grid:before{inset:18px 3%;border-radius:35%}.lf-letter-grid button{min-height:105px!important}.lf-stage-tabs button{min-height:68px!important}.lf-stage-tabs button span{max-width:100%;text-align:center;line-height:1.3}.lf-mentor{margin-bottom:10px}.lf-mentor p{font-size:12px}.lf-mentor img{width:36px;height:48px}.lf-reward-pop{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.lf-letter-grid button.is-current,.lf-model.lf-portal-arrive,.lf-reward-pop,.lf-avatar-retry,.lf-avatar-cheer{animation:none!important}}
+
+/* The letter picker is a traversable island route, not a tile dashboard. */
+.lf-map-heading{align-items:center!important}
+.lf-map-legend{display:flex;align-items:center;gap:7px;color:#426b58;font-size:12px;font-weight:900;white-space:nowrap}
+.lf-map-legend i{width:13px;height:13px;border-radius:4px;background:#6fc766;border:2px solid #fff;box-shadow:0 2px 0 #438c4a}
+.lf-map-world{position:relative;isolation:isolate;overflow:hidden;padding:12px 5px 18px;border:3px solid #fff;border-radius:30px;background:linear-gradient(180deg,#c8efff 0%,#ddf5ff 13%,#effbff 37%,#d8f4ff 69%,#f2fbff 100%);box-shadow:0 8px 0 #b4d7e8,inset 0 0 0 2px #d5effa}
+.lf-map-world:before,.lf-map-world:after{content:"";position:absolute;z-index:-1;pointer-events:none;border-radius:50%;filter:blur(1px)}
+.lf-map-world:before{width:170px;height:95px;top:4%;left:-60px;background:#fff9;box-shadow:36px 12px 0 4px #fff9,80px 2px 0 -6px #fff8}
+.lf-map-world:after{width:180px;height:100px;right:-80px;bottom:6%;background:#fff9;box-shadow:-40px -12px 0 4px #fff9,-90px 0 0 -7px #fff8}
+.lf-world-route{position:absolute;z-index:-1;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.lf-world-route path{fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1.2 2.3;filter:drop-shadow(0 1px 1px #3182ac55)}
+.lf-map-landmarks{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.lf-landmark{position:absolute;display:grid;place-items:center;color:#ffc83e;text-shadow:0 3px 0 #fff;font-size:48px;opacity:.75;animation:lf-landmark-float 3.8s ease-in-out infinite}
+.lf-landmark-one{top:3%;right:3%}.lf-landmark-two{top:49%;left:1%;font-size:36px;animation-delay:-1.1s}.lf-landmark-three{bottom:7%;left:4%;animation-delay:-2.1s}
+.lf-letter-grid{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row;gap:24px 10px!important;padding:8px 4px 12px!important;isolation:isolate}
+.lf-letter-grid:before{display:none!important}
+.lf-letter-grid button{position:relative;isolation:isolate;display:flex;overflow:visible;min-width:0;min-height:154px!important;align-self:center;justify-content:center;gap:1px!important;padding:18px 8px 20px!important;border:0!important;border-radius:35% 29% 33% 31% / 25% 29% 22% 27%!important;background:linear-gradient(160deg,#9be579 0%,#64c955 72%,#4dab4b 73%,#4dab4b 100%)!important;color:#153361!important;box-shadow:0 12px 0 #986432,0 15px 0 #77502d,0 20px 16px #28619432,inset 0 5px 0 #d5ff9b!important;transform:translateY(0)!important;transition:transform .2s cubic-bezier(.2,.8,.3,1.2),filter .2s ease!important}
+.lf-letter-grid button:before{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;background:linear-gradient(180deg,#ffffff50 0 9%,transparent 10% 69%,#87562b 70% 100%);box-shadow:inset 0 -12px 0 #a16c35;pointer-events:none}
+.lf-letter-grid button:after{content:"";position:absolute;z-index:-1;width:24%;height:15px;bottom:-23px;left:18%;border-radius:50%;background:#23527b25;filter:blur(5px);pointer-events:none}
+.lf-letter-grid button>*{position:relative;z-index:1}
+.lf-letter-grid button:nth-child(4n+1){transform:translateY(5px)!important}.lf-letter-grid button:nth-child(4n+2){transform:translateY(23px)!important}.lf-letter-grid button:nth-child(4n+3){transform:translateY(12px)!important}.lf-letter-grid button:nth-child(4n){transform:translateY(0)!important}
+.lf-letter-grid button:hover{transform:translateY(-5px) scale(1.035)!important;filter:brightness(1.04);box-shadow:0 17px 0 #986432,0 20px 0 #77502d,0 24px 18px #28619435,inset 0 5px 0 #e4ffb7!important}
+.lf-letter-grid button:active{transform:translateY(7px) scale(.98)!important;box-shadow:0 5px 0 #986432,0 8px 0 #77502d!important}
+.lf-letter-grid button strong{font-size:48px!important;color:#116fc4!important;text-shadow:0 3px 0 #d9f2ff!important;line-height:1.12!important;font-weight:950!important}
+.lf-letter-grid button>span:not(.lf-island-index):not(.lf-island-flag):not(.lf-island-guide):not(.lf-island-zone){font-size:14px;font-weight:950;color:#16345e}
+.lf-letter-grid button small{margin-top:5px;padding:3px 10px;border-radius:999px;background:#eff9ff;color:#21629b;font-size:11px;font-weight:950}
+.lf-letter-grid .lf-island-index{top:9px;inset-inline-start:12px;display:grid;place-items:center;min-width:26px;height:26px;border:2px solid #fff;border-radius:9px;background:#dff3ff;color:#2b6994;font-size:10px;line-height:1;box-shadow:0 2px 0 #96c5d8}
+.lf-island-flag{position:absolute!important;top:10px;inset-inline-end:15px;color:#fff2a2;font-size:20px;text-shadow:0 2px 0 #548542}
+.lf-island-zone{position:absolute!important;bottom:-14px;inset-inline-end:7px;padding:3px 8px;border:2px solid #fff;border-radius:999px;background:#225eaa;color:#fff;font-size:9px;font-weight:900;white-space:nowrap;box-shadow:0 3px 0 #16457f}
+.lf-letter-grid button.is-current{z-index:2;outline:4px solid #ffd44e!important;outline-offset:3px;animation:lf-island-current 1.8s ease-in-out infinite}
+.lf-letter-grid button.is-current:before{background:linear-gradient(180deg,#ffffff65 0 9%,transparent 10% 69%,#87562b 70% 100%),radial-gradient(ellipse at 50% 0,#d8ff79 0,transparent 57%)}
+.lf-island-guide{position:absolute!important;z-index:3!important;top:-36px;inset-inline-end:-9px;display:flex;align-items:center;gap:2px;padding:2px 7px 2px 2px;border:2px solid #fff;border-radius:999px;background:#ffdc58;color:#684800;font-size:9px;font-weight:950;white-space:nowrap;box-shadow:0 3px 0 #c88e18;animation:lf-guide-bob 1.3s ease-in-out infinite}
+.lf-island-guide img{width:27px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 0 #31507c55)}
+.lf-letter-grid button.is-complete{background:linear-gradient(160deg,#b7f28c 0%,#75d361 72%,#56ae50 73%,#56ae50 100%)!important;box-shadow:0 12px 0 #986432,0 15px 0 #77502d,0 20px 16px #28619432,inset 0 5px 0 #efffc1!important}
+.lf-letter-grid button.is-complete small{background:#fff0a7;color:#715100}
+.lf-map-caption{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 5px 2px!important;padding:11px;border:2px solid #fff;border-radius:16px;background:#ffffffbc;color:#225887;font-size:13px;font-weight:850;line-height:1.7;text-align:center;box-shadow:0 4px 0 #c7e2f1}
+@keyframes lf-island-current{0%,100%{box-shadow:0 12px 0 #986432,0 15px 0 #77502d,0 20px 16px #28619432,inset 0 5px 0 #d5ff9b,0 0 0 0 #ffd44e00}50%{box-shadow:0 12px 0 #986432,0 15px 0 #77502d,0 20px 16px #28619432,inset 0 5px 0 #d5ff9b,0 0 0 9px #ffd44e80}}
+@keyframes lf-guide-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes lf-landmark-float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-9px) rotate(4deg)}}
+@media(max-width:700px){.lf-map-world{padding:9px 4px 15px;border-radius:23px}.lf-letter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:22px 8px!important;padding:7px 2px 10px!important}.lf-letter-grid button{min-height:146px!important;padding:17px 6px 18px!important}.lf-letter-grid button strong{font-size:44px!important}.lf-letter-grid button>span:not(.lf-island-index):not(.lf-island-flag):not(.lf-island-guide):not(.lf-island-zone){font-size:13px}.lf-island-zone{font-size:8px;bottom:-13px}.lf-map-caption{font-size:11px;padding:8px}.lf-map-legend{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.lf-letter-grid button.is-current,.lf-island-guide,.lf-landmark{animation:none!important}}
+/* Reuse the original transparent, voxel-art platform as the map's actual island surface. */
+.lf-letter-grid{grid-template-columns:repeat(2,minmax(0,340px))!important;justify-content:center}
+.lf-letter-grid button{min-height:190px!important;border:0!important;border-radius:0!important;background:transparent url('../../../../assets/images/khaled/letter-forms/island-platform.webp') center center/100% 100% no-repeat!important;box-shadow:none!important}
+.lf-letter-grid button:before,.lf-letter-grid button:after{display:none!important}
+.lf-letter-grid button:hover{box-shadow:none!important;filter:brightness(1.06) drop-shadow(0 6px 5px #28619430)!important}
+.lf-letter-grid button:active{box-shadow:none!important}
+.lf-letter-grid button.is-complete{background:transparent url('../../../../assets/images/khaled/letter-forms/island-platform.webp') center center/100% 100% no-repeat!important;filter:hue-rotate(34deg) saturate(.9)}
+@media(max-width:700px){.lf-letter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.lf-letter-grid button{min-height:174px!important}}
+.lf-letter-grid button.is-jumping{z-index:5;animation:lf-island-launch .52s cubic-bezier(.2,.8,.2,1) both!important}
+.lf-jump-avatar{position:absolute;z-index:8;top:-26px;inset-inline-end:calc(50% - 30px);width:60px;height:76px;object-fit:contain;filter:drop-shadow(0 5px 2px #23354d55);pointer-events:none;animation:lf-jump-hop .52s cubic-bezier(.25,.7,.25,1) both}
+.lf-letter-grid button.is-jumping .lf-island-guide{opacity:0}
+.lf-landmark-one:before,.lf-landmark-one:after,.lf-landmark-three:before,.lf-landmark-three:after{content:"";position:absolute;border-radius:50%;background:#fff9}
+.lf-landmark-one:before,.lf-landmark-three:before{width:76px;height:28px;box-shadow:20px -14px 0 1px #fff9,40px 0 0 -2px #fff9}
+.lf-landmark-one:after,.lf-landmark-three:after{width:100px;height:22px;top:20px;left:-4px}
+@keyframes lf-island-launch{0%{transform:translateY(0) scale(1)}38%{transform:translateY(-13px) scale(1.055)}100%{transform:translateY(2px) scale(.97);opacity:.94}}
+@keyframes lf-jump-hop{0%{transform:translateY(18px) scale(.8);opacity:0}35%{transform:translateY(-32px) scale(1.05);opacity:1}75%{transform:translateY(-24px) scale(1)}100%{transform:translateY(4px) scale(.95);opacity:0}}

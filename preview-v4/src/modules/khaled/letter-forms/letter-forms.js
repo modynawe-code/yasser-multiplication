@@ -12,7 +12,7 @@ const hand=(connected,side)=>`<span class="lf-hand ${connected?'open':'closed'} 
 function glyph(letter,form){return `<svg viewBox="0 0 500 340" class="lf-glyph" aria-hidden="true">${writingPaths(letter.char,form).map(d=>`<path d="${d}"/>`).join('')}</svg>`;}
 export function createLetterFormsController({showView,onBack}){
  const audio=createLetterLessonAudio();
- let view,progress,letter=LETTERS[0],stage=0,form='isolated',tracing=null,mode='guided',question=null,answered=false,attempts=0;
+ let view,progress,letter=LETTERS[0],stage=0,form='isolated',tracing=null,mode='guided',question=null,answered=false,attempts=0,islandTransition=false;
  let saveFailed=false;
  try{progress=loadProgress(localStorage);}catch{progress=loadProgress({getItem:()=>null});}
  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(progress));saveFailed=false;}catch{saveFailed=true;}if(view?.querySelector('.lf-save-status'))view.querySelector('.lf-save-status').textContent=saveFailed?'تعذر الحفظ على هذا الجهاز. أبقِ النشاط مفتوحًا.':'تقدم خالد محفوظ على هذا الجهاز';}
@@ -41,7 +41,10 @@ export function createLetterFormsController({showView,onBack}){
  function picker(){
   dispose();
   view.classList.remove('lf-writing-active');
-  shell(`${progressStats()}<div class="lf-intro"><div><span class="lf-zone-tag">منطقة التدريب · ٢٨ جزيرة</span><h2>مغامرة خالد في عالم الحروف</h2><p>اقفز بين الجزر، اجمع النجوم، وافتح بوابات أشكال الحروف.</p><button class="lf-primary" data-action="resume" type="button">تابع مغامرتك · حرف ${safe(progress.last)}</button></div><span class="lf-intro-letter" aria-hidden="true">أبـ</span></div><div class="lf-map-heading"><h2>اختر جزيرتك</h2><p>ابدأ بأي حرف وكمل المسار على راحتك</p></div><div class="lf-letter-grid" aria-label="خريطة جزر الحروف">${LETTERS.map((l,index)=>{const p=progress.letters[l.char],count=Object.keys(p?.writing||{}).length,total=availableForms(l).length,complete=count===total;return `<button type="button" data-letter="${l.char}" class="${complete?'is-complete':''} ${l.char===progress.last?'is-current':''}" aria-label="جزيرة ${l.name}، ${complete?'مكتمل':p?'قيد التدريب':'ابدأ'}"><span class="lf-island-index">${String(index+1).padStart(2,'0')}</span><strong>${l.char}</strong><span>${l.name}</span><small>${complete?'★ مكتمل':p?'يتدرّب':'ابدأ الجزيرة'}</small></button>`;}).join('')}</div>`);
+  const points=LETTERS.map((_,index)=>`${index%2===0?75:25},${92+Math.floor(index/2)*205}`);
+  const route=points.map((point,index)=>`${index?'L':'M'} ${point}`).join(' ');
+  const zones=['بوابة الحروف','غابة النقاط','جسر الاتصال','وادي الكتابة','قلعة النجوم','جزيرة الأبطال','منطقة الإتقان'];
+  shell(`${progressStats()}<div class="lf-intro"><div><span class="lf-zone-tag">منطقة التدريب · ٢٨ جزيرة</span><h2>مغامرة خالد في عالم الحروف</h2><p>اقفز بين الجزر، اجمع النجوم، وافتح بوابات أشكال الحروف.</p><button class="lf-primary" data-action="resume" type="button">تابع مغامرتك · حرف ${safe(progress.last)}</button></div><span class="lf-intro-letter" aria-hidden="true">أبـ</span></div><div class="lf-map-heading"><div><h2>مسار الجزر</h2><p>اختر جزيرة، وخالد يرافقك في كل تحدٍّ</p></div><span class="lf-map-legend"><i></i> جزيرة مكتملة</span></div><div class="lf-map-world" aria-label="خريطة جزر الحروف"><svg class="lf-world-route" viewBox="0 0 100 2780" preserveAspectRatio="none" aria-hidden="true"><path d="${route}"/></svg><div class="lf-map-landmarks" aria-hidden="true"><span class="lf-landmark lf-landmark-one"></span><span class="lf-landmark lf-landmark-two">✦</span><span class="lf-landmark lf-landmark-three"></span></div><div class="lf-letter-grid" aria-label="اختر حرفًا من خريطة الجزر">${LETTERS.map((l,index)=>{const p=progress.letters[l.char],count=Object.keys(p?.writing||{}).length,total=availableForms(l).length,complete=count===total,current=l.char===progress.last,status=complete?'اكتملت الجزيرة':p?'تتدرّب هنا':'جزيرة مفتوحة';return `<button type="button" data-letter="${l.char}" class="${complete?'is-complete':''} ${current?'is-current':''}" aria-label="جزيرة ${l.name}، ${status}"><span class="lf-island-index">${String(index+1).padStart(2,'0')}</span><span class="lf-island-flag" aria-hidden="true">${complete?'★':current?'⚑':'◆'}</span><strong>${l.char}</strong><span>${l.name}</span><small>${complete?'★ أُتقنت':p?'تتدرّب':'ادخل الجزيرة'}</small>${current?`<span class="lf-island-guide"><img src="${icon}" alt=""><b>خالد هنا!</b></span>`:''}<span class="lf-island-zone">${zones[Math.floor(index/4)%zones.length]}</span></button>`;}).join('')}</div><p class="lf-map-caption">مسارك: تنقّل بين الجزر واجمع نجومك؛ كل حرف يفتح لك تحدياته الأربعة.</p></div>`);
  }
  function openLetter(char,resume=false){
   letter=LETTERS.find(l=>l.char===char)||LETTERS[0];progress.last=letter.char;
@@ -96,7 +99,7 @@ export function createLetterFormsController({showView,onBack}){
  function feedback(text){view.querySelector('.lf-feedback').textContent=text;}
  function click(event){
   const b=event.target.closest('button,input');if(!b||!view.contains(b))return;
-  if(b.dataset.letter){openLetter(b.dataset.letter);return;}
+  if(b.dataset.letter){if(islandTransition)return;if(matchMedia('(prefers-reduced-motion: reduce)').matches){openLetter(b.dataset.letter);return;}islandTransition=true;const target=b.dataset.letter;b.classList.add('is-jumping');const jumper=document.createElement('img');jumper.className='lf-jump-avatar';jumper.src=icon;jumper.alt='';b.append(jumper);view.querySelectorAll('[data-letter]').forEach(tile=>tile.disabled=true);setTimeout(()=>{islandTransition=false;openLetter(target);},520);return;}
   if(b.dataset.stage!==undefined){stage=Number(b.dataset.stage);question=null;exampleIndex=null;render();return;}
   if(b.dataset.form){form=b.dataset.form;exampleIndex=null;render();return;}
   if(b.dataset.example!==undefined){exampleIndex=Number(b.dataset.example);render();return;}
