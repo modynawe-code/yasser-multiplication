@@ -24,12 +24,14 @@ test('All 28 letters have real paths for all applicable forms and valid examples
  }
 });
 test('Every video explanation has its matching example still for all 28 letters',async()=>{
+ const expectedVideoWords={ا:'فأر',ب:'حقيبة',ت:'مفتاح',ث:'كمثرى',ج:'نجوم',ح:'سلحفاة',خ:'نخلة',د:'هدية',ذ:'حذاء',ر:'خروف',ز:'جزر',س:'تمساح',ش:'خشب',ص:'مصعد',ض:'خضار',ط:'مطرقة',ظ:'مظلة',ع:'ملعقة',غ:'ببغاء',ف:'سلحفاة',ق:'بقرة',ك:'سمكة',ل:'علم',م:'شمس',ن:'عنب',ه:'كهف',و:'عصفور',ي:'سيارة'};
  assert.equal(LETTER_VIDEO_AUDIO_CLIPS.length,28);
  for(const letter of LETTERS){
   const clip=LETTER_VIDEO_AUDIO_BY_ID[letter.audio];
   assert.ok(clip&&clip.letter===letter.char,letter.char+' has a matching video recording');
   assert.ok(Number.isFinite(clip.imageTime),letter.char+' has a curated source-frame time');
   assert.ok(letter.videoWord,letter.char+' has the example shown in the video');
+  assert.equal(letter.videoWord,expectedVideoWords[letter.char],letter.char+' keeps the pictured word paired with its source still');
   assert.ok(Array.from(letter.videoWord).some(char=>letter.char==='ا'?'اأإآ'.includes(char):char===letter.char),letter.char+' occurs in its video example');
   const still=await readFile(new URL(`../assets/images/khaled/letter-forms/video/${letter.audio}.jpg`,import.meta.url));
   assert.ok(still.length>5000,letter.char+' has a usable source-video still');
@@ -135,11 +137,15 @@ test('Human explanations and response lines resolve to the shared recording inve
  for(const [id,line] of Object.entries(LETTER_FORM_NARRATION)){
   assert.ok(inventory.includes(line.text),id+' appears in human recording inventory');
   assert.ok(recordingContract.includes(humanVoiceAssetPath(line.text).split('/').at(-1)),id+' has the correct recording filename');
-  if(['question','writing'].includes(id))assert.ok(controller.includes(`data-line="${id}"`),id+' has a play control');
+  if(['question','writing'].includes(id))assert.ok(controller.includes(`data-line="${id}"`)===false,id+' is not offered as an unavailable voice clip');
  }
- assert.equal((controller.match(/data-action="play-letter-explanation"/g)||[]).length,1,'the source recording has one control in the video example panel');
+ assert.equal((controller.match(/data-action="play-letter-explanation"/g)||[]).length,3,'the same letter-specific source recording is available for the example and the two later stages');
  assert.equal((controller.match(/\$\{videoExample\(letter\)\}/g)||[]).length,1,'the matching video word cannot be confused with a separate practice example');
- assert.match(controller,/الصورة والتسجيل لهذا المثال من المقطع نفسه/);
+ assert.match(controller,/الصوت يشرح الحرف، والصورة تعرض كلمة/);
+ assert.doesNotMatch(controller,/اسمع شرح مثال/,'letter teaching audio is not presented as pronunciation of the pictured word');
+ assert.match(controller,/شاهد المثال المصوّر/);
+ assert.match(controller,/lf-map-region/);
+ assert.match(controller,/شاهد واسمع/);
  assert.match(controller,/lf-world-hud/);
  assert.match(controller,/lf-map-heading/);
  assert.match(controller,/lf-mentor/);

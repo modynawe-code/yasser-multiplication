@@ -16,4 +16,6 @@ test('feedback sounds stay brief and low gain',()=>{
 
 test('required feedback cues are defined',()=>{
   assert.deepEqual(Object.keys(SOUND_PATTERNS).sort(),['achievement','attention','correct','portal','tap','wrong']);
+  assert.equal(SOUND_PATTERNS.achievement.length,4,'island completion uses a short rising game jingle');
+  assert.equal(SOUND_PATTERNS.portal.length,4,'portal travel has a distinct ascending cue');
 });
