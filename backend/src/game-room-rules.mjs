@@ -1,5 +1,6 @@
 import {createVaultState,applyVaultAction,GAME_ID as VAULT_ID} from '../../preview-v4/src/modules/games/gold-vault/gold-vault-engine.js';
 import { addFamilyWordCategoriesRoomPlayer, applyFamilyWordCategoriesRoomAction, createInitialFamilyWordCategoriesRoomState, projectFamilyWordCategoriesRoomState } from './family-word-categories-engine.mjs';
+import { addKingInspectorRoomPlayer, applyKingInspectorRoomAction, createInitialKingInspectorRoomState, projectKingInspectorRoomState, KING_INSPECTOR_GAME_ID } from './king-inspector-game-engine.mjs';
 import { bidAuction, buildHouse, buyProperty, createMonopolyState, drawCard, endTurn, passAuction, payJail, rollDice, sellProperty, skipProperty, tradeProperty, pickMonopolyCard, flipMonopolyCard, proposeMonopolyTrade, respondMonopolyTrade } from '../../preview-v4/src/modules/games/monopoly/monopoly-engine.js';
 import {
   CLASSIC_MOVE_STATE,
@@ -333,6 +334,15 @@ const RULES=Object.freeze({
     createInitialState:createInitialMonopolyRoomState,
     addPlayer:addMonopolyRoomPlayer,
     applyAction(state,{playerId,type,payload={}}={}){return applyMonopolyRoomAction(state,{playerId,type,payload});}
+  }),
+  [KING_INSPECTOR_GAME_ID]:Object.freeze({
+    gameId:KING_INSPECTOR_GAME_ID,
+    maxPlayers:4,
+    maxSpectators:0,
+    createInitialState:createInitialKingInspectorRoomState,
+    addPlayer:addKingInspectorRoomPlayer,
+    applyAction(state,{playerId,type,payload={}}={}){return applyKingInspectorRoomAction(state,{playerId,type,payload});},
+    projectState(state,context={}){return projectKingInspectorRoomState(state,context);}
   })
 });
 

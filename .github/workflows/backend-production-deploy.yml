@@ -2,6 +2,12 @@ name: Backend Production Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      apply_d1_migrations:
+        description: Apply pending production D1 migrations (database changes)
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -32,8 +38,13 @@ jobs:
         working-directory: backend
 
       - name: Apply production D1 migrations
+        if: ${{ inputs.apply_d1_migrations }}
         run: npx --yes wrangler@4.129.0 d1 migrations apply yasser-khaled-family --remote --config wrangler.jsonc
         working-directory: backend
+
+      - name: Confirm code-only release
+        if: ${{ inputs.apply_d1_migrations == false }}
+        run: echo "No production D1 migration requested; this game release has no migration files."
 
       - name: Deploy production Worker
         run: npx --yes wrangler@4.129.0 deploy --config wrangler.jsonc
@@ -129,6 +140,29 @@ jobs:
           const guestPrivate=await request(`/v1/games/rooms/${familyWordHost.room.code}`,{token:familyWordGuest.playerToken});
           if(guestPrivate?.room?.state?.submissions?.[familyWordHost.room.selfPlayerId])throw new Error('Family word private answers leaked before reveal');
           if(!(guestPrivate?.room?.state?.submittedPlayers||[]).includes(familyWordHost.room.selfPlayerId))throw new Error('Family word submitted status missing');
+
+          const kingHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'king-inspector-thief-executioner',learnerId:'yasser',displayName:'King Inspector smoke host'}});
+          if(!/^\d{6}$/.test(kingHost?.room?.code||''))throw new Error('King Inspector room code contract failed');
+          const kingPlayers=[{learnerId:'khaled',displayName:'King Inspector smoke guest 1'},{learnerId:'mashaal',displayName:'King Inspector smoke guest 2'},{learnerId:'parent',displayName:'King Inspector smoke guest 3'}];
+          const kingGuests=[];
+          for(const player of kingPlayers){
+            kingGuests.push(await request('/v1/games/rooms/join',{method:'POST',body:{code:kingHost.room.code,...player}}));
+          }
+          if(kingGuests.at(-1)?.room?.status!=='playing'||kingGuests.at(-1)?.room?.players?.length!==4)throw new Error('King Inspector four-player start contract failed');
+          const kingSeats=[kingHost,...kingGuests];
+          const kingViews=[];
+          for(const seat of kingSeats)kingViews.push(await request(`/v1/games/rooms/${kingHost.room.code}`,{token:seat.playerToken}));
+          const kingRoles=kingViews.map(view=>view?.room?.state?.privateRole);
+          if(new Set(kingRoles).size!==4||kingRoles.some(role=>!role))throw new Error('King Inspector role assignment contract failed');
+          for(const view of kingViews){
+            if(view?.room?.state?.roles||view?.room?.state?.roleHistory)throw new Error('King Inspector private role data leaked');
+            if(!view?.room?.state?.privateRole)throw new Error('King Inspector private role missing for its player');
+          }
+          const kingIndex=kingRoles.indexOf('king');
+          const kingView=kingViews[kingIndex];
+          const kingAsked=await request(`/v1/games/rooms/${kingHost.room.code}/actions`,{method:'POST',token:kingSeats[kingIndex].playerToken,body:{expectedVersion:kingView.room.version,type:'ask-inspector'}});
+          if(kingAsked?.room?.state?.phase!=='inspector-claim')throw new Error('King Inspector first action contract failed');
+          console.log(`Production King Inspector smoke passed: four seats, private roles, and first action (${kingHost.room.code}).`);
 
           const monopolyHost=await request('/v1/games/rooms',{method:'POST',body:{gameId:'family-monopoly',learnerId:'yasser',displayName:'Recovery smoke host'}});
           if(Date.parse(monopolyHost.room.expiresAt)-Date.now()<23*3600000)throw new Error('Monopoly 24-hour recovery window missing');

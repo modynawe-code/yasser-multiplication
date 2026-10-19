@@ -105,6 +105,19 @@ export const gameRegistry=createGameRegistry([
     metadata:{accent:'family',icon:'🏠',availabilityLabel:'محلي + أونلاين — 2 إلى 4',description:'لعبة عقارات عائلية: العبوا على جهاز واحد أو من أجهزة مختلفة، واشتروا الأراضي وطوروها وتنافسوا حتى النهاية.'}
   },
   {
+    id:'king-inspector-thief-executioner',
+    title:'ملك ومفتش ولص وجلاد',
+    category:'fun',
+    playModes:['online'],
+    networkMode:'turn-based',
+    learningMode:'none',
+    minPlayers:4,
+    maxPlayers:4,
+    version:1,
+    load:()=>import('./king-inspector/king-inspector-controller.js'),
+    metadata:{accent:'family',icon:cardArt('assets/games/king-inspector/role-cast.webp'),availabilityLabel:'أونلاين — ٤ لاعبين',description:'اسألوا عن المفتش، ثم يحاول كشف اللص من الجلاد. أدوار سرية وجولات متجددة وسجل انتصارات.'}
+  },
+  {
     id:'domino',
     title:'الدومينو',
     category:'fun',
