@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-220`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-221`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -31,6 +31,8 @@ const MASHAAL_ARABIC_LETTER_AUDIO_ASSETS=MASHAAL_ARABIC_LETTER_AUDIO_IDS
   .map(id=>`./assets/audio/mashaal/arabic-letters/${id}.mp3`);
 const KHALED_LETTER_VIDEO_AUDIO_ASSETS=MASHAAL_ARABIC_LETTER_AUDIO_IDS
   .map(id=>`./assets/audio/khaled/letter-forms/video/${id}.mp3`);
+const KHALED_WORD_ORDER_AUDIO_ASSETS=['raml','barad','badr','badan','laban','balad','naar','noor','daar','deen','maal','neel']
+  .map(id=>`./assets/audio/khaled/literacy/word-order/${id}.mp3`);
 const KHALED_LETTER_VIDEO_STILL_ASSETS=MASHAAL_ARABIC_LETTER_AUDIO_IDS
   .map(id=>`./assets/images/khaled/letter-forms/video/${id}.jpg`);
 const KHALED_LETTER_MASCOT_ASSET='./assets/images/khaled/letter-forms/avatar-block.webp';
@@ -49,6 +51,7 @@ const MASHAAL_ARABIC_COLORING_ASSETS=[
   './assets/oer/openmoji/coloring/rabbit.svg','./assets/oer/openmoji/coloring/duck.svg','./assets/oer/openmoji/coloring/crocodile.svg','./assets/oer/openmoji/coloring/fox.svg','./assets/oer/openmoji/coloring/camel.svg'
 ];
 const APP_SHELL=[
+  './src/modules/khaled/literacy/word-order-game.js','./src/modules/khaled/literacy/word-order-game.css','./src/modules/khaled/literacy/word-order-audio-manifest.js',...KHALED_WORD_ORDER_AUDIO_ASSETS,
   './src/modules/khaled/letter-forms/letter-forms.js','./src/modules/khaled/letter-forms/lesson-audio.js','./src/modules/khaled/letter-forms/letter-data.js','./src/modules/khaled/letter-forms/letter-video-audio-manifest.js','./src/modules/khaled/letter-forms/writing-paths.js','./src/modules/khaled/letter-forms/tracing.js','./src/modules/khaled/letter-forms/letter-forms.css','./assets/khaled/letter-forms/connection-hands.png',...KHALED_LETTER_VIDEO_AUDIO_ASSETS,...KHALED_LETTER_VIDEO_STILL_ASSETS,KHALED_LETTER_MASCOT_ASSET,KHALED_LETTER_WORLD_ASSET,KHALED_LETTER_ISLAND_ASSET,
   './src/modules/yasser/reviews/math-grade6.js','./src/modules/yasser/reviews/math-grade6-data.js','./src/modules/yasser/reviews/math-grade6.css',
   './src/modules/yasser/reviews/english-audio-manifest.js','./src/modules/yasser/reviews/english-review-audio.js','./src/modules/khaled/reviews/grade1-data.js','./src/modules/khaled/reviews/grade1-reviews.js','./src/modules/khaled/reviews/handwriting.js','./assets/reviews/grade1/arabic-sounds.webp','./assets/reviews/grade1/math-count-1.webp','./assets/reviews/grade1/math-count-2.webp','./assets/reviews/grade1/math-count-3.webp','./assets/reviews/grade1/math-count-4.webp','./assets/reviews/grade1/math-count-5.webp','./assets/reviews/grade1/math-count-6.webp','./src/modules/yasser/reviews/review-engine.js','./src/modules/yasser/reviews/review-runtime.js','./src/modules/yasser/reviews/grade6-reviews.js','./src/modules/yasser/reviews/digital-grade6-data.js','./src/modules/yasser/reviews/arabic-grade6-data.js','./src/modules/yasser/reviews/english-grade6-data.js','./src/modules/yasser/reviews/science-grade6-data.js','./src/modules/yasser/reviews/social-grade6-data.js','./src/modules/yasser/reviews/islamic-grade6-data.js','./assets/reviews/grade6/arabic-poem.webp','./assets/reviews/grade6/arabic-reading.webp','./assets/reviews/grade6/digital-arrow.webp','./assets/reviews/grade6/digital-bar.webp','./assets/reviews/grade6/digital-chest.webp','./assets/reviews/grade6/digital-controller.webp','./assets/reviews/grade6/digital-cube.webp','./assets/reviews/grade6/digital-cylinder.webp','./assets/reviews/grade6/digital-house.webp','./assets/reviews/grade6/digital-line.webp','./assets/reviews/grade6/digital-pie.webp','./assets/reviews/grade6/digital-viewcube.webp','./assets/reviews/grade6/digital-workplane.webp','./assets/reviews/grade6/english-animal-1.webp','./assets/reviews/grade6/english-animal-2.webp','./assets/reviews/grade6/english-animal-3.webp','./assets/reviews/grade6/english-animal-4.webp','./assets/reviews/grade6/english-animal-5.webp','./assets/reviews/grade6/english-balance.webp','./assets/reviews/grade6/english-welcome-1.webp','./assets/reviews/grade6/english-welcome-2.webp','./assets/reviews/grade6/english-welcome-3.webp','./assets/reviews/grade6/english-welcome-4.webp','./assets/reviews/grade6/english-welcome-5.webp','./assets/reviews/grade6/science-animal-cell.webp','./assets/reviews/grade6/science-photosynthesis.webp','./assets/reviews/grade6/science-plants.webp',

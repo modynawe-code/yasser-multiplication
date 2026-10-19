@@ -33,10 +33,11 @@ function ensureView(){
   view.innerHTML=`
     <div class="khaled-literacy-shell">
       <header class="khaled-literacy-header">
-        <div><div class="kicker">لغتي • أول ابتدائي</div><h1 id="khaledLiteracyTitle">لغتي</h1><p>تدرّب على الحروف أو اختر درس فيديو.</p></div>
+        <div><div class="kicker">لغتي • أول ابتدائي</div><h1 id="khaledLiteracyTitle">لغتي</h1><p>ابدأ لعبة ترتيب الكلمات أو اختر درس فيديو.</p></div>
         <button class="icon-btn" id="khaledLiteracyBack" type="button">العودة لمواد خالد</button>
       </header>
-      <div id="khaledLiteracyLibrary"><section class="khaled-literacy-activity-entry"><span class="literacy-letter-mark" aria-hidden="true">صـ</span><div><h2>أشكال الحروف وكتابتها</h2><p>٢٨ حرفًا · اتصال بالأيدي · تدريب كتابة باللمس</p></div><button id="khaledLetterFormsOpen" type="button">ابدأ التدريب</button></section><h2>فيديوهات لغتي</h2><div class="khaled-literacy-lessons" aria-label="فيديوهات لغتي">${lessonButtons()}</div></div>
+      <div id="khaledLiteracyLibrary"><div class="khaled-literacy-activity-entry-group"><section class="khaled-literacy-activity-entry"><span class="literacy-letter-mark" aria-hidden="true">رتّب</span><div><h2>سباق ترتيب الكلمات</h2><p>مرحلتان · ٢٧ كلمة · تسجيلات صوتية للكلمات المتوفرة</p></div><button id="khaledWordOrderOpen" type="button">ابدأ اللعبة</button></section><section class="khaled-literacy-activity-entry"><span class="literacy-letter-mark" aria-hidden="true">صـ</span><div><h2>أشكال الحروف وكتابتها</h2><p>٢٨ حرفًا · اتصال بالأيدي · تدريب كتابة باللمس</p></div><button id="khaledLetterFormsOpen" type="button">ابدأ التدريب</button></section></div><h2>فيديوهات لغتي</h2><div class="khaled-literacy-lessons" aria-label="فيديوهات لغتي">${lessonButtons()}</div></div>
+      <section id="khaledWordOrderRoot" hidden aria-label="لعبة ترتيب الكلمات"></section>
       <section id="khaledLiteracyWatch" hidden aria-label="مشاهدة الدرس">
       <button id="khaledLiteracyToLessons" class="icon-btn" type="button">← العودة للدروس</button>
       <section class="khaled-literacy-now" aria-live="polite">
@@ -166,6 +167,7 @@ export function bindKhaledLiteracyControls(view){
 export function createKhaledLiteracyController({showView,onBack}={}){
   let bound=false;
   let letterController=null;
+  let wordOrderGame=null;
   function open(){
     ensureStyle();
     const view=ensureView();
@@ -177,6 +179,23 @@ export function createKhaledLiteracyController({showView,onBack}={}){
           letterController||=createLetterFormsController({showView,onBack:open});
           letterController.open();
         }catch(error){button.textContent='تعذر الفتح؛ اضغط للمحاولة مجددًا';console.error('Letter forms load failed',error);}
+        finally{button.disabled=false;}
+      });
+      view.querySelector('#khaledWordOrderOpen').addEventListener('click',async(event)=>{
+        const button=event.currentTarget;button.disabled=true;
+        const library=view.querySelector('#khaledLiteracyLibrary');
+        const watch=view.querySelector('#khaledLiteracyWatch');
+        const gameRoot=view.querySelector('#khaledWordOrderRoot');
+        try{
+          if(!wordOrderGame){
+            const {createKhaledWordOrderGame}=await import('./word-order-game.js');
+            wordOrderGame=createKhaledWordOrderGame({root:gameRoot,onBack:()=>{
+              gameRoot.hidden=true;library.hidden=false;
+              view.querySelector('#khaledWordOrderOpen')?.focus();
+            }});
+          }
+          library.hidden=true;watch.hidden=true;wordOrderGame.open();
+        }catch(error){button.textContent='تعذر فتح اللعبة؛ اضغط للمحاولة مجددًا';console.error('Khaled word game load failed',error);}
         finally{button.disabled=false;}
       });
       bindKhaledLiteracyControls(view);
@@ -192,10 +211,12 @@ export function createKhaledLiteracyController({showView,onBack}={}){
         const next=VIDEOS[index+delta];
         if(next)selectVideo(view,next.id);
       });
-      document.getElementById('khaledLiteracyBack')?.addEventListener('click',()=>{view.querySelector('#khaledLiteracyVideo')?.pause();onBack?.();});
+      document.getElementById('khaledLiteracyBack')?.addEventListener('click',()=>{view.querySelector('#khaledLiteracyVideo')?.pause();wordOrderGame?.close();onBack?.();});
       bound=true;
     }
     view.querySelector('#khaledLiteracyWatch').hidden=true;
+    view.querySelector('#khaledWordOrderRoot').hidden=true;
+    wordOrderGame?.close();
     view.querySelector('#khaledLiteracyLibrary').hidden=false;
     showView?.('khaledLiteracyView');
   }
