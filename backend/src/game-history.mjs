@@ -45,6 +45,10 @@ function terminalOutcome(gameId,state){
     if(state.status!=='finished'||!state.winnerId)return null;
     return{winnerIds:[state.winnerId],scores:Object.fromEntries((state.players||[]).map(player=>[player.id,Number(player.cash||0)])),details:{board:'knowledge-monopoly-classic-40'}};
   }
+  if(gameId==='king-inspector-thief-executioner'){
+    if(state.status!=='finished'||state.phase!=='finished')return null;
+    return{winnerIds:uniq(state.winnerIds),scores:state.scores||{},details:{round:state.round||1,accusationCorrect:Boolean(state.accusation?.caught),penaltySkipped:Boolean(state.penaltySkipped),roles:{king:state.kingPlayerId,inspector:state.accusation?.inspectorId,thief:Object.entries(state.roles||{}).find(([,role])=>role==='thief')?.[0],executioner:Object.entries(state.roles||{}).find(([,role])=>role==='executioner')?.[0]}}};
+  }
   if(state.status==='finished'||state.status==='won'||state.status==='draw'){
     return{winnerIds:uniq(state.winnerIds||[state.winner].filter(Boolean)),draw:state.status==='draw',scores:state.scores||{},details:{}};
   }

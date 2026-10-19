@@ -13,6 +13,23 @@ test('games platform is composed as an isolated feature module',async()=>{
   assert.match(main,/games\?\.leave\(\)/);
 });
 
+test('King Inspector is a four-player online game with a private-role UI and cached art',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  const game=await read('src/modules/games/king-inspector/king-inspector-controller.js');
+  const css=await read('src/modules/games/king-inspector/king-inspector.css');
+  const worker=await read('service-worker.js');
+  assert.match(catalog,/id:'king-inspector-thief-executioner',[\s\S]*?playModes:\['online'\],[\s\S]*?minPlayers:4,[\s\S]*?maxPlayers:4/);
+  assert.match(controller,/gameLauncher\.register\('king-inspector-thief-executioner'/);
+  assert.match(game,/king-inspector-sound-muted-v1/);
+  assert.match(game,/privateRole/);
+  assert.match(game,/أنا حضرتك/);
+  assert.match(game,/طلع اللص من الجلاد/);
+  assert.match(game,/جولة جديدة — وزّعوا الأدوار/);
+  assert.match(css,/prefers-reduced-motion/);
+  for(const path of ['src/modules/games/king-inspector/king-inspector-controller.js','src/modules/games/king-inspector/king-inspector.css?v=1','assets/games/king-inspector/role-cast.webp'])assert.ok(worker.includes(`./${path}`),`missing ${path}`);
+});
+
 test('games shell exposes a clear registry-hydrated local vs online XO lobby without learner hardcoding',async()=>{
   const shell=await read('src/modules/games/ui/games-shell.js');
   assert.match(shell,/gamesOpenBtn/);

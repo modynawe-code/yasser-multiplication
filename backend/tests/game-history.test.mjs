@@ -82,6 +82,26 @@ test('family word online result maps player ids to learner ids and scores',()=>{
   assert.equal(built.value.players.find(p=>p.learnerId==='yasser').score,125);
 });
 
+test('King Inspector finished rounds record the winning team, scores, and revealed roles',()=>{
+  const built=buildOnlineRoomMatch({
+    roomRow:{id:'room-king-inspector',code:'135790',game_id:'king-inspector-thief-executioner',history_family_id:'par-family-1',created_at:'2026-10-19T18:00:00Z'},
+    players:[
+      {player_id:'p1',learner_id:'father',display_name:'الأب',seat:0,participation_role:'player'},
+      {player_id:'p2',learner_id:'yasser',display_name:'ياسر',seat:1,participation_role:'player'},
+      {player_id:'p3',learner_id:'khaled',display_name:'خالد',seat:2,participation_role:'player'},
+      {player_id:'p4',learner_id:'mashaal',display_name:'مشاعل',seat:3,participation_role:'player'}
+    ],
+    version:12,recordedAt:'2026-10-19T18:03:00Z',
+    state:{status:'finished',phase:'finished',round:1,startedAt:'2026-10-19T18:00:20Z',winnerIds:['p1','p2','p4'],scores:{p1:1,p2:1,p3:0,p4:1},kingPlayerId:'p1',accusation:{inspectorId:'p2',targetPlayerId:'p3',caught:true},roles:{p1:'king',p2:'inspector',p3:'thief',p4:'executioner'},penaltySkipped:false}
+  });
+  assert.equal(built.ok,true);
+  assert.deepEqual(built.value.winnerIds,['father','yasser','mashaal']);
+  assert.deepEqual(built.value.players.map(player=>player.outcome),['win','win','loss','win']);
+  assert.deepEqual(built.value.players.map(player=>player.score),[1,1,0,1]);
+  assert.equal(JSON.parse(built.value.detailsJson).accusationCorrect,true);
+  assert.equal(JSON.parse(built.value.detailsJson).roles.thief,'p3');
+});
+
 
 test('online room without a family identity is not written to family history',()=>{
   const built=buildOnlineRoomMatch({
