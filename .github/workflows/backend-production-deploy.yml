@@ -2,6 +2,12 @@ name: Backend Production Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      apply_d1_migrations:
+        description: Apply pending production D1 migrations (database changes)
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -32,8 +38,13 @@ jobs:
         working-directory: backend
 
       - name: Apply production D1 migrations
+        if: ${{ inputs.apply_d1_migrations }}
         run: npx --yes wrangler@4.129.0 d1 migrations apply yasser-khaled-family --remote --config wrangler.jsonc
         working-directory: backend
+
+      - name: Confirm code-only release
+        if: ${{ inputs.apply_d1_migrations == false }}
+        run: echo "No production D1 migration requested; this game release has no migration files."
 
       - name: Deploy production Worker
         run: npx --yes wrangler@4.129.0 deploy --config wrangler.jsonc
