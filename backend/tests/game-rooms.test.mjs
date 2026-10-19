@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { addXoRoomGuest, applyXoRoomAction, createInitialXoRoomState } from '../src/game-rooms.mjs';
 import { addMonopolyRoomPlayer, addRpsRoomGuest, applyMonopolyRoomAction, applyRpsRoomAction, createInitialMonopolyRoomState, createInitialRpsRoomState, getGameRoomRules, listGameRoomRuleIds, projectRpsRoomState } from '../src/game-room-rules.mjs';
+import { projectKingInspectorRoomState } from '../src/king-inspector-game-engine.mjs';
 
 const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -51,7 +52,7 @@ test('server requires both players before starting an online rematch',()=>{
 });
 
 test('room transport dispatches game-specific state changes through a rule registry',()=>{
-  assert.deepEqual(listGameRoomRuleIds(),['gold-vault','xo','rock-paper-scissors','family-word-categories','domino','family-monopoly']);
+  assert.deepEqual(listGameRoomRuleIds(),['gold-vault','xo','rock-paper-scissors','family-word-categories','domino','family-monopoly','king-inspector-thief-executioner']);
   assert.equal(getGameRoomRules('unknown'),null);
   const rules=getGameRoomRules('xo');
   let state=rules.addPlayer(rules.createInitialState('host'),'guest').state;
@@ -60,6 +61,49 @@ test('room transport dispatches game-specific state changes through a rule regis
   assert.equal(moved.state.board[4],'host');
   assert.equal(rules.maxPlayers,2);
   assert.equal(rules.maxSpectators,8);
+});
+
+test('King Inspector online game waits for exactly four and privately distributes fair roles',()=>{
+  const rules=getGameRoomRules('king-inspector-thief-executioner');let state=rules.createInitialState('a');
+  assert.equal(rules.maxPlayers,4);assert.equal(rules.maxSpectators,0);assert.equal(state.status,'waiting');
+  for(const player of ['b','c']){state=rules.addPlayer(state,player).state;assert.equal(state.status,'waiting');}
+  state=rules.addPlayer(state,'d').state;assert.equal(state.status,'playing');assert.equal(state.phase,'king-question');assert.equal(state.round,1);
+  assert.equal(new Set(Object.values(state.roles)).size,4);
+  const projected=rules.projectState(state,{viewerPlayerId:'a'});assert.equal(projected.privateRole,state.roles.a);assert.equal('roles' in projected,false);assert.equal('roleHistory' in projected,false);
+  const other=rules.projectState(state,{viewerPlayerId:'b'});assert.equal(other.privateRole,state.roles.b);assert.equal('roles' in other,false);
+  assert.equal(rules.addPlayer(state,'e').reason,'room-not-waiting');
+  for(let round=2;round<=4;round++){
+    state.status='finished';state.phase='finished';
+    state=rules.applyAction(state,{playerId:'a',type:'next-round'}).state;
+    assert.equal(state.round,round);assert.equal(new Set(Object.values(state.roles)).size,4);
+    for(const id of state.players)assert.equal(new Set(state.roleHistory[id]).size,round);
+  }
+});
+
+test('King Inspector validates dialogue roles, outcome, challenge, skip, and cumulative wins',()=>{
+  const rules=getGameRoomRules('king-inspector-thief-executioner');let state=rules.createInitialState('a');
+  for(const id of ['b','c','d'])state=rules.addPlayer(state,id).state;
+  const king=state.kingPlayerId,inspector=state.players.find(id=>state.roles[id]==='inspector'),thief=state.players.find(id=>state.roles[id]==='thief'),executioner=state.players.find(id=>state.roles[id]==='executioner');
+  assert.equal(rules.applyAction(state,{playerId:inspector,type:'ask-inspector'}).reason,'king-only');
+  state=rules.applyAction(state,{playerId:king,type:'ask-inspector'}).state;
+  state=rules.applyAction(state,{playerId:inspector,type:'claim-inspector'}).state;
+  assert.equal(rules.projectState(state,{viewerPlayerId:king}).publicRoles[inspector],'inspector');
+  state=rules.applyAction(state,{playerId:king,type:'issue-command'}).state;
+  assert.equal(rules.applyAction(state,{playerId:king,type:'accuse',payload:{targetPlayerId:thief}}).reason,'inspector-only');
+  state=rules.applyAction(state,{playerId:inspector,type:'accuse',payload:{targetPlayerId:thief}}).state;
+  assert.deepEqual(state.winnerIds,[king,inspector,executioner]);assert.equal(state.penaltyTargetId,thief);
+  assert.deepEqual(rules.projectState(state,{viewerPlayerId:'a'}).publicRoles,state.roles);
+  state=rules.applyAction(state,{playerId:king,type:'choose-challenge',payload:{challengeId:'animal-voice'}}).state;
+  assert.equal(rules.applyAction(state,{playerId:inspector,type:'complete-challenge'}).reason,'penalty-target-only');
+  state=rules.applyAction(state,{playerId:thief,type:'complete-challenge'}).state;
+  assert.equal(state.status,'finished');assert.equal(state.scores[king],1);assert.equal(state.scores[inspector],1);assert.equal(state.scores[executioner],1);assert.equal(state.scores[thief],0);
+  state=rules.applyAction(state,{playerId:'a',type:'next-round'}).state;
+  const nextKing=state.kingPlayerId,nextInspector=state.players.find(id=>state.roles[id]==='inspector'),nextThief=state.players.find(id=>state.roles[id]==='thief');
+  state=rules.applyAction(state,{playerId:nextKing,type:'ask-inspector'}).state;state=rules.applyAction(state,{playerId:nextInspector,type:'claim-inspector'}).state;state=rules.applyAction(state,{playerId:nextKing,type:'issue-command'}).state;
+  const missedTarget=state.players.find(id=>id!==nextKing&&id!==nextInspector&&id!==nextThief);
+  state=rules.applyAction(state,{playerId:nextInspector,type:'accuse',payload:{targetPlayerId:missedTarget}}).state;
+  assert.deepEqual(state.winnerIds,[nextThief]);assert.equal(state.penaltyTargetId,nextInspector);
+  state=rules.applyAction(state,{playerId:nextKing,type:'skip-challenge'}).state;assert.equal(state.status,'finished');assert.equal(state.penaltySkipped,true);
 });
 
 test('family Monopoly rooms wait for 2-4 players and only the host can start',()=>{

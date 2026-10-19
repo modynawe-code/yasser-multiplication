@@ -23,7 +23,7 @@ function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,char=>({'
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,marioController=null,ps1Controller=null,puzzleController=null,monopolyController=null,localXoStartedAt=null,localXoRecordedKey='';
+  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,categoriesController=null,marioController=null,ps1Controller=null,puzzleController=null,monopolyController=null,kingInspectorController=null,localXoStartedAt=null,localXoRecordedKey='';
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false,historyDays=7;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -36,6 +36,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   gameLauncher.register('super-mario-bros',({game})=>openMario(game));
   gameLauncher.register('playstation-ps1',({game})=>openPs1(game));
   gameLauncher.register('family-monopoly',({game})=>openMonopoly(game));
+  gameLauncher.register('king-inspector-thief-executioner',({game,participants})=>openKingInspector(game,participants));
 
   async function openMonopoly(game=gameRegistry.get('family-monopoly')){
     clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);
@@ -110,18 +111,18 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   function setXoMode(active){document.body.classList.toggle('xo-game-mode',Boolean(active));}
   function lobbyStatus(message,error=false){const node=byId('xoLobbyStatus');if(node){node.textContent=message||'';node.classList.toggle('error',Boolean(error));}}
   function setRoomCode(code){const box=byId('xoRoomCodeBox'),value=byId('xoRoomCode');if(value)value.textContent=code||'------';if(box)box.hidden=!code;}
-  function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode');document.body.classList.add('games-mode');}
+  function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','king-inspector-mode');document.body.classList.add('games-mode');}
 
   function leave(){
     document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode','categories-game-mode','mario-game-mode','ps1-game-mode','puzzle-game-mode','monopoly-game-mode');
-    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});monopolyController?.leave?.({navigate:false});
+    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});monopolyController?.leave?.({navigate:false});kingInspectorController?.stop?.();
     clearChallenge();onlineSession.forget();xoEvents.reset();
     xoState=null;playMode='local';onlineTurnVersion=-1;onlineCelebrated='';
   }
 
   function enterHome(){
     onBeforeEnter?.();
-    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});monopolyController?.leave?.({navigate:false});
+    categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});monopolyController?.leave?.({navigate:false});kingInspectorController?.stop?.();
     onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode','categories-game-mode','mario-game-mode');
     document.body.classList.remove('ps1-game-mode','puzzle-game-mode','monopoly-game-mode');enterGamesChrome();void gameHistoryService.flushPending();renderCatalog();show('gamesHomeView');
   }
@@ -256,6 +257,17 @@ export function createGamesController({learningAdapter,challengePresentations=nu
     }catch{
       document.body.classList.remove('categories-game-mode');renderCatalog();show('gamesHomeView');
     }
+  }
+
+  async function openKingInspector(game=gameRegistry.get('king-inspector-thief-executioner'),participants=gamePlayers.listEligible(game)){
+    clearChallenge();onlineSession.stop();xoState=null;playMode='online';setXoMode(false);
+    rpsController?.leave();categoriesController?.leave?.({navigate:false});marioController?.leave();ps1Controller?.leave();puzzleController?.leave({navigate:false});monopolyController?.leave?.({navigate:false});
+    document.body.classList.remove('rps-game-mode','categories-game-mode','mario-game-mode','ps1-game-mode','puzzle-game-mode','monopoly-game-mode');enterGamesChrome();
+    if(!game?.load)return;
+    try{
+      if(!kingInspectorController){const module=await game.load();kingInspectorController=module.createKingInspectorController({participants,roomClient,showView:show,onBack:()=>{renderCatalog();show('gamesHomeView');}});}
+      kingInspectorController.start();
+    }catch{kingInspectorController?.stop?.();document.body.classList.remove('king-inspector-mode');renderCatalog();show('gamesHomeView');}
   }
 
   function openXoLobby(){
