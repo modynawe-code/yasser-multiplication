@@ -102,6 +102,21 @@ test('RPS is lazy-loaded as an independent fun-game module',async()=>{
   assert.match(shell,/data-rps-choice="scissors"/);
 });
 
+test('King Inspector is a four-player online game with private roles, history and cached presentation',async()=>{
+  const catalog=await read('src/modules/games/game-catalog.js');
+  const controller=await read('src/modules/games/games-controller.js');
+  const king=await read('src/modules/games/king-inspector/king-inspector-controller.js');
+  const worker=await read('service-worker.js');
+  assert.match(catalog,/king-inspector-thief-executioner/);
+  assert.match(controller,/openKingInspector/);
+  assert.match(controller,/أونلاين — ٤ لاعبين/);
+  assert.match(king,/أنا حضرتك/);
+  assert.match(king,/طلع اللص من الجلاد/);
+  assert.match(king,/سجل الجولات/);
+  assert.match(worker,/king-inspector-controller\.js/);
+  assert.match(worker,/role-cast\.webp/);
+});
+
 test('RPS presentation is a full arena rather than a page card',async()=>{
   const shell=await read('src/modules/games/rps/rps-shell.js');
   const controller=await read('src/modules/games/rps/rps-controller.js');

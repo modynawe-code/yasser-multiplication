@@ -1,12 +1,13 @@
 import { randomId, randomSessionToken, sha256Base64Url } from './security.mjs';
 import { normalizeLearnerSlug } from './learners.mjs';
+import { addKingInspectorRoomPlayer, applyKingInspectorRoomAction, createInitialKingInspectorRoomState, projectKingInspectorRoomState, KING_INSPECTOR_GAME_ID } from './king-inspector-game-engine.mjs';
 
 const ROOM_TTL_MINUTES=30;
 const MAX_RECENT_ROOMS_PER_IP=10;
 const MAX_JOIN_ATTEMPTS=20;
 const JOIN_WINDOW_MINUTES=10;
 const JOIN_BLOCK_MINUTES=15;
-const DEFAULT_DISPLAY_NAMES=Object.freeze({yasser:'ياسر',khaled:'خالد',mashaal:'مشاعل'});
+const DEFAULT_DISPLAY_NAMES=Object.freeze({yasser:'ياسر',khaled:'خالد',mashaal:'مشاعل',father:'الأب',mother:'الأم'});
 const WIN_LINES=Object.freeze([[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]);
 
 const nowIso=()=>new Date().toISOString();
@@ -17,12 +18,13 @@ function normalizeDisplayName(value,learnerId){
   const text=String(value||fallback).replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim().slice(0,40);
   return text||fallback;
 }
-function validGame(value){return value==='xo';}
+function validGame(value){return value==='xo'||value===KING_INSPECTOR_GAME_ID;}
 function normalizeCode(value){return String(value||'').replace(/\D/g,'').slice(0,6);}
 function clone(value){return JSON.parse(JSON.stringify(value));}
 function winningLine(board,playerId){return WIN_LINES.find(line=>line.every(index=>board[index]===playerId))||null;}
 function otherPlayer(state,playerId){return state.players.find(id=>id!==playerId)||null;}
 function clientIp(request){return request.headers.get('CF-Connecting-IP')||'unknown';}
+function initialState(gameId,playerId){return gameId===KING_INSPECTOR_GAME_ID?createInitialKingInspectorRoomState(playerId):createInitialXoRoomState(playerId);}
 
 export function generateRoomCode(){
   const values=new Uint32Array(1);crypto.getRandomValues(values);
@@ -74,9 +76,16 @@ async function roomByCode(env,code){
 async function playersForRoom(env,roomId){
   const rows=await env.DB.prepare('SELECT player_id,learner_id,display_name,seat FROM game_room_players WHERE room_id=? ORDER BY seat').bind(roomId).all();return rows.results||[];
 }
+async function kingInspectorHistory(env,code){
+  const rows=await env.DB.prepare('SELECT round_number,winner_ids_json,scores_json,roles_json,accusation_json,ended_at FROM king_inspector_round_history WHERE room_code=? ORDER BY round_number DESC LIMIT 50').bind(code).all();
+  return(rows.results||[]).map(row=>({round:Number(row.round_number),winnerIds:JSON.parse(row.winner_ids_json||'[]'),scores:JSON.parse(row.scores_json||'{}'),roles:JSON.parse(row.roles_json||'{}'),accusation:JSON.parse(row.accusation_json||'null'),endedAt:row.ended_at}));
+}
 async function roomPayload(env,row,selfPlayerId=null){
   let state;try{state=JSON.parse(row.state_json);}catch{state=null;}
-  return{code:row.code,gameId:row.game_id,status:row.status,version:Number(row.version||0),expiresAt:row.expires_at,state,players:(await playersForRoom(env,row.id)).map(item=>({playerId:item.player_id,learnerId:item.learner_id,name:item.display_name,seat:item.seat})),selfPlayerId};
+  if(row.game_id===KING_INSPECTOR_GAME_ID&&state)state=projectKingInspectorRoomState(state,{viewerPlayerId:selfPlayerId});
+  const payload={code:row.code,gameId:row.game_id,status:row.status,version:Number(row.version||0),expiresAt:row.expires_at,state,players:(await playersForRoom(env,row.id)).map(item=>({playerId:item.player_id,learnerId:item.learner_id,name:item.display_name,seat:item.seat})),selfPlayerId};
+  if(row.game_id===KING_INSPECTOR_GAME_ID&&selfPlayerId)payload.roundHistory=await kingInspectorHistory(env,row.code);
+  return payload;
 }
 async function playerForToken(env,roomId,token){
   if(!token)return null;const hash=await sha256Base64Url(token);
@@ -106,7 +115,7 @@ async function createRoom(request,env,respond,readJson){
   const body=await readJson(request),gameId=String(body?.gameId||''),learnerId=normalizeLearnerSlug(body?.learnerId),displayName=normalizeDisplayName(body?.displayName,learnerId);
   if(!validGame(gameId)||!validLearner(learnerId))return respond(400,{error:'invalid_game_room'});
   const throttle=await allowCreate(request,env);if(!throttle.ok)return respond(429,{error:'too_many_rooms'});
-  const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),state=createInitialXoRoomState(playerId);
+  const roomId=randomId('grm'),playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),createdAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),state=initialState(gameId,playerId);
   let code=null;
   for(let attempt=0;attempt<12;attempt++){
     const candidate=generateRoomCode();
@@ -131,10 +140,14 @@ async function joinRoom(request,env,respond,readJson){
   if(row.status!=='waiting')return fail(409,'room_not_waiting',{room:await roomPayload(env,row)});
   const existing=await playersForRoom(env,row.id);if(existing.some(item=>item.learner_id===learnerId))return fail(409,'learner_already_in_room');
   let state;try{state=JSON.parse(row.state_json);}catch{return respond(500,{error:'invalid_room_state'});}
-  const playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso(),next=addXoRoomGuest(state,playerId);if(!next.ok)return fail(409,next.reason);
-  const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,displayName,tokenHash,1,joinedAt,joinedAt).run();
+  const playerId=randomId('gpl'),playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),joinedAt=nowIso();
+  const next=row.game_id===KING_INSPECTOR_GAME_ID?addKingInspectorRoomPlayer(state,playerId):addXoRoomGuest(state,playerId);
+  if(!next.ok)return fail(409,next.reason);
+  const seat=row.game_id===KING_INSPECTOR_GAME_ID?existing.length:1;
+  const insert=await env.DB.prepare('INSERT OR IGNORE INTO game_room_players(room_id,player_id,learner_id,display_name,token_hash,seat,joined_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?)').bind(row.id,playerId,learnerId,displayName,tokenHash,seat,joinedAt,joinedAt).run();
   if(Number(insert?.meta?.changes||0)!==1)return fail(409,'room_full');
-  const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind('playing',JSON.stringify(next.state),joinedAt,futureIso(ROOM_TTL_MINUTES),row.id,row.version).run();
+  const nextStatus=next.state.status==='waiting'?'waiting':'playing';
+  const update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(nextStatus,JSON.stringify(next.state),joinedAt,futureIso(ROOM_TTL_MINUTES),row.id,row.version).run();
   if(Number(update?.meta?.changes||0)!==1){
     await env.DB.prepare('DELETE FROM game_room_players WHERE room_id=? AND player_id=?').bind(row.id,playerId).run().catch(()=>null);
     return fail(409,'room_changed');
@@ -156,9 +169,15 @@ async function submitAction(request,env,respond,readJson,code){
   const body=await readJson(request),expectedVersion=Number(body?.expectedVersion),type=String(body?.type||''),cell=body?.cell;
   if(!Number.isInteger(expectedVersion)||expectedVersion!==Number(row.version))return respond(409,{error:'version_conflict',room:await roomPayload(env,row,player.player_id)});
   let state;try{state=JSON.parse(row.state_json);}catch{return respond(500,{error:'invalid_room_state'});}
-  const result=applyXoRoomAction(state,{playerId:player.player_id,type,cell});if(!result.ok)return respond(409,{error:result.reason,room:await roomPayload(env,row,player.player_id)});
-  const updatedAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(result.state.status,JSON.stringify(result.state),updatedAt,expiresAt,row.id,row.version).run();
+  const payload=body?.payload&&typeof body.payload==='object'?body.payload:{};
+  const result=row.game_id===KING_INSPECTOR_GAME_ID?applyKingInspectorRoomAction(state,{playerId:player.player_id,type,payload}):applyXoRoomAction(state,{playerId:player.player_id,type,cell,payload});
+  if(!result.ok)return respond(409,{error:result.reason,room:await roomPayload(env,row,player.player_id)});
+  const updatedAt=nowIso(),expiresAt=futureIso(ROOM_TTL_MINUTES),storedStatus=row.game_id===KING_INSPECTOR_GAME_ID?(row.status==='waiting'?'waiting':'playing'):result.state.status,update=await env.DB.prepare('UPDATE game_rooms SET status=?,state_json=?,version=version+1,updated_at=?,expires_at=? WHERE id=? AND version=?').bind(storedStatus,JSON.stringify(result.state),updatedAt,expiresAt,row.id,row.version).run();
   if(Number(update?.meta?.changes||0)!==1){const fresh=await roomByCode(env,code);return respond(409,{error:'version_conflict',room:await roomPayload(env,fresh,player.player_id)});}
+  if(row.game_id===KING_INSPECTOR_GAME_ID&&result.state.status==='finished'&&state.status!=='finished'){
+    const historyId=randomId('kih');
+    await env.DB.prepare('INSERT OR IGNORE INTO king_inspector_round_history(id,room_code,round_number,winner_ids_json,scores_json,roles_json,accusation_json,ended_at) VALUES(?,?,?,?,?,?,?,?)').bind(historyId,row.code,result.state.round,JSON.stringify(result.state.winnerIds||[]),JSON.stringify(result.state.scores||{}),JSON.stringify(result.state.roles||{}),JSON.stringify(result.state.accusation||null),result.state.endedAt||updatedAt).run();
+  }
   const fresh=await roomByCode(env,code);return respond(200,{room:await roomPayload(env,fresh,player.player_id)});
 }
 

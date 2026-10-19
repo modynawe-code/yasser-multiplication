@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const BASE_URL='http://127.0.0.1:4177/';
-const EXPECTED_CACHE='yasser-multiplication-v4-shell-84';
+const EXPECTED_CACHE='yasser-multiplication-v4-shell-85';
 const REQUIRED_CACHE_PATHS=[
   '/src/shared/activities/activity-renderer-contracts.js',
   '/src/modules/mashaal/ui/mashaal-asset-contracts.js',

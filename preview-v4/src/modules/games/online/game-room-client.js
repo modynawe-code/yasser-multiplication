@@ -15,10 +15,10 @@ export function createGameRoomClient({baseUrl=getGameApiBase(),fetchImpl=globalT
     return parseResponse(response);
   }
   return Object.freeze({
-    createRoom({gameId='xo',learnerId}){return request('/v1/games/rooms',{method:'POST',body:{gameId,learnerId}});},
-    joinRoom({code,learnerId}){return request('/v1/games/rooms/join',{method:'POST',body:{code,learnerId}});},
+    createRoom({gameId='xo',learnerId,displayName}){return request('/v1/games/rooms',{method:'POST',body:{gameId,learnerId,displayName}});},
+    joinRoom({code,learnerId,displayName,participationRole='player'}){return request('/v1/games/rooms/join',{method:'POST',body:{code,learnerId,displayName,participationRole}});},
     getRoom({code,token}){return request(`/v1/games/rooms/${encodeURIComponent(code)}`,{token});},
-    submitAction({code,token,expectedVersion,type,cell}){return request(`/v1/games/rooms/${encodeURIComponent(code)}/actions`,{method:'POST',token,body:{expectedVersion,type,cell}});}
+    submitAction({code,token,expectedVersion,type,payload={},cell}){const body={expectedVersion,type};if(payload&&typeof payload==='object'&&!Array.isArray(payload)&&Object.keys(payload).length)body.payload=payload;if(cell!==undefined)body.cell=cell;return request(`/v1/games/rooms/${encodeURIComponent(code)}/actions`,{method:'POST',token,body});}
   });
 }
 

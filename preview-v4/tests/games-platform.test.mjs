@@ -23,6 +23,11 @@ test('initial catalog covers turn-based simultaneous and realtime architecture p
   assert.equal(gameRegistry.get('xo').networkMode,'turn-based');
   assert.equal(gameRegistry.get('rock-paper-scissors').networkMode,'simultaneous');
   assert.equal(gameRegistry.get('number-race').networkMode,'realtime');
+  const kingInspector=gameRegistry.get('king-inspector-thief-executioner');
+  assert.equal(kingInspector.networkMode,'turn-based');
+  assert.deepEqual([kingInspector.minPlayers,kingInspector.maxPlayers],[4,4]);
+  assert.deepEqual(kingInspector.playModes,['online']);
+  assert.equal(typeof kingInspector.load,'function');
 });
 
 test('player context carries learner identity but no academic progress state',()=>{

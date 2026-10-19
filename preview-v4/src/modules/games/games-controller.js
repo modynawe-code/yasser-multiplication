@@ -14,12 +14,12 @@ function show(id){allViews().forEach(view=>view.classList.toggle('active',view.i
 function byId(id){return document.getElementById(id);}
 function categoryLabel(category){return category==='educational'?'تعليمية':category==='fun'?'مرح':'تعليم + مرح';}
 function learningLabel(mode){return mode==='required'?'تعلم أساسي':mode==='optional'?'تعلم اختياري':mode==='adaptive'?'تعلم متكيف':'مرح فقط';}
-function gameIcon(id){return id==='xo'?'⭕':id==='rock-paper-scissors'?'✊':id==='number-race'?'🏁':'🎮';}
+function gameIcon(id){return id==='king-inspector-thief-executioner'?'<img class="game-icon-art" src="assets/games/king-inspector/role-cast.webp" alt="">':id==='xo'?'⭕':id==='rock-paper-scissors'?'✊':id==='number-race'?'🏁':'🎮';}
 function now(){return globalThis.performance?.now?.()??Date.now();}
 function fallbackParticipant(id){return Object.freeze({playerId:id,learnerId:id,displayName:id,theme:'family',symbol:'🎮',accent:'violet',avatar:null,celebrationAvatar:null});}
 
 export function createGamesController({learningAdapter,challengePresentations=null,onBeforeEnter,onExitToHub,roomClient=createGameRoomClient()}={}){
-  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null;
+  let bound=false,xoState=null,challengeState=null,challengeRequest=0,passTimer=null,rpsController=null,kingInspectorController=null;
   let localXoPlayers=[],nextStarterIndex=0,playMode='local',selectedOnlineLearner=null,onlineBusy=false,onlineTurnVersion=-1,onlineCelebrated='',restoringOnline=false;
   const speech=createSpeechService(),audio=createFeedbackAudio(),xoEvents=createXoEventBridge();
   const onlineSession=createXoOnlineSession({roomClient,onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -70,13 +70,14 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   function enterGamesChrome(){document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode');document.body.classList.add('games-mode');}
 
   function leave(){
-    document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode');
+    document.body.classList.remove('games-mode','xo-game-mode','rps-game-mode','king-inspector-mode');
+    kingInspectorController?.stop?.();
     clearChallenge();onlineSession.forget();xoEvents.reset();
     xoState=null;playMode='local';onlineTurnVersion=-1;onlineCelebrated='';
   }
 
   function enterHome(){
-    onBeforeEnter?.();
+    onBeforeEnter?.();kingInspectorController?.stop?.();document.body.classList.remove('king-inspector-mode');
     onlineSession.stop();clearChallenge();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode');
     enterGamesChrome();renderCatalog();show('gamesHomeView');
   }
@@ -84,8 +85,9 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   function renderCatalog(){
     const host=byId('gamesCatalog');if(!host)return;
     host.innerHTML=gameRegistry.list().map(game=>{
-      const ready=game.id==='xo'||game.id==='rock-paper-scissors';
-      const availability=game.id==='xo'?'محلي + أونلاين':game.id==='rock-paper-scissors'?'محلي الآن':'قريبًا';
+      const isKing=game.id==='king-inspector-thief-executioner';
+      const ready=isKing||game.id==='xo'||game.id==='rock-paper-scissors';
+      const availability=isKing?'أونلاين — ٤ لاعبين':game.id==='xo'?'محلي + أونلاين':game.id==='rock-paper-scissors'?'محلي الآن':'قريبًا';
       return `<button class="game-card ${ready?'ready':'locked'}" data-game-id="${game.id}" ${ready?'':'disabled'}>
         <span class="game-card-status">${ready?'جاهزة للتجربة':'قريبًا'}</span>
         <span class="game-card-icon" aria-hidden="true">${gameIcon(game.id)}</span>
@@ -96,6 +98,16 @@ export function createGamesController({learningAdapter,challengePresentations=nu
     }).join('');
     host.querySelector('[data-game-id="xo"]')?.addEventListener('click',openXoLobby);
     host.querySelector('[data-game-id="rock-paper-scissors"]')?.addEventListener('click',openRps);
+    host.querySelector('[data-game-id="king-inspector-thief-executioner"]')?.addEventListener('click',openKingInspector);
+  }
+
+  async function openKingInspector(){
+    clearChallenge();onlineSession.forget();xoState=null;playMode='local';setXoMode(false);document.body.classList.remove('rps-game-mode','king-inspector-mode');enterGamesChrome();
+    const game=gameRegistry.get('king-inspector-thief-executioner');if(!game?.load)return;
+    try{
+      if(!kingInspectorController){const module=await game.load();kingInspectorController=module.createKingInspectorController({participants:educationalParticipants(),roomClient,showView:show,onBack:()=>{document.body.classList.remove('king-inspector-game-mode');renderCatalog();show('gamesHomeView');}});}
+      kingInspectorController.start();
+    }catch{renderCatalog();show('gamesHomeView');}
   }
 
   async function openRps(){
@@ -108,7 +120,7 @@ export function createGamesController({learningAdapter,challengePresentations=nu
   }
 
   function openXoLobby(){
-    clearChallenge();onlineSession.forget();xoEvents.reset();xoState=null;setXoMode(false);document.body.classList.remove('rps-game-mode');playMode='local';selectedOnlineLearner=null;onlineTurnVersion=-1;onlineCelebrated='';
+    clearChallenge();onlineSession.forget();xoEvents.reset();xoState=null;setXoMode(false);document.body.classList.remove('rps-game-mode','king-inspector-mode');playMode='local';selectedOnlineLearner=null;onlineTurnVersion=-1;onlineCelebrated='';
     const input=byId('xoRoomCodeInput');if(input)input.value='';setRoomCode('');lobbyStatus('');renderLobbyParticipants();show('xoLobbyView');
   }
 

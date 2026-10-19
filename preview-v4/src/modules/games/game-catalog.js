@@ -37,5 +37,18 @@ export const gameRegistry=createGameRegistry([
     maxPlayers:2,
     version:1,
     metadata:{accent:'duo',description:'كل إجابة صحيحة تدفع شخصية اللاعب خطوة في السباق.'}
+  },
+  {
+    id:'king-inspector-thief-executioner',
+    title:'الملك والمفتش',
+    category:'fun',
+    playModes:['online'],
+    networkMode:'turn-based',
+    learningMode:'optional',
+    minPlayers:4,
+    maxPlayers:4,
+    version:1,
+    load:()=>import('./king-inspector/king-inspector-controller.js'),
+    metadata:{accent:'royal',description:'أربعة أدوار سرّية، سؤال الملك، واختيار المفتش — مين يكشف اللص؟'}
   }
 ]);
