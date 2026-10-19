@@ -66,7 +66,6 @@ export function createKhaledWordOrderGame({root,onBack,random=Math.random}={}){
       <div class="kwg-tray" data-tray aria-label="مقاطع الكلمة"></div>
       <div class="kwg-actions"><button type="button" data-action="replay" hidden>أعد سماع الكلمة</button><button type="button" data-action="next" hidden>الكلمة التالية</button><button type="button" data-action="reset">أعد هذه الكلمة</button><button type="button" data-action="restart" hidden>العب من جديد</button></div>
       <p class="kwg-status" data-status role="status" aria-live="polite"></p>
-      <footer class="kwg-credit">إعداد: عبد الله السديري</footer>
     </div>`;
 
   const slotsEl=root.querySelector('[data-slots]'),trayEl=root.querySelector('[data-tray]');
@@ -132,8 +131,14 @@ export function createKhaledWordOrderGame({root,onBack,random=Math.random}={}){
       const element=document.elementFromPoint(moveEvent.clientX,moveEvent.clientY),next=element?.closest('.kwg-slot:not(.is-filled)');
       if(target!==next){target?.classList.remove('is-hover');target=next;target?.classList.add('is-hover');}
     };
-    const up=()=>{
+    const up=upEvent=>{
+      if(ghost){
+        const element=document.elementFromPoint(upEvent.clientX,upEvent.clientY);
+        const finalTarget=element?.closest('.kwg-slot:not(.is-filled)');
+        if(target!==finalTarget){target?.classList.remove('is-hover');target=finalTarget;target?.classList.add('is-hover');}
+      }
       tile.removeEventListener('pointermove',move);tile.removeEventListener('pointerup',up);tile.removeEventListener('pointercancel',up);
+      try{tile.releasePointerCapture(upEvent.pointerId);}catch{}
       ghost?.remove();tile.classList.remove('is-ghost');target?.classList.remove('is-hover');
       if(target)place(tile,target);else if(!ghost)pick(tile);
     };
