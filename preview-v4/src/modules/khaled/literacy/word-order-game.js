@@ -1,7 +1,7 @@
 import {WORD_ORDER_AUDIO_BY_WORD,WORD_ORDER_AUDIO_ROOT} from './word-order-audio-manifest.js';
 
 const STAGES=Object.freeze([
-  Object.freeze({title:'المرحلة ١ · م، ب، ل، د، ن، ر',words:Object.freeze([
+  Object.freeze({title:'المرحلة ١',letters:'م · ب · ل · د · ن · ر',words:Object.freeze([
     {type:'حروف متحركة',word:'بَلَد',parts:['بَـ','ـلَـ','ـدَ']},
     {type:'حروف متحركة',word:'لَبَن',parts:['لَـ','ـبَـ','ـنَ']},
     {type:'حروف متحركة',word:'بَدَن',parts:['بَـ','ـدَ','نَ']},
@@ -17,7 +17,7 @@ const STAGES=Object.freeze([
     {type:'مقطع ساكن',word:'رَمْل',parts:['رَ','مْـ','ـل']},
     {type:'مقطع ساكن',word:'بَنْد',parts:['بَـ','ـنْـ','ـد']}
   ])}),
-  Object.freeze({title:'المرحلة ٢ · ص، ف، س، ق، ت، ح',words:Object.freeze([
+  Object.freeze({title:'المرحلة ٢',letters:'ص · ف · س · ق · ت · ح',words:Object.freeze([
     {type:'حروف متحركة',word:'قَفَص',parts:['قَـ','ـفَـ','ـصَ']},
     {type:'حروف متحركة',word:'فُسِرَ',parts:['فُـ','ـسِـ','ـرَ']},
     {type:'حروف متحركة',word:'فَحَص',parts:['فَـ','ـحَـ','ـصَ']},
@@ -94,7 +94,10 @@ export function createKhaledWordOrderGame({root,onBack,random=Math.random}={}){
     runToken++;stopAudio();resetStageState();
     const item=current(),stage=STAGES[item.stageIndex];
     messageEl.textContent='هيا نرتب المقاطع ونكوّن الكلمة!';messageEl.className='';answerEl.textContent='';statusEl.textContent='';
-    stageEl.textContent=stage.title;progressEl.textContent=`الكلمة ${item.wordIndex+1} من ${stage.words.length}`;
+    stageEl.replaceChildren();
+    const stageName=document.createElement('span');stageName.textContent=stage.title;
+    const stageLetters=document.createElement('span');stageLetters.className='kwg-stage-letters';stageLetters.dir='rtl';stageLetters.textContent=`الحروف: ${stage.letters}`;
+    stageEl.append(stageName,stageLetters);progressEl.textContent=`الكلمة ${item.wordIndex+1} من ${stage.words.length}`;
     carEl.style.setProperty('--progress','0%');
     replayBtn.hidden=true;nextBtn.hidden=true;restartBtn.hidden=true;
     slotsEl.replaceChildren();trayEl.replaceChildren();
