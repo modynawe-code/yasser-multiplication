@@ -69,7 +69,7 @@ test('Activity is linked from Khaled literacy and its dependencies are available
  assert.match(sw,/assets\/images\/khaled\/letter-forms\/island-platform\.webp/);
  const island=await readFile(new URL('../assets/images/khaled/letter-forms/island-platform.webp',import.meta.url));
  assert.ok(island.length>30000,'the floating voxel island artwork is bundled for offline play');
- assert.match(sw,/shell-225/);
+ assert.match(sw,/shell-226/);
 });
 
 test('Each Arabic letter has its own extracted voice clip and valid source interval',async()=>{
