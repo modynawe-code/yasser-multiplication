@@ -27,7 +27,12 @@ test('King Inspector is a four-player online game with a private-role UI and cac
   assert.match(game,/طلع اللص من الجلاد/);
   assert.match(game,/جولة جديدة — وزّعوا الأدوار/);
   assert.match(game,/id="kiSelfRole"/);
-  assert.match(game,/id="kiTurnBanner"/);\n  assert.match(game,/id="kiDemoStart"/);\n  assert.match(game,/function startDemo\(\)/);\n  assert.match(game,/function scheduleDemoBots\(\)/);\n  assert.match(game,/id="kiDemoRole"/);\n  assert.match(game,/ki-role-character role-\$\{role\}/);
+  assert.match(game,/id="kiTurnBanner"/);
+  assert.match(game,/id="kiDemoStart"/);
+  assert.match(game,/function startDemo\(\)/);
+  assert.match(game,/function scheduleDemoBots\(\)/);
+  assert.match(game,/id="kiDemoRole"/);
+  assert.match(game,/ki-role-character role-\$\{role\}/);
   assert.match(game,/function turnInfo\(\)/);
   assert.match(game,/audioContext\.resume\(\)/);
   assert.match(game,/id="kiConfirmDialog"/);
