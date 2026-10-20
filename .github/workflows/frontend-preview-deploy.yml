@@ -3,6 +3,7 @@ name: Frontend Preview Deploy
 on:
   push:
     branches:
+      - 'main'
       - 'feature/family-games-mashaal-integration-v1'
       - 'feature/product-ui-reference-v1'
       - 'feature/king-inspector-mainline'
