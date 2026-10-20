@@ -73,28 +73,27 @@ export function createKingInspectorController({participants=[],roomClient=create
   function renderScores(){const host=by('kiScores'),s=state();if(!host)return;host.innerHTML=players().map(item=>`<span class="ki-score ${item.playerId===self()?'is-self':''}"><b>${esc(item.name||item.learnerId)}</b><strong>${Number(s.scores?.[item.playerId]||0)}</strong><small>فوز</small></span>`).join('');}
   function actionButton(label,type,enabled=true,cls=''){return`<button type="button" class="ki-action ${cls}" data-ki-action="${esc(type)}" ${enabled&&!busy?'':'disabled'}>${esc(label)}</button>`;}
   function renderActions(){
-    const host=by('kiActions'),title=by('kiGameTitle'),phase=by('kiPhase'),s=state(),id=self(),role=s.privateRole;host.innerHTML='';
+    const host=by('kiActions'),title=by('kiGameTitle'),phase=by('kiPhase'),s=state(),id=self(),role=s.privateRole,target=name(s.penaltyTargetId);host.innerHTML='';
     if(s.phase==='king-question'){
-      title.textContent='الملك يسأل';phase.textContent='مين المفتش؟';host.innerHTML=actionButton('مين المفتش؟','ask-inspector',role==='king');
-      if(role!=='king')phase.textContent=role==='inspector'?'الملك يسألك — جهّز ردك':'انتظر سؤال الملك';
+      title.textContent=role==='king'?'دور الملك':'الملك يسأل';phase.textContent=role==='king'?'اسأل اللاعبين: مين المفتش؟':role==='inspector'?'الملك يسألك — جهّز ردك':'بانتظار الملك يبدأ السؤال';if(role==='king')host.innerHTML=actionButton('مين المفتش؟','ask-inspector',true,'primary');
     }else if(s.phase==='inspector-claim'){
-      title.textContent='دور المفتش';phase.textContent=role==='inspector'?'قل للملك: أنا حضرتك':'المفتش يعرّف عن نفسه';host.innerHTML=actionButton('أنا حضرتك','claim-inspector',role==='inspector');
+      title.textContent='دور المفتش';phase.textContent=role==='inspector'?'قل للملك: أنا حضرتك':'بانتظار المفتش يعرّف بنفسه';if(role==='inspector')host.innerHTML=actionButton('أنا حضرتك','claim-inspector',true,'primary');
     }else if(s.phase==='king-command'){
-      title.textContent='أمر الملك';phase.textContent='المفتش حضر — طلع اللص من الجلاد';host.innerHTML=actionButton('طلع اللص من الجلاد','issue-command',role==='king');
+      title.textContent='أمر الملك';phase.textContent=role==='king'?'أصدر الأمر للمفتش':'بانتظار الملك يصدر الأمر';if(role==='king')host.innerHTML=actionButton('طلع اللص من الجلاد','issue-command',true,'primary');
     }else if(s.phase==='inspector-choosing'){
       title.textContent='اختيار المفتش';phase.textContent=role==='inspector'?'اختر اللص من بين الجلاد واللاعب الآخر':'المفتش يختار بين لاعبين';
-      if(role==='inspector')host.innerHTML=players().filter(item=>item.playerId!==s.kingPlayerId&&item.playerId!==id).map(item=>`<button type="button" class="ki-suspect" data-ki-suspect="${esc(item.playerId)}" ${busy?'disabled':''}><span>${portrait(item.playerId)}</span><strong>${esc(item.name||item.learnerId)}</strong></button>`).join('');
+      if(role==='inspector')host.innerHTML=players().filter(item=>item.playerId!==s.kingPlayerId&&item.playerId!==id).map(item=>'<button type="button" class="ki-suspect" data-ki-suspect="'+esc(item.playerId)+'"><span>'+portrait(item.playerId)+'</span><strong>'+esc(item.name||item.learnerId)+'</strong></button>').join('');
     }else if(s.phase==='challenge'){
-      const caught=Boolean(s.accusation?.caught);title.textContent=caught?'كشف المفتش اللص!':'اللص أفلت من الكشف';phase.textContent=caught?`${name(s.accusation?.targetPlayerId)} كان اللص.`:`اختار المفتش ${name(s.accusation?.targetPlayerId)}؛ اللص الحقيقي كان ${name(Object.keys(s.publicRoles||{}).find(pid=>s.publicRoles[pid]==='thief'))}.`;
-      const target=name(s.penaltyTargetId);host.innerHTML=`<p class="ki-penalty-target">التحدي على: <strong>${esc(target)}</strong></p>${role==='king'?CHALLENGES.map(challenge=>actionButton(challenge.title,'choose-challenge',true,'secondary')).join('')+actionButton('بدون تحدٍ','skip-challenge',true,'quiet'):actionButton('تخطي التحدي','skip-challenge',id===s.penaltyTargetId,'quiet')}`;
+      const caught=Boolean(s.accusation?.caught),thief=name(Object.keys(s.publicRoles||{}).find(pid=>s.publicRoles[pid]==='thief'));title.textContent=caught?'كشف المفتش اللص!':'اللص أفلت من الكشف';phase.textContent=caught?name(s.accusation?.targetPlayerId)+' كان اللص.':'اختار المفتش '+name(s.accusation?.targetPlayerId)+'؛ اللص الحقيقي كان '+thief+'.';
+      host.innerHTML='<p class="ki-penalty-target">التحدي على: <strong>'+esc(target)+'</strong></p>'+(role==='king'?CHALLENGES.map(challenge=>actionButton(challenge.title,'choose-challenge',true,'secondary')).join('')+actionButton('بدون تحدٍ','skip-challenge',true,'quiet'):id===s.penaltyTargetId?actionButton('تخطي التحدي','skip-challenge',true,'quiet'):'<p class="ki-waiting-copy">الملك يختار تحديًا لـ '+esc(target)+'.</p>');
       host.querySelectorAll('[data-ki-action="choose-challenge"]').forEach((button,index)=>button.dataset.challengeId=CHALLENGES[index].id);
     }else if(s.phase==='challenge-response'){
-      const challenge=CHALLENGES.find(item=>item.id===s.penaltyChallengeId);title.textContent='التحدي المرح';phase.textContent=challenge?.copy||'نفّذ التحدي أو تخطّه.';host.innerHTML=actionButton('تم التحدي','complete-challenge',id===s.penaltyTargetId,'success')+actionButton('تخطي','skip-challenge',id===s.penaltyTargetId,'quiet');
+      const challenge=CHALLENGES.find(item=>item.id===s.penaltyChallengeId);title.textContent='التحدي المرح';phase.textContent=challenge?.copy||'التحدي جاهز.';host.innerHTML=id===s.penaltyTargetId?actionButton('تم التحدي','complete-challenge',true,'success')+actionButton('تخطي','skip-challenge',true,'quiet'):'<p class="ki-waiting-copy">بانتظار '+esc(target)+' ينفذ التحدي.</p>';
     }else if(s.phase==='finished'){
-      const winners=(s.winnerIds||[]).map(name);title.textContent=s.accusation?.caught?'نجح فريق الملك':'فاز اللص';phase.textContent=s.penaltySkipped?'تم تخطي التحدي.':s.accusation?.caught?'المفتش كشف اللص. جولة موفقة!':'المفتش أخطأ، واللص أفلت.';host.innerHTML=`<div class="ki-winner-line">${esc(winners.join(' · '))}</div>${actionButton('جولة جديدة — وزّعوا الأدوار','next-round',true,'primary')}`;
+      const winners=(s.winnerIds||[]).map(name);title.textContent=s.accusation?.caught?'نجح فريق الملك':'فاز اللص';phase.textContent=s.penaltySkipped?'تم تخطي التحدي.':s.accusation?.caught?'المفتش كشف اللص. جولة موفقة!':'المفتش أخطأ، واللص أفلت.';host.innerHTML='<div class="ki-winner-line">'+esc(winners.join(' · '))+'</div>'+actionButton('جولة جديدة — وزّعوا الأدوار','next-round',true,'primary');
     }
     host.querySelectorAll('[data-ki-action]').forEach(button=>button.addEventListener('click',()=>{const payload=button.dataset.challengeId?{challengeId:button.dataset.challengeId}:{};void act(button.dataset.kiAction,payload);}));
-    host.querySelectorAll('[data-ki-suspect]').forEach(button=>button.addEventListener('click',()=>{void confirmAccusation(button.dataset.kiSuspect);}));
+    host.querySelectorAll('[data-ki-suspect]').forEach(button=>button.addEventListener('click',()=>confirmAccusation(button.dataset.kiSuspect)));
   }
   function confirmAccusation(targetPlayerId){pendingAccusationId=targetPlayerId;const copy=by('kiConfirmCopy'),dialog=by('kiConfirmDialog');if(copy)copy.textContent='تأكد من اختيار '+name(targetPlayerId)+' كصاحب دور اللص؟';if(dialog?.showModal)dialog.showModal();else void act('accuse',{targetPlayerId});}
   function submitAccusation(){const targetPlayerId=pendingAccusationId;if(!targetPlayerId)return;pendingAccusationId='';by('kiConfirmDialog')?.close();void act('accuse',{targetPlayerId});}
