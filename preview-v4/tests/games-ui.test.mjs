@@ -34,6 +34,9 @@ test('King Inspector is a four-player online game with a private-role UI and cac
   assert.match(game,/id="kiDemoRole"/);
   assert.match(game,/ki-role-character role-\$\{role\}/);
   assert.match(game,/function turnInfo\(\)/);
+  assert.match(game,/id="kiCenterCharacter"/);
+  assert.match(game,/function centerRole\(\)/);
+  assert.match(game,/function renderCenterCharacter\(\)/);
   assert.match(game,/audioContext\.resume\(\)/);
   assert.match(game,/id="kiConfirmDialog"/);
   assert.doesNotMatch(game,/globalThis\.confirm|\bconfirm\(/);
@@ -41,7 +44,7 @@ test('King Inspector is a four-player online game with a private-role UI and cac
   assert.match(game,/بانتظار .*ينفذ التحدي/);
   assert.match(css,/\.ki-turn-banner/);
   assert.match(css,/prefers-reduced-motion/);
-  for(const path of ['src/modules/games/king-inspector/king-inspector-controller.js','src/modules/games/king-inspector/king-inspector.css?v=3','assets/games/king-inspector/role-cast.webp'])assert.ok(worker.includes(`./${path}`),`missing ${path}`);
+  for(const path of ['src/modules/games/king-inspector/king-inspector-controller.js','src/modules/games/king-inspector/king-inspector.css?v=4','assets/games/king-inspector/role-cast.webp'])assert.ok(worker.includes(`./${path}`),`missing ${path}`);
 });
 
 test('games shell exposes a clear registry-hydrated local vs online XO lobby without learner hardcoding',async()=>{
