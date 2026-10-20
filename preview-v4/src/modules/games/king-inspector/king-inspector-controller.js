@@ -20,7 +20,7 @@ const CHALLENGES=Object.freeze([
 
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="king-inspector-game"]'))return;
-  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/games/king-inspector/king-inspector.css?v=1';link.dataset.moduleStyle='king-inspector-game';document.head.appendChild(link);
+  const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/games/king-inspector/king-inspector.css?v=2';link.dataset.moduleStyle='king-inspector-game';document.head.appendChild(link);
 }
 
 function ensureShell(){
