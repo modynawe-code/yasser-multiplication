@@ -37,5 +37,5 @@ test('word playback maps only to bundled lesson voice clips and never synthesize
   const shell=await readFile(new URL('../service-worker.js',import.meta.url),'utf8');
   for(const name of ['word-order-game.js','word-order-game.css','word-order-audio-manifest.js'])assert.ok(shell.includes(name));
   assert.ok(shell.includes('KHALED_WORD_ORDER_AUDIO_ASSETS'));
-  assert.match(shell,/shell-222/);
+  assert.match(shell,/shell-224/);
 });
