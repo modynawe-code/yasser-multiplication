@@ -33,7 +33,10 @@ test('King Inspector is a four-player online game with a private-role UI and cac
   assert.match(game,/function scheduleDemoBots\(\)/);
   assert.match(game,/id="kiDemoRole"/);
   assert.match(game,/ki-role-character role-\$\{role\}/);
-  assert.match(game,/function turnInfo\(\)/);\n  assert.match(game,/id="kiCenterCharacter"/);\n  assert.match(game,/function centerRole\(\)/);\n  assert.match(game,/function renderCenterCharacter\(\)/);
+  assert.match(game,/function turnInfo\(\)/);
+  assert.match(game,/id="kiCenterCharacter"/);
+  assert.match(game,/function centerRole\(\)/);
+  assert.match(game,/function renderCenterCharacter\(\)/);
   assert.match(game,/audioContext\.resume\(\)/);
   assert.match(game,/id="kiConfirmDialog"/);
   assert.doesNotMatch(game,/globalThis\.confirm|\bconfirm\(/);
