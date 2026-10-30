@@ -40,7 +40,22 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
       await page.waitForFunction(()=>{
         const n=window.__quranTestSurah;
         return !!document.querySelector('.quran-mushaf-ayah-path[data-ayah="'+n+':1"]');
-      },null,{timeout:35000});
+      },null,{timeout:15000}).catch(async error=>{
+        const diag=await page.evaluate(()=>({
+          chapter:window.__quranTestSurah,
+          src:document.querySelector('.quran-page-image')?.currentSrc,
+          imageOk:document.querySelector('.quran-page-image')?.naturalWidth,
+          errors:document.querySelector('.quran-page-frame')?.dataset.imageError,
+          paths:[...document.querySelectorAll('.quran-mushaf-ayah-path')].slice(0,10).map(p=>p.dataset.ayah),
+          switchText:document.querySelector('.quran-itqan-toggle')?.textContent,
+          sourceText:document.querySelector('.quran-itqan-source-name')?.textContent,
+          text:document.querySelector('.quran-player-status')?.textContent,
+          origin:location.origin
+        }));
+        console.log('OVERLAY_TIMEOUT_DIAGNOSTIC',name,learner,JSON.stringify(diag),errors.slice(-3));
+        await page.screenshot({path:'/tmp/quran-itqan-timeout-'+name+'.png',fullPage:true});
+        throw error;
+      });
       await page.locator('.quran-ayah-button').first().click();
       await page.waitForFunction(()=>{
         const n=window.__quranTestSurah;
