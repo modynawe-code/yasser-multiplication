@@ -20,6 +20,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg
+      - name: Test conservative pause consensus using synthetic evidence
+        working-directory: preview-v4
+        run: python -m unittest tools/test_fatiha_pause_consensus.py -v
       - name: Analyze the verified original MP3, not a different reader
         working-directory: preview-v4
         run: |
