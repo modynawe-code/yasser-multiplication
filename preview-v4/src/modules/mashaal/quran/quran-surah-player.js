@@ -1,4 +1,3 @@
-import {matchFatihaPage1Polygons} from './fatiha-page1-polygons.js';
 import {isItqanPilotOrigin,loadItqanTrack} from '../../../shared/quran/itqan-pilot-source.js';
 import {fetchOfficialAyahPolygons} from '../../../shared/quran/quran-svg-ayah-polygons.js';
 
@@ -64,7 +63,6 @@ function mountQuranSurahPlayerCore(host,{
   ):[];
 
   if(!pages.length)throw new Error('Verified mushaf page image is required');
-  const verseGeometry=matchFatihaPage1Polygons(pages[0],surahNumber,ayahs);
 
   host.innerHTML='';
   host.removeAttribute('aria-hidden');
@@ -116,7 +114,6 @@ function mountQuranSurahPlayerCore(host,{
     if(overlayPaths.length)viewport.appendChild(verseOverlay);
     else verseOverlay=null;
   };
-  if(verseGeometry)mountOfficialGeometry(verseGeometry);
 
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
@@ -229,8 +226,7 @@ function mountQuranSurahPlayerCore(host,{
     const sources=pageSources(page);
     sourceIndex=0;
     overlayEpoch++;
-    if(verseOverlay&&!verseGeometry)mountOfficialGeometry(null);
-    if(verseOverlay)verseOverlay.style.display=pageIndex===0?'':'none';
+    if(verseOverlay)mountOfficialGeometry(null);
     figure.removeAttribute('data-image-error');
     if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
@@ -351,10 +347,6 @@ function mountQuranSurahPlayerCore(host,{
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
   image.addEventListener('load',()=>{
     figure.removeAttribute('data-image-error');
-    if(verseGeometry){
-      if(verseOverlay)verseOverlay.style.display=pageIndex===0&&sourceIndex===0?'':'none';
-      return;
-    }
     if(!ayahs.length||!Number.isInteger(surahNumber))return;
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
     void fetchOfficialAyahPolygons(src,surahNumber).then(geometry=>{
