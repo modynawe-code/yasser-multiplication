@@ -74,6 +74,20 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
         ||!state.reciter?.includes('تلاوة إتقان')||!state.imageReady
         ||!state.versePosition?.includes('الآية 1 من'))
         throw Error(name+' '+learner+' visual state mismatch '+JSON.stringify(state));
+      if(learner==='khaled'||learner==='mashaal'){
+        const aligned=await page.evaluate(()=>{
+          const viewport=document.querySelector('.quran-page-viewport');
+          const image=document.querySelector('.quran-page-image');
+          const overlay=document.querySelector('.quran-mushaf-ayah-overlay');
+          const a=image?.getBoundingClientRect(),b=overlay?.getBoundingClientRect();
+          return {focused:viewport?.dataset.focused,
+            imageY:a?.top,overlayY:b?.top,imageHeight:a?.height,overlayHeight:b?.height};
+        });
+        if(aligned.focused!=='true'
+          ||Math.abs(aligned.imageY-aligned.overlayY)>3
+          ||Math.abs(aligned.imageHeight-aligned.overlayHeight)>3)
+          throw Error(name+' '+learner+' focused short-surah geometry misaligned '+JSON.stringify(aligned));
+      }
       if(learner==='yasser'){
         await page.locator('.quran-ayah-button').last().click();
         await page.waitForFunction(()=>window.__quranTestPlayer.getPageIndex()===5,null,{timeout:35000});
