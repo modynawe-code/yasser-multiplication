@@ -1,4 +1,5 @@
 import { mountQuranSurahPlayer } from '../../mashaal/quran/quran-surah-player.js';
+import { loadItqanFatiha } from './itqan-fatiha.js';
 
 const QURAN_SVG_COMMIT='b91d39e1065b57bdda3e94aca8ecf3575e50e1e6';
 const AUDIO_BASE='https://cdn.quran.ws/KFGQPC/resources/quran-audios/akhdar-sura/sura';
@@ -86,9 +87,14 @@ function ensureShell(){
 }
 
 export function createKhaledQuranController({showView,onBack}={}){
-  let term=1,player=null,bound=false,selectedSurah=null;
+  let term=1,player=null,bound=false,selectedSurah=null,pilotTicket=0;
   const byId=id=>document.getElementById(id);
-  const destroyPlayer=()=>{if(!player)return;try{player.destroy();}catch{}player=null;};
+  const destroyPlayer=()=>{
+    pilotTicket++;
+    if(!player)return;
+    try{player.destroy();}catch{}
+    player=null;
+  };
   function renderTerms(){
     document.querySelectorAll('[data-khaled-quran-term]').forEach(button=>{
       const active=Number(button.dataset.khaledQuranTerm)===term;
@@ -107,7 +113,47 @@ export function createKhaledQuranController({showView,onBack}={}){
     destroyPlayer();selectedSurah=item.surahNumber;
     document.querySelectorAll('.khaled-quran-surah').forEach(node=>node.classList.toggle('selected',node===button));
     const host=byId('khaledQuranPlayer');if(!host)return;host.hidden=false;host.innerHTML=`<h2 id="khaledQuranSelectedTitle">سورة ${item.surahNameAr}</h2><div id="khaledQuranPlayerHost"></div>`;
-    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
+    const playerHost=byId('khaledQuranPlayerHost');
+    player=mountQuranSurahPlayer(playerHost,{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
+    if(item.surahNumber===1){
+      const pilot=document.createElement('div');
+      pilot.className='khaled-itqan-pilot';
+      const button=document.createElement('button');
+      button.type='button';button.className='khaled-itqan-try';
+      button.textContent='جرّب تكرار آيات الفاتحة';
+      const message=document.createElement('p');
+      message.setAttribute('role','status');
+      message.textContent='تجربة اختيارية من إتقان • تحتاج الإنترنت • الاستماع المعتاد يظل متاحًا';
+      pilot.append(button,message);host.appendChild(pilot);
+      button.addEventListener('click',async()=>{
+        const ticket=++pilotTicket;
+        button.disabled=true;message.textContent='جاري فحص التلاوة والتوقيت من إتقان...';
+        try{
+          const verified=await loadItqanFatiha();
+          if(ticket!==pilotTicket||selectedSurah!==1)return;
+          // Keep the existing local/external Akhdar player until the pair is validated.
+          destroyPlayer();
+          player=mountQuranSurahPlayer(playerHost,{
+            surahNameAr:item.surahNameAr,surahNumber:1,
+            audioPath:verified.audioPath,ayahTimings:verified.ayahTimings,
+            durationSeconds:verified.durationSeconds,mushafPage:item.mushafPage,
+            retryPlayText:'اضغط تشغيل مرة ثانية'
+          });
+          button.hidden=true;
+          message.textContent='التوقيت والصوت من تسجيل إتقان نفسه. اختر الآية ثم عدد مرات التكرار.';
+        }catch{
+          if(ticket!==pilotTicket)return;
+          // No replacement if the network, reciter identity, or timings cannot be verified.
+          if(!player)player=mountQuranSurahPlayer(playerHost,{
+            surahNameAr:item.surahNameAr,surahNumber:1,
+            audioPath:item.audioPath,mushafPage:item.mushafPage,
+            retryPlayText:'اضغط تشغيل مرة ثانية'
+          });
+          message.textContent='تعذر التأكد من تلاوة إبراهيم الأخضر وتوقيت آياتها في إتقان. المشغّل الأصلي ما زال متاحًا.';
+          button.disabled=false;
+        }
+      });
+    }
     host.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
   }
   function setTerm(next){
