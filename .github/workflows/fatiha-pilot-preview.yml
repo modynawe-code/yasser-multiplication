@@ -7,6 +7,8 @@ on:
       - .github/workflows/fatiha-pilot-preview.yml
       - 'preview-v4/src/modules/khaled/quran/**'
       - 'preview-v4/src/modules/mashaal/quran/**'
+      - 'preview-v4/src/shared/quran/**'
+      - 'preview-v4/tests/quran-svg-page-index.test.mjs'
       - 'preview-v4/tests/fatiha-mushaf-polygon-highlight.test.mjs'
       - 'preview-v4/tools/fatiha-overlay-browser-qa.mjs'
       - 'preview-v4/tools/build-itqan-cms-tracks.mjs'
@@ -112,6 +114,11 @@ jobs:
           grep -q 'M 113.70 130.39' /tmp/fatiha-polygons.js
           curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.js" -o /tmp/fatiha-player.js
           grep -q 'paintListeningAyah' /tmp/fatiha-player.js
+          curl --fail --location --silent --show-error "$BASE/src/shared/quran/quran-svg-page-index.js" -o /tmp/quran-svg-index.js
+          grep -q 'findOfficialHafsPage' /tmp/quran-svg-index.js
+          curl --fail --location --silent --show-error "$BASE/assets/recitation/itqan-hafs-tracks.json" -o /tmp/quran-itqan-catalog.json
+          node --input-type=module -e "import fs from 'node:fs'; const d=JSON.parse(fs.readFileSync('/tmp/quran-itqan-catalog.json')); const required=[1,...Array.from({length:22},(_,i)=>93+i),32,33,34,35,36,37,38,67,68]; if(required.some(n=>!d.tracks[String(n)]))process.exit(1); console.log('Verified Itqan same-track curriculum coverage for all children')"
+
           curl --fail --location --silent --show-error "$BASE/service-worker.js" -o /tmp/fatiha-sw.js
           grep -q 'shell-fatiha-' /tmp/fatiha-sw.js
           grep -q "fatiha-page1-polygons.js" /tmp/fatiha-sw.js
