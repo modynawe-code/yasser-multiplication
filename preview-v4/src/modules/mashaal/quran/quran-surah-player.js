@@ -134,6 +134,9 @@ function mountQuranSurahPlayerCore(host,{
   const geometryHint=document.createElement('p');
   geometryHint.className='quran-geometry-hint';geometryHint.hidden=true;
   geometryHint.setAttribute('role','status');
+  const retryHighlight=document.createElement('button');
+  retryHighlight.type='button';retryHighlight.className='quran-geometry-retry';
+  retryHighlight.textContent='إعادة محاولة التظليل';retryHighlight.hidden=true;
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
 
@@ -153,7 +156,7 @@ function mountQuranSurahPlayerCore(host,{
   const retryPage=document.createElement('button');
   retryPage.type='button';retryPage.className='quran-page-retry';retryPage.hidden=true;
   retryPage.textContent='إعادة تحميل صفحة المصحف';
-  figure.append(versePosition,viewport,caption,geometryHint,pageNav,retryPage);
+  figure.append(versePosition,viewport,caption,geometryHint,retryHighlight,pageNav,retryPage);
 
   const audio=new Audio(audioPath);
   audio.preload='metadata';
@@ -351,7 +354,7 @@ function mountQuranSurahPlayerCore(host,{
     sourceIndex=0;
     overlayEpoch++;
     if(verseOverlay)mountOfficialGeometry(null);
-    figure.removeAttribute('data-image-error');retryPage.hidden=true;geometryHint.hidden=true;
+    figure.removeAttribute('data-image-error');retryPage.hidden=true;geometryHint.hidden=true;retryHighlight.hidden=true;
     if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
     }else{
@@ -556,7 +559,7 @@ function mountQuranSurahPlayerCore(host,{
   });
   audio.addEventListener('ended',()=>{if(!handleAyahBoundary())markCompleted();});
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
-  image.addEventListener('load',()=>{
+  const refreshGeometry=()=>{
     figure.removeAttribute('data-image-error');retryPage.hidden=true;
     if(!ayahs.length||!Number.isInteger(surahNumber))return;
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
@@ -571,17 +574,19 @@ function mountQuranSurahPlayerCore(host,{
       throw new Error('quran-polygon-geometry-unavailable');
     })().then(geometry=>{
       if(destroyed||thisEpoch!==overlayEpoch)return;
-      geometryHint.hidden=true;
+      geometryHint.hidden=true;retryHighlight.hidden=true;
       mountOfficialGeometry(geometry);
       paintListeningAyah();
     }).catch(()=>{
       if(destroyed||thisEpoch!==overlayEpoch)return;
       mountOfficialGeometry(null);
       geometryHint.textContent='التلاوة مستمرة، لكن تعذر تظليل الآيات داخل المصحف. جرّب إعادة تحميل الصفحة.';
-      geometryHint.hidden=false;
+      geometryHint.hidden=false;retryHighlight.hidden=false;
     });
-  });
-  image.addEventListener('error',()=>{overlayEpoch++;geometryHint.hidden=true;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
+  };
+  image.addEventListener('load',refreshGeometry);
+  retryHighlight.addEventListener('click',refreshGeometry);
+  image.addEventListener('error',()=>{overlayEpoch++;geometryHint.hidden=true;retryHighlight.hidden=true;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
 
   retryPage.addEventListener('click',renderPage);
   renderPage();
