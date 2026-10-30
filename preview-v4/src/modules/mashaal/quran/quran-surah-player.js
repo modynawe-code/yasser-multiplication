@@ -1,5 +1,6 @@
 import {isItqanPilotOrigin,loadItqanTrack} from '../../../shared/quran/itqan-pilot-source.js';
 import {fetchOfficialAyahPolygons} from '../../../shared/quran/quran-svg-ayah-polygons.js';
+import {findOfficialHafsPage,pageIndexInCurriculum} from '../../../shared/quran/quran-svg-page-index.js';
 
 const STYLE_KEY='quran-surah-player';
 
@@ -47,6 +48,7 @@ function mountQuranSurahPlayerCore(host,{
   mushafPages=null,
   ayahTimings=null,
   durationSeconds=0,
+  autoFollowOfficialPages=false,
   retryPlayText='اضغطي تشغيل مرة ثانية',
   onCompleted=()=>{},
   onPageChange=()=>{}
@@ -193,6 +195,7 @@ function mountQuranSurahPlayerCore(host,{
   }
   host.appendChild(root);
 
+  let requestedAyahKey='',followTicket=0;
   let selectedAyahIndex=-1,ayahRepeatCount=0;
   let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
   const rangeEnd=range=>{
@@ -247,6 +250,23 @@ function mountQuranSurahPlayerCore(host,{
     pageIndex=target;renderPage();
   };
 
+  const followAyahPage=index=>{
+    if(!autoFollowOfficialPages||pages.length<2||index<0||destroyed)return;
+    const key=ayahs[index]?.ayahKey;
+    if(!key||key===requestedAyahKey)return;
+    requestedAyahKey=key;
+    const ticket=++followTicket;
+    // Official Quran SVG JSON is the canonical ayah-to-mushaf-page mapping.
+    // No inferred page offsets and no alteration of school progress levels.
+    const [sura,verse]=key.split(':').map(Number);
+    void findOfficialHafsPage(sura,verse).then(pageNumber=>{
+      if(destroyed||ticket!==followTicket||pageNumber==null)return;
+      const next=pageIndexInCurriculum(pages,pageNumber);
+      if(next>=0&&next!==pageIndex)changePage(next);
+    }).catch(()=>{
+      // Keep playing even if the Quran SVG CDN is temporarily inaccessible.
+    });
+  };
   const updateProgress=()=>{
     if(destroyed||seeking)return;
     const duration=finiteDuration(),current=Number(audio.currentTime)||0;
@@ -273,6 +293,7 @@ function mountQuranSurahPlayerCore(host,{
       if(isCurrent)path.setAttribute('aria-current','true');
       else path.removeAttribute('aria-current');
     });
+    followAyahPage(current);
   };
   const paintAyahSelection=()=>{
     ayahButtons.forEach((button,index)=>{
@@ -365,7 +386,7 @@ function mountQuranSurahPlayerCore(host,{
     play:playAudio,pause:pauseAudio,restart:restartAudio,stop:stopAudio,
     nextPage(){changePage(pageIndex+1);},previousPage(){changePage(pageIndex-1);},getPageIndex(){return pageIndex;},
     hasCompleted(){return completed;},
-    destroy(){destroyed=true;overlayEpoch++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+    destroy(){destroyed=true;overlayEpoch++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
   });
 }
 
@@ -403,7 +424,8 @@ export function mountQuranSurahPlayer(host,options={}){
         ...options,
         audioPath:source.audioPath,
         ayahTimings:source.ayahTimings,
-        durationSeconds:source.durationSeconds
+        durationSeconds:source.durationSeconds,
+        autoFollowOfficialPages:true
       }:options);
       for(let i=0;i<previouslyAt;i++)instance.nextPage();
       attachToggle();
