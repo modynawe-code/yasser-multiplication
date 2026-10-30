@@ -38,6 +38,8 @@ test('a failed page has a recoverable retry action without replacing Quran text'
     'matching verified page mirrors are tried before dropping the highlight');
   assert.match(player,/geometryHint\.hidden=false/,
     'the child must see why the page could not be highlighted');
+  assert.match(player,/retryHighlight\.addEventListener\('click',refreshGeometry\)/,
+    'failed geometry is retried without reloading the Quran page');
 
   assert.match(player,/root\.append\(panel\)/,'keep transport, progress and live status before training');
 });
