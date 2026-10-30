@@ -1,4 +1,5 @@
 import {matchFatihaPage1Polygons} from './fatiha-page1-polygons.js';
+import {isItqanPilotOrigin,loadItqanTrack} from '../../../shared/quran/itqan-pilot-source.js';
 
 const STYLE_KEY='quran-surah-player';
 
@@ -38,7 +39,7 @@ function normalizedPages(mushafPage,mushafPages){
   return mushafPage&&pageSources(mushafPage).length?[mushafPage]:[];
 }
 
-export function mountQuranSurahPlayer(host,{
+function mountQuranSurahPlayerCore(host,{
   surahNameAr='السورة',
   surahNumber=null,
   audioPath='',
@@ -356,5 +357,71 @@ export function mountQuranSurahPlayer(host,{
     nextPage(){changePage(pageIndex+1);},previousPage(){changePage(pageIndex-1);},getPageIndex(){return pageIndex;},
     hasCompleted(){return completed;},
     destroy(){destroyed=true;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+  });
+}
+
+
+/**
+ * Stable player facade for Yasser, Khaled and Mashaal.
+ * The original reciter and learner progress remain untouched. Only on the
+ * isolated pilot can the listener opt into an Itqan CMS recording WITH its
+ * own embedded timestamps, and return to the original at any time.
+ */
+export function mountQuranSurahPlayer(host,options={}){
+  let instance=mountQuranSurahPlayerCore(host,options);
+  let disposed=false,activeItqan=false,source=null,sourceTicket=0;
+  const attachToggle=()=>{
+    if(disposed||!source)return;
+    const root=host.querySelector('.quran-surah-player');
+    if(!root)return;
+    const panel=document.createElement('div');
+    panel.className='quran-itqan-source-panel';
+    const label=document.createElement('p');
+    label.className='quran-itqan-source-name';
+    label.textContent=activeItqan
+      ?'تلاوة إتقان المتزامنة • '+source.reciter+' • '+source.riwayah
+      :'تلاوة أصلية • يمكنك تجربة تلاوة إتقان بصوت '+source.reciter+' مع توقيت آياتها';
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='quran-itqan-toggle';
+    button.textContent=activeItqan?'الرجوع إلى التلاوة الأصلية':'استمع بتلاوة إتقان وتوقيت آياتها';
+    button.addEventListener('click',()=>{
+      if(disposed)return;
+      const previouslyAt=instance.getPageIndex();
+      instance.destroy();
+      activeItqan=!activeItqan;
+      instance=mountQuranSurahPlayerCore(host,activeItqan?{
+        ...options,
+        audioPath:source.audioPath,
+        ayahTimings:source.ayahTimings,
+        durationSeconds:source.durationSeconds
+      }:options);
+      for(let i=0;i<previouslyAt;i++)instance.nextPage();
+      attachToggle();
+    });
+    panel.append(label,button);
+    root.append(panel);
+  };
+  if(isItqanPilotOrigin()){
+    const ticket=++sourceTicket;
+    void loadItqanTrack(options.surahNumber).then(track=>{
+      if(disposed||ticket!==sourceTicket||!track)return;
+      source=track;attachToggle();
+    }).catch(()=>{});
+  }
+  return Object.freeze({
+    play:(...args)=>instance.play(...args),
+    pause:(...args)=>instance.pause(...args),
+    stop:(...args)=>instance.stop(...args),
+    restart:(...args)=>instance.restart(...args),
+    nextPage:(...args)=>instance.nextPage(...args),
+    previousPage:(...args)=>instance.previousPage(...args),
+    getPageIndex:()=>instance.getPageIndex(),
+    hasCompleted:()=>instance.hasCompleted(),
+    destroy(){
+      if(disposed)return;
+      disposed=true;sourceTicket++;
+      instance.destroy();
+    }
   });
 }
