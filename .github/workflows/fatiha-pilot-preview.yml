@@ -8,6 +8,7 @@ on:
       - 'preview-v4/src/modules/khaled/quran/**'
       - 'preview-v4/src/modules/mashaal/quran/**'
       - 'preview-v4/tests/fatiha-mushaf-polygon-highlight.test.mjs'
+      - 'preview-v4/tools/fatiha-overlay-browser-qa.mjs'
   workflow_dispatch:
 
 permissions:
@@ -122,7 +123,7 @@ jobs:
         run: |
           command -v google-chrome
           npm install --no-save --ignore-scripts playwright-core@1.56.1
-          node tools/test-fatiha-overlay-browser.mjs
+          node tools/fatiha-overlay-browser-qa.mjs
       - name: Save browser screenshot as diagnostic evidence
         if: always()
         uses: actions/upload-artifact@v4
