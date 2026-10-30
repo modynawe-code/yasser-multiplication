@@ -176,7 +176,7 @@ const familyParent=createFamilyParentController({
 });
 
 let goldVault=null;
-function leaveLearningAreas(){goldVault?.leave();cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
+function leaveLearningAreas(){document.dispatchEvent(new Event('family:stop-quran-audio'));goldVault?.leave();cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
 
 learnerRuntimes.register('yasser',{leave:()=>yasser.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode');if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();}});
 learnerRuntimes.register('khaled',{leave:()=>khaled.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}});

@@ -47,9 +47,41 @@ jobs:
         run: npm test
         working-directory: preview-v4
 
+      - name: Build verified Itqan CMS same-track catalog
+        working-directory: preview-v4
+        run: |
+          node tools/build-itqan-cms-tracks.mjs
+          node --input-type=module <<'NODE'
+          import {readFile} from 'node:fs/promises';
+          const catalog=JSON.parse(await readFile('assets/recitation/itqan-hafs-tracks.json','utf8'));
+          const required=[1,...Array.from({length:22},(_,i)=>93+i),32,33,34,35,36,37,38,67,68];
+          if(required.some(s=>!catalog.tracks[String(s)]))throw new Error('Missing Quran school chapter from CMS');
+          console.log('Itqan same-track recordings checked for all learners:',required.length,'surahs');
+          NODE
       - name: Build isolated web preview
         run: node tools/build-web-preview.mjs
 
+      - name: Rotate preview Quran PWA cache on this release
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFile,writeFile} from 'node:fs/promises';
+          const sha=String(process.env.GITHUB_SHA||'').slice(0,12);
+          if(!/^[a-f0-9]{12}$/.test(sha))throw new Error('Missing immutable GitHub commit SHA');
+          const path='dist-web-preview/service-worker.js';
+          let sw=await readFile(path,'utf8');
+          const previous='const CACHE_VERSION=`${CACHE_PREFIX}shell-222`;';
+          const next='const CACHE_VERSION=`${CACHE_PREFIX}shell-quran-itqan-'+sha+'`;';
+          if(sw.split(previous).length!==2)throw new Error('Unexpected service worker version: refusing stale release');
+          sw=sw.replace(previous,next);
+          const shell='const APP_SHELL=[';
+          if(sw.split(shell).length!==2)throw new Error('Unexpected service worker shell');
+          sw=sw.replace(shell,shell+"\n  './assets/recitation/itqan-hafs-tracks.json',\n  './src/shared/quran/itqan-catalog-source.js',\n  './src/shared/quran/quran-svg-ayah-polygons.js',\n  './src/shared/quran/quran-svg-page-index.js',");
+          await writeFile(path,sw);
+          const importedPath='dist-web-preview/service-worker-runtime.js';
+          const runtime=await readFile(importedPath,'utf8');
+          await writeFile(importedPath,runtime+'\n// itqan-quran-release-'+sha+'\n');
+          console.log('Quran PWA cache version rotated to',sha);
+          NODE
       - name: Verify preview isolation
         run: |
           node <<'NODE'
@@ -58,6 +90,8 @@ jobs:
           const meta=JSON.parse(fs.readFileSync('dist-web-preview/deployment-meta.json','utf8'));
           if(!html.includes('__FAMILY_API_BASE_URL__="https://yasser-khaled-family-api.modynawe.workers.dev"'))throw new Error('Published family API bootstrap is missing');
           if(meta.mode!='web-production'||meta.cloudSync!==true)throw new Error('Published deployment metadata is invalid');
+          const catalog=JSON.parse(fs.readFileSync('dist-web-preview/assets/recitation/itqan-hafs-tracks.json','utf8'));
+          if(catalog.schemaVersion!==1||!Object.keys(catalog.tracks||{}).length)throw new Error('Itqan same-track catalog missing from production preview');
           if(fs.existsSync('dist-web-preview/tests')||fs.existsSync('dist-web-preview/tools')||fs.existsSync('dist-web-preview/docs'))throw new Error('Non-runtime files leaked into preview package');
           NODE
 
