@@ -52,6 +52,23 @@ jobs:
           if(createHash('sha256').update(audio).digest('hex')!==expected)throw new Error('Pilot recording mismatch');
           if(!html.includes('__FAMILY_API_DISABLED__=true'))throw new Error('Family cloud sync is not disabled');
           if(!await readFile('dist-web-preview/src/modules/khaled/quran/fatiha-review-candidate.js','utf8').then(x=>x.includes('ACOUSTIC_ONLY_UNVERIFIED')))throw new Error('Unapproved cue source missing');
+          // Pilot origin has a cache-first Service Worker. Bump *only the built
+          // pilot* cache version on every release so Safari does not keep the
+          // previously cached Quran player and CSS despite a successful deploy.
+          const swPath='dist-web-preview/service-worker.js';
+          let sw=await readFile(swPath,'utf8');
+          const oldCache='const CACHE_VERSION=`\u0024{CACHE_PREFIX}shell-222`;';
+          const newCache='const CACHE_VERSION=`\u0024{CACHE_PREFIX}shell-fatiha-highlight-20261030-v3`;';
+          if(sw.split(oldCache).length!==2)throw new Error('Expected SW cache key not found');
+          sw=sw.replace(oldCache,newCache);
+          const base="const APP_SHELL=[";
+          if(sw.split(base).length!==2)throw new Error('App shell anchor not found');
+          sw=sw.replace(base,base+"\n  './src/modules/khaled/quran/khaled-quran.js',\n  './src/modules/khaled/quran/fatiha-review-candidate.js',\n  './src/modules/mashaal/quran/fatiha-page1-polygons.js',");
+          await writeFile(swPath,sw);
+          const workerRuntime='dist-web-preview/service-worker-runtime.js';
+          const runtime=await readFile(workerRuntime,'utf8');
+          await writeFile(workerRuntime,runtime+'\n// fatiha-pilot-20261030-v3: force Safari imported-SW update.\n');
+          console.log('Pilot Service Worker cache rotated and new Quran modules precached');
           console.log('Isolated trial bundle verified: no production family cloud sync, SHA-pinned original audio');
           NODE
       - name: Upload static trial bundle for review and rollback
@@ -87,6 +104,11 @@ jobs:
           grep -q 'M 113.70 130.39' /tmp/fatiha-polygons.js
           curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.js" -o /tmp/fatiha-player.js
           grep -q 'paintListeningAyah' /tmp/fatiha-player.js
+          curl --fail --location --silent --show-error "$BASE/service-worker.js" -o /tmp/fatiha-sw.js
+          grep -q 'shell-fatiha-highlight-20261030-v3' /tmp/fatiha-sw.js
+          grep -q "fatiha-page1-polygons.js" /tmp/fatiha-sw.js
+          curl --fail --location --silent --show-error "$BASE/service-worker-runtime.js" -o /tmp/fatiha-sw-runtime.js
+          grep -q 'fatiha-pilot-20261030-v3' /tmp/fatiha-sw-runtime.js
           curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.css" -o /tmp/fatiha-style.css
           grep -q 'quran-mushaf-ayah-path.is-current' /tmp/fatiha-style.css
           curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3" -o /tmp/fatiha-audio.mp3
