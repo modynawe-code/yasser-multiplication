@@ -1,0 +1,37 @@
+name: Al-Fatiha acoustic pause evidence (one-off)
+on:
+  push:
+    branches:
+      - feature/khaled-fatiha-itqan-pilot-20261030
+    paths:
+      - .github/workflows/khaled-fatiha-pauses-once.yml
+permissions:
+  contents: read
+jobs:
+  acoustic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure FFmpeg and ffprobe
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Analyze the verified original MP3, not a different reader
+        working-directory: preview-v4
+        run: |
+          SHA="$(node --input-type=module -e "import {MASHAAL_RECITATION_MEDIA} from './src/modules/mashaal/curriculum/recitation-media-manifest.js'; const f=MASHAAL_RECITATION_MEDIA.find(x=>x.surahNumber===1&&x.sourceId==='kfgqpc-ibrahim-al-akhdar-hafs'); if(!f)process.exit(2); process.stdout.write(f.sha256)")"
+          python tools/analyze-khaled-fatiha-pauses.py \
+            --audio assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3 \
+            --expected-sha256 "$SHA" \
+            --output analysis-output/fatiha-acoustic-pauses-unapproved.json
+      - name: Save non-approved acoustic report for human evaluation
+        uses: actions/upload-artifact@v4
+        with:
+          name: fatiha-acoustic-pauses-unapproved
+          path: preview-v4/analysis-output/fatiha-acoustic-pauses-unapproved.json
+          retention-days: 7
+          if-no-files-found: error
