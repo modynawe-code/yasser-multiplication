@@ -382,6 +382,7 @@ function mountQuranSurahPlayerCore(host,{
     overlayEpoch++;
     if(verseOverlay)mountOfficialGeometry(null);
     figure.removeAttribute('data-image-error');retryPage.hidden=true;geometryHint.hidden=true;retryHighlight.hidden=true;
+    viewport.removeAttribute('data-official-focus');
     if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
     }else{
@@ -610,6 +611,7 @@ function mountQuranSurahPlayerCore(host,{
         &&Number.isFinite(cropped.height)&&cropped.height>0
         &&cropped.top>=0&&cropped.top+cropped.height<=1){
         activeFocusRegion={...original,top:cropped.top,height:cropped.height};
+        viewport.dataset.officialFocus='true';
         viewport.style.aspectRatio=String(activeFocusRegion.aspect/activeFocusRegion.height);
         image.style.transform=`translateY(-${activeFocusRegion.top*100}%)`;
       }
