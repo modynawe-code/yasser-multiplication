@@ -234,7 +234,7 @@ function mountQuranSurahPlayerCore(host,{
       const reviewed=document.createElement('button');
       reviewed.type='button';reviewed.className='quran-practice-reviewed';
       reviewed.textContent='راجعت بنفسي';
-      if(learnerId==='mashaal')reviewed.hidden=true;
+      if(learnerId==='mashaal'){reviewed.hidden=true;practiceBlindButton.hidden=true;}
       practiceHint=document.createElement('p');
       practiceHint.className='quran-practice-status';practiceHint.setAttribute('role','status');
       practiceHint.textContent='اختر آياتك، استمع للتلاوة، ثم ردد بنفسك';
@@ -342,9 +342,13 @@ function mountQuranSurahPlayerCore(host,{
   const previewSeek=()=>{const duration=finiteDuration();if(!duration)return;if(!seeking)beginSeek();const target=seekValue();try{audio.currentTime=target;}catch{}paintSeek(target,duration);time.textContent=`${formatTime(target)} / ${formatTime(duration)}`;};
   const paintListeningAyah=()=>{
     const ms=(Number(audio.currentTime)||0)*1000;
-    const current=selectedAyahIndex>=0?selectedAyahIndex:
-      (audio.paused?-1:ayahs.findIndex((ayah,index)=>ms>=ayah.startMs
-        &&(ms<ayah.endMs||(index===ayahs.length-1&&ms<=ayah.endMs))));
+    const current=selectedAyahIndex>=0
+      ?(ayahs.findIndex((ayah,index)=>index>=selectedAyahIndex
+         &&index<=selectedAyahEndIndex&&ms>=ayah.startMs&&ms<ayah.endMs)
+         >=0?ayahs.findIndex((ayah,index)=>index>=selectedAyahIndex
+           &&index<=selectedAyahEndIndex&&ms>=ayah.startMs&&ms<ayah.endMs):selectedAyahIndex)
+      :(audio.paused?-1:ayahs.findIndex((ayah,index)=>ms>=ayah.startMs
+         &&(ms<ayah.endMs||(index===ayahs.length-1&&ms<=ayah.endMs))));
     ayahButtons.forEach((button,index)=>{
       const isCurrent=index===current;
       button.classList.toggle('is-current',isCurrent);
@@ -381,6 +385,14 @@ function mountQuranSurahPlayerCore(host,{
     const stored=markQuranPractice(learnerId,{
       surahNumber,fromAyah:range.fromAyah,toAyah:range.toAyah,stage
     });
+    if(stored){
+      const progress=loadQuranPractice(learnerId).records;
+      ayahButtons.forEach((button,index)=>{
+        const state=progress[surahNumber+':'+String(index+1)]?.stage||'';
+        button.dataset.practiceStage=state;
+        button.title=state==='reviewed'?'راجعته غيب':state==='repeated'?'تدربت عليه':state==='listened'?'استمعت إليه':'';
+      });
+    }
     if(practiceHint){
       practiceHint.textContent=stored
         ?(stage==='listened'?'انتهى الاستماع، الآن ردد بنفسك':stage==='repeated'?'تم تسجيل الترديد الذي أكدته':'تم تسجيل مراجعتك الذاتية، وليست درجة تسميع آلية')
@@ -426,19 +438,11 @@ function mountQuranSurahPlayerCore(host,{
     }
   };
   const selectAyah=async (index,{revealInMushaf=false}={})=>{
-    const item=ayahs[index];if(!item||destroyed)return;
+    if(!ayahs[index]||destroyed)return;
     if(fromSelect)fromSelect.value=String(index);
     if(toSelect)toSelect.value=String(index);
     await selectRange(index,index);
     if(revealInMushaf)showHighlightedVerseOnMushaf();
-    return;
-    // Retained below for legacy compatibility; unreachable during active range control.
-    audio.pause();selectedAyahIndex=index;ayahRepeatCount=0;completed=false;seeking=false;
-    try{audio.currentTime=item.startMs/1000;}catch{status.textContent='تعذر الانتقال للآية';clearAyahSelection();return;}
-    paintAyahSelection();updateProgress();
-    status.textContent='الآية '+String(index+1)+' — استمع وردد';
-    if(revealInMushaf)showHighlightedVerseOnMushaf();
-    await playAudio();
   };
   const handleAyahBoundary=()=>{
     if(selectedAyahIndex<0||destroyed||seeking)return false;
