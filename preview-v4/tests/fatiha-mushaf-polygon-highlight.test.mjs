@@ -33,7 +33,8 @@ test('verse overlay fails safely when using different surah/page/SVG geometry or
 test('player maps original vector paths onto the existing image, synchronizes active ayah, and offers touch and keyboard input',async()=>{
   const player=await readFile(new URL('../src/modules/mashaal/quran/quran-surah-player.js',import.meta.url),'utf8');
   const css=await readFile(new URL('../src/modules/mashaal/quran/quran-surah-player.css',import.meta.url),'utf8');
-  assert.match(player,/const verseGeometry=matchFatihaPage1Polygons\(pages\[0\],surahNumber,ayahs\)/);
+  assert.match(player,/fetchOfficialAyahPolygons\(src,surahNumber\)/);
+  assert.doesNotMatch(player,/matchFatihaPage1Polygons\(/);
   assert.match(player,/document\.createElementNS\(ns,'svg'\)/);
   assert.match(player,/verseOverlay\.setAttribute\('viewBox',geometry\.viewBox\)/);
   assert.match(player,/path\.setAttribute\('d',item\.d\)/);
