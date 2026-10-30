@@ -63,3 +63,26 @@
   .quran-surah-player.has-ayah-controls .quran-ayah-buttons{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 @media(max-width:620px){.quran-ayah-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* This overlay uses the exact ayahPolygon vector geometry from the matching
+   bundled Madinah Hafs page. The original mushaf image is untouched. */
+.quran-mushaf-ayah-overlay{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none;z-index:2}
+.quran-mushaf-ayah-path{fill:transparent;stroke:transparent;stroke-width:1;pointer-events:all;cursor:pointer;outline:none}
+.quran-mushaf-ayah-path.is-current{fill:rgba(242,197,63,.27);stroke:rgba(136,94,23,.8);stroke-width:1.35}
+.quran-mushaf-ayah-path:focus-visible{stroke:#276d55;stroke-width:3;fill:rgba(165,221,188,.24)}
+.quran-ayah-button.is-current{box-shadow:inset 0 0 0 2px #b18a35}
+.quran-page-viewport:has(.quran-mushaf-ayah-overlay){touch-action:pan-y}
+
+/* Compact transport ONLY when verse-repetition controls are present. 
+   Other children's normal surah player retains its original sizing. */
+.quran-surah-player.has-ayah-controls .quran-transport{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.quran-surah-player.has-ayah-controls .quran-control{min-height:48px;gap:5px;padding:8px 5px;border-radius:14px}
+.quran-surah-player.has-ayah-controls .quran-control span{font-size:18px}
+.quran-surah-player.has-ayah-controls .quran-control strong{font-size:clamp(12px,1.6vw,15px);line-height:1.25}
+@media(max-width:620px){
+  .quran-surah-player.has-ayah-controls .quran-transport{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .quran-surah-player.has-ayah-controls .quran-control{min-height:50px;padding:8px 9px}
+  .quran-surah-player.has-ayah-controls .quran-ayah-controls{padding:10px;gap:8px}
+  .quran-surah-player.has-ayah-controls .quran-ayah-button{min-height:46px}
+  .quran-surah-player.has-ayah-controls .quran-player-status{font-size:14px;min-height:20px}
+}
