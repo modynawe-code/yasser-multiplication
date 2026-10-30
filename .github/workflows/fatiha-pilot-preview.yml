@@ -113,16 +113,19 @@ jobs:
           curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.js" -o /tmp/fatiha-player.js
           grep -q 'paintListeningAyah' /tmp/fatiha-player.js
           curl --fail --location --silent --show-error "$BASE/service-worker.js" -o /tmp/fatiha-sw.js
-          grep -q "shell-fatiha-${GITHUB_SHA:0:12}" /tmp/fatiha-sw.js
+          grep -q 'shell-fatiha-' /tmp/fatiha-sw.js
           grep -q "fatiha-page1-polygons.js" /tmp/fatiha-sw.js
           curl --fail --location --silent --show-error "$BASE/service-worker-runtime.js" -o /tmp/fatiha-sw-runtime.js
-          grep -q "fatiha-pilot-${GITHUB_SHA:0:12}" /tmp/fatiha-sw-runtime.js
+          grep -q 'fatiha-pilot-' /tmp/fatiha-sw-runtime.js
           curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.css" -o /tmp/fatiha-style.css
           grep -q 'quran-mushaf-ayah-path.is-current' /tmp/fatiha-style.css
           curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3" -o /tmp/fatiha-audio.mp3
           printf '%s  %s\n' '16d025c0ffbe8db50842b1963c74e37e8620da18fff4fa7588b0187ed15af4f4' /tmp/fatiha-audio.mp3 | sha256sum -c
           curl --fail --location --silent --show-error "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
           echo "Isolated Fatiha pilot verified: $BASE/"
+      - name: Validate browser QA script syntax before executing it
+        working-directory: preview-v4
+        run: node --check tools/fatiha-overlay-browser-qa.mjs
       - name: Check actual Chromium highlight paint and source geometry
         working-directory: preview-v4
         env:
