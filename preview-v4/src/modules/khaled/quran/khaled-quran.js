@@ -26,7 +26,7 @@ const FOCUS_BY_SURAH=Object.freeze({
   101:Object.freeze([0,.53]),102:Object.freeze([.53,.47]),
   103:Object.freeze([0,.27]),104:Object.freeze([.27,.41]),105:Object.freeze([.68,.32]),
   106:Object.freeze([0,.30]),107:Object.freeze([.30,.43]),108:Object.freeze([.73,.27]),
-  109:Object.freeze([0,.35]),110:Object.freeze([.35,.29]),111:Object.freeze([.64,.36]),
+  109:Object.freeze([0,.35]),110:Object.freeze([.35,.32]),111:Object.freeze([.64,.36]),
   112:Object.freeze([0,.29]),113:Object.freeze([.29,.34]),114:Object.freeze([.63,.37])
 });
 
