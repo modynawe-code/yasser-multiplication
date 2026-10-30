@@ -107,7 +107,7 @@ export function createKhaledQuranController({showView,onBack}={}){
     destroyPlayer();selectedSurah=item.surahNumber;
     document.querySelectorAll('.khaled-quran-surah').forEach(node=>node.classList.toggle('selected',node===button));
     const host=byId('khaledQuranPlayer');if(!host)return;host.hidden=false;host.innerHTML=`<h2 id="khaledQuranSelectedTitle">سورة ${item.surahNameAr}</h2><div id="khaledQuranPlayerHost"></div>`;
-    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
+    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,learnerId:'khaled',audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
     host.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
   }
   function setTerm(next){
