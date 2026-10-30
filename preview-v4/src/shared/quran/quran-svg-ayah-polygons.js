@@ -36,7 +36,12 @@ export async function fetchOfficialAyahPolygons(pageSource,surahNumber,{fetchImp
   const trustedPinned=
     url.hostname==='cdn.jsdelivr.net'&&/^\/gh\/quranpedia\/quran-svg@[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/.test(url.pathname)
     ||url.hostname==='raw.githubusercontent.com'&&/^\/quranpedia\/quran-svg\/[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/.test(url.pathname);
-  if(url.protocol!=='https:'||!trustedSameOrigin&&!trustedPinned)throw new Error('untrusted-quran-svg-source');
+  // Localhost HTTP is permitted only for local automated verification.
+  // Deployed applications and all remote SVG origins must use HTTPS.
+  const localTest=trustedSameOrigin&&url.protocol==='http:'
+    &&(url.hostname==='127.0.0.1'||url.hostname==='localhost');
+  if(!((url.protocol==='https:'&&(trustedSameOrigin||trustedPinned))||localTest))
+    throw new Error('untrusted-quran-svg-source');
   const response=await fetchImpl(url.href,{mode:'cors',redirect:'error'});
   if(!response.ok)throw new Error('quran-svg-unavailable');
   const text=await response.text();
