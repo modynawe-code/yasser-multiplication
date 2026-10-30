@@ -47,6 +47,17 @@ jobs:
         run: npm test
         working-directory: preview-v4
 
+      - name: Build verified Itqan CMS same-track catalog
+        working-directory: preview-v4
+        run: |
+          node tools/build-itqan-cms-tracks.mjs
+          node --input-type=module <<'NODE'
+          import {readFile} from 'node:fs/promises';
+          const catalog=JSON.parse(await readFile('assets/recitation/itqan-hafs-tracks.json','utf8'));
+          const required=[1,...Array.from({length:22},(_,i)=>93+i),32,33,34,35,36,37,38,67,68];
+          if(required.some(s=>!catalog.tracks[String(s)]))throw new Error('Missing Quran school chapter from CMS');
+          console.log('Itqan same-track recordings checked for all learners:',required.length,'surahs');
+          NODE
       - name: Build isolated web preview
         run: node tools/build-web-preview.mjs
 
@@ -58,6 +69,8 @@ jobs:
           const meta=JSON.parse(fs.readFileSync('dist-web-preview/deployment-meta.json','utf8'));
           if(!html.includes('__FAMILY_API_BASE_URL__="https://yasser-khaled-family-api.modynawe.workers.dev"'))throw new Error('Published family API bootstrap is missing');
           if(meta.mode!='web-production'||meta.cloudSync!==true)throw new Error('Published deployment metadata is invalid');
+          const catalog=JSON.parse(fs.readFileSync('dist-web-preview/assets/recitation/itqan-hafs-tracks.json','utf8'));
+          if(catalog.schemaVersion!==1||!Object.keys(catalog.tracks||{}).length)throw new Error('Itqan same-track catalog missing from production preview');
           if(fs.existsSync('dist-web-preview/tests')||fs.existsSync('dist-web-preview/tools')||fs.existsSync('dist-web-preview/docs'))throw new Error('Non-runtime files leaked into preview package');
           NODE
 
