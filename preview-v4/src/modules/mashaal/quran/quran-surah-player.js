@@ -131,6 +131,9 @@ function mountQuranSurahPlayerCore(host,{
   versePosition.hidden=!ayahs.length;
   versePosition.setAttribute('aria-live','polite');
   versePosition.textContent='اختر آية أو ابدأ التلاوة';
+  const geometryHint=document.createElement('p');
+  geometryHint.className='quran-geometry-hint';geometryHint.hidden=true;
+  geometryHint.setAttribute('role','status');
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
 
@@ -150,7 +153,7 @@ function mountQuranSurahPlayerCore(host,{
   const retryPage=document.createElement('button');
   retryPage.type='button';retryPage.className='quran-page-retry';retryPage.hidden=true;
   retryPage.textContent='إعادة تحميل صفحة المصحف';
-  figure.append(versePosition,viewport,caption,pageNav,retryPage);
+  figure.append(versePosition,viewport,caption,geometryHint,pageNav,retryPage);
 
   const audio=new Audio(audioPath);
   audio.preload='metadata';
@@ -348,7 +351,7 @@ function mountQuranSurahPlayerCore(host,{
     sourceIndex=0;
     overlayEpoch++;
     if(verseOverlay)mountOfficialGeometry(null);
-    figure.removeAttribute('data-image-error');retryPage.hidden=true;
+    figure.removeAttribute('data-image-error');retryPage.hidden=true;geometryHint.hidden=true;
     if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
     }else{
@@ -557,15 +560,28 @@ function mountQuranSurahPlayerCore(host,{
     figure.removeAttribute('data-image-error');retryPage.hidden=true;
     if(!ayahs.length||!Number.isInteger(surahNumber))return;
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
-    void fetchOfficialAyahPolygons(src,surahNumber).then(geometry=>{
+    // The displayed original page may load via <img> even when a CORS fetch
+    // for its polygon geometry fails. Try only the same verified page mirrors.
+    const candidates=[...new Set([src,...pageSources(pages[pageIndex])])];
+    void (async()=>{
+      for(const candidate of candidates){
+        try{return await fetchOfficialAyahPolygons(candidate,surahNumber);}
+        catch{/* Use the next trusted mirror; never generate polygons. */}
+      }
+      throw new Error('quran-polygon-geometry-unavailable');
+    })().then(geometry=>{
       if(destroyed||thisEpoch!==overlayEpoch)return;
+      geometryHint.hidden=true;
       mountOfficialGeometry(geometry);
       paintListeningAyah();
     }).catch(()=>{
-      if(!destroyed&&thisEpoch===overlayEpoch)mountOfficialGeometry(null);
+      if(destroyed||thisEpoch!==overlayEpoch)return;
+      mountOfficialGeometry(null);
+      geometryHint.textContent='التلاوة مستمرة، لكن تعذر تظليل الآيات داخل المصحف. جرّب إعادة تحميل الصفحة.';
+      geometryHint.hidden=false;
     });
   });
-  image.addEventListener('error',()=>{overlayEpoch++;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
+  image.addEventListener('error',()=>{overlayEpoch++;geometryHint.hidden=true;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
 
   retryPage.addEventListener('click',renderPage);
   renderPage();
