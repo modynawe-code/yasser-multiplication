@@ -59,6 +59,11 @@ export const KHALED_QURAN_TERMS=Object.freeze({
   2:Object.freeze(TERM_2.map(mediaFor))
 });
 
+// The Itqan Akhdar track is absent from the live API; keep this experiment out of children's normal UI.
+function isItqanPilotDebugEnabled(){
+  return new URLSearchParams(globalThis.location?.search||'').get('itqanPilot')==='1';
+}
+
 function ensureStyle(){
   if(document.querySelector('link[data-module-style="khaled-quran"]'))return;
   const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/khaled/quran/khaled-quran.css';link.dataset.moduleStyle='khaled-quran';document.head.appendChild(link);
@@ -115,7 +120,7 @@ export function createKhaledQuranController({showView,onBack}={}){
     const host=byId('khaledQuranPlayer');if(!host)return;host.hidden=false;host.innerHTML=`<h2 id="khaledQuranSelectedTitle">سورة ${item.surahNameAr}</h2><div id="khaledQuranPlayerHost"></div>`;
     const playerHost=byId('khaledQuranPlayerHost');
     player=mountQuranSurahPlayer(playerHost,{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
-    if(item.surahNumber===1){
+    if(item.surahNumber===1&&isItqanPilotDebugEnabled()){
       const pilot=document.createElement('div');
       pilot.className='khaled-itqan-pilot';
       const button=document.createElement('button');
