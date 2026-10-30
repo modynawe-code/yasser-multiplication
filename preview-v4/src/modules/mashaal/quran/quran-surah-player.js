@@ -4,6 +4,9 @@ import {findOfficialHafsPage,pageIndexInCurriculum} from '../../../shared/quran/
 import {loadQuranPractice,markQuranPractice,getQuranPracticeStage,practiceStorageKey} from '../../../shared/quran/quran-practice-progress.js';
 
 const STYLE_KEY='quran-surah-player';
+// These pinned, verified Hafs SVG pages are already included in this repository.
+// Prefer them over remote CDNs so the first and last pages work offline.
+const BUNDLED_HAFS_PAGES=new Set([1,603,604]);
 
 function ensureStyle(){
   if(document.querySelector(`link[data-module-style="${STYLE_KEY}"]`))return;
@@ -30,8 +33,12 @@ function normalizedFocusRegion(mushafPage,surahNumber){
   return Object.freeze({top,height,aspect,labelAr:String(region.labelAr||'').trim()});
 }
 
-function pageSources(mushafPage){
-  const values=[mushafPage?.imagePath,mushafPage?.imageUrl,...(Array.isArray(mushafPage?.fallbackImageUrls)?mushafPage.fallbackImageUrls:[])];
+export function pageSources(mushafPage){
+  const number=Number(mushafPage?.pageNumber);
+  const bundled=mushafPage?.sourceId==='kfgqpc-hafs-madinah-svg'
+    &&Number.isInteger(number)&&BUNDLED_HAFS_PAGES.has(number)
+    ?`./assets/recitation/kfqc-hafs-page-${number}.svg`:'';
+  const values=[bundled,mushafPage?.imagePath,mushafPage?.imageUrl,...(Array.isArray(mushafPage?.fallbackImageUrls)?mushafPage.fallbackImageUrls:[])];
   return [...new Set(values.map(value=>String(value||'').trim()).filter(Boolean))];
 }
 
@@ -135,7 +142,10 @@ function mountQuranSurahPlayerCore(host,{
   pageNav.append(previousPage,pageIndicator,nextPage);
   if(pages.length<2)pageNav.hidden=true;
 
-  figure.append(viewport,caption,pageNav);
+  const retryPage=document.createElement('button');
+  retryPage.type='button';retryPage.className='quran-page-retry';retryPage.hidden=true;
+  retryPage.textContent='إعادة تحميل صفحة المصحف';
+  figure.append(viewport,caption,pageNav,retryPage);
 
   const audio=new Audio(audioPath);
   audio.preload='metadata';
@@ -269,7 +279,8 @@ function mountQuranSurahPlayerCore(host,{
       if(Number(fromSelect.value)>Number(toSelect.value))fromSelect.value=toSelect.value;
     });
     rangePlay.addEventListener('click',()=>{void selectRange(Number(fromSelect.value),Number(toSelect.value));});
-    root.insertBefore(panel,progressWrap);
+    // Keep playback and seek controls together before the longer lesson controls.
+    root.insertBefore(panel,status);
   }
   host.appendChild(root);
 
@@ -308,7 +319,7 @@ function mountQuranSurahPlayerCore(host,{
     sourceIndex=0;
     overlayEpoch++;
     if(verseOverlay)mountOfficialGeometry(null);
-    figure.removeAttribute('data-image-error');
+    figure.removeAttribute('data-image-error');retryPage.hidden=true;
     if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
     }else{
@@ -492,7 +503,7 @@ function mountQuranSurahPlayerCore(host,{
   audio.addEventListener('ended',()=>{if(!handleAyahBoundary())markCompleted();});
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
   image.addEventListener('load',()=>{
-    figure.removeAttribute('data-image-error');
+    figure.removeAttribute('data-image-error');retryPage.hidden=true;
     if(!ayahs.length||!Number.isInteger(surahNumber))return;
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
     void fetchOfficialAyahPolygons(src,surahNumber).then(geometry=>{
@@ -503,8 +514,9 @@ function mountQuranSurahPlayerCore(host,{
       if(!destroyed&&thisEpoch===overlayEpoch)mountOfficialGeometry(null);
     });
   });
-  image.addEventListener('error',()=>{overlayEpoch++;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
+  image.addEventListener('error',()=>{overlayEpoch++;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
 
+  retryPage.addEventListener('click',renderPage);
   renderPage();
 
   return Object.freeze({
