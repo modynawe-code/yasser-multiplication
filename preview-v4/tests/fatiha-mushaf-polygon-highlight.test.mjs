@@ -35,13 +35,13 @@ test('player maps original vector paths onto the existing image, synchronizes ac
   const css=await readFile(new URL('../src/modules/mashaal/quran/quran-surah-player.css',import.meta.url),'utf8');
   assert.match(player,/const verseGeometry=matchFatihaPage1Polygons\(pages\[0\],surahNumber,ayahs\)/);
   assert.match(player,/document\.createElementNS\(ns,'svg'\)/);
-  assert.match(player,/verseOverlay\.setAttribute\('viewBox',verseGeometry\.viewBox\)/);
-  assert.match(player,/path\.setAttribute\('d',verseGeometry\.paths\[index\]\.d\)/);
+  assert.match(player,/verseOverlay\.setAttribute\('viewBox',geometry\.viewBox\)/);
+  assert.match(player,/path\.setAttribute\('d',item\.d\)/);
   assert.match(player,/path\.addEventListener\('click'/);
   assert.match(player,/path\.addEventListener\('keydown'/);
   assert.match(player,/path\.classList\.toggle\('is-current',isCurrent\)/);
   assert.match(player,/audio\.addEventListener\('timeupdate',\(\)=>\{updateProgress\(\);handleAyahBoundary\(\);paintListeningAyah\(\);\}\)/);
-  assert.match(player,/sourceIndex===0\?'':'none'/);
+  assert.match(player,/fetchOfficialAyahPolygons\(src,surahNumber\)/);
   assert.match(player,/const showHighlightedVerseOnMushaf=\(\)=>/);
   assert.match(player,/visible<Math\.min\(260,rect\.height\/2\)/);
   assert.match(player,/selectAyah\(index,\{revealInMushaf:true\}\)/);
