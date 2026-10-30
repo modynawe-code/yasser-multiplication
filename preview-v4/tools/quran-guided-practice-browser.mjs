@@ -121,10 +121,10 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       await page.locator('.quran-practice-done').click();
       await verify('repeated');
       if(learner!=='mashaal'){
-        await page.locator('.quran-practice-blind').click();
+        await page.locator('button.quran-practice-blind').click();
         const hidden=await page.locator('.quran-page-frame').evaluate(el=>el.classList.contains('quran-practice-blind'));
         if(!hidden)throw Error('self-review blind mode unavailable');
-        await page.locator('.quran-practice-blind').click();
+        await page.locator('button.quran-practice-blind').click();
         await page.locator('.quran-practice-reviewed').click();
         await verify('reviewed');
       }else if(!await page.locator('.quran-practice-reviewed').isHidden()){
