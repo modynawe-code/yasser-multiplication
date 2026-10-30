@@ -1,4 +1,5 @@
 name: Quran Guided Practice — Chrome and WebKit
+# Regression gate for native verse range selection and child-isolated progress
 on:
   push:
     branches:
