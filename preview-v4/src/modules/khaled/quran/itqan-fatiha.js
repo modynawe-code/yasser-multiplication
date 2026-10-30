@@ -11,9 +11,9 @@ function normalizeName(value){
 export function isIbrahimAlAkhdarHafs(recitation){
   const reciter=normalizeName(recitation?.reciter?.name);
   const riwayah=normalizeName(recitation?.riwayah?.name);
-  const knownReciter=/(?:^|\\s)ابراهيم\\s+الاخضر(?:$|\\s)/u.test(reciter)
-    || /\\bibrahim\\s+(?:al\\s*)?akhdar\\b/i.test(reciter);
-  return knownReciter&&(/(?:^|\\s)حفص(?:$|\\s)/u.test(riwayah)||/\\bhafs\\b/i.test(riwayah));
+  const knownReciter=/(?:^|\s)ابراهيم\s+الاخضر(?:$|\s)/u.test(reciter)
+    || /\bibrahim\s+(?:al\s*)?akhdar\b/i.test(reciter);
+  return knownReciter&&(/(?:^|\s)حفص(?:$|\s)/u.test(riwayah)||/\bhafs\b/i.test(riwayah));
 }
 
 export function validateFatihaTrack(track){
