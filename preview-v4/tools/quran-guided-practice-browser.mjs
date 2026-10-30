@@ -61,6 +61,11 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         html:e.outerHTML.slice(0,900),
         options:[...e.options].slice(0,6).map(o=>({value:o.value,text:o.text,selected:o.selected}))
       })))));
+      console.log('SELECT_OPTIONS_DIAGNOSTIC',browserName,learner,
+        JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>({
+          options:[...e.options].slice(0,7).map(o=>({text:o.textContent,value:o.value,selected:o.selected})),
+          html:e.outerHTML.slice(0,550),name:e.getAttribute('aria-label')
+        })))));
       const firstSelected=await page.locator('.quran-range-controls select').nth(0).selectOption('1');
       console.log('SET_FROM',browserName,learner,JSON.stringify(firstSelected),
         JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>e.value))));
