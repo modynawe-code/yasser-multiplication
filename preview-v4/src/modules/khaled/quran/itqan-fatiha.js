@@ -1,6 +1,7 @@
 // Optional, on-demand Itqan pilot. No API keys, user identifiers, or existing audio are sent.
 const API_ORIGIN='https://api.cms.itqan.dev';
-const MAX_PAGES=16;
+const MAX_PAGES=10;
+const PAGE_SIZE=200;
 
 function normalizeName(value){
   return String(value||'').normalize('NFKD').toLowerCase()
@@ -39,28 +40,40 @@ export function validateFatihaTrack(track){
   return Object.freeze({audioPath:url.href,ayahTimings:Object.freeze(timings),durationSeconds:duration/1000});
 }
 
-async function readPages(fetchImpl,initialPath){
-  const all=[],seen=new Set();
-  let url=new URL(initialPath,API_ORIGIN);
-  for(let page=0;page<MAX_PAGES&&url;page++){
-    if(url.origin!==API_ORIGIN||!url.pathname.startsWith('/recitations/')||seen.has(url.href)){
-      throw new Error('unexpected-itqan-pagination');
-    }
-    seen.add(url.href);
+async function readPages(fetchImpl,path){
+  // Itqan uses count/page/page_size, NOT a "next" cursor.
+  // Use only fixed, read-only recitation endpoints to avoid redirecting requests.
+  const initial=new URL(path,API_ORIGIN);
+  if(initial.origin!==API_ORIGIN
+    ||!/^\/recitations\/(?:\d+\/)?$/.test(initial.pathname)
+    ||initial.search||initial.hash)throw new Error('unexpected-itqan-path');
+  const all=[];
+  let total=null;
+  for(let page=1;page<=MAX_PAGES;page++){
+    const url=new URL(initial.href);
+    url.searchParams.set('page',String(page));
+    url.searchParams.set('page_size',String(PAGE_SIZE));
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),7000);
     let response;
     try{
-      response=await fetchImpl(url.href,{headers:{Accept:'application/json'},signal:controller.signal});
+      response=await fetchImpl(url.href,{
+        headers:{Accept:'application/json','Accept-Language':'ar'},
+        signal:controller.signal,
+        redirect:'error'
+      });
     }finally{clearTimeout(timeout);}
     if(!response?.ok)throw new Error('itqan-api-unavailable');
     const data=await response.json();
-    if(!Array.isArray(data?.results))throw new Error('invalid-itqan-response');
+    if(!Number.isSafeInteger(data?.count)||data.count<0||!Array.isArray(data.results)
+      ||data.results.length>PAGE_SIZE)throw new Error('invalid-itqan-response');
+    if(total===null)total=data.count;
+    if(data.count!==total)throw new Error('changed-itqan-result-count');
+    if(data.results.length===0&&all.length<total)throw new Error('incomplete-itqan-pagination');
     all.push(...data.results);
-    url=data.next?new URL(data.next,url):null;
+    if(all.length>=total)return all.slice(0,total);
   }
-  if(url)throw new Error('itqan-pagination-limit');
-  return all;
+  throw new Error('itqan-pagination-limit');
 }
 
 export async function loadItqanFatiha({fetchImpl=fetch}={}){
