@@ -66,6 +66,13 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         return {start:timings[1].startMs/1000,end:timings[3].endMs/1000};
       },config.surahNumber);
       await page.locator('.quran-range-play').click();
+      const initial=await page.evaluate(()=>({
+        selects:[...document.querySelectorAll('.quran-range-controls select')].map(x=>x.value),
+        audioStart:window.__qaAudio.at(-1).currentTime,
+        status:document.querySelector('.quran-player-status')?.textContent,
+        repeat:document.querySelector('[aria-label="عدد تكرارات الآية"]')?.value
+      }));
+      console.log('RANGE_START_DEBUG',browserName,learner,JSON.stringify(initial),JSON.stringify(data));
       for(let cycle=1;cycle<=3;cycle++){
         const state=await page.evaluate(({end,start})=>{
           const audio=window.__qaAudio.at(-1);
