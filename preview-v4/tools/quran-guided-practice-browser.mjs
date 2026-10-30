@@ -57,6 +57,10 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       await page.locator('.quran-itqan-toggle').waitFor({timeout:20000});
       await page.locator('.quran-itqan-toggle').click();
       await page.locator('.quran-range-controls').waitFor({timeout:12000});
+      if(!await page.locator('.quran-practice-done').isDisabled())
+        throw Error(browserName+' '+learner+' repeat was possible before listening');
+      if(learner!=='mashaal'&&!await page.locator('.quran-practice-reviewed').isDisabled())
+        throw Error(browserName+' '+learner+' review was possible before self-test');
       console.log('SELECT_OPTIONS',browserName,learner,JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>({
         html:e.outerHTML.slice(0,900),
         options:[...e.options].slice(0,6).map(o=>({value:o.value,text:o.text,selected:o.selected}))
@@ -99,13 +103,24 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         return state.last;
       },{who:learner,number:config.surahNumber,wanted:stage});
       await verify('listened');
+      if(await page.locator('.quran-practice-done').isDisabled())
+        throw Error(browserName+' '+learner+' repeat stayed disabled after listening');
+      const firstStage=await page.locator('.quran-practice-step[data-state="current"]').first().textContent();
+      if(!firstStage?.includes('ردد'))
+        throw Error(browserName+' '+learner+' missing repeat stage: '+firstStage);
       await page.locator('.quran-practice-done').click();
       await verify('repeated');
       if(learner!=='mashaal'){
+        if(!await page.locator('.quran-practice-reviewed').isDisabled())
+          throw Error(browserName+' '+learner+' review was possible before hiding mushaf');
+        if(await page.locator('button.quran-practice-blind').isDisabled())
+          throw Error(browserName+' '+learner+' blind test unavailable after repeat');
         await page.locator('button.quran-practice-blind').click();
         const hidden=await page.locator('.quran-page-frame').evaluate(el=>el.classList.contains('quran-practice-blind'));
         if(!hidden)throw Error('self-review blind mode unavailable');
         await page.locator('button.quran-practice-blind').click();
+        if(await page.locator('.quran-practice-reviewed').isDisabled())
+          throw Error(browserName+' '+learner+' self-review not unlocked after blind check');
         await page.locator('.quran-practice-reviewed').click();
         await verify('reviewed');
       }else if(!await page.locator('.quran-practice-reviewed').isHidden()){
