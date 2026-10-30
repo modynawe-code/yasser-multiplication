@@ -134,3 +134,19 @@
 .quran-practice-blind .quran-page-viewport{visibility:hidden}
 .quran-practice-blind .quran-page-caption::after{content:"المصحف مخفي للتسميع الذاتي";display:block;font-weight:800;color:#305d49}
 @media(max-width:540px){.quran-range-controls,.quran-practice-guided{gap:7px;padding:9px}.quran-practice-guided button,.quran-range-play{font-size:14px}}
+
+
+/* Keep recitation controls reachable while the child follows a long Mushaf page.
+   Limited to timed-guided lessons, preserving ordinary surah-player layouts. */
+@media(max-width:620px){
+  .quran-surah-player.has-ayah-controls .quran-transport{
+    position:sticky;
+    bottom:env(safe-area-inset-bottom,0px);
+    z-index:4;
+    padding:7px;
+    background:rgba(255,255,255,.98);
+    border:1px solid #dfd8e2;
+    border-radius:18px;
+    box-shadow:0 6px 17px rgba(51,39,62,.12);
+  }
+}
