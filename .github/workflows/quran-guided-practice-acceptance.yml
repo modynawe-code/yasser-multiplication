@@ -49,3 +49,5 @@ jobs:
           for i in {1..15}; do curl -fsS http://127.0.0.1:8790/ >/dev/null && break || sleep 1; done
           cd preview-v4
           node tools/quran-guided-practice-browser.mjs
+
+# Explicit-value-select browser regression gate
