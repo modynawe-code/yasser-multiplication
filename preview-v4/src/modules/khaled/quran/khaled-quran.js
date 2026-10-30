@@ -1,5 +1,7 @@
 import { mountQuranSurahPlayer } from '../../mashaal/quran/quran-surah-player.js';
 import { loadItqanFatiha } from './itqan-fatiha.js';
+import {getMashaalRecitationAsset} from '../../mashaal/curriculum/recitation-media-manifest.js';
+import {verifiedFatihaReviewPilot} from './fatiha-review-candidate.js';
 
 const QURAN_SVG_COMMIT='b91d39e1065b57bdda3e94aca8ecf3575e50e1e6';
 const AUDIO_BASE='https://cdn.quran.ws/KFGQPC/resources/quran-audios/akhdar-sura/sura';
@@ -60,6 +62,12 @@ export const KHALED_QURAN_TERMS=Object.freeze({
 });
 
 // The Itqan Akhdar track is absent from the live API; keep this experiment out of children's normal UI.
+function isFatihaReviewHost(){
+  const hostname=String(globalThis.location?.hostname||'').toLowerCase();
+  return hostname==='family-learning-fatiha-pilot.modynawe.workers.dev'
+    ||((hostname==='localhost'||hostname==='127.0.0.1')&&new URLSearchParams(globalThis.location?.search||'').get('fatihaReview')==='1');
+}
+
 function isItqanPilotDebugEnabled(){
   return new URLSearchParams(globalThis.location?.search||'').get('itqanPilot')==='1';
 }
@@ -119,8 +127,23 @@ export function createKhaledQuranController({showView,onBack}={}){
     document.querySelectorAll('.khaled-quran-surah').forEach(node=>node.classList.toggle('selected',node===button));
     const host=byId('khaledQuranPlayer');if(!host)return;host.hidden=false;host.innerHTML=`<h2 id="khaledQuranSelectedTitle">سورة ${item.surahNameAr}</h2><div id="khaledQuranPlayerHost"></div>`;
     const playerHost=byId('khaledQuranPlayerHost');
-    player=mountQuranSurahPlayer(playerHost,{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
-    if(item.surahNumber===1&&isItqanPilotDebugEnabled()){
+    const review=item.surahNumber===1&&isFatihaReviewHost()
+      ?verifiedFatihaReviewPilot(getMashaalRecitationAsset('kfgqpc-ibrahim-al-akhdar-hafs-1')):null;
+    player=mountQuranSurahPlayer(playerHost,{
+      surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,
+      audioPath:review?.audioPath||item.audioPath,
+      mushafPage:review?.mushafPage||item.mushafPage,
+      ...(review?{ayahTimings:review.ayahTimings,durationSeconds:review.durationSeconds}:{}),
+      retryPlayText:'اضغط تشغيل مرة ثانية'
+    });
+    if(review){
+      const notice=document.createElement('p');
+      notice.className='khaled-fatiha-review-notice';
+      notice.setAttribute('role','status');
+      notice.textContent='تجربة غير معتمدة: توقيت الآيات مقترح من تحليل الوقفات الصوتية. استمع لكل آية وتحقق من بدايتها ونهايتها. لا تستخدمه لاختبار الحفظ.';
+      host.insertBefore(notice,playerHost);
+    }
+    if(!review&&item.surahNumber===1&&isItqanPilotDebugEnabled()){
       const pilot=document.createElement('div');
       pilot.className='khaled-itqan-pilot';
       const button=document.createElement('button');
