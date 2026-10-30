@@ -42,6 +42,9 @@ test('player maps original vector paths onto the existing image, synchronizes ac
   assert.match(player,/path\.classList\.toggle\('is-current',isCurrent\)/);
   assert.match(player,/audio\.addEventListener\('timeupdate',\(\)=>\{updateProgress\(\);handleAyahBoundary\(\);paintListeningAyah\(\);\}\)/);
   assert.match(player,/sourceIndex===0\?'':'none'/);
+  assert.match(player,/const showHighlightedVerseOnMushaf=\(\)=>/);
+  assert.match(player,/visible<Math\.min\(260,rect\.height\/2\)/);
+  assert.match(player,/selectAyah\(index,\{revealInMushaf:true\}\)/);
   assert.match(css,/\.quran-mushaf-ayah-path\.is-current/);
   assert.match(css,/\.quran-surah-player\.has-ayah-controls \.quran-transport/);
 });
