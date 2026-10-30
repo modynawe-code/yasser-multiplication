@@ -598,7 +598,9 @@ export function mountQuranSurahPlayer(host,options={}){
     label.className='quran-itqan-source-name';
     label.textContent=activeItqan
       ?'تلاوة إتقان المتزامنة • '+source.reciter+' • '+source.riwayah
-      :'تلاوة أصلية • يمكنك تجربة تلاوة إتقان بصوت '+source.reciter+' مع توقيت آياتها';
+      :(Array.isArray(options.ayahTimings)&&options.ayahTimings.length
+        ?'تلاوة أصلية بتوقيت آيات موثّق • يمكنك تجربة إتقان بصوت '+source.reciter
+        :'التلاوة الأصلية لا توفر توقيت آيات موثّق للتظليل • لتظليل الآية أثناء النطق جرّب إتقان بصوت '+source.reciter);
     const button=document.createElement('button');
     button.type='button';
     button.className='quran-itqan-toggle';
