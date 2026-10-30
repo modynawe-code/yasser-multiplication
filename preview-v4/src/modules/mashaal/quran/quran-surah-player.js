@@ -1,6 +1,7 @@
 import {isItqanEnabledOrigin,loadItqanTrack} from '../../../shared/quran/itqan-catalog-source.js';
 import {fetchOfficialAyahPolygons} from '../../../shared/quran/quran-svg-ayah-polygons.js';
 import {findOfficialHafsPage,pageIndexInCurriculum} from '../../../shared/quran/quran-svg-page-index.js';
+import {loadQuranPractice,markQuranPractice,getQuranPracticeStage,practiceStorageKey} from '../../../shared/quran/quran-practice-progress.js';
 
 const STYLE_KEY='quran-surah-player';
 
@@ -49,6 +50,7 @@ function mountQuranSurahPlayerCore(host,{
   ayahTimings=null,
   durationSeconds=0,
   autoFollowOfficialPages=false,
+  learnerId=null,
   retryPlayText='اضغطي تشغيل مرة ثانية',
   onCompleted=()=>{},
   onPageChange=()=>{}
@@ -167,7 +169,9 @@ function mountQuranSurahPlayerCore(host,{
 
   root.append(figure,transport,progressWrap,status);
   const ayahButtons=[];
-  let repeatSelect=null;
+  let repeatSelect=null,fromSelect=null,toSelect=null,practiceHint=null,practiceBlindButton=null;
+  let practiceBlind=false;
+  const canStorePractice=Boolean(practiceStorageKey(learnerId));
   if(ayahs.length){
     root.classList.add('has-ayah-controls');
     const panel=document.createElement('div');panel.className='quran-ayah-controls';
@@ -191,12 +195,72 @@ function mountQuranSurahPlayerCore(host,{
       ayahButtons.push(button);buttons.appendChild(button);
     }
     panel.append(heading,buttons);
+    const range=document.createElement('div');
+    range.className='quran-range-controls';
+    const rangeTitle=document.createElement('strong');
+    rangeTitle.textContent='كرر مجموعة آيات';
+    const fromLabel=document.createElement('label');fromLabel.textContent='من الآية';
+    const toLabel=document.createElement('label');toLabel.textContent='إلى الآية';
+    fromSelect=document.createElement('select');toSelect=document.createElement('select');
+    fromSelect.setAttribute('aria-label','من الآية');toSelect.setAttribute('aria-label','إلى الآية');
+    for(let index=0;index<ayahs.length;index++){
+      for(const control of [fromSelect,toSelect]){
+        const option=document.createElement('option');
+        option.value=String(index);option.textContent=String(index+1);control.append(option);
+      }
+    }
+    const lastPractice=canStorePractice?loadQuranPractice(learnerId).last:null;
+    const resume=lastPractice?.surahNumber===surahNumber
+      ?Math.max(0,ayahs.findIndex(item=>item.ayahKey===surahNumber+':'+lastPractice.ayahNumber)):0;
+    fromSelect.value=String(resume);
+    toSelect.value=String(Math.min(ayahs.length-1,resume+2));
+    fromLabel.append(fromSelect);toLabel.append(toSelect);
+    const rangePlay=document.createElement('button');
+    rangePlay.type='button';rangePlay.className='quran-range-play';
+    rangePlay.textContent='استمع للنطاق وكرره';
+    range.append(rangeTitle,fromLabel,toLabel,rangePlay);
+    panel.append(range);
+    if(canStorePractice){
+      const practice=document.createElement('div');
+      practice.className='quran-practice-guided';
+      const guide=document.createElement('strong');
+      guide.textContent=learnerId==='mashaal'?'استمعي ثم رددي':'الحفظ: استمع ← ردّد ← اختبر نفسك';
+      const repeatDone=document.createElement('button');
+      repeatDone.type='button';repeatDone.className='quran-practice-done';
+      repeatDone.textContent=learnerId==='mashaal'?'رددت الآيات':'رددت الآيات بنفسي';
+      practiceBlindButton=document.createElement('button');
+      practiceBlindButton.type='button';practiceBlindButton.className='quran-practice-blind';
+      practiceBlindButton.textContent=learnerId==='mashaal'?'إظهار المصحف':'اختبر نفسي غيب';
+      const reviewed=document.createElement('button');
+      reviewed.type='button';reviewed.className='quran-practice-reviewed';
+      reviewed.textContent='راجعت بنفسي';
+      if(learnerId==='mashaal')reviewed.hidden=true;
+      practiceHint=document.createElement('p');
+      practiceHint.className='quran-practice-status';practiceHint.setAttribute('role','status');
+      practiceHint.textContent='اختر آياتك، استمع للتلاوة، ثم ردد بنفسك';
+      practice.append(guide,repeatDone,practiceBlindButton,reviewed,practiceHint);
+      panel.append(practice);
+      repeatDone.addEventListener('click',()=>recordPractice('repeated'));
+      practiceBlindButton.addEventListener('click',()=>{
+        if(learnerId==='mashaal')return;
+        practiceBlind=!practiceBlind;
+        audio.pause();
+        figure.classList.toggle('quran-practice-blind',practiceBlind);
+        practiceBlindButton.textContent=practiceBlind?'أظهر المصحف':'اختبر نفسي غيب';
+        practiceHint.textContent=practiceBlind?'اختبر حفظك بنفسك، ثم أظهر المصحف للتأكد':'ظهر المصحف للتحقق من إجابتك';
+      });
+      reviewed.addEventListener('click',()=>{
+        if(practiceBlind){practiceHint.textContent='أظهر المصحف أولًا للتحقق من التسميع';return;}
+        recordPractice('reviewed');
+      });
+    }
+    rangePlay.addEventListener('click',()=>{void selectRange(Number(fromSelect.value),Number(toSelect.value));});
     root.insertBefore(panel,progressWrap);
   }
   host.appendChild(root);
 
   let requestedAyahKey='',followTicket=0;
-  let selectedAyahIndex=-1,ayahRepeatCount=0;
+  let selectedAyahIndex=-1,selectedAyahEndIndex=-1,ayahRepeatCount=0;
   let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
   const rangeEnd=range=>{
     try{
@@ -303,7 +367,41 @@ function mountQuranSurahPlayerCore(host,{
     });
     paintListeningAyah();
   };
-  const clearAyahSelection=()=>{selectedAyahIndex=-1;ayahRepeatCount=0;paintAyahSelection();};
+  const clearAyahSelection=()=>{
+    selectedAyahIndex=-1;selectedAyahEndIndex=-1;ayahRepeatCount=0;paintAyahSelection();
+  };
+  const rangeSelection=()=>{
+    const start=Number(fromSelect?.value),end=Number(toSelect?.value);
+    if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end<start||end>=ayahs.length)return null;
+    return {start,end,fromAyah:start+1,toAyah:end+1};
+  };
+  const recordPractice=stage=>{
+    const range=rangeSelection();
+    if(!canStorePractice||!range)return false;
+    const stored=markQuranPractice(learnerId,{
+      surahNumber,fromAyah:range.fromAyah,toAyah:range.toAyah,stage
+    });
+    if(practiceHint){
+      practiceHint.textContent=stored
+        ?(stage==='listened'?'انتهى الاستماع، الآن ردد بنفسك':stage==='repeated'?'تم تسجيل الترديد الذي أكدته':'تم تسجيل مراجعتك الذاتية، وليست درجة تسميع آلية')
+        :'تعذر حفظ التقدم على هذا الجهاز';
+    }
+    return stored;
+  };
+  const selectRange=async (start,end)=>{
+    if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end<start||end>=ayahs.length||destroyed)return;
+    if(practiceBlind){
+      practiceBlind=false;figure.classList.remove('quran-practice-blind');
+      if(practiceBlindButton)practiceBlindButton.textContent='اختبر نفسي غيب';
+    }
+    audio.pause();selectedAyahIndex=start;selectedAyahEndIndex=end;
+    ayahRepeatCount=0;completed=false;seeking=false;
+    try{audio.currentTime=ayahs[start].startMs/1000;}
+    catch{clearAyahSelection();status.textContent='تعذر بدء النطاق';return;}
+    paintAyahSelection();updateProgress();
+    status.textContent='الآيات '+String(start+1)+' إلى '+String(end+1)+' — استمع ثم ردد';
+    await playAudio();
+  };
   const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;const shouldResume=resumeAfterSeek,target=seekValue();clearAyahSelection();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
   const markCompleted=()=>{completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();};
   const playAudio=async()=>{try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
@@ -329,6 +427,12 @@ function mountQuranSurahPlayerCore(host,{
   };
   const selectAyah=async (index,{revealInMushaf=false}={})=>{
     const item=ayahs[index];if(!item||destroyed)return;
+    if(fromSelect)fromSelect.value=String(index);
+    if(toSelect)toSelect.value=String(index);
+    await selectRange(index,index);
+    if(revealInMushaf)showHighlightedVerseOnMushaf();
+    return;
+    // Retained below for legacy compatibility; unreachable during active range control.
     audio.pause();selectedAyahIndex=index;ayahRepeatCount=0;completed=false;seeking=false;
     try{audio.currentTime=item.startMs/1000;}catch{status.textContent='تعذر الانتقال للآية';clearAyahSelection();return;}
     paintAyahSelection();updateProgress();
@@ -338,8 +442,8 @@ function mountQuranSurahPlayerCore(host,{
   };
   const handleAyahBoundary=()=>{
     if(selectedAyahIndex<0||destroyed||seeking)return false;
-    const item=ayahs[selectedAyahIndex];
-    if(audio.currentTime*1000<item.endMs-50)return false;
+    const item=ayahs[selectedAyahEndIndex>=selectedAyahIndex?selectedAyahEndIndex:selectedAyahIndex];
+    if(!item||audio.currentTime*1000<item.endMs-50)return false;
     ayahRepeatCount++;
     const target=Number(repeatSelect?.value)||1;
     if(ayahRepeatCount<target){
@@ -347,8 +451,11 @@ function mountQuranSurahPlayerCore(host,{
       status.textContent='إعادة الآية '+String(selectedAyahIndex+1)+' — '+String(ayahRepeatCount+1)+' من '+String(target);
       if(audio.paused)void playAudio();
     }else{
-      const finished=selectedAyahIndex+1;
-      clearAyahSelection();audio.pause();status.textContent='اكتمل تكرار الآية '+String(finished)+' — اختر الآية التالية';
+      const start=selectedAyahIndex+1,end=selectedAyahEndIndex+1;
+      audio.pause();
+      if(fromSelect&&toSelect){fromSelect.value=String(start-1);toSelect.value=String(end-1);recordPractice('listened');}
+      clearAyahSelection();
+      status.textContent=start===end?'اكتمل تكرار الآية '+start:'اكتمل تكرار الآيات '+start+' إلى '+end;
     }
     updateProgress();return true;
   };
