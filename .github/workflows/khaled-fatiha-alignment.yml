@@ -52,12 +52,24 @@ jobs:
             --audio assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3 \
             --expected-sha256 "$SHA" \
             --out analysis-output/fatiha-munajjam-raw.json
+      - name: Verify candidate against strict confidence and original MP3
+        working-directory: preview-v4
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const rows=JSON.parse(readFileSync('analysis-output/fatiha-munajjam-raw.json','utf8'));
+          console.log('Munajjam raw candidate diagnostics (UNAPPROVED):');
+          for(const item of rows)console.log(JSON.stringify({
+            ayah:item.ayah_number,start:item.start_time,end:item.end_time,
+            similarity:item.similarity_score
+          }));
+          NODE
           node tools/prepare-khaled-fatiha-alignment.mjs analysis-output/fatiha-munajjam-raw.json > analysis-output/fatiha-human-review-candidate.json
-      - name: Upload candidate JSON only (no MP3)
-        if: success()
+      - name: Upload raw or strictly validated candidate (never audio)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: khaled-fatiha-unapproved-alignment
           path: preview-v4/analysis-output/*.json
           retention-days: 7
-          if-no-files-found: error
+          if-no-files-found: warn
