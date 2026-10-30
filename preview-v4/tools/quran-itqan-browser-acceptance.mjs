@@ -130,6 +130,37 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
         throw Error(name+' bundled mushaf page '+number+' failed '+JSON.stringify(loaded));
       console.log(name+' BUNDLED_MUSHAF_PAGE_PASS '+number);
     }
+    // QUR-02 regression: page 602 previously leaked the previous surah's
+    // last line above Al-Maun. Require a crop derived from real page polygons,
+    // not merely the old manually estimated viewport percentages.
+    await page.evaluate(async()=>{
+      window.__quranTestPlayer?.destroy?.();
+      const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+      const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+      const item=KHALED_QURAN_TERMS[1].find(x=>x.surahNumber===107);
+      if(!item)throw Error('Al-Maun is missing from Khaled curriculum');
+      const host=document.createElement('div');
+      document.body.replaceChildren(host);
+      window.__quranTestPlayer=mountQuranSurahPlayer(host,{
+        surahNumber:item.surahNumber,surahNameAr:item.surahNameAr,
+        mushafPage:item.mushafPage,audioPath:item.audioPath
+      });
+    });
+    await page.waitForFunction(()=>{
+      const viewport=document.querySelector('.quran-page-viewport');
+      return viewport?.dataset.officialFocus==='true'
+        ||document.querySelector('.quran-page-frame')?.dataset.imageError==='true';
+    },null,{timeout:35000});
+    const maun=await page.evaluate(()=>({
+      official:document.querySelector('.quran-page-viewport')?.dataset.officialFocus,
+      src:document.querySelector('.quran-page-image')?.currentSrc,
+      width:document.querySelector('.quran-page-image')?.naturalWidth,
+      cropped:document.querySelector('.quran-page-image')?.style.transform,
+      failed:document.querySelector('.quran-page-frame')?.dataset.imageError
+    }));
+    if(maun.official!=='true'||!maun.width||maun.failed)
+      throw Error(name+' Al-Maun official-focus failed '+JSON.stringify(maun));
+    console.log(name+' SURAH_107_OFFICIAL_CROP_PASS');
     await page.screenshot({path:'/tmp/quran-itqan-'+name+'.png',fullPage:true});
     if(errors.length)throw Error(name+' page errors: '+errors.join('; ').slice(0,350));
   }finally{await browser.close();}
