@@ -240,10 +240,12 @@ function mountQuranSurahPlayerCore(host,{
       ayahButtons.push(button);buttons.appendChild(button);
     }
     panel.append(heading,buttons);
-    const range=document.createElement('div');
+    const range=document.createElement('details');
     range.className='quran-range-controls';
-    const rangeTitle=document.createElement('strong');
-    rangeTitle.textContent='كرر مجموعة آيات';
+    const rangeTitle=document.createElement('summary');
+    rangeTitle.textContent='خيارات تكرار مجموعة آيات';
+    const rangeBody=document.createElement('div');
+    rangeBody.className='quran-range-body';
     const fromLabel=document.createElement('label');fromLabel.textContent='من الآية';
     const toLabel=document.createElement('label');toLabel.textContent='إلى الآية';
     fromSelect=document.createElement('select');toSelect=document.createElement('select');
@@ -263,7 +265,8 @@ function mountQuranSurahPlayerCore(host,{
     const rangePlay=document.createElement('button');
     rangePlay.type='button';rangePlay.className='quran-range-play';
     rangePlay.textContent='استمع للنطاق وكرره';
-    range.append(rangeTitle,fromLabel,toLabel,rangePlay);
+    rangeBody.append(fromLabel,toLabel,rangePlay);
+    range.append(rangeTitle,rangeBody);
     panel.append(range);
     if(canStorePractice){
       const practice=document.createElement('div');
