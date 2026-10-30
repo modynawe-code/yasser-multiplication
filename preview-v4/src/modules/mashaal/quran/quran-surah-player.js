@@ -1,3 +1,5 @@
+import {matchFatihaPage1Polygons} from './fatiha-page1-polygons.js';
+
 const STYLE_KEY='quran-surah-player';
 
 function ensureStyle(){
@@ -60,6 +62,7 @@ export function mountQuranSurahPlayer(host,{
   ):[];
 
   if(!pages.length)throw new Error('Verified mushaf page image is required');
+  const verseGeometry=matchFatihaPage1Polygons(pages[0],surahNumber,ayahs);
 
   host.innerHTML='';
   host.removeAttribute('aria-hidden');
@@ -80,6 +83,30 @@ export function mountQuranSurahPlayer(host,{
   image.decoding='async';
   image.loading='eager';
   viewport.appendChild(image);
+  const overlayPaths=[];
+  let verseOverlay=null;
+  if(verseGeometry){
+    // This transparent SVG reuses the exact per-ayah polygons from the bundled
+    // unchanged mushaf page; never estimate a bounding box over sacred text.
+    const ns='http://www.w3.org/2000/svg';
+    verseOverlay=document.createElementNS(ns,'svg');
+    verseOverlay.classList.add('quran-mushaf-ayah-overlay');
+    verseOverlay.setAttribute('viewBox',verseGeometry.viewBox);
+    verseOverlay.setAttribute('preserveAspectRatio','xMidYMid meet');
+    verseOverlay.setAttribute('aria-label','اضغط على الآية لتلاوتها');
+    for(let index=0;index<verseGeometry.paths.length;index++){
+      const path=document.createElementNS(ns,'path');
+      path.setAttribute('d',verseGeometry.paths[index].d);
+      path.classList.add('quran-mushaf-ayah-path');
+      path.setAttribute('role','button');
+      path.setAttribute('tabindex','0');
+      path.setAttribute('aria-label','تشغيل الآية '+String(index+1));
+      path.dataset.ayah=verseGeometry.paths[index].ayahKey;
+      overlayPaths.push(path);
+      verseOverlay.appendChild(path);
+    }
+    viewport.appendChild(verseOverlay);
+  }
 
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
@@ -191,6 +218,8 @@ export function mountQuranSurahPlayer(host,{
     const focusRegion=normalizedFocusRegion(page,surahNumber);
     const sources=pageSources(page);
     sourceIndex=0;
+    // Overlay belongs ONLY to the verified first page with the exact source SVG.
+    if(verseOverlay)verseOverlay.style.display=pageIndex===0?'':'none';
     figure.removeAttribute('data-image-error');
     if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
@@ -220,18 +249,39 @@ export function mountQuranSurahPlayer(host,{
   };
   const beginSeek=()=>{if(seeking||!finiteDuration())return;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
   const previewSeek=()=>{const duration=finiteDuration();if(!duration)return;if(!seeking)beginSeek();const target=seekValue();try{audio.currentTime=target;}catch{}paintSeek(target,duration);time.textContent=`${formatTime(target)} / ${formatTime(duration)}`;};
-  const paintAyahSelection=()=>ayahButtons.forEach((button,index)=>{
-    const active=index===selectedAyahIndex;
-    button.classList.toggle('active',active);
-    button.setAttribute('aria-pressed',String(active));
-  });
+  const paintListeningAyah=()=>{
+    const ms=(Number(audio.currentTime)||0)*1000;
+    const current=selectedAyahIndex>=0?selectedAyahIndex:
+      (audio.paused?-1:ayahs.findIndex((ayah,index)=>ms>=ayah.startMs
+        &&(ms<ayah.endMs||(index===ayahs.length-1&&ms<=ayah.endMs))));
+    ayahButtons.forEach((button,index)=>{
+      const isCurrent=index===current;
+      button.classList.toggle('is-current',isCurrent);
+      if(isCurrent)button.setAttribute('aria-current','true');
+      else button.removeAttribute('aria-current');
+    });
+    overlayPaths.forEach((path,index)=>{
+      const isCurrent=index===current;
+      path.classList.toggle('is-current',isCurrent);
+      if(isCurrent)path.setAttribute('aria-current','true');
+      else path.removeAttribute('aria-current');
+    });
+  };
+  const paintAyahSelection=()=>{
+    ayahButtons.forEach((button,index)=>{
+      const active=index===selectedAyahIndex;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    paintListeningAyah();
+  };
   const clearAyahSelection=()=>{selectedAyahIndex=-1;ayahRepeatCount=0;paintAyahSelection();};
   const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;const shouldResume=resumeAfterSeek,target=seekValue();clearAyahSelection();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
   const markCompleted=()=>{completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();};
-  const playAudio=async()=>{try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';return true;}catch{status.textContent=retryPlayText;return false;}};
-  const pauseAudio=()=>{audio.pause();status.textContent='متوقفة مؤقتًا';};
+  const playAudio=async()=>{try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
+  const pauseAudio=()=>{audio.pause();paintListeningAyah();status.textContent='متوقفة مؤقتًا';};
   const restartAudio=async()=>{audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
-  const stopAudio=()=>{audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();status.textContent='متوقفة';};
+  const stopAudio=()=>{audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
   const stopOnFamilyNavigation=()=>stopAudio();
   document.addEventListener('family:stop-quran-audio',stopOnFamilyNavigation);
   const selectAyah=async index=>{
@@ -260,20 +310,28 @@ export function mountQuranSurahPlayer(host,{
   };
 
   ayahButtons.forEach((button,index)=>button.addEventListener('click',()=>{void selectAyah(index);}));
+  overlayPaths.forEach((path,index)=>{
+    path.addEventListener('click',()=>{void selectAyah(index);});
+    path.addEventListener('keydown',event=>{
+      if(event.key==='Enter'||event.key===' '){
+        event.preventDefault();void selectAyah(index);
+      }
+    });
+  });
   play.addEventListener('click',()=>{void playAudio();});pause.addEventListener('click',pauseAudio);stop.addEventListener('click',stopAudio);restart.addEventListener('click',()=>{void restartAudio();});
   previousPage.addEventListener('click',()=>changePage(pageIndex-1));nextPage.addEventListener('click',()=>changePage(pageIndex+1));
   viewport.addEventListener('touchstart',event=>{const touch=event.changedTouches?.[0];if(!touch)return;touchStartX=touch.clientX;touchStartY=touch.clientY;},{passive:true});
   viewport.addEventListener('touchend',event=>{const touch=event.changedTouches?.[0];if(!touch)return;const dx=touch.clientX-touchStartX,dy=touch.clientY-touchStartY;if(Math.abs(dx)<45||Math.abs(dx)<=Math.abs(dy)*1.2)return;if(dx<0)changePage(pageIndex+1);else changePage(pageIndex-1);},{passive:true});
   progress.addEventListener('pointerdown',beginSeek);progress.addEventListener('input',previewSeek);progress.addEventListener('change',commitSeek);progress.addEventListener('pointerup',commitSeek);progress.addEventListener('pointercancel',commitSeek);
-  audio.addEventListener('timeupdate',()=>{updateProgress();handleAyahBoundary();});
+  audio.addEventListener('timeupdate',()=>{updateProgress();handleAyahBoundary();paintListeningAyah();});
   audio.addEventListener('loadedmetadata',updateProgress);
   audio.addEventListener('durationchange',updateProgress);
   audio.addEventListener('progress',updateProgress);
   audio.addEventListener('canplay',updateProgress);
   audio.addEventListener('ended',()=>{if(!handleAyahBoundary())markCompleted();});
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
-  image.addEventListener('load',()=>{figure.removeAttribute('data-image-error');});
-  image.addEventListener('error',()=>{const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
+  image.addEventListener('load',()=>{figure.removeAttribute('data-image-error');if(verseOverlay)verseOverlay.style.display=pageIndex===0&&sourceIndex===0?'':'none';});
+  image.addEventListener('error',()=>{if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
 
   renderPage();
 
