@@ -141,6 +141,50 @@ try{
     ||!general.fill?.startsWith('rgba(242, 197, 63')
     ||!general.source?.includes('kfqc-hafs-page-604.svg'))
     failures.push('native page-604 ayahPolygon highlighting failed');
+  // Smoke both remaining children's curricula, including pinned remote Quran
+  // SVG pages. A same-track Itqan source must activate real verse polygons.
+  for(const learner of ['khaled','yasser']){
+    await page.evaluate(async who=>{
+      window.__qaPlayer?.destroy();
+      const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+      let item;
+      if(who==='khaled'){
+        const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+        item=KHALED_QURAN_TERMS[2].find(x=>x.surahNumber===93);
+      }else{
+        const {YASSER_QURAN_TERMS}=await import('./src/modules/yasser/quran/yasser-quran.js');
+        item=YASSER_QURAN_TERMS[1].recitation[0];
+      }
+      if(!item)throw new Error('Missing learner Quran curriculum item: '+who);
+      const host=document.querySelector('body > div');
+      window.__qaPlayer=mountQuranSurahPlayer(host,{
+        surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,
+        audioPath:item.audioPath,mushafPage:item.mushafPage,
+        mushafPages:item.mushafPages,durationSeconds:item.durationSeconds||0
+      });
+      window.__qaExpectedSurah=item.surahNumber;
+    },learner);
+    await page.locator('.quran-itqan-toggle').waitFor({timeout:20000});
+    await page.locator('.quran-itqan-toggle').click();
+    await page.waitForFunction(()=>{
+      const root=document.querySelector('svg.quran-mushaf-ayah-overlay');
+      const expected=String(window.__qaExpectedSurah)+':';
+      return [...(root?.querySelectorAll('path')||[])].some(p=>p.dataset.ayah?.startsWith(expected));
+    },null,{timeout:25000});
+    const evidence=await page.evaluate(()=>{
+      const svg=document.querySelector('svg.quran-mushaf-ayah-overlay');
+      const paths=[...svg.querySelectorAll('path')];
+      const selected=paths[0];
+      return {surah:window.__qaExpectedSurah,pathCount:paths.length,
+        firstAyah:selected.dataset.ayah,
+        pageUrl:document.querySelector('.quran-page-image')?.currentSrc,
+        sourceName:document.querySelector('.quran-itqan-source-name')?.textContent};
+    });
+    console.log('Cross-child live Itqan+SVG:',learner,JSON.stringify(evidence));
+    if(!evidence.pathCount||!evidence.firstAyah?.startsWith(evidence.surah+':')
+      ||!evidence.sourceName?.includes('تلاوة إتقان'))
+      failures.push(learner+' live Quran SVG or Itqan mapping unavailable');
+  }
   if(failures.length)throw new Error('Visual QA failed: '+failures.join('; '));
   console.log('CHROME_VISUAL_QA_PASS: image, highlighted verse 2, hit target, button sync, geometry');
 }finally{
