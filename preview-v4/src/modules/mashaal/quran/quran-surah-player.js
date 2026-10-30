@@ -232,6 +232,8 @@ export function mountQuranSurahPlayer(host,{
   const pauseAudio=()=>{audio.pause();status.textContent='متوقفة مؤقتًا';};
   const restartAudio=async()=>{audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
   const stopAudio=()=>{audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();status.textContent='متوقفة';};
+  const stopOnFamilyNavigation=()=>stopAudio();
+  document.addEventListener('family:stop-quran-audio',stopOnFamilyNavigation);
   const selectAyah=async index=>{
     const item=ayahs[index];if(!item||destroyed)return;
     audio.pause();selectedAyahIndex=index;ayahRepeatCount=0;completed=false;seeking=false;
@@ -279,6 +281,6 @@ export function mountQuranSurahPlayer(host,{
     play:playAudio,pause:pauseAudio,restart:restartAudio,stop:stopAudio,
     nextPage(){changePage(pageIndex+1);},previousPage(){changePage(pageIndex-1);},getPageIndex(){return pageIndex;},
     hasCompleted(){return completed;},
-    destroy(){destroyed=true;stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+    destroy(){destroyed=true;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
   });
 }
