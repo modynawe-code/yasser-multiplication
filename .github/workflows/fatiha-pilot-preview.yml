@@ -1,0 +1,79 @@
+name: Fatiha Isolated Audio Review Preview
+on:
+  push:
+    branches:
+      - feature/khaled-fatiha-itqan-pilot-20261030
+    paths:
+      - .github/workflows/fatiha-pilot-preview.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fatiha-isolated-preview
+  cancel-in-progress: true
+
+jobs:
+  trial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test all family learning modules before trial publication
+        run: npm test
+        working-directory: preview-v4
+      - name: Prepare static trial without production family cloud sync
+        run: |
+          node tools/build-web-preview.mjs
+          node --input-type=module <<'NODE'
+          import {readFile,writeFile} from 'node:fs/promises';
+          import {createHash} from 'node:crypto';
+          const index='dist-web-preview/index.html',metaPath='dist-web-preview/deployment-meta.json';
+          let html=await readFile(index,'utf8');
+          const original='globalThis.__FAMILY_API_BASE_URL__="https://yasser-khaled-family-api.modynawe.workers.dev";globalThis.__FAMILY_DEPLOYMENT_MODE__="web-production";';
+          const replacement='globalThis.__FAMILY_API_DISABLED__=true;globalThis.__FAMILY_API_BASE_URL__="";globalThis.__FAMILY_DEPLOYMENT_MODE__="fatiha-pilot";';
+          if(html.split(original).length!==2)throw new Error('Cloud sync disable guard not found exactly once');
+          html=html.replace(original,replacement);
+          await writeFile(index,html);
+          const meta=JSON.parse(await readFile(metaPath,'utf8'));
+          await writeFile(metaPath,JSON.stringify({...meta,mode:'fatiha-pilot',cloudSync:false,unapprovedAudioReview:true},null,2)+'\n');
+          const expected='16d025c0ffbe8db50842b1963c74e37e8620da18fff4fa7588b0187ed15af4f4';
+          const audio=await readFile('dist-web-preview/assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3');
+          if(createHash('sha256').update(audio).digest('hex')!==expected)throw new Error('Pilot recording mismatch');
+          if(!html.includes('__FAMILY_API_DISABLED__=true'))throw new Error('Family cloud sync is not disabled');
+          if(!await readFile('dist-web-preview/src/modules/khaled/quran/fatiha-review-candidate.js','utf8').then(x=>x.includes('ACOUSTIC_ONLY_UNVERIFIED')))throw new Error('Unapproved cue source missing');
+          console.log('Isolated trial bundle verified: no production family cloud sync, SHA-pinned original audio');
+          NODE
+      - name: Upload static trial bundle for review and rollback
+        uses: actions/upload-artifact@v4
+        with:
+          name: fatiha-isolated-web-trial
+          path: dist-web-preview
+          retention-days: 3
+          include-hidden-files: true
+      - name: Ensure dedicated host credentials exist
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::No Cloudflare deploy token configured; standalone build artifact was preserved."
+            exit 1
+          fi
+      - name: Deploy only dedicated trial Worker (not family-learning-preview)
+        run: npx --yes wrangler@4.129.0 deploy --config wrangler.fatiha-pilot.jsonc
+      - name: Smoke test dedicated worker and verify audio SHA on host
+        run: |
+          BASE='https://family-learning-fatiha-pilot.modynawe.workers.dev'
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/" -o /tmp/fatiha-home.html
+          grep -q '__FAMILY_API_DISABLED__=true' /tmp/fatiha-home.html
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/src/modules/khaled/quran/fatiha-review-candidate.js" -o /tmp/fatiha-cues.js
+          grep -q 'ACOUSTIC_ONLY_UNVERIFIED' /tmp/fatiha-cues.js
+          curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3" -o /tmp/fatiha-audio.mp3
+          printf '%s  %s\n' '16d025c0ffbe8db50842b1963c74e37e8620da18fff4fa7588b0187ed15af4f4' /tmp/fatiha-audio.mp3 | sha256sum -c
+          curl --fail --location --silent --show-error "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
+          echo "Isolated Fatiha pilot verified: $BASE/"
