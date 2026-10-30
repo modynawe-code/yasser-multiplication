@@ -92,6 +92,11 @@ jobs:
           if(meta.mode!='web-production'||meta.cloudSync!==true)throw new Error('Published deployment metadata is invalid');
           const catalog=JSON.parse(fs.readFileSync('dist-web-preview/assets/recitation/itqan-hafs-tracks.json','utf8'));
           if(catalog.schemaVersion!==1||!Object.keys(catalog.tracks||{}).length)throw new Error('Itqan same-track catalog missing from production preview');
+          for(const n of [1,603,604]){
+            const asset='dist-web-preview/assets/recitation/kfqc-hafs-page-'+n+'.svg';
+            if(!fs.existsSync(asset)||!fs.readFileSync(asset,'utf8').includes('ayahPolygon'))
+              throw new Error('Verified bundled Hafs page missing from preview: '+n);
+          }
           if(fs.existsSync('dist-web-preview/tests')||fs.existsSync('dist-web-preview/tools')||fs.existsSync('dist-web-preview/docs'))throw new Error('Non-runtime files leaked into preview package');
           NODE
 
@@ -129,6 +134,9 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -q '"cloudSync": true'
+          for n in 1 603 604; do
+            curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/assets/recitation/kfqc-hafs-page-$n.svg" > /dev/null
+          done
 
   github-pages:
     needs: build
@@ -168,5 +176,8 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": true'
+          for n in 1 603 604; do
+            curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/kfqc-hafs-page-$n.svg" > /dev/null
+          done
 
 # manual deploy trigger: science integration 2026-09-11
