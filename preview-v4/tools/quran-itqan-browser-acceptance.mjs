@@ -84,6 +84,36 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
       }
       console.log(name+' PASS '+learner+' '+JSON.stringify(state));
     }
+    // Real browser gate for the three already-bundled pages, including
+    // Al-Fatiha (page 1), which previously tried only blocked remote sources.
+    for(const [surah,number] of [[1,1],[111,603],[113,604]]){
+      await page.evaluate(async surahNumber=>{
+        window.__quranTestPlayer?.destroy?.();
+        const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+        const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+        const chapter=Object.values(KHALED_QURAN_TERMS).flat().find(s=>s.surahNumber===surahNumber);
+        if(!chapter)throw Error('Missing bundled chapter '+surahNumber);
+        const host=document.createElement('div');
+        document.body.replaceChildren(host);
+        window.__quranTestPlayer=mountQuranSurahPlayer(host,{
+          surahNumber:chapter.surahNumber,surahNameAr:chapter.surahNameAr,
+          audioPath:chapter.audioPath,mushafPage:chapter.mushafPage
+        });
+      },surah);
+      await page.waitForFunction(()=>{
+        const image=document.querySelector('.quran-page-image');
+        return image?.complete&&image.naturalWidth>0
+          ||document.querySelector('.quran-page-frame')?.dataset.imageError==='true';
+      },null,{timeout:15000});
+      const loaded=await page.evaluate(()=>({
+        src:document.querySelector('.quran-page-image')?.currentSrc||'',
+        width:document.querySelector('.quran-page-image')?.naturalWidth||0,
+        error:document.querySelector('.quran-page-frame')?.dataset.imageError||''
+      }));
+      if(!loaded.width||loaded.error||!loaded.src.includes('/kfqc-hafs-page-'+number+'.svg'))
+        throw Error(name+' bundled mushaf page '+number+' failed '+JSON.stringify(loaded));
+      console.log(name+' BUNDLED_MUSHAF_PAGE_PASS '+number);
+    }
     await page.screenshot({path:'/tmp/quran-itqan-'+name+'.png',fullPage:true});
     if(errors.length)throw Error(name+' page errors: '+errors.join('; ').slice(0,350));
   }finally{await browser.close();}
