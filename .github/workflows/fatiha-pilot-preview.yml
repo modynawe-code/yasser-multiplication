@@ -9,6 +9,7 @@ on:
       - 'preview-v4/src/modules/mashaal/quran/**'
       - 'preview-v4/tests/fatiha-mushaf-polygon-highlight.test.mjs'
       - 'preview-v4/tools/fatiha-overlay-browser-qa.mjs'
+      - 'preview-v4/tools/build-itqan-cms-tracks.mjs'
   workflow_dispatch:
 
 permissions:
@@ -33,6 +34,10 @@ jobs:
       - name: Test all family learning modules before trial publication
         run: npm test
         working-directory: preview-v4
+      - name: Fetch same-track, published Itqan CMS audio and timings
+        working-directory: preview-v4
+        run: |
+          node tools/build-itqan-cms-tracks.mjs
       - name: Prepare static trial without production family cloud sync
         run: |
           node tools/build-web-preview.mjs
