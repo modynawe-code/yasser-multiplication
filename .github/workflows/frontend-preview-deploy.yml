@@ -61,6 +61,27 @@ jobs:
       - name: Build isolated web preview
         run: node tools/build-web-preview.mjs
 
+      - name: Rotate preview Quran PWA cache on this release
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFile,writeFile} from 'node:fs/promises';
+          const sha=String(process.env.GITHUB_SHA||'').slice(0,12);
+          if(!/^[a-f0-9]{12}$/.test(sha))throw new Error('Missing immutable GitHub commit SHA');
+          const path='dist-web-preview/service-worker.js';
+          let sw=await readFile(path,'utf8');
+          const previous='const CACHE_VERSION=`${CACHE_PREFIX}shell-222`;';
+          const next='const CACHE_VERSION=`${CACHE_PREFIX}shell-quran-itqan-'+sha+'`;';
+          if(sw.split(previous).length!==2)throw new Error('Unexpected service worker version: refusing stale release');
+          sw=sw.replace(previous,next);
+          const shell='const APP_SHELL=[';
+          if(sw.split(shell).length!==2)throw new Error('Unexpected service worker shell');
+          sw=sw.replace(shell,shell+"\n  './assets/recitation/itqan-hafs-tracks.json',\n  './src/shared/quran/itqan-catalog-source.js',\n  './src/shared/quran/quran-svg-ayah-polygons.js',\n  './src/shared/quran/quran-svg-page-index.js',");
+          await writeFile(path,sw);
+          const importedPath='dist-web-preview/service-worker-runtime.js';
+          const runtime=await readFile(importedPath,'utf8');
+          await writeFile(importedPath,runtime+'\n// itqan-quran-release-'+sha+'\n');
+          console.log('Quran PWA cache version rotated to',sha);
+          NODE
       - name: Verify preview isolation
         run: |
           node <<'NODE'
