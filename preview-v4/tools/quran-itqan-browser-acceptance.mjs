@@ -3,7 +3,7 @@
 import {chromium,webkit} from 'playwright';
 const origin='http://127.0.0.1:8790/?itqanPilot=1';
 for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
-  const browser=await browserType.launch({headless:true,args:name==='chromium'?['--no-sandbox','--disable-dev-shm-usage']:[]});
+  const browser=await browserType.launch({headless:true,...(name==='chromium'?{executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--disable-dev-shm-usage']}:{} )});
   try{
     const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
