@@ -205,7 +205,7 @@ function openSurah(item,button){
   const blind=document.getElementById('yasserQuranBlind');if(blind)blind.textContent='اختبرني غيب';
   updateLevelButton();saveLast(item,selectedPageNumber);
   player=mountQuranSurahPlayer(document.getElementById('yasserQuranPlayerHost'),{
-    surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,mushafPages:item.mushafPages,durationSeconds:item.durationSeconds,retryPlayText:'اضغط تشغيل مرة ثانية',
+    surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,learnerId:'yasser',audioPath:item.audioPath,mushafPage:item.mushafPage,mushafPages:item.mushafPages,durationSeconds:item.durationSeconds,retryPlayText:'اضغط تشغيل مرة ثانية',
     onPageChange:({pageNumber})=>{if(!pageNumber)return;selectedPageNumber=pageNumber;updateLevelButton();saveLast(item,pageNumber);},
     onCompleted:()=>{
       if(mode!=='memorization'||repeatTarget<=1)return;

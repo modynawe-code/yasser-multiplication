@@ -107,3 +107,20 @@
 .quran-itqan-toggle{font:inherit;font-weight:900;min-height:50px;border-radius:12px;padding:8px 12px;background:#e0f3e7;color:#175035;border:2px solid #6ea585;touch-action:manipulation}
 .quran-itqan-toggle:focus-visible{outline:3px solid #285f52;outline-offset:2px}
 @media(max-width:620px){.quran-itqan-source-panel{padding:10px;gap:6px}.quran-itqan-toggle{font-size:15px;min-height:52px}}
+
+/* Quran guided practice: opt-in to a same-track verified Itqan recording. */
+.quran-range-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;background:#f4f8f4;border:1px solid #d5e5d9;border-radius:15px}
+.quran-range-controls>strong{grid-column:1/-1;color:#205b3d}
+.quran-range-controls label{display:grid;gap:5px;font-weight:800}
+.quran-range-controls select{min-width:0;width:100%;min-height:44px;padding:6px;border-radius:10px;border:1px solid #7eac8e;background:white;font:inherit}
+.quran-range-play{grid-column:1/-1;background:#d6efdf;border:2px solid #488e63;color:#20583a;border-radius:12px;min-height:50px;font:inherit;font-weight:900}
+.quran-practice-guided{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border:1px solid #c1dbce;border-radius:15px;background:#f5fbf7;padding:12px}
+.quran-practice-guided>strong,.quran-practice-status{grid-column:1/-1}
+.quran-practice-guided button{min-height:50px;border:2px solid #88b7a1;border-radius:12px;background:white;color:#235039;font:inherit;font-weight:800}
+.quran-practice-guided button[hidden]{display:none}
+.quran-practice-status{margin:3px 0 0;font-size:14px;font-weight:700;color:#295a3e}
+.quran-ayah-button[data-practice-stage="reviewed"]{border-color:#5985b9}
+.quran-ayah-button[data-practice-stage="repeated"]{border-color:#41895c}
+.quran-practice-blind .quran-page-viewport{visibility:hidden}
+.quran-practice-blind .quran-page-caption::after{content:"المصحف مخفي للتسميع الذاتي";display:block;font-weight:800;color:#305d49}
+@media(max-width:540px){.quran-range-controls,.quran-practice-guided{gap:7px;padding:9px}.quran-practice-guided button,.quran-range-play{font-size:14px}}

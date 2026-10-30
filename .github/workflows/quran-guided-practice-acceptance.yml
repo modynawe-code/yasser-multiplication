@@ -1,0 +1,53 @@
+name: Quran Guided Practice — Chrome and WebKit
+# Regression gate for native verse range selection and child-isolated progress
+on:
+  push:
+    branches:
+      - feature/quran-learning-range-progress-v1
+    paths:
+      - 'preview-v4/src/shared/quran/quran-practice-progress.js'
+      - 'preview-v4/src/modules/mashaal/quran/**'
+      - 'preview-v4/src/modules/khaled/quran/**'
+      - 'preview-v4/src/modules/yasser/quran/**'
+      - 'preview-v4/src/modules/mashaal/ui/mashaal-controller.js'
+      - 'preview-v4/tools/quran-guided-practice-browser.mjs'
+      - '.github/workflows/quran-guided-practice-acceptance.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quran-guided-practice-test
+  cancel-in-progress: true
+jobs:
+  browsers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run all learning-app regression tests
+        working-directory: preview-v4
+        run: npm test
+      - name: Build verified Itqan catalog and family preview
+        run: |
+          cd preview-v4
+          node tools/build-itqan-cms-tracks.mjs
+          cd ..
+          node tools/build-web-preview.mjs
+      - name: Install browsers and QA harness
+        working-directory: preview-v4
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps webkit
+      - name: Verify verse-range playback and learner progress on Chrome and WebKit
+        run: |
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory dist-web-preview >/tmp/quran-practice-preview.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in {1..15}; do curl -fsS http://127.0.0.1:8790/ >/dev/null && break || sleep 1; done
+          cd preview-v4
+          node tools/quran-guided-practice-browser.mjs
+
+# Explicit-value-select browser regression gate
