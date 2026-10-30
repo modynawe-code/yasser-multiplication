@@ -30,6 +30,31 @@ jobs:
       - name: Test learning app
         run: npm test
         working-directory: preview-v4
+      - name: Probe Itqan public recitations once (experimental, non-gating)
+        if: github.ref == 'refs/heads/feature/khaled-fatiha-itqan-pilot-20261030'
+        continue-on-error: true
+        working-directory: preview-v4
+        run: |
+          node --input-type=module <<'NODE'
+          import {loadItqanFatiha} from './src/modules/khaled/quran/itqan-fatiha.js';
+          const url='https://api.cms.itqan.dev/recitations/?page=1&page_size=200';
+          try{
+            const response=await fetch(url,{
+              headers:{Origin:'https://modynawe-code.github.io',Accept:'application/json','Accept-Language':'ar'},
+              signal:AbortSignal.timeout(9000)
+            });
+            console.log('API status:',response.status);
+            console.log('CORS allow-origin:',response.headers.get('access-control-allow-origin')||'(absent)');
+            const data=await response.json();
+            console.log('Reported recitation count:',data.count);
+            console.log('Returned on page:',data.results?.length);
+            console.log('Reciters matching Akhdar:',data.results?.filter(r=>/اخضر|akhdar|akhdar|akhdar/i.test(r.reciter?.name||'')).map(r=>({id:r.id,name:r.reciter?.name,riwayah:r.riwayah?.name})));
+          }catch(error){console.log('API probe unavailable:',error.name,String(error.message).slice(0,180));}
+          try{
+            const result=await loadItqanFatiha();
+            console.log('Fatiha same-track MATCH found:',new URL(result.audioPath).hostname,'timings:',result.ayahTimings.length,'durationSeconds:',result.durationSeconds);
+          }catch(error){console.log('Fatiha same-track unavailable:',error.name,String(error.message).slice(0,180));}
+          NODE
       - name: Build human voice recording inventory
         run: npm run voice:check
         working-directory: preview-v4
