@@ -84,6 +84,63 @@ try{
   if(errors.length)failures.push('browser errors: '+errors.slice(0,3).join(';'));
   await mkdir(dirname('/tmp/fatiha-pilot-visual-qa.png'),{recursive:true});
   await page.screenshot({path:'/tmp/fatiha-pilot-visual-qa.png',fullPage:true});
+
+  // Exercise the deployed Itqan CMS catalog on the real shared Quran player.
+  const itqanSwitch=page.locator('.quran-itqan-toggle');
+  await itqanSwitch.waitFor({timeout:20000});
+  await itqanSwitch.click();
+  const synchronized=await page.evaluate(async()=>{
+    const data=await fetch('./assets/recitation/itqan-hafs-tracks.json').then(r=>r.json());
+    const audio=document.querySelector('.quran-surah-player audio');
+    // Existing player constructs audio through new Audio(), not necessarily
+    // appended to DOM, so observe the visible alternate-source label and buttons.
+    return {
+      reciter:data.reciter,sourceTracks:Object.keys(data.tracks).length,
+      surah1:data.tracks['1']?.ayahTimings?.length,
+      selectedSource:document.querySelector('.quran-itqan-source-name')?.textContent,
+      returnButton:document.querySelector('.quran-itqan-toggle')?.textContent,
+      verseButtons:document.querySelectorAll('.quran-ayah-button').length
+    };
+  });
+  console.log('Itqan CMS live catalog and shared switch:',JSON.stringify(synchronized));
+  if(!synchronized.selectedSource?.includes(synchronized.reciter)
+    ||!synchronized.returnButton?.includes('الرجوع')
+    ||synchronized.surah1!==7||synchronized.verseButtons!==7)
+    failures.push('Itqan original-audio+embedded-timing track was not selectable for Fatiha');
+  // Test a second chapter using its actual bundled Quran SVG (page 604),
+  // not the hand-copied Fatiha-only coordinates.
+  await page.evaluate(async()=>{
+    window.__qaPlayer?.destroy();
+    const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+    const {getMashaalRecitationAsset}=await import('./src/modules/mashaal/curriculum/recitation-media-manifest.js');
+    const asset=getMashaalRecitationAsset('kfgqpc-ibrahim-al-akhdar-hafs-114');
+    if(!asset)throw new Error('Mashaal An-Nas bundled track missing');
+    window.__qaPlayer=mountQuranSurahPlayer(document.querySelector('body > div'),{
+      surahNameAr:asset.surahNameAr,surahNumber:114,
+      audioPath:asset.localPath,mushafPage:asset.mushafPage
+    });
+  });
+  await page.locator('.quran-itqan-toggle').waitFor({timeout:20000});
+  await page.locator('.quran-itqan-toggle').click();
+  await page.waitForFunction(()=>!!document.querySelector('svg.quran-mushaf-ayah-overlay path[data-ayah="114:1"]'),{timeout:20000});
+  await page.locator('.quran-ayah-button').first().click();
+  const general=await page.evaluate(()=>{
+    const img=document.querySelector('.quran-page-image');
+    const svg=document.querySelector('svg.quran-mushaf-ayah-overlay');
+    const ayah=svg?.querySelector('path[data-ayah="114:1"]');
+    return{
+      imageLoaded:img?.complete&&img?.naturalWidth>0,
+      pathCount:svg?.querySelectorAll('path').length||0,
+      highlighted:ayah?.classList.contains('is-current'),
+      fill:ayah?getComputedStyle(ayah).fill:null,
+      source:img?.currentSrc
+    };
+  });
+  console.log('Quran SVG native polygon QA for surah 114:',JSON.stringify(general));
+  if(!general.imageLoaded||!general.pathCount||!general.highlighted
+    ||!general.fill?.startsWith('rgba(242, 197, 63'))
+    ||!general.source?.includes('kfqc-hafs-page-604.svg'))
+    failures.push('native page-604 ayahPolygon highlighting failed');
   if(failures.length)throw new Error('Visual QA failed: '+failures.join('; '));
   console.log('CHROME_VISUAL_QA_PASS: image, highlighted verse 2, hit target, button sync, geometry');
 }finally{
