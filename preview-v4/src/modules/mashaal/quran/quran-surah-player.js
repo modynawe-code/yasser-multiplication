@@ -325,11 +325,15 @@ function mountQuranSurahPlayerCore(host,{
     fromSelect.addEventListener('change',()=>{
       if(Number(toSelect.value)<Number(fromSelect.value))toSelect.value=fromSelect.value;
       resetPracticeConfirmation();
+      audio.pause();clearAyahSelection();fullSurahListening=false;
+      status.textContent='نطاق جديد — اضغط استمع للنطاق وكرره';
       if(practiceHint)practiceHint.textContent='اخترت نطاقًا جديدًا؛ استمع له قبل تسجيل الترديد';
     });
     toSelect.addEventListener('change',()=>{
       if(Number(fromSelect.value)>Number(toSelect.value))fromSelect.value=toSelect.value;
       resetPracticeConfirmation();
+      audio.pause();clearAyahSelection();fullSurahListening=false;
+      status.textContent='نطاق جديد — اضغط استمع للنطاق وكرره';
       if(practiceHint)practiceHint.textContent='اخترت نطاقًا جديدًا؛ استمع له قبل تسجيل الترديد';
     });
     rangePlay.addEventListener('click',()=>{void selectRange(Number(fromSelect.value),Number(toSelect.value));});
