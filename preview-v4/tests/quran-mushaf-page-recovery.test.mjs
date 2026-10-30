@@ -34,5 +34,5 @@ test('a failed page has a recoverable retry action without replacing Quran text'
   assert.match(player,/retryPage\.addEventListener\('click',renderPage\)/);
   assert.match(player,/figure\.dataset\.imageError='true';retryPage\.hidden=false/);
   assert.match(player,/لا يتم استبدالها بنص مولّد/);
-  assert.match(player,/root\.insertBefore\(panel,status\)/);
+  assert.match(player,/root\.append\(panel\)/,'keep transport, progress and live status before training');
 });
