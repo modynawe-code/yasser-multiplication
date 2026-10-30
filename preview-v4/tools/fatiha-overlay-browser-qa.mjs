@@ -138,7 +138,7 @@ try{
   });
   console.log('Quran SVG native polygon QA for surah 114:',JSON.stringify(general));
   if(!general.imageLoaded||!general.pathCount||!general.highlighted
-    ||!general.fill?.startsWith('rgba(242, 197, 63'))
+    ||!general.fill?.startsWith('rgba(242, 197, 63')
     ||!general.source?.includes('kfqc-hafs-page-604.svg'))
     failures.push('native page-604 ayahPolygon highlighting failed');
   if(failures.length)throw new Error('Visual QA failed: '+failures.join('; '));
