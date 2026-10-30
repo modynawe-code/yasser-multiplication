@@ -12,6 +12,8 @@
 .quran-page-image{display:block;width:100%;height:auto;border-radius:14px;background:#fff;user-select:none;-webkit-user-drag:none}
 .quran-page-viewport[data-focused="true"] .quran-page-image{position:absolute;inset:0 auto auto 0;max-width:none;max-height:none;border-radius:0;transform-origin:center top}
 .quran-page-caption{padding:9px 8px 2px;text-align:center;color:#756b53;font-size:13px;font-weight:800;line-height:1.45}
+.quran-verse-position{margin:0 0 8px;padding:8px 12px;text-align:center;border:1px solid #b6d4c2;border-radius:12px;background:#eaf7ef;color:#1d603d;font-weight:900;font-size:15px}
+.quran-verse-position[hidden]{display:none}
 .quran-page-nav{display:grid;grid-template-columns:minmax(90px,1fr) auto minmax(90px,1fr);align-items:center;gap:8px;margin-top:8px;direction:rtl}
 .quran-page-nav[hidden]{display:none}
 .quran-page-nav-button{min-height:44px;border:1px solid #d9d2bd;border-radius:14px;background:#fff;color:#4d493d;font:inherit;font-weight:900;padding:8px 12px;touch-action:manipulation}
