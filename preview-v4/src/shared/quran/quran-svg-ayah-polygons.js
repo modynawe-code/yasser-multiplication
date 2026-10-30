@@ -56,8 +56,8 @@ export function parseOfficialAyahPolygons(svgText,surahNumber,{parserFactory=()=
     // Quranpedia bundled ayahPolygon nodes use M/L coordinate pairs.
     // Skip unsupported path commands rather than guessing geometry.
     if(Number.isInteger(surah)&&surah>=1&&surah<=114&&d
-      &&/^[MmLlZz0-9+.,\\s-]+$/.test(d)){
-      const values=d.match(/[-+]?(?:\\d*\\.\\d+|\\d+\\.?\\d*)/g)?.map(Number)||[];
+      &&/^[MmLlZz0-9+.,\s-]+$/.test(d)){
+      const values=d.match(/[-+]?(?:\d*\.\d+|\d+\.?\d*)/g)?.map(Number)||[];
       if(values.length>=4&&values.length%2===0&&values.every(Number.isFinite)){
         const ys=values.filter((_,i)=>i%2===1);
         rows.push({surah,top:Math.min(...ys),bottom:Math.max(...ys)});
