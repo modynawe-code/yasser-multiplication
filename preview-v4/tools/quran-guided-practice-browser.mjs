@@ -59,6 +59,11 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       await page.locator('.quran-range-controls').waitFor({timeout:12000});
       await page.locator('.quran-range-controls select').nth(0).selectOption('1');
       await page.locator('.quran-range-controls select').nth(1).selectOption('3');
+      console.log('RANGE_BEFORE_CLICK',browserName,learner,JSON.stringify(await page.evaluate(()=>({
+        selects:[...document.querySelectorAll('.quran-range-controls select')].map(x=>x.value),
+        audioCount:window.__qaAudio.length,
+        source:document.querySelector('.quran-itqan-source-name')?.textContent
+      }))));
       const data=await page.evaluate(async n=>{
         const catalog=await fetch('./assets/recitation/itqan-hafs-tracks.json').then(r=>r.json());
         const timings=catalog.tracks[String(n)]?.ayahTimings;
@@ -68,6 +73,7 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       await page.locator('.quran-range-play').click();
       const initial=await page.evaluate(()=>({
         selects:[...document.querySelectorAll('.quran-range-controls select')].map(x=>x.value),
+        audioCount:window.__qaAudio.length,
         audioStart:window.__qaAudio.at(-1).currentTime,
         status:document.querySelector('.quran-player-status')?.textContent,
         repeat:document.querySelector('[aria-label="عدد تكرارات الآية"]')?.value
