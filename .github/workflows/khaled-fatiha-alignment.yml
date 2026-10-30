@@ -25,8 +25,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify FFmpeg availability
-        run: ffprobe -version | head -n 1
+      - name: Install and verify FFmpeg (includes ffprobe)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          command -v ffprobe
+          ffprobe -version
       - name: Install pinned Munajjam and CPU ASR dependencies
         run: |
           python -m pip install --disable-pip-version-check --upgrade pip
