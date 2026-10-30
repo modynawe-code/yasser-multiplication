@@ -78,6 +78,7 @@
 /* This overlay uses the exact ayahPolygon vector geometry from the matching
    bundled Madinah Hafs page. The original mushaf image is untouched. */
 .quran-mushaf-ayah-overlay{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none;z-index:2}
+.quran-page-viewport[data-focused="true"] .quran-mushaf-ayah-overlay{height:auto;max-height:none;transform-origin:center top}
 .quran-mushaf-ayah-path{fill:transparent;stroke:transparent;stroke-width:1;pointer-events:all;cursor:pointer;outline:none}
 .quran-mushaf-ayah-path.is-current{fill:rgba(242,197,63,.27);stroke:rgba(136,94,23,.8);stroke-width:1.35}
 .quran-mushaf-ayah-path:focus-visible{stroke:#276d55;stroke-width:3;fill:rgba(165,221,188,.24)}
