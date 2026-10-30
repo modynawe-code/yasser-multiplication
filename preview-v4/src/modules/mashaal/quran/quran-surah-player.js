@@ -192,6 +192,14 @@ function mountQuranSurahPlayerCore(host,{
       const button=document.createElement('button');button.type='button';
       button.className='quran-ayah-button';button.textContent='الآية '+String(index+1);
       button.setAttribute('aria-pressed','false');button.dataset.ayah=ayahs[index].ayahKey;
+      if(canStorePractice){
+        const record=getQuranPracticeStage(learnerId,surahNumber,index+1);
+        if(record){
+          button.dataset.practiceStage=record.stage;
+          button.title=record.stage==='reviewed'?'راجعته غيب'
+            :record.stage==='repeated'?'تدربت عليه':'استمعت إليه';
+        }
+      }
       ayahButtons.push(button);buttons.appendChild(button);
     }
     panel.append(heading,buttons);
@@ -254,6 +262,12 @@ function mountQuranSurahPlayerCore(host,{
         recordPractice('reviewed');
       });
     }
+    fromSelect.addEventListener('change',()=>{
+      if(Number(toSelect.value)<Number(fromSelect.value))toSelect.value=fromSelect.value;
+    });
+    toSelect.addEventListener('change',()=>{
+      if(Number(fromSelect.value)>Number(toSelect.value))fromSelect.value=toSelect.value;
+    });
     rangePlay.addEventListener('click',()=>{void selectRange(Number(fromSelect.value),Number(toSelect.value));});
     root.insertBefore(panel,progressWrap);
   }
