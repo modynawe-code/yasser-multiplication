@@ -465,7 +465,7 @@ function mountQuranSurahPlayerCore(host,{
     ayahRepeatCount++;
     const target=Number(repeatSelect?.value)||1;
     if(ayahRepeatCount<target){
-      try{audio.currentTime=item.startMs/1000;}catch{clearAyahSelection();audio.pause();return true;}
+      try{audio.currentTime=ayahs[selectedAyahIndex].startMs/1000;}catch{clearAyahSelection();audio.pause();return true;}
       status.textContent='إعادة الآية '+String(selectedAyahIndex+1)+' — '+String(ayahRepeatCount+1)+' من '+String(target);
       if(audio.paused)void playAudio();
     }else{
