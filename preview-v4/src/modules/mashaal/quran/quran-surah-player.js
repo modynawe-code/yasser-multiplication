@@ -126,6 +126,11 @@ function mountQuranSurahPlayerCore(host,{
     else verseOverlay=null;
   };
 
+  const versePosition=document.createElement('p');
+  versePosition.className='quran-verse-position';
+  versePosition.hidden=!ayahs.length;
+  versePosition.setAttribute('aria-live','polite');
+  versePosition.textContent='اختر آية أو ابدأ التلاوة';
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
 
@@ -145,7 +150,7 @@ function mountQuranSurahPlayerCore(host,{
   const retryPage=document.createElement('button');
   retryPage.type='button';retryPage.className='quran-page-retry';retryPage.hidden=true;
   retryPage.textContent='إعادة تحميل صفحة المصحف';
-  figure.append(viewport,caption,pageNav,retryPage);
+  figure.append(versePosition,viewport,caption,pageNav,retryPage);
 
   const audio=new Audio(audioPath);
   audio.preload='metadata';
@@ -398,6 +403,11 @@ function mountQuranSurahPlayerCore(host,{
            &&index<=selectedAyahEndIndex&&ms>=ayah.startMs&&ms<ayah.endMs):selectedAyahIndex)
       :(audio.paused?-1:ayahs.findIndex((ayah,index)=>ms>=ayah.startMs
          &&(ms<ayah.endMs||(index===ayahs.length-1&&ms<=ayah.endMs))));
+    if(ayahs.length){
+      const text=current>=0?'الآية '+String(current+1)+' من '+String(ayahs.length)
+        :'اختر آية أو ابدأ التلاوة';
+      if(versePosition.textContent!==text)versePosition.textContent=text;
+    }
     ayahButtons.forEach((button,index)=>{
       const isCurrent=index===current;
       button.classList.toggle('is-current',isCurrent);
