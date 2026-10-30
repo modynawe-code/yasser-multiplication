@@ -31,10 +31,28 @@ jobs:
             --audio assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3 \
             --expected-sha256 "$SHA" \
             --output analysis-output/fatiha-acoustic-pauses-unapproved.json
+      - name: Build local audio-review page (source MP3 stays in repository)
+        working-directory: preview-v4
+        run: |
+          node --check tools/create-fatiha-review-page.mjs
+          node tools/create-fatiha-review-page.mjs \
+            analysis-output/fatiha-acoustic-pauses-unapproved.json \
+            analysis-output/fatiha-review-unapproved.html
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import vm from 'node:vm';
+          const html=readFileSync('analysis-output/fatiha-review-unapproved.html','utf8');
+          const script=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+          if(!script||!html.includes('REQUIRES_EXPERT_APPROVAL_AND_DEVICE_TESTS'))throw new Error('Unapproved review page missing');
+          new vm.Script(script);
+          console.log('Stand-alone reviewer JavaScript syntax checked');
+          NODE
       - name: Save non-approved acoustic report for human evaluation
         uses: actions/upload-artifact@v4
         with:
           name: fatiha-acoustic-pauses-unapproved
-          path: preview-v4/analysis-output/fatiha-acoustic-pauses-unapproved.json
+          path: |
+            preview-v4/analysis-output/fatiha-acoustic-pauses-unapproved.json
+            preview-v4/analysis-output/fatiha-review-unapproved.html
           retention-days: 7
           if-no-files-found: error
