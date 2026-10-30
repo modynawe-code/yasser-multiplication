@@ -151,10 +151,20 @@
     position:sticky;
     bottom:env(safe-area-inset-bottom,0px);
     z-index:4;
-    padding:7px;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:5px;
+    padding:5px;
     background:rgba(255,255,255,.98);
     border:1px solid #dfd8e2;
-    border-radius:18px;
-    box-shadow:0 6px 17px rgba(51,39,62,.12);
+    border-radius:14px;
+    box-shadow:0 4px 12px rgba(51,39,62,.12);
+  }
+  .quran-surah-player.has-ayah-controls .quran-control{
+    min-width:0;min-height:54px;padding:4px 1px;
+    display:flex;flex-direction:column;gap:2px;border-radius:10px;
+  }
+  .quran-surah-player.has-ayah-controls .quran-control span{font-size:17px;line-height:1}
+  .quran-surah-player.has-ayah-controls .quran-control strong{
+    font-size:11px;line-height:1.2;text-align:center;
   }
 }
