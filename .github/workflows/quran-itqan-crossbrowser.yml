@@ -1,0 +1,56 @@
+name: Quran Itqan Cross-Browser Acceptance
+on:
+  push:
+    branches:
+      - feature/quran-itqan-svg-integration-v1
+    paths:
+      - 'preview-v4/src/shared/quran/**'
+      - 'preview-v4/src/modules/mashaal/quran/**'
+      - 'preview-v4/tools/quran-itqan-browser-acceptance.mjs'
+      - 'preview-v4/tools/build-itqan-cms-tracks.mjs'
+      - '.github/workflows/quran-itqan-crossbrowser.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quran-itqan-crossbrowser
+  cancel-in-progress: true
+jobs:
+  browsers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run family regression
+        working-directory: preview-v4
+        run: npm test
+      - name: Build real verified CMS tracks and static family preview
+        run: |
+          cd preview-v4
+          node tools/build-itqan-cms-tracks.mjs
+          cd ..
+          node tools/build-web-preview.mjs
+      - name: Install browser engines and preview automation
+        working-directory: preview-v4
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps webkit
+      - name: Serve actual built preview and check Chromium + Safari WebKit
+        run: |
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory dist-web-preview >/tmp/quran-preview-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in {1..15}; do curl -fsS http://127.0.0.1:8790/ >/dev/null && break || sleep 1; done
+          cd preview-v4
+          node tools/quran-itqan-browser-acceptance.mjs
+      - name: Upload browser screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quran-itqan-browser-verification
+          path: /tmp/quran-itqan-*.png
+          retention-days: 3
+          if-no-files-found: warn
