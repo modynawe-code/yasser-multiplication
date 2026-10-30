@@ -66,10 +66,10 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
           options:[...e.options].slice(0,7).map(o=>({text:o.textContent,value:o.value,selected:o.selected})),
           html:e.outerHTML.slice(0,550),name:e.getAttribute('aria-label')
         })))));
-      const firstSelected=await page.locator('.quran-range-controls select').nth(0).selectOption('1');
+      const firstSelected=await page.locator('.quran-range-controls select').nth(0).selectOption({value:'1'});
       console.log('SET_FROM',browserName,learner,JSON.stringify(firstSelected),
         JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>e.value))));
-      const secondSelected=await page.locator('.quran-range-controls select').nth(1).selectOption('3');
+      const secondSelected=await page.locator('.quran-range-controls select').nth(1).selectOption({value:'3'});
       console.log('SET_TO',browserName,learner,JSON.stringify(secondSelected),
         JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>e.value))));
       console.log('RANGE_BEFORE_CLICK',browserName,learner,JSON.stringify(await page.evaluate(()=>({
