@@ -34,5 +34,10 @@ test('a failed page has a recoverable retry action without replacing Quran text'
   assert.match(player,/retryPage\.addEventListener\('click',renderPage\)/);
   assert.match(player,/figure\.dataset\.imageError='true';retryPage\.hidden=false/);
   assert.match(player,/لا يتم استبدالها بنص مولّد/);
+  assert.match(player,/candidates=\[\.\.\.new Set\(\[src,\.\.\.pageSources\(pages\[pageIndex\]\)\]\)\]/,
+    'matching verified page mirrors are tried before dropping the highlight');
+  assert.match(player,/geometryHint\.hidden=false/,
+    'the child must see why the page could not be highlighted');
+
   assert.match(player,/root\.append\(panel\)/,'keep transport, progress and live status before training');
 });
