@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/quran-learning-range-progress-v1
+      - feature/product-ui-reference-v1
     paths:
       - 'preview-v4/src/shared/quran/quran-practice-progress.js'
       - 'preview-v4/src/modules/mashaal/quran/**'
