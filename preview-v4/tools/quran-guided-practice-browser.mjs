@@ -57,8 +57,12 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       await page.locator('.quran-itqan-toggle').waitFor({timeout:20000});
       await page.locator('.quran-itqan-toggle').click();
       await page.locator('.quran-range-controls').waitFor({timeout:12000});
-      await page.locator('.quran-range-controls select').nth(0).selectOption('1');
-      await page.locator('.quran-range-controls select').nth(1).selectOption('3');
+      const firstSelected=await page.locator('.quran-range-controls select').nth(0).selectOption('1');
+      console.log('SET_FROM',browserName,learner,JSON.stringify(firstSelected),
+        JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>e.value))));
+      const secondSelected=await page.locator('.quran-range-controls select').nth(1).selectOption('3');
+      console.log('SET_TO',browserName,learner,JSON.stringify(secondSelected),
+        JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>e.value))));
       console.log('RANGE_BEFORE_CLICK',browserName,learner,JSON.stringify(await page.evaluate(()=>({
         selects:[...document.querySelectorAll('.quran-range-controls select')].map(x=>x.value),
         audioCount:window.__qaAudio.length,
