@@ -20,7 +20,7 @@ concurrency:
 jobs:
   trial:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 12
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: cb1e4fe9d46768f7400d427eaecceb49
@@ -115,5 +115,21 @@ jobs:
           printf '%s  %s\n' '16d025c0ffbe8db50842b1963c74e37e8620da18fff4fa7588b0187ed15af4f4' /tmp/fatiha-audio.mp3 | sha256sum -c
           curl --fail --location --silent --show-error "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
           echo "Isolated Fatiha pilot verified: $BASE/"
+      - name: Check actual Chromium highlight paint and source geometry
+        working-directory: preview-v4
+        env:
+          FATIHA_PILOT_URL: https://family-learning-fatiha-pilot.modynawe.workers.dev
+        run: |
+          command -v google-chrome
+          npm install --no-save --ignore-scripts playwright-core@1.56.1
+          node tools/test-fatiha-overlay-browser.mjs
+      - name: Save browser screenshot as diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fatiha-real-browser-highlight-qa
+          path: /tmp/fatiha-pilot-visual-qa.png
+          retention-days: 3
+          if-no-files-found: warn
 
 # Deployment retry after updating the legacy Itqan regression assertion.
