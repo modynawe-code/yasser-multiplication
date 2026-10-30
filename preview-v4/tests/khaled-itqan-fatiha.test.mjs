@@ -77,3 +77,13 @@ test('pilot is limited to Khaled Fatiha and older three-child player paths stay 
   assert.match(shared,/if\(ayahs\.length\)/);
   assert.match(shared,/clearAyahSelection\(\)/);
 });
+
+test('switching to the family hub or another Khaled subject stops a running Quran track',async()=>{
+  const main=await readFile(new URL('../src/main.js',import.meta.url),'utf8');
+  const khaledHome=await readFile(new URL('../src/modules/khaled/ui/khaled-home-shell.js',import.meta.url),'utf8');
+  const player=await readFile(new URL('../src/modules/mashaal/quran/quran-surah-player.js',import.meta.url),'utf8');
+  assert.match(main,/document\.dispatchEvent\(new Event\('family:stop-quran-audio'\)\)/);
+  assert.match(player,/document\.addEventListener\('family:stop-quran-audio',stopOnFamilyNavigation\)/);
+  assert.match(player,/document\.removeEventListener\('family:stop-quran-audio',stopOnFamilyNavigation\)/);
+  assert.match(khaledHome,/if\(id!=='khaledQuranView'\)quranController\?\.leave\(\)/);
+});
