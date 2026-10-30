@@ -586,7 +586,7 @@ function mountQuranSurahPlayerCore(host,{
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
   const refreshGeometry=()=>{
     figure.removeAttribute('data-image-error');retryPage.hidden=true;
-    if(!ayahs.length||!Number.isInteger(surahNumber))return;
+    if(!Number.isInteger(surahNumber)||(!ayahs.length&&!normalizedFocusRegion(pages[pageIndex],surahNumber)))return;
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
     // The displayed original page may load via <img> even when a CORS fetch
     // for its polygon geometry fails. Try only the same verified page mirrors.
@@ -599,14 +599,29 @@ function mountQuranSurahPlayerCore(host,{
       throw new Error('quran-polygon-geometry-unavailable');
     })().then(geometry=>{
       if(destroyed||thisEpoch!==overlayEpoch)return;
+      // Prefer crop boundaries calculated from the authoritative SAME page.
+      // Preserve the existing manual focus when the pinned SVG lacks polygons.
+      const original=normalizedFocusRegion(pages[pageIndex],surahNumber);
+      const cropped=geometry?.focusRegion;
+      if(original&&cropped&&Number.isFinite(cropped.top)
+        &&Number.isFinite(cropped.height)&&cropped.height>0
+        &&cropped.top>=0&&cropped.top+cropped.height<=1){
+        activeFocusRegion={...original,top:cropped.top,height:cropped.height};
+        viewport.style.aspectRatio=String(activeFocusRegion.aspect/activeFocusRegion.height);
+        image.style.transform=`translateY(-${activeFocusRegion.top*100}%)`;
+      }
       geometryHint.hidden=true;retryHighlight.hidden=true;
-      mountOfficialGeometry(geometry);
-      paintListeningAyah();
+      if(ayahs.length){
+        mountOfficialGeometry(geometry);
+        paintListeningAyah();
+      }
     }).catch(()=>{
       if(destroyed||thisEpoch!==overlayEpoch)return;
       mountOfficialGeometry(null);
-      geometryHint.textContent='التلاوة مستمرة، لكن تعذر تظليل الآيات داخل المصحف. جرّب إعادة تحميل الصفحة.';
-      geometryHint.hidden=false;retryHighlight.hidden=false;
+      if(ayahs.length){
+        geometryHint.textContent='التلاوة مستمرة، لكن تعذر تظليل الآيات داخل المصحف. جرّب إعادة تحميل الصفحة.';
+        geometryHint.hidden=false;retryHighlight.hidden=false;
+      }
     });
   };
   image.addEventListener('load',refreshGeometry);
