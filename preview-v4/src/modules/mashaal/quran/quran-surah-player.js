@@ -181,7 +181,7 @@ function mountQuranSurahPlayerCore(host,{
   const ayahButtons=[];
   let repeatSelect=null,fromSelect=null,toSelect=null,practiceHint=null,practiceBlindButton=null;
   let repeatDoneButton=null,reviewedButton=null,updatePracticeStep=()=>{};
-  let practiceBlind=false;
+  let practiceBlind=false,blindWasUsed=false;
   const canStorePractice=Boolean(practiceStorageKey(learnerId));
   if(ayahs.length){
     root.classList.add('has-ayah-controls');
@@ -249,7 +249,7 @@ function mountQuranSurahPlayerCore(host,{
       repeatDoneButton=repeatDone;
       repeatDone.textContent=learnerId==='mashaal'?'رددت الآيات':'رددت الآيات بنفسي';
       practiceBlindButton=document.createElement('button');
-      practiceBlindButton.type='button';practiceBlindButton.className='quran-practice-blind';
+      practiceBlindButton.type='button';practiceBlindButton.className='quran-practice-blind';practiceBlindButton.disabled=true;
       practiceBlindButton.textContent=learnerId==='mashaal'?'إظهار المصحف':'اختبر نفسي غيب';
       const reviewed=document.createElement('button');
       reviewed.type='button';reviewed.className='quran-practice-reviewed';reviewed.disabled=true;
@@ -284,6 +284,8 @@ function mountQuranSurahPlayerCore(host,{
       practiceBlindButton.addEventListener('click',()=>{
         if(learnerId==='mashaal')return;
         practiceBlind=!practiceBlind;
+        if(practiceBlind)blindWasUsed=true;
+        if(!practiceBlind&&blindWasUsed&&reviewedButton)reviewedButton.disabled=false;
         audio.pause();
         figure.classList.toggle('quran-practice-blind',practiceBlind);
         practiceBlindButton.textContent=practiceBlind?'أظهر المصحف':'اختبر نفسي غيب';
@@ -435,7 +437,7 @@ function mountQuranSurahPlayerCore(host,{
     if(stored){
       updatePracticeStep(stage);
       if(stage==='listened'&&repeatDoneButton)repeatDoneButton.disabled=false;
-      if(stage==='repeated'&&reviewedButton)reviewedButton.disabled=false;
+      if(stage==='repeated'&&practiceBlindButton)practiceBlindButton.disabled=false;
       const progress=loadQuranPractice(learnerId).records;
       ayahButtons.forEach((button,index)=>{
         const state=progress[surahNumber+':'+String(index+1)]?.stage||'';
@@ -457,7 +459,9 @@ function mountQuranSurahPlayerCore(host,{
       if(practiceBlindButton)practiceBlindButton.textContent='اختبر نفسي غيب';
     }
     if(repeatDoneButton)repeatDoneButton.disabled=true;
+    if(practiceBlindButton)practiceBlindButton.disabled=true;
     if(reviewedButton)reviewedButton.disabled=true;
+    blindWasUsed=false;
     updatePracticeStep('');
     audio.pause();selectedAyahIndex=start;selectedAyahEndIndex=end;
     ayahRepeatCount=0;completed=false;seeking=false;
