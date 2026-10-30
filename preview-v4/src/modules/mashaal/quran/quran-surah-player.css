@@ -18,6 +18,10 @@
 .quran-page-nav-button:disabled{opacity:.4;cursor:default}.quran-page-nav-button:not(:disabled):active{transform:scale(.985)}
 .quran-page-indicator{min-width:92px;text-align:center;color:#756b53;font-size:13px;font-weight:900;white-space:nowrap}
 .quran-page-frame[data-image-error="true"]{min-height:180px;display:grid;place-items:center}.quran-page-frame[data-image-error="true"] .quran-page-viewport{display:none}
+.quran-page-retry{min-height:46px;width:100%;padding:9px 12px;border:2px solid #6b9476;border-radius:12px;background:#e8f5ec;color:#24583b;font:inherit;font-weight:900;touch-action:manipulation}
+.quran-page-retry[hidden]{display:none}
+.quran-page-retry:focus-visible{outline:3px solid #285f52;outline-offset:3px}
+.quran-page-frame[data-image-error="true"] .quran-page-caption{font-size:15px;line-height:1.65}
 .quran-transport{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .quran-control{min-height:72px;border:2px solid #e4d6ea;border-radius:20px;background:#fff;padding:11px 14px;color:var(--text);font:inherit;font-weight:950;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 14px rgba(74,48,84,.05);touch-action:manipulation}
 .quran-control span{font-size:25px}.quran-control strong{font-size:18px}.quran-control-primary{background:#fff3fb;border-color:#bb78aa;color:#6c3d62;box-shadow:0 8px 18px rgba(183,121,170,.16)}
