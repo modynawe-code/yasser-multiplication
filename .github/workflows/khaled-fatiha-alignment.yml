@@ -1,0 +1,57 @@
+name: Quran Fatiha Munajjam Candidate (one-off)
+on:
+  push:
+    branches:
+      - feature/khaled-fatiha-itqan-pilot-20261030
+    paths:
+      - .github/workflows/khaled-fatiha-alignment.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: khaled-fatiha-candidate
+  cancel-in-progress: true
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify FFmpeg availability
+        run: ffprobe -version | head -n 1
+      - name: Install pinned Munajjam and CPU ASR dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          git clone --quiet https://github.com/Itqan-community/Munajjam.git /tmp/itqan-munajjam
+          git -C /tmp/itqan-munajjam checkout --quiet c8012e12cb3d335728bd1ed61de38143d1b7781a
+          python -m pip install --disable-pip-version-check '/tmp/itqan-munajjam/munajjam' 'faster-whisper>=1.1,<2'
+      - name: Generate an unapproved candidate using the bundled original audio
+        working-directory: preview-v4
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          MUNAJJAM_DEVICE: cpu
+          MUNAJJAM_MODEL_TYPE: faster-whisper
+        run: |
+          SHA="$(node --input-type=module -e "import {MASHAAL_RECITATION_MEDIA} from './src/modules/mashaal/curriculum/recitation-media-manifest.js'; const f=MASHAAL_RECITATION_MEDIA.find(x=>x.surahNumber===1&&x.sourceId==='kfgqpc-ibrahim-al-akhdar-hafs'); if(!f)process.exit(2); process.stdout.write(f.sha256)")"
+          python tools/align-khaled-fatiha-munajjam.py \
+            --audio assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3 \
+            --expected-sha256 "$SHA" \
+            --out analysis-output/fatiha-munajjam-raw.json
+          node tools/prepare-khaled-fatiha-alignment.mjs analysis-output/fatiha-munajjam-raw.json > analysis-output/fatiha-human-review-candidate.json
+      - name: Upload candidate JSON only (no MP3)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: khaled-fatiha-unapproved-alignment
+          path: preview-v4/analysis-output/*.json
+          retention-days: 7
+          if-no-files-found: error
