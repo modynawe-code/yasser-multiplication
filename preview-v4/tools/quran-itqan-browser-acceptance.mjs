@@ -66,11 +66,13 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
         return {
           selected:path?.dataset.ayah,fill:path?getComputedStyle(path).fill:'',
           reciter:document.querySelector('.quran-itqan-source-name')?.textContent,
-          imageReady:document.querySelector('.quran-page-image')?.naturalWidth>0
+          imageReady:document.querySelector('.quran-page-image')?.naturalWidth>0,
+          versePosition:document.querySelector('.quran-verse-position')?.textContent
         };
       });
       if(!state.selected||!state.fill.includes('242, 197, 63')
-        ||!state.reciter?.includes('تلاوة إتقان')||!state.imageReady)
+        ||!state.reciter?.includes('تلاوة إتقان')||!state.imageReady
+        ||!state.versePosition?.includes('الآية 1 من'))
         throw Error(name+' '+learner+' visual state mismatch '+JSON.stringify(state));
       if(learner==='yasser'){
         await page.locator('.quran-ayah-button').last().click();
