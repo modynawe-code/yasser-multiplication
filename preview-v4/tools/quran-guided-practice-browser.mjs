@@ -61,6 +61,37 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         throw Error(browserName+' '+learner+' repeat was possible before listening');
       if(learner!=='mashaal'&&!await page.locator('.quran-practice-reviewed').isDisabled())
         throw Error(browserName+' '+learner+' review was possible before self-test');
+      // A full, uninterrupted listen may unlock the selected practice range.
+      // Skipping directly to the end must NOT unlock any confirmation.
+      await page.locator('.quran-control-primary').click();
+      await page.waitForFunction(()=>window.__qaAudio.at(-1)&&!window.__qaAudio.at(-1).paused);
+      const skipped=await page.evaluate(()=>{
+        const audio=window.__qaAudio.at(-1),seek=document.querySelector('.quran-progress');
+        seek.value='3998';
+        seek.dispatchEvent(new Event('input',{bubbles:true}));
+        seek.dispatchEvent(new Event('change',{bubbles:true}));
+        audio.currentTime=audio.duration;
+        audio.dispatchEvent(new Event('ended'));
+        return !document.querySelector('.quran-practice-done').disabled;
+      });
+      if(skipped)throw Error(browserName+' '+learner+' skipped full-surah playback unlocked practice');
+      await page.locator('.quran-control').nth(3).click();
+      await page.waitForFunction(()=>{
+        const a=window.__qaAudio.at(-1);
+        return a&&!a.paused&&a.currentTime<0.5;
+      });
+      const complete=await page.evaluate(()=>{
+        const audio=window.__qaAudio.at(-1);
+        audio.currentTime=audio.duration;
+        audio.dispatchEvent(new Event('ended'));
+        return {
+          unlocked:!document.querySelector('.quran-practice-done').disabled,
+          hint:document.querySelector('.quran-practice-status')?.textContent,
+          current:document.querySelector('.quran-practice-step[data-state="current"]')?.textContent
+        };
+      });
+      if(!complete.unlocked||!complete.current?.includes('ردد'))
+        throw Error(browserName+' '+learner+' full-surah completion not recognized '+JSON.stringify(complete));
       console.log('SELECT_OPTIONS',browserName,learner,JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>({
         html:e.outerHTML.slice(0,900),
         options:[...e.options].slice(0,6).map(o=>({value:o.value,text:o.text,selected:o.selected}))
@@ -68,6 +99,8 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       // Explicit values, not numeric labels: label "2" belongs to value "1".
       await page.locator('.quran-range-controls select').nth(0).selectOption({value:'1'});
       await page.locator('.quran-range-controls select').nth(1).selectOption({value:'3'});
+      if(!await page.locator('.quran-practice-done').isDisabled())
+        throw Error(browserName+' '+learner+' stale listening was applied to a new range');
       const chosen=await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(el=>el.value));
       if(chosen.join(',')!=='1,3')throw Error('Unexpected range values '+chosen.join(','));
       const data=await page.evaluate(async n=>{
