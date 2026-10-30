@@ -284,12 +284,28 @@ export function mountQuranSurahPlayer(host,{
   const stopAudio=()=>{audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
   const stopOnFamilyNavigation=()=>stopAudio();
   document.addEventListener('family:stop-quran-audio',stopOnFamilyNavigation);
-  const selectAyah=async index=>{
+  const showHighlightedVerseOnMushaf=()=>{
+    if(!verseOverlay)return;
+    const rect=figure.getBoundingClientRect();
+    const viewHeight=Number(globalThis.innerHeight)||0;
+    if(!viewHeight)return;
+    const visible=Math.max(0,Math.min(rect.bottom,viewHeight)-Math.max(rect.top,0));
+    // The verse buttons are below the large page on a phone. Without this,
+    // users can hear the ayah but cannot see its highlight above the fold.
+    if(visible<Math.min(260,rect.height/2)){
+      figure.scrollIntoView({
+        behavior:globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',
+        block:'center'
+      });
+    }
+  };
+  const selectAyah=async (index,{revealInMushaf=false}={})=>{
     const item=ayahs[index];if(!item||destroyed)return;
     audio.pause();selectedAyahIndex=index;ayahRepeatCount=0;completed=false;seeking=false;
     try{audio.currentTime=item.startMs/1000;}catch{status.textContent='تعذر الانتقال للآية';clearAyahSelection();return;}
     paintAyahSelection();updateProgress();
     status.textContent='الآية '+String(index+1)+' — استمع وردد';
+    if(revealInMushaf)showHighlightedVerseOnMushaf();
     await playAudio();
   };
   const handleAyahBoundary=()=>{
@@ -309,7 +325,7 @@ export function mountQuranSurahPlayer(host,{
     updateProgress();return true;
   };
 
-  ayahButtons.forEach((button,index)=>button.addEventListener('click',()=>{void selectAyah(index);}));
+  ayahButtons.forEach((button,index)=>button.addEventListener('click',()=>{void selectAyah(index,{revealInMushaf:true});}));
   overlayPaths.forEach((path,index)=>{
     path.addEventListener('click',()=>{void selectAyah(index);});
     path.addEventListener('keydown',event=>{
