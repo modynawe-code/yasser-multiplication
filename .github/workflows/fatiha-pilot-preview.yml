@@ -69,7 +69,14 @@ jobs:
       - name: Smoke test dedicated worker and verify audio SHA on host
         run: |
           BASE='https://family-learning-fatiha-pilot.modynawe.workers.dev'
-          curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/" -o /tmp/fatiha-home.html
+          echo "Checking dedicated Worker after deployment propagation"
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            STATUS="$(curl --location --silent --show-error --output /tmp/fatiha-home.html --write-out '%{http_code}' "$BASE/" || true)"
+            echo "Attempt $attempt: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then break; fi
+            sleep 4
+          done
+          test "$STATUS" = "200" || (head -c 500 /tmp/fatiha-home.html || true; exit 1)
           grep -q '__FAMILY_API_DISABLED__=true' /tmp/fatiha-home.html
           curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/src/modules/khaled/quran/fatiha-review-candidate.js" -o /tmp/fatiha-cues.js
           grep -q 'ACOUSTIC_ONLY_UNVERIFIED' /tmp/fatiha-cues.js
