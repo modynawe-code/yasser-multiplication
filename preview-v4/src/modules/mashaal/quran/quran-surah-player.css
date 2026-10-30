@@ -57,7 +57,7 @@
 .quran-ayah-heading strong{font-size:18px;color:#255b3d}
 .quran-ayah-heading label{font-size:14px;font-weight:900;color:#255b3d}
 .quran-ayah-heading select{min-height:44px;border:1px solid #95bca6;border-radius:10px;background:white;padding:5px 10px;font:inherit;color:#255b3d}
-.quran-ayah-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.quran-ayah-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:310px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .quran-ayah-button{min-height:52px;border:2px solid #cbe0d2;border-radius:14px;background:white;color:#255b3d;font:inherit;font-weight:900;touch-action:manipulation}
 .quran-ayah-button.active{background:#d1f2df;border-color:#428b62}
 .quran-ayah-button:focus-visible,.quran-ayah-heading select:focus-visible{outline:3px solid #316a48;outline-offset:3px}
