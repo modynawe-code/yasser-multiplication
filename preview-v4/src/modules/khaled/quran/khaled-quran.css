@@ -6,3 +6,6 @@
 .khaled-itqan-try:disabled{opacity:.65;cursor:progress}
 .khaled-itqan-pilot p{margin:0;font-size:13px;line-height:1.7;color:#46614f;font-weight:750}
 .khaled-itqan-try:focus-visible{outline:3px solid #286845;outline-offset:3px}
+
+/* Dedicated non-production review host only. Visible even on tablets. */
+.khaled-fatiha-review-notice{margin:0 0 14px;padding:14px 18px;border:2px solid #bd8e2c;border-radius:16px;background:#fff5d6;color:#63400e;font-weight:900;font-size:clamp(15px,2vw,18px);line-height:1.7;text-align:center}
