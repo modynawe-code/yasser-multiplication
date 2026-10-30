@@ -197,6 +197,17 @@ function mountQuranSurahPlayerCore(host,{
   let repeatSelect=null,fromSelect=null,toSelect=null,practiceHint=null,practiceBlindButton=null;
   let repeatDoneButton=null,reviewedButton=null,updatePracticeStep=()=>{};
   let practiceBlind=false,blindWasUsed=false;
+  const resetPracticeConfirmation=()=>{
+    if(repeatDoneButton)repeatDoneButton.disabled=true;
+    if(practiceBlindButton)practiceBlindButton.disabled=true;
+    if(reviewedButton)reviewedButton.disabled=true;
+    blindWasUsed=false;
+    if(practiceBlind){
+      practiceBlind=false;figure.classList.remove('quran-practice-blind');
+      if(practiceBlindButton)practiceBlindButton.textContent='اختبر نفسي غيب';
+    }
+    updatePracticeStep('');
+  };
   const canStorePractice=Boolean(practiceStorageKey(learnerId));
   if(ayahs.length){
     root.classList.add('has-ayah-controls');
@@ -313,9 +324,13 @@ function mountQuranSurahPlayerCore(host,{
     }
     fromSelect.addEventListener('change',()=>{
       if(Number(toSelect.value)<Number(fromSelect.value))toSelect.value=fromSelect.value;
+      resetPracticeConfirmation();
+      if(practiceHint)practiceHint.textContent='اخترت نطاقًا جديدًا؛ استمع له قبل تسجيل الترديد';
     });
     toSelect.addEventListener('change',()=>{
       if(Number(fromSelect.value)>Number(toSelect.value))fromSelect.value=toSelect.value;
+      resetPracticeConfirmation();
+      if(practiceHint)practiceHint.textContent='اخترت نطاقًا جديدًا؛ استمع له قبل تسجيل الترديد';
     });
     rangePlay.addEventListener('click',()=>{void selectRange(Number(fromSelect.value),Number(toSelect.value));});
     // Keep the playback state visible immediately below transport and seek.
@@ -325,7 +340,7 @@ function mountQuranSurahPlayerCore(host,{
 
   let requestedAyahKey='',followTicket=0;
   let selectedAyahIndex=-1,selectedAyahEndIndex=-1,ayahRepeatCount=0;
-  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
+  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,fullSurahListening=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
   const rangeEnd=range=>{
     try{
       const length=Number(range?.length)||0;
@@ -403,7 +418,7 @@ function mountQuranSurahPlayerCore(host,{
     if(!duration)progress.disabled=true;
     paintSeek(current,duration);time.textContent=`${formatTime(current)} / ${duration?formatTime(duration):'--:--'}`;
   };
-  const beginSeek=()=>{if(seeking||!finiteDuration())return;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
+  const beginSeek=()=>{if(seeking||!finiteDuration())return;fullSurahListening=false;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
   const previewSeek=()=>{const duration=finiteDuration();if(!duration)return;if(!seeking)beginSeek();const target=seekValue();try{audio.currentTime=target;}catch{}paintSeek(target,duration);time.textContent=`${formatTime(target)} / ${formatTime(duration)}`;};
   const paintListeningAyah=()=>{
     const ms=(Number(audio.currentTime)||0)*1000;
@@ -475,15 +490,8 @@ function mountQuranSurahPlayerCore(host,{
   };
   const selectRange=async (start,end)=>{
     if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end<start||end>=ayahs.length||destroyed)return;
-    if(practiceBlind){
-      practiceBlind=false;figure.classList.remove('quran-practice-blind');
-      if(practiceBlindButton)practiceBlindButton.textContent='اختبر نفسي غيب';
-    }
-    if(repeatDoneButton)repeatDoneButton.disabled=true;
-    if(practiceBlindButton)practiceBlindButton.disabled=true;
-    if(reviewedButton)reviewedButton.disabled=true;
-    blindWasUsed=false;
-    updatePracticeStep('');
+    resetPracticeConfirmation();
+    fullSurahListening=false;
     audio.pause();selectedAyahIndex=start;selectedAyahEndIndex=end;
     ayahRepeatCount=0;completed=false;seeking=false;
     try{audio.currentTime=ayahs[start].startMs/1000;}
@@ -492,12 +500,20 @@ function mountQuranSurahPlayerCore(host,{
     status.textContent='الآيات '+String(start+1)+' إلى '+String(end+1)+' — استمع ثم ردد';
     await playAudio();
   };
-  const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;const shouldResume=resumeAfterSeek,target=seekValue();clearAyahSelection();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
-  const markCompleted=()=>{completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();};
-  const playAudio=async()=>{try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
+  const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;fullSurahListening=false;const shouldResume=resumeAfterSeek,target=seekValue();clearAyahSelection();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
+  const markCompleted=()=>{
+    const eligible=fullSurahListening&&selectedAyahIndex<0&&ayahs.length&&canStorePractice;
+    fullSurahListening=false;completed=true;
+    const logged=eligible&&recordPractice('listened');
+    status.textContent=logged?'انتهت التلاوة — الآن يمكنك ترديد نطاق الآيات المختار':'انتهت التلاوة';
+    if(ayahs.length&&!logged&&practiceHint)
+      practiceHint.textContent='للبدء بالحفظ اضغط «استمع للنطاق وكرره» أولًا';
+    updateProgress();onCompleted();
+  };
+  const playAudio=async()=>{try{await audio.play();if(selectedAyahIndex<0&&!seeking&&audio.currentTime<0.5)fullSurahListening=true;status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
   const pauseAudio=()=>{audio.pause();paintListeningAyah();status.textContent='متوقفة مؤقتًا';};
-  const restartAudio=async()=>{audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
-  const stopAudio=()=>{audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
+  const restartAudio=async()=>{fullSurahListening=false;audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
+  const stopAudio=()=>{fullSurahListening=false;audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
   const stopOnFamilyNavigation=()=>stopAudio();
   document.addEventListener('family:stop-quran-audio',stopOnFamilyNavigation);
   const showHighlightedVerseOnMushaf=()=>{
