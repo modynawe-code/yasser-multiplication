@@ -57,6 +57,12 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       await page.locator('.quran-itqan-toggle').waitFor({timeout:20000});
       await page.locator('.quran-itqan-toggle').click();
       await page.locator('.quran-range-controls').waitFor({timeout:12000});
+      const advanced=page.locator('details.quran-range-controls');
+      if(await advanced.evaluate(node=>node.open))
+        throw Error(browserName+' '+learner+' advanced range controls not collapsed by default');
+      await advanced.locator('summary').click();
+      if(!await advanced.evaluate(node=>node.open))
+        throw Error(browserName+' '+learner+' cannot open advanced verse-range controls');
       if(!await page.locator('.quran-practice-done').isDisabled())
         throw Error(browserName+' '+learner+' repeat was possible before listening');
       if(learner!=='mashaal'&&!await page.locator('.quran-practice-reviewed').isDisabled())
