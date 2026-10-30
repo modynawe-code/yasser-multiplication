@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {deriveOfficialSurahCrop} from '../src/shared/quran/quran-svg-ayah-polygons.js';
+import {deriveOfficialSurahCrop,parseOfficialAyahPolygons} from '../src/shared/quran/quran-svg-ayah-polygons.js';
 
 // Read original ayah polygons only; never inspect or rewrite Quran wording.
 function verifiedRows(svg){
@@ -42,4 +42,30 @@ test('missing or unsupported polygon geometry cannot produce fabricated crop',()
   assert.equal(deriveOfficialSurahCrop('0 0 345 550',[
     {surah:106,top:130,bottom:190},{surah:107,top:252,bottom:388},{surah:108,top:450,bottom:525}
   ],107)?.top,(190+8)/550);
+});
+
+
+test('the actual SVG parser exposes correct source crop, not only the pure helper',async()=>{
+  const svg=await readFile(new URL('../assets/recitation/kfqc-hafs-page-604.svg',import.meta.url),'utf8');
+  const parserFactory=()=>({
+    parseFromString(text){
+      const viewBox=text.match(/<svg[^>]*viewBox="([^"]+)"/)?.[1];
+      const nodes=[...text.matchAll(/<path class="ayahPolygon"[^>]+\/>/g)]
+        .map(([tag])=>({
+          getAttribute(name){
+            return tag.match(new RegExp('(?:^|\\s)'+name+'="([^"]*)"'))?.[1]??null;
+          }
+        }));
+      return {documentElement:{
+        localName:'svg',getAttribute:name=>name==='viewBox'?viewBox:null,
+        querySelector:()=>null,querySelectorAll:()=>nodes
+      }};
+    }
+  });
+  const result=parseOfficialAyahPolygons(svg,113,{parserFactory});
+  assert.equal(result?.paths.length,5,'all verified surah Al-Falaq ayah shapes must parse');
+  assert.ok(result.focusRegion?.height>0,
+    'a valid multi-surah Quran SVG must yield a source-derived focus region');
+  assert.ok(result.focusRegion.top>0&&result.focusRegion.top<.35,
+    'Al-Falaq crop starts below Al-Ikhlas, including the heading');
 });
