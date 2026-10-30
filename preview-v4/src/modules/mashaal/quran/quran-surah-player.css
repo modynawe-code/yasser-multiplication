@@ -121,8 +121,11 @@
 @media(max-width:620px){.quran-itqan-source-panel{padding:10px;gap:6px}.quran-itqan-toggle{font-size:15px;min-height:52px}}
 
 /* Quran guided practice: opt-in to a same-track verified Itqan recording. */
-.quran-range-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;background:#f4f8f4;border:1px solid #d5e5d9;border-radius:15px}
-.quran-range-controls>strong{grid-column:1/-1;color:#205b3d}
+.quran-range-controls{display:block;padding:12px;background:#f4f8f4;border:1px solid #d5e5d9;border-radius:15px}
+.quran-range-controls>summary{color:#205b3d;font-weight:900;cursor:pointer;min-height:34px;display:list-item;list-style:disclosure-closed inside;touch-action:manipulation}
+.quran-range-controls[open]>summary{list-style-type:disclosure-open}
+.quran-range-controls>summary:focus-visible{outline:3px solid #285f52;outline-offset:2px;border-radius:5px}
+.quran-range-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 .quran-range-controls label{display:grid;gap:5px;font-weight:800}
 .quran-range-controls select{min-width:0;width:100%;min-height:44px;padding:6px;border-radius:10px;border:1px solid #7eac8e;background:white;font:inherit}
 .quran-range-play{grid-column:1/-1;background:#d6efdf;border:2px solid #488e63;color:#20583a;border-radius:12px;min-height:50px;font:inherit;font-weight:900}
