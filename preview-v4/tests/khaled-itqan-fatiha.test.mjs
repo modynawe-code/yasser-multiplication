@@ -39,8 +39,8 @@ test('timings must match one complete seven-ayah Al-Fatiha track and HTTPS audio
 test('loads audio and timestamps from the same Itqan track, never from the existing recording',async()=>{
   const requests=[];
   const fetcher=stubFetch({
-    '/recitations/':{results:[RECITER],next:null},
-    '/recitations/123/':{results:[TRACK],next:null}
+    '/recitations/?page=1&page_size=200':{count:1,results:[RECITER]},
+    '/recitations/123/?page=1&page_size=200':{count:1,results:[TRACK]}
   });
   const result=await loadItqanFatiha({fetchImpl:async(url,options)=>{
     requests.push([url,options?.headers?.Accept]);
@@ -53,18 +53,46 @@ test('loads audio and timestamps from the same Itqan track, never from the exist
 });
 
 test('fails closed when Al Akhdar is unavailable or verse timings have gaps/invalid duration',async()=>{
-  const noReciter=stubFetch({'/recitations/':{results:[{...RECITER,reciter:{name:'Other'}}],next:null}});
+  const noReciter=stubFetch({'/recitations/?page=1&page_size=200':{count:1,results:[{...RECITER,reciter:{name:'Other'}}]}});
   await assert.rejects(loadItqanFatiha({fetchImpl:noReciter}),/matching-akhdar/);
   const wrongTimings=stubFetch({
-    '/recitations/':{results:[RECITER],next:null},
-    '/recitations/123/':{results:[{...TRACK,duration_ms:2000}],next:null}
+    '/recitations/?page=1&page_size=200':{count:1,results:[RECITER]},
+    '/recitations/123/?page=1&page_size=200':{count:1,results:[{...TRACK,duration_ms:2000}]}
   });
   await assert.rejects(loadItqanFatiha({fetchImpl:wrongTimings}),/matching-fatiha/);
 });
 
-test('pagination cannot redirect the browser to third-party hosts',async()=>{
-  const malicious=stubFetch({'/recitations/':{results:[],next:'https://other.example/api/recitations/'}});
-  await assert.rejects(loadItqanFatiha({fetchImpl:malicious}),/unexpected-itqan-pagination/);
+test('paginates by count rather than undocumented next URLs',async()=>{
+  const firstPage=Array.from({length:200},(_,index)=>({
+    id:index+1,reciter:{name:'Mishary Rashid Alafasy'},riwayah:{name:'Hafs'}
+  }));
+  const calls=[];
+  const pages=stubFetch({
+    '/recitations/?page=1&page_size=200':{count:201,results:firstPage},
+    '/recitations/?page=2&page_size=200':{count:201,results:[RECITER]},
+    '/recitations/123/?page=1&page_size=200':{count:1,results:[TRACK]}
+  });
+  const result=await loadItqanFatiha({fetchImpl:async(url,options)=>{
+    calls.push({url,headers:options.headers,redirect:options.redirect});
+    return pages(url);
+  }});
+  assert.equal(result.audioPath,TRACK.audio_url);
+  assert.deepEqual(calls.map(c=>new URL(c.url).searchParams.get('page')),['1','2','1']);
+  assert.ok(calls.every(c=>c.headers['Accept-Language']==='ar'&&c.redirect==='error'));
+});
+
+test('rejects incomplete and malformed Itqan pages without switching the player',async()=>{
+  const incomplete=stubFetch({
+    '/recitations/?page=1&page_size=200':{count:201,results:Array.from({length:200},()=>RECITER)},
+    '/recitations/?page=2&page_size=200':{count:201,results:[]}
+  });
+  await assert.rejects(loadItqanFatiha({fetchImpl:incomplete}),/incomplete-itqan-pagination/);
+  const invalid=stubFetch({'/recitations/?page=1&page_size=200':{results:[RECITER]}});
+  await assert.rejects(loadItqanFatiha({fetchImpl:invalid}),/invalid-itqan-response/);
+  const oldStyle=stubFetch({
+    '/recitations/?page=1&page_size=200':{count:0,results:[],next:'https://other.example/steal'}
+  });
+  await assert.rejects(loadItqanFatiha({fetchImpl:oldStyle}),/matching-akhdar/);
 });
 
 test('pilot is limited to Khaled Fatiha and older three-child player paths stay compatible',async()=>{
