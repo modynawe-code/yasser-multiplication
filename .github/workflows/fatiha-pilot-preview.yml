@@ -59,7 +59,9 @@ jobs:
           const swPath='dist-web-preview/service-worker.js';
           let sw=await readFile(swPath,'utf8');
           const oldCache='const CACHE_VERSION=`\u0024{CACHE_PREFIX}shell-222`;';
-          const newCache='const CACHE_VERSION=`\u0024{CACHE_PREFIX}shell-fatiha-highlight-20261030-v3`;';
+          const buildSha=String(process.env.GITHUB_SHA||'').slice(0,12);
+          if(!/^[a-f0-9]{12}$/i.test(buildSha))throw new Error('Missing immutable deployment SHA');
+          const newCache='const CACHE_VERSION=`\u0024{CACHE_PREFIX}shell-fatiha-'+buildSha+'`;';
           if(sw.split(oldCache).length!==2)throw new Error('Expected SW cache key not found');
           sw=sw.replace(oldCache,newCache);
           const base="const APP_SHELL=[";
@@ -68,7 +70,7 @@ jobs:
           await writeFile(swPath,sw);
           const workerRuntime='dist-web-preview/service-worker-runtime.js';
           const runtime=await readFile(workerRuntime,'utf8');
-          await writeFile(workerRuntime,runtime+'\n// fatiha-pilot-20261030-v3: force Safari imported-SW update.\n');
+          await writeFile(workerRuntime,runtime+'\n// fatiha-pilot-'+buildSha+': force Safari imported-SW update.\n');
           console.log('Pilot Service Worker cache rotated and new Quran modules precached');
           console.log('Isolated trial bundle verified: no production family cloud sync, SHA-pinned original audio');
           NODE
@@ -106,10 +108,10 @@ jobs:
           curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.js" -o /tmp/fatiha-player.js
           grep -q 'paintListeningAyah' /tmp/fatiha-player.js
           curl --fail --location --silent --show-error "$BASE/service-worker.js" -o /tmp/fatiha-sw.js
-          grep -q 'shell-fatiha-highlight-20261030-v3' /tmp/fatiha-sw.js
+          grep -q "shell-fatiha-${GITHUB_SHA:0:12}" /tmp/fatiha-sw.js
           grep -q "fatiha-page1-polygons.js" /tmp/fatiha-sw.js
           curl --fail --location --silent --show-error "$BASE/service-worker-runtime.js" -o /tmp/fatiha-sw-runtime.js
-          grep -q 'fatiha-pilot-20261030-v3' /tmp/fatiha-sw-runtime.js
+          grep -q "fatiha-pilot-${GITHUB_SHA:0:12}" /tmp/fatiha-sw-runtime.js
           curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.css" -o /tmp/fatiha-style.css
           grep -q 'quran-mushaf-ayah-path.is-current' /tmp/fatiha-style.css
           curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3" -o /tmp/fatiha-audio.mp3
