@@ -188,6 +188,22 @@ try{
     if(!evidence.pathCount||!evidence.firstAyah?.startsWith(evidence.surah+':')
       ||!evidence.sourceName?.includes('تلاوة إتقان'))
       failures.push(learner+' live Quran SVG or Itqan mapping unavailable');
+    if(learner==='yasser'){
+      // Last ayah of Surah Sad is printed on page 458, not page 453.
+      // The player must follow the official Quran SVG JSON page index.
+      await page.locator('.quran-ayah-button').last().click();
+      await page.waitForFunction(()=>{
+        const src=document.querySelector('.quran-page-image')?.currentSrc||'';
+        return src.includes('/458.svg');
+      },null,{timeout:25000});
+      await page.waitForFunction(()=>{
+        const svg=document.querySelector('svg.quran-mushaf-ayah-overlay');
+        return !!svg?.querySelector('path[data-ayah="38:88"]');
+      },null,{timeout:25000});
+      const pageIndex=await page.evaluate(()=>window.__qaPlayer.getPageIndex());
+      if(pageIndex!==5)failures.push('Yasser Quran SVG page-follow expected 458 / index 5');
+      console.log('ITQAN_QURAN_SVG_PAGE_FOLLOW_PASS: Yasser Surah 38 ayah 88 -> page 458');
+    }
   }
   if(failures.length)throw new Error('Visual QA failed: '+failures.join('; '));
   console.log('CHROME_VISUAL_QA_PASS: image, highlighted verse 2, hit target, button sync, geometry');
