@@ -43,6 +43,51 @@ def find_pauses(audio, threshold_db, min_seconds):
     return pauses
 
 
+def build_review_cues(scenarios, duration, *, audio_sha):
+    """Propose timing cuts only when three independent dB thresholds agree.
+
+    This identifies acoustic pauses, NOT recognized Quran verse boundaries.
+    Six stable cuts are necessary for seven tentative Al-Fatiha spans.
+    """
+    if not isinstance(audio_sha, str) or len(audio_sha) != 64:
+        raise ValueError("verified-audio-sha-required")
+    if not 0 < duration < 600 or len(scenarios) < 3:
+        raise ValueError("invalid-acoustic-evidence")
+    groups = []
+    for scenario in scenarios:
+        threshold = scenario["thresholdDb"]
+        if any(threshold in group["votes"] for group in groups):
+            raise ValueError("duplicate-threshold")
+        for pause in scenario["interiorPauses"]:
+            middle = float(pause["middle"])
+            match = next((g for g in groups if abs(g["center"]-middle) < 0.35
+                          and threshold not in g["votes"]), None)
+            if match is None:
+                groups.append({"center": middle, "centers": [middle],
+                               "votes": {threshold}})
+            else:
+                match["centers"].append(middle)
+                match["votes"].add(threshold)
+                match["center"] = sum(match["centers"]) / len(match["centers"])
+    stable = sorted((g for g in groups if len(g["votes"]) == len(scenarios)),
+                    key=lambda g: g["center"])
+    if len(stable) != 6:
+        raise ValueError(f"need-six-stable-pauses-found-{len(stable)}")
+    cuts = [round(g["center"], 3) for g in stable]
+    if any(b-a < 2.0 for a, b in zip(cuts, cuts[1:])):
+        raise ValueError("acoustic-cuts-too-close")
+    if cuts[0] < 1.0 or duration-cuts[-1] < 2.0:
+        raise ValueError("missing-leading-or-last-verse-duration")
+    # Deliberately include original lead-in and tail: trimming a sacred
+    # syllable is less acceptable than a review player having extra silence.
+    boundaries = [0.0] + cuts + [round(duration, 4)]
+    return [{
+        "ayahKey": f"1:{idx+1}", "startMs": round(boundaries[idx]*1000),
+        "endMs": round(boundaries[idx+1]*1000),
+        "reviewStatus": "ACOUSTIC_ONLY_UNVERIFIED",
+    } for idx in range(7)]
+
+
 def inspect(audio, expected_sha):
     actual = hashlib.sha256(audio.read_bytes()).hexdigest()
     if actual != expected_sha:
@@ -64,12 +109,14 @@ def inspect(audio, expected_sha):
             "interiorPauses": interior,
             "count": len(interior),
         })
+    proposed = build_review_cues(scenarios, duration, audio_sha=actual)
     return {
         "status": "REQUIRES_HUMAN_AUDIO_REVIEW",
         "surah": 1, "reciter": "Ibrahim Al-Akhdar",
         "audioSha256": actual, "durationSeconds": round(duration, 4),
         "method": "ffmpeg silencedetect; NOT verse identification",
         "scenarios": scenarios,
+        "proposedReviewCues": proposed,
         "warning": "Acoustic silences include breaths and intra-verse stops. "
                    "They are neither approved ayah boundaries nor playback metadata.",
     }
@@ -90,6 +137,7 @@ def main():
         print("Threshold", scenario["thresholdDb"], "pauses", scenario["count"])
         for pause in scenario["interiorPauses"]:
             print("  ", pause)
+    print("Review-only candidate cues:", report["proposedReviewCues"])
     print("NO VERSE TIMES APPROVED; human listening remains required.")
 
 
