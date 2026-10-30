@@ -88,8 +88,7 @@ function mountQuranSurahPlayerCore(host,{
   const overlayPaths=[];
   let verseOverlay=null,overlayEpoch=0;
   const mountOfficialGeometry=geometry=>{
-    verseOverlay?.remove();verseOverlay=null;
-    overlayPaths.length=0;
+    verseOverlay?.remove();verseOverlay=null;overlayPaths.length=0;
     if(!geometry?.paths?.length)return;
     const ns='http://www.w3.org/2000/svg';
     verseOverlay=document.createElementNS(ns,'svg');
@@ -115,7 +114,7 @@ function mountQuranSurahPlayerCore(host,{
       verseOverlay.appendChild(path);
     }
     if(overlayPaths.length)viewport.appendChild(verseOverlay);
-    else{verseOverlay=null;}
+    else verseOverlay=null;
   };
   if(verseGeometry)mountOfficialGeometry(verseGeometry);
 
@@ -226,11 +225,9 @@ function mountQuranSurahPlayerCore(host,{
 
   const renderPage=()=>{
     const page=pages[pageIndex];
-    // Timed ayah overlay must use un-cropped page geometry for exact alignment.
     const focusRegion=ayahs.length?null:normalizedFocusRegion(page,surahNumber);
     const sources=pageSources(page);
     sourceIndex=0;
-    // Invalidate old-page overlays while loading the exact current mushaf SVG.
     overlayEpoch++;
     if(verseOverlay&&!verseGeometry)mountOfficialGeometry(null);
     if(verseOverlay)verseOverlay.style.display=pageIndex===0?'':'none';
@@ -274,7 +271,72 @@ function mountQuranSurahPlayerCore(host,{
       if(isCurrent)button.setAttribute('aria-current','true');
       else button.removeAttribute('aria-current');
     });
-  
+    overlayPaths.forEach(path=>{
+      const isCurrent=path.dataset.ayah===ayahs[current]?.ayahKey;
+      path.classList.toggle('is-current',isCurrent);
+      if(isCurrent)path.setAttribute('aria-current','true');
+      else path.removeAttribute('aria-current');
+    });
+  };
+  const paintAyahSelection=()=>{
+    ayahButtons.forEach((button,index)=>{
+      const active=index===selectedAyahIndex;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    paintListeningAyah();
+  };
+  const clearAyahSelection=()=>{selectedAyahIndex=-1;ayahRepeatCount=0;paintAyahSelection();};
+  const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;const shouldResume=resumeAfterSeek,target=seekValue();clearAyahSelection();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
+  const markCompleted=()=>{completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();};
+  const playAudio=async()=>{try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
+  const pauseAudio=()=>{audio.pause();paintListeningAyah();status.textContent='متوقفة مؤقتًا';};
+  const restartAudio=async()=>{audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
+  const stopAudio=()=>{audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
+  const stopOnFamilyNavigation=()=>stopAudio();
+  document.addEventListener('family:stop-quran-audio',stopOnFamilyNavigation);
+  const showHighlightedVerseOnMushaf=()=>{
+    if(!verseOverlay)return;
+    const rect=figure.getBoundingClientRect();
+    const viewHeight=Number(globalThis.innerHeight)||0;
+    if(!viewHeight)return;
+    const visible=Math.max(0,Math.min(rect.bottom,viewHeight)-Math.max(rect.top,0));
+    // The verse buttons are below the large page on a phone. Without this,
+    // users can hear the ayah but cannot see its highlight above the fold.
+    if(visible<Math.min(260,rect.height/2)){
+      figure.scrollIntoView({
+        behavior:globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',
+        block:'center'
+      });
+    }
+  };
+  const selectAyah=async (index,{revealInMushaf=false}={})=>{
+    const item=ayahs[index];if(!item||destroyed)return;
+    audio.pause();selectedAyahIndex=index;ayahRepeatCount=0;completed=false;seeking=false;
+    try{audio.currentTime=item.startMs/1000;}catch{status.textContent='تعذر الانتقال للآية';clearAyahSelection();return;}
+    paintAyahSelection();updateProgress();
+    status.textContent='الآية '+String(index+1)+' — استمع وردد';
+    if(revealInMushaf)showHighlightedVerseOnMushaf();
+    await playAudio();
+  };
+  const handleAyahBoundary=()=>{
+    if(selectedAyahIndex<0||destroyed||seeking)return false;
+    const item=ayahs[selectedAyahIndex];
+    if(audio.currentTime*1000<item.endMs-50)return false;
+    ayahRepeatCount++;
+    const target=Number(repeatSelect?.value)||1;
+    if(ayahRepeatCount<target){
+      try{audio.currentTime=item.startMs/1000;}catch{clearAyahSelection();audio.pause();return true;}
+      status.textContent='إعادة الآية '+String(selectedAyahIndex+1)+' — '+String(ayahRepeatCount+1)+' من '+String(target);
+      if(audio.paused)void playAudio();
+    }else{
+      const finished=selectedAyahIndex+1;
+      clearAyahSelection();audio.pause();status.textContent='اكتمل تكرار الآية '+String(finished)+' — اختر الآية التالية';
+    }
+    updateProgress();return true;
+  };
+
+  ayahButtons.forEach((button,index)=>button.addEventListener('click',()=>{void selectAyah(index,{revealInMushaf:true});}));
   play.addEventListener('click',()=>{void playAudio();});pause.addEventListener('click',pauseAudio);stop.addEventListener('click',stopAudio);restart.addEventListener('click',()=>{void restartAudio();});
   previousPage.addEventListener('click',()=>changePage(pageIndex-1));nextPage.addEventListener('click',()=>changePage(pageIndex+1));
   viewport.addEventListener('touchstart',event=>{const touch=event.changedTouches?.[0];if(!touch)return;touchStartX=touch.clientX;touchStartY=touch.clientY;},{passive:true});
@@ -293,8 +355,6 @@ function mountQuranSurahPlayerCore(host,{
       if(verseOverlay)verseOverlay.style.display=pageIndex===0&&sourceIndex===0?'':'none';
       return;
     }
-    // Quran SVG owns the verse polygons on EVERY Hafs page. Read the SVG being
-    // displayed (including fallback sources); never approximate coordinates.
     if(!ayahs.length||!Number.isInteger(surahNumber))return;
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
     void fetchOfficialAyahPolygons(src,surahNumber).then(geometry=>{
