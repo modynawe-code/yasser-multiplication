@@ -417,7 +417,8 @@ export function mountQuranSurahPlayer(host,options={}){
       attachToggle();
     });
     panel.append(label,button);
-    root.append(panel);
+    root.insertBefore(panel,root.querySelector('.quran-transport'));
+    // Keep the source choice visible before the transport buttons on phones.
   };
   if(isItqanPilotOrigin()){
     const ticket=++sourceTicket;
