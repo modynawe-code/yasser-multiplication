@@ -95,7 +95,7 @@ function mountQuranSurahPlayerCore(host,{
   image.loading='eager';
   viewport.appendChild(image);
   const overlayPaths=[];
-  let verseOverlay=null,overlayEpoch=0;
+  let verseOverlay=null,overlayEpoch=0,activeFocusRegion=null;
   const mountOfficialGeometry=geometry=>{
     verseOverlay?.remove();verseOverlay=null;overlayPaths.length=0;
     if(!geometry?.paths?.length)return;
@@ -104,6 +104,10 @@ function mountQuranSurahPlayerCore(host,{
     verseOverlay.classList.add('quran-mushaf-ayah-overlay');
     verseOverlay.setAttribute('viewBox',geometry.viewBox);
     verseOverlay.setAttribute('preserveAspectRatio','xMidYMid meet');
+    // The verified polygon SVG has the same viewBox as the displayed Mushaf.
+    // Move it exactly with the cropped original page; never derive new text.
+    if(activeFocusRegion)
+      verseOverlay.style.transform=`translateY(-${activeFocusRegion.top*100}%)`;
     verseOverlay.setAttribute('aria-label','اضغط الآية لتلاوتها من مصدر إتقان');
     for(const item of geometry.paths){
       const index=ayahs.findIndex(t=>t.ayahKey===item.ayahKey);
@@ -349,7 +353,8 @@ function mountQuranSurahPlayerCore(host,{
 
   const renderPage=()=>{
     const page=pages[pageIndex];
-    const focusRegion=ayahs.length?null:normalizedFocusRegion(page,surahNumber);
+    const focusRegion=normalizedFocusRegion(page,surahNumber);
+    activeFocusRegion=focusRegion;
     const sources=pageSources(page);
     sourceIndex=0;
     overlayEpoch++;
