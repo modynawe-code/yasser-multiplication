@@ -120,6 +120,12 @@
 .quran-range-play{grid-column:1/-1;background:#d6efdf;border:2px solid #488e63;color:#20583a;border-radius:12px;min-height:50px;font:inherit;font-weight:900}
 .quran-practice-guided{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border:1px solid #c1dbce;border-radius:15px;background:#f5fbf7;padding:12px}
 .quran-practice-guided>strong,.quran-practice-status{grid-column:1/-1}
+.quran-practice-steps{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:7px;list-style:none;margin:2px 0;padding:0}
+.quran-practice-step{min-height:42px;display:grid;place-items:center;padding:7px 5px;border-radius:12px;border:1px solid #c9d7ce;background:#fff;color:#52705e;font-size:14px;font-weight:850;text-align:center}
+.quran-practice-step[data-state="current"]{background:#deefe4;border-color:#4c9367;color:#1c5737;box-shadow:inset 0 0 0 1px #4c9367}
+.quran-practice-step[data-state="done"]{background:#ebf8ef;border-color:#9bc9ad;color:#376c49}
+.quran-practice-guided button:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
+.quran-practice-guided button:focus-visible{outline:3px solid #285f52;outline-offset:2px}
 .quran-practice-guided button{min-height:50px;border:2px solid #88b7a1;border-radius:12px;background:white;color:#235039;font:inherit;font-weight:800}
 .quran-practice-guided button[hidden]{display:none}
 .quran-practice-status{margin:3px 0 0;font-size:14px;font-weight:700;color:#295a3e}
