@@ -74,7 +74,7 @@ export async function buildItqanPilotCatalog({fetchImpl=fetch}={}){
       const raw=await listItqanPages('/recitations/'+recitation.id+'/',{fetchImpl});
       const tracks=raw.map(validateItqanTrack).filter(Boolean);
       const bySurah=new Map(tracks.map(track=>[track.surahNumber,track]));
-      const mustHave=[1,111,112,113,114,32,33,34,35,36,37,38,67,68];
+      const mustHave=[1,...Array.from({length:22},(_,i)=>93+i),32,33,34,35,36,37,38,67,68];
       // Prefer wide curricular coverage; other surahs are enabled only if validated.
       if(!mustHave.every(n=>bySurah.has(n))){failures.push('id-'+recitation.id+':missing-covered-surahs');continue;}
       return {
@@ -96,7 +96,7 @@ if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
     await writeFile(DEST,JSON.stringify(data,null,2)+'\n','utf8');
     console.log('Itqan CMS validated original-track catalog:',JSON.stringify({
       recitationId:data.recitationId,reciter:data.reciter,riwayah:data.riwayah,
-      surahs:Object.keys(data.tracks).length,required:[1,111,112,113,114,32,33,34,35,36,37,38,67,68]
+      surahs:Object.keys(data.tracks).length,missing:Array.from({length:114},(_,i)=>i+1).filter(i=>!data.tracks[String(i)]),required:'Khaled 1+93-114; Yasser 32-38+67-68; Mashaal 1+111-114'
     }));
   }).catch(error=>{console.error(error);process.exitCode=1;});
 }
