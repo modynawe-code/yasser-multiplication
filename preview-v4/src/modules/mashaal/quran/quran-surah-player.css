@@ -86,3 +86,17 @@
   .quran-surah-player.has-ayah-controls .quran-ayah-button{min-height:46px}
   .quran-surah-player.has-ayah-controls .quran-player-status{font-size:14px;min-height:20px}
 }
+
+/* Shared compact transport for all learners, even before per-ayah data exists. */
+@media(max-width:620px){
+  .quran-surah-player:not(.has-ayah-controls) .quran-transport{
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:8px
+  }
+  .quran-surah-player:not(.has-ayah-controls) .quran-control{
+    min-height:52px;gap:6px;padding:8px 9px;border-radius:14px
+  }
+  .quran-surah-player:not(.has-ayah-controls) .quran-control span{font-size:19px}
+  .quran-surah-player:not(.has-ayah-controls) .quran-control strong{
+    font-size:clamp(13px,3.6vw,16px);line-height:1.3
+  }
+}
