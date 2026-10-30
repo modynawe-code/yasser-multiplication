@@ -38,6 +38,8 @@ jobs:
           git clone --quiet https://github.com/Itqan-community/Munajjam.git /tmp/itqan-munajjam
           git -C /tmp/itqan-munajjam checkout --quiet c8012e12cb3d335728bd1ed61de38143d1b7781a
           python -m pip install --disable-pip-version-check '/tmp/itqan-munajjam/munajjam' 'faster-whisper>=1.1,<2'
+          echo 'PYTHONPATH=/tmp/itqan-munajjam/munajjam' >> "$GITHUB_ENV"
+          PYTHONPATH=/tmp/itqan-munajjam/munajjam python -c 'import munajjam.models; import munajjam.core; print("Munajjam source modules import OK")'
       - name: Generate an unapproved candidate using the bundled original audio
         working-directory: preview-v4
         env:
