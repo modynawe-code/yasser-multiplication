@@ -98,7 +98,8 @@ test('rejects incomplete and malformed Itqan pages without switching the player'
 test('pilot is limited to Khaled Fatiha and older three-child player paths stay compatible',async()=>{
   const khaled=await readFile(new URL('../src/modules/khaled/quran/khaled-quran.js',import.meta.url),'utf8');
   const shared=await readFile(new URL('../src/modules/mashaal/quran/quran-surah-player.js',import.meta.url),'utf8');
-  assert.match(khaled,/if\(item\.surahNumber===1\)/);
+  assert.match(khaled,/if\(item\.surahNumber===1&&isItqanPilotDebugEnabled\(\)\)/);
+  assert.match(khaled,/get\('itqanPilot'\)==='1'/);
   assert.match(khaled,/const verified=await loadItqanFatiha\(\)/);
   assert.match(khaled,/ayahTimings:verified\.ayahTimings/);
   assert.match(shared,/ayahTimings=null/);
