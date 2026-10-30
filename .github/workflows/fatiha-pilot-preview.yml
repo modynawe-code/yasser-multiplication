@@ -5,6 +5,9 @@ on:
       - feature/khaled-fatiha-itqan-pilot-20261030
     paths:
       - .github/workflows/fatiha-pilot-preview.yml
+      - 'preview-v4/src/modules/khaled/quran/**'
+      - 'preview-v4/src/modules/mashaal/quran/**'
+      - 'preview-v4/tests/fatiha-mushaf-polygon-highlight.test.mjs'
   workflow_dispatch:
 
 permissions:
@@ -80,6 +83,12 @@ jobs:
           grep -q '__FAMILY_API_DISABLED__=true' /tmp/fatiha-home.html
           curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/src/modules/khaled/quran/fatiha-review-candidate.js" -o /tmp/fatiha-cues.js
           grep -q 'ACOUSTIC_ONLY_UNVERIFIED' /tmp/fatiha-cues.js
+          curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/fatiha-page1-polygons.js" -o /tmp/fatiha-polygons.js
+          grep -q 'M 113.70 130.39' /tmp/fatiha-polygons.js
+          curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.js" -o /tmp/fatiha-player.js
+          grep -q 'paintListeningAyah' /tmp/fatiha-player.js
+          curl --fail --location --silent --show-error "$BASE/src/modules/mashaal/quran/quran-surah-player.css" -o /tmp/fatiha-style.css
+          grep -q 'quran-mushaf-ayah-path.is-current' /tmp/fatiha-style.css
           curl --fail --location --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/ibrahim-al-akhdar-hafs-1-al-fatiha.mp3" -o /tmp/fatiha-audio.mp3
           printf '%s  %s\n' '16d025c0ffbe8db50842b1963c74e37e8620da18fff4fa7588b0187ed15af4f4' /tmp/fatiha-audio.mp3 | sha256sum -c
           curl --fail --location --silent --show-error "$BASE/deployment-meta.json" | grep -q '"cloudSync": false'
