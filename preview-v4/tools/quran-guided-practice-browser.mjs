@@ -77,6 +77,18 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         return {start:timings[1].startMs/1000,end:timings[3].endMs/1000};
       },config.surahNumber);
       await page.locator('.quran-range-play').click();
+      // Buffering and recovery should show live, accurate playback state.
+      const playbackStatus=await page.evaluate(()=>{
+        const audio=window.__qaAudio.at(-1);
+        audio.dispatchEvent(new Event('waiting'));
+        const waiting=document.querySelector('.quran-player-status')?.textContent||'';
+        audio.dispatchEvent(new Event('playing'));
+        const resumed=document.querySelector('.quran-player-status')?.textContent||'';
+        return {waiting,resumed};
+      });
+      if(!playbackStatus.waiting.includes('تحميل التلاوة')
+        ||!playbackStatus.resumed.includes('تعمل التلاوة'))
+        throw Error(browserName+' '+learner+' incorrect buffering status '+JSON.stringify(playbackStatus));
       for(let cycle=1;cycle<=3;cycle++){
         const state=await page.evaluate(({end,start})=>{
           const audio=window.__qaAudio.at(-1);
