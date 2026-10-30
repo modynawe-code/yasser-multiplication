@@ -10,6 +10,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
 import {MASHAAL_RECITATION_MEDIA} from '../src/modules/mashaal/curriculum/recitation-media-manifest.js';
 
 const officialFatiha=MASHAAL_RECITATION_MEDIA.find(asset=>
@@ -70,6 +71,6 @@ async function main(){
   console.log(JSON.stringify(candidate,null,2));
 }
 
-if(process.argv[1]&&fileURLToPath(import.meta.url)===fileURLToPath(new URL('file://'+process.argv[1]))){
+if(process.argv[1]&&fileURLToPath(import.meta.url)===resolve(process.argv[1])){
   main().catch(error=>{console.error('Alignment not approved:',error.message);process.exitCode=1;});
 }
