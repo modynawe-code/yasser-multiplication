@@ -89,8 +89,8 @@ function ensureShell(){
 export function createKhaledQuranController({showView,onBack}={}){
   let term=1,player=null,bound=false,selectedSurah=null,pilotTicket=0;
   const byId=id=>document.getElementById(id);
-  const destroyPlayer=()=>{
-    pilotTicket++;
+  const destroyPlayer=(invalidate=true)=>{
+    if(invalidate)pilotTicket++;
     if(!player)return;
     try{player.destroy();}catch{}
     player=null;
@@ -132,7 +132,7 @@ export function createKhaledQuranController({showView,onBack}={}){
           const verified=await loadItqanFatiha();
           if(ticket!==pilotTicket||selectedSurah!==1)return;
           // Keep the existing local/external Akhdar player until the pair is validated.
-          destroyPlayer();
+          destroyPlayer(false);
           player=mountQuranSurahPlayer(playerHost,{
             surahNameAr:item.surahNameAr,surahNumber:1,
             audioPath:verified.audioPath,ayahTimings:verified.ayahTimings,
