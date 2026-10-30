@@ -46,6 +46,10 @@ try{
     return !!img&&img.complete&&img.naturalWidth>0&&sheet;
   },{timeout:15000});
   await page.locator('.quran-ayah-button').nth(1).click();
+  // After tapping below the fold, allow the mushaf auto-reveal to settle
+  // before checking viewport hit testing. Offscreen coordinates are not taps.
+  await page.locator('.quran-page-frame').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(350);
   const state=await page.evaluate(()=>{
     const img=document.querySelector('.quran-page-image');
     const svg=document.querySelector('svg.quran-mushaf-ayah-overlay');
