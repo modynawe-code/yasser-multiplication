@@ -61,22 +61,11 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         html:e.outerHTML.slice(0,900),
         options:[...e.options].slice(0,6).map(o=>({value:o.value,text:o.text,selected:o.selected}))
       })))));
-      console.log('SELECT_OPTIONS_DIAGNOSTIC',browserName,learner,
-        JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>({
-          options:[...e.options].slice(0,7).map(o=>({text:o.textContent,value:o.value,selected:o.selected})),
-          html:e.outerHTML.slice(0,550),name:e.getAttribute('aria-label')
-        })))));
-      const firstSelected=await page.locator('.quran-range-controls select').nth(0).selectOption({value:'1'});
-      console.log('SET_FROM',browserName,learner,JSON.stringify(firstSelected),
-        JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>e.value))));
-      const secondSelected=await page.locator('.quran-range-controls select').nth(1).selectOption({value:'3'});
-      console.log('SET_TO',browserName,learner,JSON.stringify(secondSelected),
-        JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>e.value))));
-      console.log('RANGE_BEFORE_CLICK',browserName,learner,JSON.stringify(await page.evaluate(()=>({
-        selects:[...document.querySelectorAll('.quran-range-controls select')].map(x=>x.value),
-        audioCount:window.__qaAudio.length,
-        source:document.querySelector('.quran-itqan-source-name')?.textContent
-      }))));
+      // Explicit values, not numeric labels: label "2" belongs to value "1".
+      await page.locator('.quran-range-controls select').nth(0).selectOption({value:'1'});
+      await page.locator('.quran-range-controls select').nth(1).selectOption({value:'3'});
+      const chosen=await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(el=>el.value));
+      if(chosen.join(',')!=='1,3')throw Error('Unexpected range values '+chosen.join(','));
       const data=await page.evaluate(async n=>{
         const catalog=await fetch('./assets/recitation/itqan-hafs-tracks.json').then(r=>r.json());
         const timings=catalog.tracks[String(n)]?.ayahTimings;
@@ -84,14 +73,6 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         return {start:timings[1].startMs/1000,end:timings[3].endMs/1000};
       },config.surahNumber);
       await page.locator('.quran-range-play').click();
-      const initial=await page.evaluate(()=>({
-        selects:[...document.querySelectorAll('.quran-range-controls select')].map(x=>x.value),
-        audioCount:window.__qaAudio.length,
-        audioStart:window.__qaAudio.at(-1).currentTime,
-        status:document.querySelector('.quran-player-status')?.textContent,
-        repeat:document.querySelector('[aria-label="عدد تكرارات الآية"]')?.value
-      }));
-      console.log('RANGE_START_DEBUG',browserName,learner,JSON.stringify(initial),JSON.stringify(data));
       for(let cycle=1;cycle<=3;cycle++){
         const state=await page.evaluate(({end,start})=>{
           const audio=window.__qaAudio.at(-1);
