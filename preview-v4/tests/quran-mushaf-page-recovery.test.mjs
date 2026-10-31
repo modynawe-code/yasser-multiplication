@@ -1,0 +1,49 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {pageSources} from '../src/modules/mashaal/quran/quran-surah-player.js';
+import {KHALED_QURAN_TERMS} from '../src/modules/khaled/quran/khaled-quran.js';
+
+const chapters=Object.values(KHALED_QURAN_TERMS).flat();
+const chapter=n=>chapters.find(item=>item.surahNumber===n);
+
+test('prefer the three verified, bundled Hafs SVG pages over external mirrors',()=>{
+  for(const [surah,page] of [[1,1],[111,603],[113,604]]){
+    const item=chapter(surah);
+    assert.ok(item,'missing school chapter '+surah);
+    const sources=pageSources(item.mushafPage);
+    assert.equal(sources[0],`./assets/recitation/kfqc-hafs-page-${page}.svg`);
+    assert.equal(new Set(sources).size,sources.length,'do not duplicate local fallback');
+    assert.ok(sources.some(src=>src.startsWith('https://')),
+      'retain verified remote mirrors for when local loading fails');
+  }
+});
+
+test('every current Khaled course page prefers locally bundled original artwork',()=>{
+  for(const item of chapters){
+    const sources=pageSources(item.mushafPage);
+    assert.equal(sources[0],
+      './assets/recitation/kfqc-hafs-page-'+item.pageNumber+'.svg');
+    assert.equal(item.mushafPage.offlineBundled,true);
+    assert.ok(sources.some(src=>src.startsWith('https://')));
+  }
+  const unknownSource=pageSources({
+    sourceId:'unverified',pageNumber:1,imageUrl:'https://example.test/a.svg'
+  });
+  assert.deepEqual(unknownSource,['https://example.test/a.svg']);
+});
+
+test('a failed page has a recoverable retry action without replacing Quran text',async()=>{
+  const player=await readFile(new URL('../src/modules/mashaal/quran/quran-surah-player.js',import.meta.url),'utf8');
+  assert.match(player,/retryPage\.addEventListener\('click',renderPage\)/);
+  assert.match(player,/figure\.dataset\.imageError='true';retryPage\.hidden=false/);
+  assert.match(player,/لا يتم استبدالها بنص مولّد/);
+  assert.match(player,/\.\.\.pageSources\(page\)/,
+    'matching pinned page mirrors remain available if a per-surah SVG fails');
+  assert.match(player,/geometryHint\.hidden=false/,
+    'the child must see why the page could not be highlighted');
+  assert.match(player,/retryHighlight\.addEventListener\('click',refreshGeometry\)/,
+    'failed geometry is retried without reloading the Quran page');
+
+  assert.match(player,/root\.append\(panel\)/,'keep transport, progress and live status before training');
+});

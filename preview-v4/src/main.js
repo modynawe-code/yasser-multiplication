@@ -33,6 +33,7 @@ import { createChallengePresentationRegistry } from './modules/games/core/challe
 import { createFamilyAuthClient } from './shared/sync/family-auth-client.js';
 import { createFamilySyncCapabilityRegistry } from './shared/sync/family-sync-capability-registry.js';
 import { createFamilySyncService } from './shared/sync/family-sync-service.js';
+import {createQuranPracticeCloudSync} from './shared/quran/quran-practice-cloud-sync.js';
 import { appendCloudSession } from './shared/sync/session-sync.js';
 import { createLocalBackupService } from './shared/backup/local-backup-service.js';
 import { resetLearnerScopedProgress } from './shared/progress/learner-scoped-reset.js';
@@ -104,6 +105,7 @@ syncCapabilities.register('mashaal',{
 let startupSignal;
 const cloudAuth=createFamilyAuthClient({getRequestSignal:()=>startupSignal});
 const cloudSync=createFamilySyncService({authClient:cloudAuth,capabilityRegistry:syncCapabilities});
+const quranPracticeSync=createQuranPracticeCloudSync({authClient:cloudAuth,storage:localBackup.storage});
 
 async function restoreFamilyCloudOnStart(){
   if(!cloudAuth.isConfigured())return false;
@@ -176,7 +178,7 @@ const familyParent=createFamilyParentController({
 });
 
 let goldVault=null;
-function leaveLearningAreas(){goldVault?.leave();cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
+function leaveLearningAreas(){document.dispatchEvent(new Event('family:stop-quran-audio'));goldVault?.leave();cabinet?.leave();yasser.leave();khaled.leave();mashaal.leave();familyParent.leave();}
 
 learnerRuntimes.register('yasser',{leave:()=>yasser.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();khaled.leave();mashaal.leave();familyParent.leave();document.body.classList.remove('hub-mode','khaled-mode','mashaal-mode','family-parent-mode','games-mode');if(!yasserStarted){yasserStarted=true;yasser.start();return;}yasser.enterHome();}});
 learnerRuntimes.register('khaled',{leave:()=>khaled.leave(),enter:()=>{independentGames?.leave();games?.leave();cabinet?.leave();yasser.leave();mashaal.leave();familyParent.leave();if(!khaledStarted){khaledStarted=true;khaled.start();return;}khaled.enter();}});
@@ -208,9 +210,12 @@ async function flushFamilyCloud(){
   try{
     if(!cloudAuth.isAuthenticated())await cloudAuth.reconnectFamily();
     await cloudSync.upload();
+    await quranPracticeSync.sync();
   }catch{}finally{familyCloudUploading=false;}
 }
 globalThis.setInterval?.(()=>{void flushFamilyCloud();},30000);
+globalThis.setTimeout?.(()=>{void flushFamilyCloud();},0);
+globalThis.addEventListener?.('family:quran-practice-changed',()=>{void flushFamilyCloud();});
 globalThis.addEventListener?.('online',()=>{void flushFamilyCloud();});
 globalThis.addEventListener?.('pagehide',()=>{void localBackup.flush();void flushFamilyCloud();});
 globalThis.addEventListener?.('visibilitychange',()=>{if(globalThis.document?.visibilityState==='hidden'){void localBackup.flush();void flushFamilyCloud();}});

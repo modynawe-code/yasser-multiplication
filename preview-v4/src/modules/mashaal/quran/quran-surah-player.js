@@ -1,4 +1,20 @@
+import {isItqanEnabledOrigin,loadItqanTrack} from '../../../shared/quran/itqan-catalog-source.js';
+import {fetchOfficialAyahPolygons} from '../../../shared/quran/quran-svg-ayah-polygons.js';
+import {findOfficialHafsPage,pageIndexInCurriculum} from '../../../shared/quran/quran-svg-page-index.js';
+import {findBundledQuranAyahPage,findBundledSurahView} from '../../../shared/quran/quran-course-page-map.js';
+import {loadQuranPractice,markQuranPractice,getQuranPracticeStage,practiceStorageKey} from '../../../shared/quran/quran-practice-progress.js';
+import {createQuranInstructionVoice} from '../../../shared/quran/quran-instruction-voice.js';
+
 const STYLE_KEY='quran-surah-player';
+// These pinned, verified Hafs SVG pages are already included in this repository.
+// Prefer them over remote CDNs so the first and last pages work offline.
+const BUNDLED_HAFS_PAGES=new Set([1,603,604]);
+// Decode lead-in for repeated MP3 verse seeks, without changing original timing.
+export function repeatSeekStartSeconds(startMs){
+  const ms=Number(startMs);
+  if(!Number.isFinite(ms)||ms<0)return 0;
+  return Math.max(0,(ms-350)/1000);
+}
 
 function ensureStyle(){
   if(document.querySelector(`link[data-module-style="${STYLE_KEY}"]`))return;
@@ -25,8 +41,12 @@ function normalizedFocusRegion(mushafPage,surahNumber){
   return Object.freeze({top,height,aspect,labelAr:String(region.labelAr||'').trim()});
 }
 
-function pageSources(mushafPage){
-  const values=[mushafPage?.imagePath,mushafPage?.imageUrl,...(Array.isArray(mushafPage?.fallbackImageUrls)?mushafPage.fallbackImageUrls:[])];
+export function pageSources(mushafPage){
+  const number=Number(mushafPage?.pageNumber);
+  const bundled=mushafPage?.sourceId==='kfgqpc-hafs-madinah-svg'
+    &&Number.isInteger(number)&&BUNDLED_HAFS_PAGES.has(number)
+    ?`./assets/recitation/kfqc-hafs-page-${number}.svg`:'';
+  const values=[bundled,mushafPage?.imagePath,mushafPage?.imageUrl,...(Array.isArray(mushafPage?.fallbackImageUrls)?mushafPage.fallbackImageUrls:[])];
   return [...new Set(values.map(value=>String(value||'').trim()).filter(Boolean))];
 }
 
@@ -36,13 +56,16 @@ function normalizedPages(mushafPage,mushafPages){
   return mushafPage&&pageSources(mushafPage).length?[mushafPage]:[];
 }
 
-export function mountQuranSurahPlayer(host,{
+function mountQuranSurahPlayerCore(host,{
   surahNameAr='السورة',
   surahNumber=null,
   audioPath='',
   mushafPage=null,
   mushafPages=null,
+  ayahTimings=null,
   durationSeconds=0,
+  autoFollowOfficialPages=false,
+  learnerId=null,
   retryPlayText='اضغطي تشغيل مرة ثانية',
   onCompleted=()=>{},
   onPageChange=()=>{}
@@ -52,6 +75,12 @@ export function mountQuranSurahPlayer(host,{
   ensureStyle();
 
   const pages=normalizedPages(mushafPage,mushafPages);
+  // Optional verse controls. Timing offsets MUST refer to the same audioPath.
+  const ayahs=Array.isArray(ayahTimings)?ayahTimings.filter(item=>
+    typeof item?.ayahKey==='string'&&Number.isFinite(item?.startMs)&&Number.isFinite(item?.endMs)
+    &&item.startMs>=0&&item.endMs>item.startMs
+  ):[];
+
   if(!pages.length)throw new Error('Verified mushaf page image is required');
 
   host.innerHTML='';
@@ -60,6 +89,7 @@ export function mountQuranSurahPlayer(host,{
 
   const root=document.createElement('section');
   root.className='quran-surah-player';
+  if(['khaled','yasser','mashaal'].includes(learnerId))root.classList.add('quran-learner-'+learnerId);
   root.setAttribute('aria-label',`مشغل سورة ${surahNameAr}`);
 
   const figure=document.createElement('figure');
@@ -73,10 +103,60 @@ export function mountQuranSurahPlayer(host,{
   image.decoding='async';
   image.loading='eager';
   viewport.appendChild(image);
+  const overlayPaths=[];
+  let verseOverlay=null,overlayEpoch=0,activeFocusRegion=null;
+  let showFullPage=false,surahViewTicket=0;
+  const mountOfficialGeometry=geometry=>{
+    verseOverlay?.remove();verseOverlay=null;overlayPaths.length=0;
+    if(!geometry?.paths?.length)return;
+    const ns='http://www.w3.org/2000/svg';
+    verseOverlay=document.createElementNS(ns,'svg');
+    verseOverlay.classList.add('quran-mushaf-ayah-overlay');
+    verseOverlay.setAttribute('viewBox',geometry.viewBox);
+    verseOverlay.setAttribute('preserveAspectRatio','xMidYMid meet');
+    // The verified polygon SVG has the same viewBox as the displayed Mushaf.
+    // Move it exactly with the cropped original page; never derive new text.
+    if(activeFocusRegion)
+      verseOverlay.style.transform=`translateY(-${activeFocusRegion.top*100}%)`;
+    verseOverlay.setAttribute('aria-label','اضغط الآية لتلاوتها من مصدر إتقان');
+    for(const item of geometry.paths){
+      const index=ayahs.findIndex(t=>t.ayahKey===item.ayahKey);
+      if(index<0)continue;
+      const path=document.createElementNS(ns,'path');
+      path.setAttribute('d',item.d);
+      path.classList.add('quran-mushaf-ayah-path');
+      path.setAttribute('role','button');
+      path.setAttribute('tabindex','0');
+      path.setAttribute('aria-label','تشغيل الآية '+String(index+1));
+      path.dataset.ayah=item.ayahKey;
+      path.addEventListener('click',()=>{void selectAyah(index);});
+      path.addEventListener('keydown',event=>{
+        if(event.key==='Enter'||event.key===' '){event.preventDefault();void selectAyah(index);}
+      });
+      overlayPaths.push(path);
+      verseOverlay.appendChild(path);
+    }
+    if(overlayPaths.length)viewport.appendChild(verseOverlay);
+    else verseOverlay=null;
+  };
 
+  const versePosition=document.createElement('p');
+  versePosition.className='quran-verse-position';
+  versePosition.hidden=!ayahs.length;
+  versePosition.setAttribute('aria-live','polite');
+  versePosition.textContent='اختر آية أو ابدأ التلاوة';
+  const geometryHint=document.createElement('p');
+  geometryHint.className='quran-geometry-hint';geometryHint.hidden=true;
+  geometryHint.setAttribute('role','status');
+  const retryHighlight=document.createElement('button');
+  retryHighlight.type='button';retryHighlight.className='quran-geometry-retry';
+  retryHighlight.textContent='إعادة محاولة التظليل';retryHighlight.hidden=true;
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
 
+  const viewToggle=document.createElement('button');
+  viewToggle.type='button';viewToggle.className='quran-full-page-toggle';
+  viewToggle.hidden=true;viewToggle.textContent='عرض الصفحة كاملة';
   const pageNav=document.createElement('div');
   pageNav.className='quran-page-nav';
   pageNav.setAttribute('role','group');
@@ -90,7 +170,10 @@ export function mountQuranSurahPlayer(host,{
   pageNav.append(previousPage,pageIndicator,nextPage);
   if(pages.length<2)pageNav.hidden=true;
 
-  figure.append(viewport,caption,pageNav);
+  const retryPage=document.createElement('button');
+  retryPage.type='button';retryPage.className='quran-page-retry';retryPage.hidden=true;
+  retryPage.textContent='إعادة تحميل صفحة المصحف';
+  figure.append(versePosition,viewport,caption,viewToggle,geometryHint,retryHighlight,pageNav,retryPage);
 
   const audio=new Audio(audioPath);
   audio.preload='metadata';
@@ -123,9 +206,199 @@ export function mountQuranSurahPlayer(host,{
   status.className='quran-player-status';status.setAttribute('aria-live','polite');status.textContent='جاهزة للاستماع';
 
   root.append(figure,transport,progressWrap,status);
+  const ayahButtons=[];
+  let repeatSelect=null,fromSelect=null,toSelect=null,practiceHint=null,practiceBlindButton=null;
+  let repeatDoneButton=null,reviewedButton=null,practiceStartButton=null,updatePracticeStep=()=>{};
+  let practiceBlind=false,blindWasUsed=false;
+  const instructionVoice=createQuranInstructionVoice();
+  const stopInstructionVoice=()=>instructionVoice.stop();
+  const resetPracticeConfirmation=()=>{
+    if(repeatDoneButton)repeatDoneButton.disabled=true;
+    if(practiceBlindButton)practiceBlindButton.disabled=true;
+    if(reviewedButton)reviewedButton.disabled=true;
+    blindWasUsed=false;
+    if(practiceBlind){
+      practiceBlind=false;figure.classList.remove('quran-practice-blind');
+      if(practiceBlindButton)practiceBlindButton.textContent='اختبر نفسي غيب';
+    }
+    updatePracticeStep('');
+  };
+  const canStorePractice=Boolean(practiceStorageKey(learnerId));
+  if(ayahs.length){
+    root.classList.add('has-ayah-controls');
+    const panel=document.createElement('div');panel.className='quran-ayah-controls';
+    panel.setAttribute('role','group');panel.setAttribute('aria-label','التدريب على الآيات');
+    const heading=document.createElement('div');heading.className='quran-ayah-heading';
+    const title=document.createElement('strong');title.textContent='اسمع الآية وكررها';
+    const label=document.createElement('label');label.textContent='التكرار ';
+    repeatSelect=document.createElement('select');
+    repeatSelect.setAttribute('aria-label','عدد تكرارات الآية');
+    for(const count of [1,3,5]){
+      const option=document.createElement('option');option.value=String(count);option.textContent=count===1?'مرة':count+' مرات';
+      if(count===3)option.selected=true;
+      repeatSelect.appendChild(option);
+    }
+    label.appendChild(repeatSelect);heading.append(title,label);
+    const buttons=document.createElement('div');buttons.className='quran-ayah-buttons';
+    for(let index=0;index<ayahs.length;index++){
+      const button=document.createElement('button');button.type='button';
+      button.className='quran-ayah-button';button.textContent='الآية '+String(index+1);
+      button.setAttribute('aria-pressed','false');button.dataset.ayah=ayahs[index].ayahKey;
+      if(canStorePractice){
+        const record=getQuranPracticeStage(learnerId,surahNumber,index+1);
+        if(record){
+          button.dataset.practiceStage=record.stage;
+          button.title=record.stage==='reviewed'?'راجعته غيب'
+            :record.stage==='repeated'?'تدربت عليه':'استمعت إليه';
+        }
+      }
+      ayahButtons.push(button);buttons.appendChild(button);
+    }
+    panel.append(heading,buttons);
+    const range=document.createElement('details');
+    range.className='quran-range-controls';
+    const rangeTitle=document.createElement('summary');
+    rangeTitle.textContent='خيارات تكرار مجموعة آيات';
+    const rangeBody=document.createElement('div');
+    rangeBody.className='quran-range-body';
+    const fromLabel=document.createElement('label');fromLabel.textContent='من الآية';
+    const toLabel=document.createElement('label');toLabel.textContent='إلى الآية';
+    fromSelect=document.createElement('select');toSelect=document.createElement('select');
+    fromSelect.setAttribute('aria-label','من الآية');toSelect.setAttribute('aria-label','إلى الآية');
+    for(let index=0;index<ayahs.length;index++){
+      for(const control of [fromSelect,toSelect]){
+        const option=document.createElement('option');
+        option.value=String(index);option.textContent=String(index+1);control.append(option);
+      }
+    }
+    const lastPractice=canStorePractice?loadQuranPractice(learnerId).last:null;
+    const resume=lastPractice?.surahNumber===surahNumber
+      ?Math.max(0,ayahs.findIndex(item=>item.ayahKey===surahNumber+':'+lastPractice.ayahNumber)):0;
+    fromSelect.value=String(resume);
+    toSelect.value=String(Math.min(ayahs.length-1,resume+2));
+    fromLabel.append(fromSelect);toLabel.append(toSelect);
+    const rangePlay=document.createElement('button');
+    rangePlay.type='button';rangePlay.className='quran-range-play';
+    rangePlay.textContent='استمع للنطاق وكرره';
+    rangeBody.append(fromLabel,toLabel,rangePlay);
+    range.append(rangeTitle,rangeBody);
+    panel.append(range);
+    if(canStorePractice){
+      const practice=document.createElement('div');
+      practice.className='quran-practice-guided';
+      const guide=document.createElement('strong');
+      guide.textContent=learnerId==='khaled'?'اسمع الآيات ثم رددها بصوتك'
+        :learnerId==='mashaal'?'اسمعي الآيات ثم ردديها':'تدرّب على الحفظ والتسميع';
+      const startListen=document.createElement('button');
+      startListen.type='button';startListen.className='quran-practice-listen';
+      startListen.textContent=learnerId==='mashaal'?'ابدئي الاستماع للآيات':'ابدأ الاستماع للآيات';
+      practiceStartButton=startListen;
+      // OS spoken instructions are optional and NEVER used to recite Quran.
+      // They are activated by the child's gesture, and paused before playback.
+      const instruction=document.createElement('button');
+      instruction.type='button';instruction.className='quran-practice-instruction';
+      instruction.textContent='🔊 اسمع التعليمات';
+      instruction.hidden=learnerId==='yasser'||!instructionVoice.available();
+      instruction.addEventListener('click',()=>{
+        if(instruction.hidden)return;
+        const line=learnerId==='khaled'
+          ?(repeatDone.disabled?'اضغط ابدأ الاستماع، واستمع للآيات بهدوء.':'الآن ردد الآيات بصوتك، ثم اضغط رددت.')
+          :(repeatDone.disabled?'اضغطي ابدأ الاستماع، ثم استمعي للآيات.':'الآن رددي الآيات بصوتك، ثم اضغطي رددت.');
+        audio.pause();instructionVoice.speak(line);
+      });
+      const repeatDone=document.createElement('button');
+      repeatDone.type='button';repeatDone.className='quran-practice-done';repeatDone.disabled=true;
+      repeatDoneButton=repeatDone;
+      repeatDone.textContent=learnerId==='mashaal'?'رددت الآيات':'رددت الآيات بنفسي';
+      practiceBlindButton=document.createElement('button');
+      practiceBlindButton.type='button';practiceBlindButton.className='quran-practice-blind';practiceBlindButton.disabled=true;
+      practiceBlindButton.textContent=learnerId==='mashaal'?'إظهار المصحف':'اختبر نفسي غيب';
+      const reviewed=document.createElement('button');
+      reviewed.type='button';reviewed.className='quran-practice-reviewed';reviewed.disabled=true;
+      reviewedButton=reviewed;
+      reviewed.textContent='راجعت بنفسي';
+      if(learnerId==='mashaal'){reviewed.hidden=true;practiceBlindButton.hidden=true;}
+      const stageList=document.createElement('ol');
+      stageList.className='quran-practice-steps';
+      stageList.setAttribute('aria-label','خطوات الحفظ');
+      const names=learnerId==='mashaal'?['استمعي','رددي']:['استمع','ردد','اختبر'];
+      const nodes=names.map((name,index)=>{
+        const li=document.createElement('li');
+        li.className='quran-practice-step';li.textContent=name;
+        li.dataset.state=index===0?'current':'pending';
+        stageList.append(li);
+        return li;
+      });
+      updatePracticeStep=stage=>{
+        const done=stage==='reviewed'?3:stage==='repeated'?2:stage==='listened'?1:0;
+        nodes.forEach((node,index)=>{
+          node.dataset.state=index<done?'done':index===done?'current':'pending';
+          if(index===done)node.setAttribute('aria-current','step');
+          else node.removeAttribute('aria-current');
+        });
+        // One next action at a time; don't overwhelm children with disabled buttons.
+        startListen.hidden=done!==0;
+        repeatDone.hidden=done!==1;
+        const readyToReview=done===2&&blindWasUsed&&!practiceBlind&&!reviewed.disabled;
+        practiceBlindButton.hidden=learnerId==='mashaal'||done!==2||readyToReview;
+        reviewed.hidden=learnerId==='mashaal'||!readyToReview;
+      };
+      practiceHint=document.createElement('p');
+      practiceHint.className='quran-practice-status';practiceHint.setAttribute('role','status');
+      practiceHint.textContent='اختر آياتك، استمع للتلاوة، ثم ردد بنفسك';
+      practice.append(guide,stageList,instruction,startListen,repeatDone,practiceBlindButton,reviewed,practiceHint);
+      // Place the active learning action before the per-verse button grid.
+      panel.insertBefore(practice,buttons);
+      startListen.addEventListener('click',()=>{
+        void selectRange(Number(fromSelect.value),Number(toSelect.value));
+      });
+      updatePracticeStep('');
+      repeatDone.addEventListener('click',()=>recordPractice('repeated'));
+      practiceBlindButton.addEventListener('click',()=>{
+        if(learnerId==='mashaal')return;
+        practiceBlind=!practiceBlind;
+        if(practiceBlind)blindWasUsed=true;
+        if(!practiceBlind&&blindWasUsed&&reviewedButton)reviewedButton.disabled=false;
+        audio.pause();
+        figure.classList.toggle('quran-practice-blind',practiceBlind);
+        practiceBlindButton.textContent=practiceBlind?'أظهر المصحف':'اختبر نفسي غيب';
+        updatePracticeStep('repeated');
+        practiceHint.textContent=practiceBlind?'اختبر حفظك بنفسك، ثم أظهر المصحف للتأكد':'ظهر المصحف للتحقق من إجابتك';
+      });
+      reviewed.addEventListener('click',()=>{
+        if(practiceBlind){practiceHint.textContent='أظهر المصحف أولًا للتحقق من التسميع';return;}
+        recordPractice('reviewed');
+      });
+    }
+    fromSelect.addEventListener('change',()=>{
+      if(Number(toSelect.value)<Number(fromSelect.value))toSelect.value=fromSelect.value;
+      resetPracticeConfirmation();
+      audio.pause();clearAyahSelection();fullSurahListening=false;
+      status.textContent='نطاق جديد — اضغط استمع للنطاق وكرره';
+      if(practiceHint)practiceHint.textContent='اخترت نطاقًا جديدًا؛ استمع له قبل تسجيل الترديد';
+    });
+    toSelect.addEventListener('change',()=>{
+      if(Number(fromSelect.value)>Number(toSelect.value))fromSelect.value=toSelect.value;
+      resetPracticeConfirmation();
+      audio.pause();clearAyahSelection();fullSurahListening=false;
+      status.textContent='نطاق جديد — اضغط استمع للنطاق وكرره';
+      if(practiceHint)practiceHint.textContent='اخترت نطاقًا جديدًا؛ استمع له قبل تسجيل الترديد';
+    });
+    rangePlay.addEventListener('click',()=>{void selectRange(Number(fromSelect.value),Number(toSelect.value));});
+    // Keep the playback state visible immediately below transport and seek.
+    root.append(panel);
+  }
   host.appendChild(root);
 
-  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
+  let requestedAyahKey='',followTicket=0;
+  let selectedAyahIndex=-1,selectedAyahEndIndex=-1,ayahRepeatCount=0;
+  let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,fullSurahListening=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
+  let replaySeekPending=false,replaySeekListener=null,replaySeekFallback=null;
+  const cancelReplaySeek=()=>{
+    if(replaySeekListener)audio.removeEventListener('seeked',replaySeekListener);
+    if(replaySeekFallback!==null)clearTimeout(replaySeekFallback);
+    replaySeekListener=null;replaySeekFallback=null;replaySeekPending=false;
+  };
   const rangeEnd=range=>{
     try{
       const length=Number(range?.length)||0;
@@ -154,28 +427,86 @@ export function mountQuranSurahPlayer(host,{
   const renderPage=()=>{
     const page=pages[pageIndex];
     const focusRegion=normalizedFocusRegion(page,surahNumber);
-    const sources=pageSources(page);
+    activeFocusRegion=focusRegion;
+    const hasIsolated=!showFullPage&&Boolean(page?.isolatedImagePath);
+    const sources=hasIsolated
+      ?[page.isolatedImagePath,...pageSources(page)]:pageSources(page);
     sourceIndex=0;
-    figure.removeAttribute('data-image-error');
-    if(focusRegion){
+    overlayEpoch++;
+    if(verseOverlay)mountOfficialGeometry(null);
+    figure.removeAttribute('data-image-error');retryPage.hidden=true;geometryHint.hidden=true;retryHighlight.hidden=true;
+    viewport.removeAttribute('data-official-focus');
+    viewport.removeAttribute('data-source-view');
+    viewToggle.hidden=!page?.isolatedImagePath&&!focusRegion;
+    viewToggle.textContent=showFullPage?'عرض السورة فقط':'عرض الصفحة كاملة';
+    if(hasIsolated){
+      // Let the source SVG define its own exact geometry. No CSS crop.
+      const dims=String(page.isolatedViewBox||'').split(/\s+/).map(Number);
+      activeFocusRegion=null;
+      figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');
+      image.style.removeProperty('transform');
+      viewport.style.aspectRatio=String(dims[2]/dims[3]);
+    }else if(showFullPage){
+      activeFocusRegion=null;
+      figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');
+      viewport.style.removeProperty('aspect-ratio');image.style.removeProperty('transform');
+    }else if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
     }else{
       figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');viewport.style.removeProperty('aspect-ratio');image.style.removeProperty('transform');
     }
     image.src=sources[0];
-    image.alt=focusRegion?`سورة ${surahNameAr} كما تظهر في صفحة ${page?.pageNumber||''} من مصحف المدينة`:`صفحة ${page?.pageNumber||''} من المصحف التي تحتوي على سورة ${surahNameAr}`;
+    image.alt=hasIsolated||focusRegion&&!showFullPage
+      ?`سورة ${surahNameAr} كما تظهر في صفحة ${page?.pageNumber||''} من مصحف المدينة`
+      :`صفحة ${page?.pageNumber||''} من المصحف التي تحتوي على سورة ${surahNameAr}`;
     const pageLabel=page?.pageNumber?` • صفحة ${page.pageNumber}`:'';
     caption.textContent=focusRegion?`${focusRegion.labelAr||`سورة ${surahNameAr}`} • من مصحف المدينة${pageLabel} • حفص عن عاصم`:`مصحف المدينة • حفص عن عاصم${pageLabel}`;
     pageIndicator.textContent=`صفحة ${pageIndex+1} من ${pages.length}`;
     previousPage.disabled=pageIndex===0;nextPage.disabled=pageIndex===pages.length-1;
     onPageChange({index:pageIndex,count:pages.length,pageNumber:page?.pageNumber||null});
+    // Mashaal's synchronous player uses the same verified map as Khaled/Yasser.
+    // A stale async lookup must never replace a different selected page.
+    const ticket=++surahViewTicket,number=page?.pageNumber,index=pageIndex;
+    if(!page?.isolatedImagePath&&Number.isInteger(number))
+      void findBundledSurahView(number,surahNumber).then(view=>{
+        if(!view||destroyed||ticket!==surahViewTicket||index!==pageIndex)return;
+        pages[index]={...pages[index],isolatedImagePath:view.imagePath,
+          isolatedViewBox:view.viewBox};
+        if(!showFullPage)renderPage();
+        else{viewToggle.hidden=false;viewToggle.textContent='عرض السورة فقط';}
+      }).catch(()=>{});
+    
   };
+  viewToggle.addEventListener('click',()=>{
+    if(viewToggle.hidden)return;
+    showFullPage=!showFullPage;renderPage();
+  });
   const changePage=next=>{
     const target=Math.max(0,Math.min(pages.length-1,next));
     if(target===pageIndex)return;
     pageIndex=target;renderPage();
   };
 
+  const followAyahPage=index=>{
+    if(!autoFollowOfficialPages||pages.length<2||index<0||destroyed)return;
+    const key=ayahs[index]?.ayahKey;
+    if(!key||key===requestedAyahKey)return;
+    requestedAyahKey=key;
+    const ticket=++followTicket;
+    // Official Quran SVG JSON is the canonical ayah-to-mushaf-page mapping.
+    // No inferred page offsets and no alteration of school progress levels.
+    const [sura,verse]=key.split(':').map(Number);
+    // Local map was generated from verified page polygons at build time.
+    // Avoid runtime CDN dependency; canonical Quran SVG JSON is fallback.
+    void findBundledQuranAyahPage(sura,verse).then(async page=>{
+      const pageNumber=page??await findOfficialHafsPage(sura,verse);
+      if(destroyed||ticket!==followTicket||pageNumber==null)return;
+      const next=pageIndexInCurriculum(pages,pageNumber);
+      if(next>=0&&next!==pageIndex)changePage(next);
+    }).catch(()=>{
+      // Keep playing even if both the local map and CDN are unavailable.
+    });
+  };
   const updateProgress=()=>{
     if(destroyed||seeking)return;
     const duration=finiteDuration(),current=Number(audio.currentTime)||0;
@@ -183,36 +514,329 @@ export function mountQuranSurahPlayer(host,{
     if(!duration)progress.disabled=true;
     paintSeek(current,duration);time.textContent=`${formatTime(current)} / ${duration?formatTime(duration):'--:--'}`;
   };
-  const beginSeek=()=>{if(seeking||!finiteDuration())return;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
+  const beginSeek=()=>{if(seeking||!finiteDuration())return;cancelReplaySeek();fullSurahListening=false;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
   const previewSeek=()=>{const duration=finiteDuration();if(!duration)return;if(!seeking)beginSeek();const target=seekValue();try{audio.currentTime=target;}catch{}paintSeek(target,duration);time.textContent=`${formatTime(target)} / ${formatTime(duration)}`;};
-  const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;const shouldResume=resumeAfterSeek,target=seekValue();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
-  const markCompleted=()=>{completed=true;status.textContent='انتهت التلاوة';updateProgress();onCompleted();};
-  const playAudio=async()=>{try{await audio.play();status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';return true;}catch{status.textContent=retryPlayText;return false;}};
-  const pauseAudio=()=>{audio.pause();status.textContent='متوقفة مؤقتًا';};
-  const restartAudio=async()=>{audio.pause();audio.currentTime=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
-  const stopAudio=()=>{audio.pause();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();status.textContent='متوقفة';};
+  const paintListeningAyah=()=>{
+    const ms=(Number(audio.currentTime)||0)*1000;
+    const current=selectedAyahIndex>=0
+      ?(ayahs.findIndex((ayah,index)=>index>=selectedAyahIndex
+         &&index<=selectedAyahEndIndex&&ms>=ayah.startMs&&ms<ayah.endMs)
+         >=0?ayahs.findIndex((ayah,index)=>index>=selectedAyahIndex
+           &&index<=selectedAyahEndIndex&&ms>=ayah.startMs&&ms<ayah.endMs):selectedAyahIndex)
+      :(audio.paused?-1:ayahs.findIndex((ayah,index)=>ms>=ayah.startMs
+         &&(ms<ayah.endMs||(index===ayahs.length-1&&ms<=ayah.endMs))));
+    if(ayahs.length){
+      const text=current>=0?'الآية '+String(current+1)+' من '+String(ayahs.length)
+        :'اختر آية أو ابدأ التلاوة';
+      if(versePosition.textContent!==text)versePosition.textContent=text;
+    }
+    ayahButtons.forEach((button,index)=>{
+      const isCurrent=index===current;
+      button.classList.toggle('is-current',isCurrent);
+      if(isCurrent)button.setAttribute('aria-current','true');
+      else button.removeAttribute('aria-current');
+    });
+    overlayPaths.forEach(path=>{
+      const isCurrent=path.dataset.ayah===ayahs[current]?.ayahKey;
+      path.classList.toggle('is-current',isCurrent);
+      if(isCurrent)path.setAttribute('aria-current','true');
+      else path.removeAttribute('aria-current');
+    });
+    followAyahPage(current);
+  };
+  const paintAyahSelection=()=>{
+    ayahButtons.forEach((button,index)=>{
+      const active=index===selectedAyahIndex;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    paintListeningAyah();
+  };
+  const clearAyahSelection=()=>{
+    cancelReplaySeek();selectedAyahIndex=-1;selectedAyahEndIndex=-1;ayahRepeatCount=0;paintAyahSelection();
+  };
+  const rangeSelection=()=>{
+    const start=Number(fromSelect?.value),end=Number(toSelect?.value);
+    if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end<start||end>=ayahs.length)return null;
+    return {start,end,fromAyah:start+1,toAyah:end+1};
+  };
+  const recordPractice=stage=>{
+    const range=rangeSelection();
+    if(!canStorePractice||!range)return false;
+    const stored=markQuranPractice(learnerId,{
+      surahNumber,fromAyah:range.fromAyah,toAyah:range.toAyah,stage
+    });
+    if(stored){
+      updatePracticeStep(stage);
+      if(stage==='listened'&&repeatDoneButton)repeatDoneButton.disabled=false;
+      if(stage==='repeated'&&practiceBlindButton)practiceBlindButton.disabled=false;
+      const progress=loadQuranPractice(learnerId).records;
+      ayahButtons.forEach((button,index)=>{
+        const state=progress[surahNumber+':'+String(index+1)]?.stage||'';
+        button.dataset.practiceStage=state;
+        button.title=state==='reviewed'?'راجعته غيب':state==='repeated'?'تدربت عليه':state==='listened'?'استمعت إليه':'';
+      });
+    }
+    if(practiceHint){
+      practiceHint.textContent=stored
+        ?(stage==='listened'?'انتهى الاستماع، الآن ردد بنفسك':stage==='repeated'?'تم تسجيل الترديد الذي أكدته':'تم تسجيل مراجعتك الذاتية، وليست درجة تسميع آلية')
+        :'تعذر حفظ التقدم على هذا الجهاز';
+    }
+    return stored;
+  };
+  const selectRange=async (start,end)=>{
+    if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end<start||end>=ayahs.length||destroyed)return;
+    cancelReplaySeek();resetPracticeConfirmation();
+    fullSurahListening=false;
+    audio.pause();selectedAyahIndex=start;selectedAyahEndIndex=end;
+    ayahRepeatCount=0;completed=false;seeking=false;
+    try{audio.currentTime=ayahs[start].startMs/1000;}
+    catch{clearAyahSelection();status.textContent='تعذر بدء النطاق';return;}
+    paintAyahSelection();updateProgress();
+    status.textContent='الآيات '+String(start+1)+' إلى '+String(end+1)+' — استمع ثم ردد';
+    await playAudio();
+  };
+  const commitSeek=()=>{const duration=finiteDuration();if(!duration)return;fullSurahListening=false;const shouldResume=resumeAfterSeek,target=seekValue();clearAyahSelection();try{audio.currentTime=target;}catch{}seeking=false;resumeAfterSeek=false;completed=false;paintSeek(target,duration);updateProgress();if(shouldResume){void playAudio();}else status.textContent='جاهزة من الموضع الجديد';};
+  const markCompleted=()=>{
+    const eligible=fullSurahListening&&selectedAyahIndex<0&&ayahs.length&&canStorePractice;
+    fullSurahListening=false;completed=true;
+    const logged=eligible&&recordPractice('listened');
+    status.textContent=logged?'انتهت التلاوة — الآن يمكنك ترديد نطاق الآيات المختار':'انتهت التلاوة';
+    if(ayahs.length&&!logged&&practiceHint)
+      practiceHint.textContent='للبدء بالحفظ اضغط «استمع للنطاق وكرره» أولًا';
+    updateProgress();onCompleted();
+  };
+  const playAudio=async()=>{try{stopInstructionVoice();await audio.play();if(selectedAyahIndex<0&&!seeking&&audio.currentTime<0.5)fullSurahListening=true;status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
+  const pauseAudio=()=>{audio.pause();paintListeningAyah();status.textContent='متوقفة مؤقتًا';};
+  const restartAudio=async()=>{cancelReplaySeek();fullSurahListening=false;audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
+  const stopAudio=()=>{cancelReplaySeek();fullSurahListening=false;audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
+  const stopOnFamilyNavigation=()=>stopAudio();
+  document.addEventListener('family:stop-quran-audio',stopOnFamilyNavigation);
+  const showHighlightedVerseOnMushaf=()=>{
+    if(!verseOverlay)return;
+    const rect=figure.getBoundingClientRect();
+    const viewHeight=Number(globalThis.innerHeight)||0;
+    if(!viewHeight)return;
+    const visible=Math.max(0,Math.min(rect.bottom,viewHeight)-Math.max(rect.top,0));
+    // The verse buttons are below the large page on a phone. Without this,
+    // users can hear the ayah but cannot see its highlight above the fold.
+    if(visible<Math.min(260,rect.height/2)){
+      figure.scrollIntoView({
+        behavior:globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',
+        block:'center'
+      });
+    }
+  };
+  const selectAyah=async (index,{revealInMushaf=false}={})=>{
+    if(!ayahs[index]||destroyed)return;
+    if(fromSelect)fromSelect.value=String(index);
+    if(toSelect)toSelect.value=String(index);
+    await selectRange(index,index);
+    if(revealInMushaf)showHighlightedVerseOnMushaf();
+  };
+  const handleAyahBoundary=()=>{
+    if(replaySeekPending)return true;
+    if(selectedAyahIndex<0||destroyed||seeking)return false;
+    const item=ayahs[selectedAyahEndIndex>=selectedAyahIndex?selectedAyahEndIndex:selectedAyahIndex];
+    if(!item||audio.currentTime*1000<item.endMs-50)return false;
+    ayahRepeatCount++;
+    const target=Number(repeatSelect?.value)||1;
+    if(ayahRepeatCount<target){
+      // Pause during the media seek; otherwise Safari/MP3 can skip opening
+      // consonants when starting the next repetition.
+      const replayStart=repeatSeekStartSeconds(ayahs[selectedAyahIndex].startMs);
+      audio.pause();replaySeekPending=true;
+      const resumeReplay=()=>{
+        if(!replaySeekPending||destroyed)return;
+        cancelReplaySeek();
+        status.textContent='إعادة الآية '+String(selectedAyahIndex+1)+' — '+String(ayahRepeatCount+1)+' من '+String(target);
+        paintListeningAyah();
+        void playAudio();
+      };
+      replaySeekListener=resumeReplay;
+      audio.addEventListener('seeked',resumeReplay,{once:true});
+      // No-op seeks may not emit seeked. Install recovery before setting
+      // currentTime, so a synchronous media event cannot leave a stray timer.
+      replaySeekFallback=setTimeout(()=>{
+        if(replaySeekPending&&!audio.seeking
+          &&Math.abs((Number(audio.currentTime)||0)-replayStart)<0.12)resumeReplay();
+      },800);
+      try{audio.currentTime=replayStart;}
+      catch{cancelReplaySeek();clearAyahSelection();audio.pause();status.textContent='تعذر إعادة الآية';return true;}
+    }else{
+      const start=selectedAyahIndex+1,end=selectedAyahEndIndex+1;
+      audio.pause();
+      if(fromSelect&&toSelect){fromSelect.value=String(start-1);toSelect.value=String(end-1);recordPractice('listened');}
+      clearAyahSelection();
+      status.textContent=start===end?'اكتمل تكرار الآية '+start:'اكتمل تكرار الآيات '+start+' إلى '+end;
+    }
+    updateProgress();return true;
+  };
 
+  ayahButtons.forEach((button,index)=>button.addEventListener('click',()=>{void selectAyah(index,{revealInMushaf:true});}));
   play.addEventListener('click',()=>{void playAudio();});pause.addEventListener('click',pauseAudio);stop.addEventListener('click',stopAudio);restart.addEventListener('click',()=>{void restartAudio();});
   previousPage.addEventListener('click',()=>changePage(pageIndex-1));nextPage.addEventListener('click',()=>changePage(pageIndex+1));
   viewport.addEventListener('touchstart',event=>{const touch=event.changedTouches?.[0];if(!touch)return;touchStartX=touch.clientX;touchStartY=touch.clientY;},{passive:true});
   viewport.addEventListener('touchend',event=>{const touch=event.changedTouches?.[0];if(!touch)return;const dx=touch.clientX-touchStartX,dy=touch.clientY-touchStartY;if(Math.abs(dx)<45||Math.abs(dx)<=Math.abs(dy)*1.2)return;if(dx<0)changePage(pageIndex+1);else changePage(pageIndex-1);},{passive:true});
   progress.addEventListener('pointerdown',beginSeek);progress.addEventListener('input',previewSeek);progress.addEventListener('change',commitSeek);progress.addEventListener('pointerup',commitSeek);progress.addEventListener('pointercancel',commitSeek);
-  audio.addEventListener('timeupdate',updateProgress);
+  audio.addEventListener('timeupdate',()=>{updateProgress();handleAyahBoundary();paintListeningAyah();});
   audio.addEventListener('loadedmetadata',updateProgress);
   audio.addEventListener('durationchange',updateProgress);
   audio.addEventListener('progress',updateProgress);
   audio.addEventListener('canplay',updateProgress);
-  audio.addEventListener('ended',markCompleted);
+  audio.addEventListener('waiting',()=>{
+    if(!destroyed&&!audio.paused)status.textContent='جاري تحميل التلاوة...';
+  });
+  audio.addEventListener('stalled',()=>{
+    if(!destroyed&&!audio.paused)status.textContent='اتصال التلاوة بطيء — جاري المحاولة';
+  });
+  audio.addEventListener('playing',()=>{
+    if(!destroyed)status.textContent='تعمل التلاوة الآن';
+  });
+  audio.addEventListener('ended',()=>{if(!handleAyahBoundary())markCompleted();});
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
-  image.addEventListener('load',()=>{figure.removeAttribute('data-image-error');});
-  image.addEventListener('error',()=>{const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
+  const refreshGeometry=()=>{
+    figure.removeAttribute('data-image-error');retryPage.hidden=true;
+    if(!Number.isInteger(surahNumber)||pages[pageIndex]?.sourceId!=='kfgqpc-hafs-madinah-svg')return;
+    const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
+    // The displayed original page may load via <img> even when a CORS fetch
+    // for its polygon geometry fails. Try only the same verified page mirrors.
+    const page=pages[pageIndex];
+    const candidates=[...new Set([src,
+      ...(!showFullPage&&page?.isolatedImagePath?[page.isolatedImagePath]:[]),
+      ...pageSources(page)])];
+    void (async()=>{
+      for(const candidate of candidates){
+        try{return await fetchOfficialAyahPolygons(candidate,surahNumber);}
+        catch{/* Use the next trusted mirror; never generate polygons. */}
+      }
+      throw new Error('quran-polygon-geometry-unavailable');
+    })().then(geometry=>{
+      if(destroyed||thisEpoch!==overlayEpoch)return;
+      // Prefer crop boundaries calculated from the authoritative SAME page.
+      // Preserve the existing manual focus when the pinned SVG lacks polygons.
+      const original=normalizedFocusRegion(pages[pageIndex],surahNumber);
+      const cropped=geometry?.focusRegion;
+      const pageAspect=Number(pages[pageIndex]?.imageAspectRatio);
+      const usingSourceView=!showFullPage&&sourceIndex===0
+        &&Boolean(pages[pageIndex]?.isolatedImagePath)
+        &&src.endsWith(pages[pageIndex].isolatedImagePath.replace(/^\./,''));
+      const box=geometry?.viewBox?.split(/\s+/).map(Number);
+      if(usingSourceView&&box?.length===4&&box.every(Number.isFinite)
+        &&box[2]>0&&box[3]>0){
+        activeFocusRegion=null;
+        figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');
+        viewport.dataset.sourceView='true';viewport.dataset.officialFocus='true';
+        viewport.style.aspectRatio=String(box[2]/box[3]);
+        image.style.removeProperty('transform');
+        viewToggle.hidden=false;
+      }else if(!showFullPage&&cropped&&Number.isFinite(pageAspect)&&pageAspect>0&&Number.isFinite(cropped.top)
+        &&Number.isFinite(cropped.height)&&cropped.height>0
+        &&cropped.top>=0&&cropped.top+cropped.height<=1){
+        activeFocusRegion={aspect:pageAspect,
+          labelAr:original?.labelAr||'سورة '+surahNameAr,
+          top:cropped.top,height:cropped.height};
+        figure.dataset.focused='true';viewport.dataset.focused='true';
+        viewport.dataset.officialFocus='true';
+        viewport.style.aspectRatio=String(activeFocusRegion.aspect/activeFocusRegion.height);
+        image.style.transform=`translateY(-${activeFocusRegion.top*100}%)`;
+      }
+      geometryHint.hidden=true;retryHighlight.hidden=true;
+      if(ayahs.length){
+        mountOfficialGeometry(geometry);
+        paintListeningAyah();
+      }
+    }).catch(()=>{
+      if(destroyed||thisEpoch!==overlayEpoch)return;
+      mountOfficialGeometry(null);
+      if(ayahs.length){
+        geometryHint.textContent='التلاوة مستمرة، لكن تعذر تظليل الآيات داخل المصحف. جرّب إعادة تحميل الصفحة.';
+        geometryHint.hidden=false;retryHighlight.hidden=false;
+      }
+    });
+  };
+  image.addEventListener('load',refreshGeometry);
+  retryHighlight.addEventListener('click',refreshGeometry);
+  image.addEventListener('error',()=>{overlayEpoch++;geometryHint.hidden=true;retryHighlight.hidden=true;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=!showFullPage&&page?.isolatedImagePath
+      ?[page.isolatedImagePath,...pageSources(page)]:pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
 
+  retryPage.addEventListener('click',renderPage);
   renderPage();
 
   return Object.freeze({
     play:playAudio,pause:pauseAudio,restart:restartAudio,stop:stopAudio,
     nextPage(){changePage(pageIndex+1);},previousPage(){changePage(pageIndex-1);},getPageIndex(){return pageIndex;},
     hasCompleted(){return completed;},
-    destroy(){destroyed=true;stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+    destroy(){stopInstructionVoice();cancelReplaySeek();destroyed=true;overlayEpoch++;surahViewTicket++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+  });
+}
+
+
+/**
+ * Stable player facade for Yasser, Khaled and Mashaal.
+ * The original reciter and learner progress remain untouched. Only on the
+ * isolated pilot can the listener opt into an Itqan CMS recording WITH its
+ * own embedded timestamps, and return to the original at any time.
+ */
+export function mountQuranSurahPlayer(host,options={}){
+  let instance=mountQuranSurahPlayerCore(host,options);
+  let disposed=false,activeItqan=false,source=null,sourceTicket=0;
+  const attachToggle=()=>{
+    if(disposed||!source)return;
+    const root=host.querySelector('.quran-surah-player');
+    if(!root)return;
+    const panel=document.createElement('div');
+    panel.className='quran-itqan-source-panel';
+    const label=document.createElement('p');
+    label.className='quran-itqan-source-name';
+    label.textContent=activeItqan
+      ?'تلاوة إتقان المتزامنة • '+source.reciter+' • '+source.riwayah
+      :(Array.isArray(options.ayahTimings)&&options.ayahTimings.length
+        ?'تلاوة أصلية بتوقيت آيات موثّق • يمكنك تجربة إتقان بصوت '+source.reciter
+        :'التلاوة الأصلية لا توفر توقيت آيات موثّق للتظليل • لتظليل الآية أثناء النطق جرّب إتقان بصوت '+source.reciter);
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='quran-itqan-toggle';
+    button.textContent=activeItqan?'الرجوع إلى التلاوة الأصلية':'استمع بتلاوة إتقان وتوقيت آياتها';
+    button.addEventListener('click',()=>{
+      if(disposed)return;
+      const previouslyAt=instance.getPageIndex();
+      instance.destroy();
+      activeItqan=!activeItqan;
+      instance=mountQuranSurahPlayerCore(host,activeItqan?{
+        ...options,
+        audioPath:source.audioPath,
+        ayahTimings:source.ayahTimings,
+        durationSeconds:source.durationSeconds,
+        autoFollowOfficialPages:true
+      }:options);
+      for(let i=0;i<previouslyAt;i++)instance.nextPage();
+      attachToggle();
+    });
+    panel.append(label,button);
+    root.insertBefore(panel,root.querySelector('.quran-transport'));
+    // Keep the source choice visible before the transport buttons on phones.
+  };
+  if(isItqanEnabledOrigin()){
+    const ticket=++sourceTicket;
+    void loadItqanTrack(options.surahNumber).then(track=>{
+      if(disposed||ticket!==sourceTicket||!track)return;
+      source=track;attachToggle();
+    }).catch(()=>{});
+  }
+  return Object.freeze({
+    play:(...args)=>instance.play(...args),
+    pause:(...args)=>instance.pause(...args),
+    stop:(...args)=>instance.stop(...args),
+    restart:(...args)=>instance.restart(...args),
+    nextPage:(...args)=>instance.nextPage(...args),
+    previousPage:(...args)=>instance.previousPage(...args),
+    getPageIndex:()=>instance.getPageIndex(),
+    hasCompleted:()=>instance.hasCompleted(),
+    destroy(){
+      if(disposed)return;
+      disposed=true;sourceTicket++;
+      instance.destroy();
+    }
   });
 }

@@ -1,0 +1,276 @@
+import {chromium,webkit} from 'playwright';
+// Local ephemeral test origin; this script does not touch real learner storage.
+const base='http://127.0.0.1:8790/';
+for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
+  const browser=await browserType.launch({
+    headless:true,
+    ...(browserName==='chrome'?{
+      executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--disable-dev-shm-usage']
+    }:{})
+  });
+  try{
+    const page=await browser.newPage({viewport:{width:390,height:844}});
+    const browserErrors=[];
+    page.on('pageerror',error=>browserErrors.push(error.message));
+    await page.goto(base+'?itqanPilot=1',{waitUntil:'domcontentloaded'});
+    // Fake only the audio clock, not the player, CMS catalog or markup. This
+    // permits deterministic playback-completion tests in Chrome and Safari.
+    await page.evaluate(()=>{
+      window.__qaAudio=[];
+      window.Audio=class MockAudio extends EventTarget{
+        constructor(src){
+          super();this.src=src;this._time=0;this._seekId=0;this.seeking=false;this.duration=4000;
+          this.paused=true;this.ended=false;
+          this.seekable={length:1,end(){return 4000;}};
+          window.__qaAudio.push(this);
+        }
+        get currentTime(){return this._time;}
+        set currentTime(value){
+          this._time=Number(value)||0;this.seeking=true;
+          const seekId=++this._seekId;
+          queueMicrotask(()=>{
+            if(seekId!==this._seekId)return;
+            this.seeking=false;this.dispatchEvent(new Event('seeked'));
+          });
+        }
+        play(){this.paused=false;return Promise.resolve();}
+        pause(){this.paused=true;}
+      };
+    });
+    for(const learner of ['khaled','yasser','mashaal']){
+      const config=await page.evaluate(async who=>{
+        const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+        let item,options;
+        if(who==='khaled'){
+          const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+          item=KHALED_QURAN_TERMS[2].find(x=>x.surahNumber===93);
+          options={audioPath:item.audioPath,mushafPage:item.mushafPage};
+        }else if(who==='yasser'){
+          const {YASSER_QURAN_TERMS}=await import('./src/modules/yasser/quran/yasser-quran.js');
+          item=YASSER_QURAN_TERMS[1].recitation.find(x=>x.surahNumber===38);
+          options={audioPath:item.audioPath,mushafPage:item.mushafPage,mushafPages:item.mushafPages};
+        }else{
+          const {getMashaalRecitationAsset}=await import('./src/modules/mashaal/curriculum/recitation-media-manifest.js');
+          item=getMashaalRecitationAsset('kfgqpc-ibrahim-al-akhdar-hafs-114');
+          options={audioPath:item.localPath,mushafPage:item.mushafPage};
+        }
+        if(!item)throw Error('Missing curriculum item for '+who);
+        document.body.replaceChildren();
+        const host=document.createElement('div');document.body.append(host);
+        window.__qaPlayer?.destroy?.();
+        window.__qaPlayer=mountQuranSurahPlayer(host,{
+          ...options,learnerId:who,surahNameAr:item.surahNameAr,surahNumber:item.surahNumber
+        });
+        return{surahNumber:item.surahNumber};
+      },learner);
+      await page.locator('.quran-itqan-toggle').waitFor({timeout:20000});
+      await page.locator('.quran-itqan-toggle').click();
+      await page.locator('.quran-range-controls').waitFor({timeout:12000});
+      if(!await page.locator('.quran-practice-listen').isVisible())
+        throw Error(browserName+' '+learner+' missing primary listening action');
+      if(!await page.locator('.quran-practice-done').isHidden())
+        throw Error(browserName+' '+learner+' disabled repeat action should not clutter screen');
+      await page.locator('.quran-practice-listen').click();
+      const started=await page.evaluate(()=>({
+        playing:!window.__qaAudio.at(-1)?.paused,
+        active:!!document.querySelector('.quran-ayah-button.active')
+      }));
+      if(!started.playing||!started.active)
+        throw Error(browserName+' '+learner+' guided listen CTA failed '+JSON.stringify(started));
+      await page.locator('.quran-control').nth(2).click();
+      const advanced=page.locator('details.quran-range-controls');
+      if(await advanced.evaluate(node=>node.open))
+        throw Error(browserName+' '+learner+' advanced range controls not collapsed by default');
+      await advanced.locator('summary').click();
+      if(!await advanced.evaluate(node=>node.open))
+        throw Error(browserName+' '+learner+' cannot open advanced verse-range controls');
+      if(!await page.locator('.quran-practice-done').isDisabled())
+        throw Error(browserName+' '+learner+' repeat was possible before listening');
+      if(learner!=='mashaal'&&!await page.locator('.quran-practice-reviewed').isDisabled())
+        throw Error(browserName+' '+learner+' review was possible before self-test');
+      // A full, uninterrupted listen may unlock the selected practice range.
+      // Skipping directly to the end must NOT unlock any confirmation.
+      await page.locator('.quran-control-primary').click();
+      await page.waitForFunction(()=>window.__qaAudio.at(-1)&&!window.__qaAudio.at(-1).paused);
+      const skipped=await page.evaluate(()=>{
+        const audio=window.__qaAudio.at(-1),seek=document.querySelector('.quran-progress');
+        seek.value='3998';
+        seek.dispatchEvent(new Event('input',{bubbles:true}));
+        seek.dispatchEvent(new Event('change',{bubbles:true}));
+        audio.currentTime=audio.duration;
+        audio.dispatchEvent(new Event('ended'));
+        return !document.querySelector('.quran-practice-done').disabled;
+      });
+      if(skipped)throw Error(browserName+' '+learner+' skipped full-surah playback unlocked practice');
+      await page.locator('.quran-control').nth(3).click();
+      await page.waitForFunction(()=>{
+        const a=window.__qaAudio.at(-1);
+        return a&&!a.paused&&a.currentTime<0.5;
+      });
+      const complete=await page.evaluate(()=>{
+        const audio=window.__qaAudio.at(-1);
+        audio.currentTime=audio.duration;
+        audio.dispatchEvent(new Event('ended'));
+        return {
+          unlocked:!document.querySelector('.quran-practice-done').disabled,
+          hint:document.querySelector('.quran-practice-status')?.textContent,
+          current:document.querySelector('.quran-practice-step[data-state="current"]')?.textContent
+        };
+      });
+      if(!complete.unlocked||!complete.current?.includes('ردد'))
+        throw Error(browserName+' '+learner+' full-surah completion not recognized '+JSON.stringify(complete));
+      console.log('SELECT_OPTIONS',browserName,learner,JSON.stringify(await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(e=>({
+        html:e.outerHTML.slice(0,900),
+        options:[...e.options].slice(0,6).map(o=>({value:o.value,text:o.text,selected:o.selected}))
+      })))));
+      // Explicit values, not numeric labels: label "2" belongs to value "1".
+      await page.locator('.quran-range-controls select').nth(0).selectOption({value:'1'});
+      await page.locator('.quran-range-controls select').nth(1).selectOption({value:'3'});
+      if(!await page.locator('.quran-practice-done').isDisabled())
+        throw Error(browserName+' '+learner+' stale listening was applied to a new range');
+      const chosen=await page.locator('.quran-range-controls select').evaluateAll(els=>els.map(el=>el.value));
+      if(chosen.join(',')!=='1,3')throw Error('Unexpected range values '+chosen.join(','));
+      const data=await page.evaluate(async n=>{
+        const catalog=await fetch('./assets/recitation/itqan-hafs-tracks.json').then(r=>r.json());
+        const timings=catalog.tracks[String(n)]?.ayahTimings;
+        if(!timings||timings.length<4)throw Error('No genuine Itqan track for '+n);
+        return {start:timings[1].startMs/1000,end:timings[3].endMs/1000};
+      },config.surahNumber);
+      await page.locator('.quran-range-play').click();
+      // Buffering and recovery should show live, accurate playback state.
+      const playbackStatus=await page.evaluate(()=>{
+        const audio=window.__qaAudio.at(-1);
+        audio.dispatchEvent(new Event('waiting'));
+        const waiting=document.querySelector('.quran-player-status')?.textContent||'';
+        audio.dispatchEvent(new Event('playing'));
+        const resumed=document.querySelector('.quran-player-status')?.textContent||'';
+        return {waiting,resumed};
+      });
+      if(!playbackStatus.waiting.includes('تحميل التلاوة')
+        ||!playbackStatus.resumed.includes('تعمل التلاوة'))
+        throw Error(browserName+' '+learner+' incorrect buffering status '+JSON.stringify(playbackStatus));
+      for(let cycle=1;cycle<=3;cycle++){
+        const state=await page.evaluate(({end})=>{
+          const audio=window.__qaAudio.at(-1);
+          audio.currentTime=end+0.08;
+          audio.dispatchEvent(new Event('timeupdate'));
+          return {paused:audio.paused,time:audio.currentTime,
+            status:document.querySelector('.quran-player-status')?.textContent};
+        },data);
+        if(cycle<3){
+          if(!state.paused)throw Error(browserName+' '+learner+' repeat did not pause for seek');
+          await page.waitForFunction(start=>{
+            const audio=window.__qaAudio.at(-1);
+            return !audio.paused&&!audio.seeking
+              &&Math.abs(audio.currentTime-Math.max(0,start-0.35))<0.07;
+          },data.start,{timeout:4000});
+        }else if(!state.paused||!state.status.includes('اكتمل تكرار الآيات')){
+          throw Error(browserName+' '+learner+' did not finish 3 full repetitions '+JSON.stringify(state));
+        }
+      }
+      const verify=async stage=>page.evaluate(({who,number,wanted})=>{
+        const key='family-learning:quran-practice:v1:'+who;
+        const state=JSON.parse(localStorage.getItem(key));
+        if(!state||state.version!==1)throw Error('practice not persisted');
+        for(let ayah=2;ayah<=4;ayah++){
+          if(state.records[number+':'+ayah]?.stage!==wanted)
+            throw Error('Missing practice status for verse '+ayah+' '+JSON.stringify(state.records[number+':'+ayah]));
+        }
+        return state.last;
+      },{who:learner,number:config.surahNumber,wanted:stage});
+      await verify('listened');
+      if(await page.locator('.quran-practice-done').isDisabled()
+        ||!await page.locator('.quran-practice-done').isVisible()
+        ||!await page.locator('.quran-practice-listen').isHidden())
+        throw Error(browserName+' '+learner+' repeat step not exclusively visible after listening');
+      const firstStage=await page.locator('.quran-practice-step[data-state="current"]').first().textContent();
+      if(!firstStage?.includes('ردد'))
+        throw Error(browserName+' '+learner+' missing repeat stage: '+firstStage);
+      await page.locator('.quran-practice-done').click();
+      await verify('repeated');
+      if(learner!=='mashaal'){
+        if(!await page.locator('.quran-practice-reviewed').isDisabled())
+          throw Error(browserName+' '+learner+' review was possible before hiding mushaf');
+        if(await page.locator('button.quran-practice-blind').isDisabled()
+          ||!await page.locator('button.quran-practice-blind').isVisible()
+          ||!await page.locator('.quran-practice-done').isHidden())
+          throw Error(browserName+' '+learner+' blind test not the sole next action');
+        await page.locator('button.quran-practice-blind').click();
+        const hidden=await page.locator('.quran-page-frame').evaluate(el=>el.classList.contains('quran-practice-blind'));
+        if(!hidden)throw Error('self-review blind mode unavailable');
+        await page.locator('button.quran-practice-blind').click();
+        if(await page.locator('.quran-practice-reviewed').isDisabled()
+          ||!await page.locator('.quran-practice-reviewed').isVisible()
+          ||!await page.locator('button.quran-practice-blind').isHidden())
+          throw Error(browserName+' '+learner+' self-review not the sole next action after blind check');
+        await page.locator('.quran-practice-reviewed').click();
+        await verify('reviewed');
+      }else if(!await page.locator('.quran-practice-reviewed').isHidden()){
+        throw Error('KG3 unexpectedly received exam scoring');
+      }
+      const stored=await page.evaluate(who=>Object.keys(localStorage)
+        .filter(key=>key.startsWith('family-learning:quran-practice:v1:')&&key.endsWith(who)),learner);
+      if(stored.length!==1)throw Error('Per learner namespace incorrect '+learner);
+      // User regression: an individual verse must restart fully on repeats
+      // two and three, including its opening phonemes (300+ ms pre-roll).
+      await page.locator('.quran-ayah-button').nth(1).click();
+      const single=await page.evaluate(async n=>{
+        const catalog=await fetch('./assets/recitation/itqan-hafs-tracks.json').then(r=>r.json());
+        const verse=catalog.tracks[String(n)].ayahTimings[1];
+        return {start:verse.startMs/1000,end:verse.endMs/1000};
+      },config.surahNumber);
+      for(let repetition=1;repetition<=3;repetition++){
+        const atBoundary=await page.evaluate(end=>{
+          const audio=window.__qaAudio.at(-1);
+          audio.currentTime=end+0.08;
+          audio.dispatchEvent(new Event('timeupdate'));
+          return {paused:audio.paused,status:document.querySelector('.quran-player-status')?.textContent};
+        },single.end);
+        if(!atBoundary.paused)
+          throw Error(browserName+' '+learner+' individual verse did not pause before replay seek');
+        if(repetition<3){
+          await page.waitForFunction(start=>{
+            const audio=window.__qaAudio.at(-1);
+            return !audio.paused&&!audio.seeking
+              &&Math.abs(audio.currentTime-Math.max(0,start-0.35))<0.07;
+          },single.start,{timeout:4000});
+        }else if(!atBoundary.status.includes('اكتمل تكرار الآية')){
+          throw Error(browserName+' '+learner+' single-verse repeat did not complete');
+        }
+      }
+      console.log('INDIVIDUAL_VERSE_REPLAY_PASS',browserName,learner,'verse 2','repeats 3');
+      console.log('GUIDED_QURAN_RANGE_PASS',browserName,learner,
+        'surah',config.surahNumber,'range',2,'to',4,'repeats',3);
+    }
+    // Genuine continuation-page regression (Khaled's Al-Adiyat does not fit
+    // entirely on its nominal first Mushaf page).
+    const continuation=await page.evaluate(async()=>{
+      const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+      const {loadQuranCoursePages}=await import('./src/shared/quran/quran-course-page-map.js');
+      const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+      const item=Object.values(KHALED_QURAN_TERMS).flat().find(x=>x.surahNumber===100);
+      const pages=await loadQuranCoursePages(item);
+      window.__qaPlayer?.destroy?.();
+      document.body.replaceChildren();
+      const host=document.createElement('div');
+      document.body.append(host);
+      window.__qaPlayer=mountQuranSurahPlayer(host,{
+        learnerId:'khaled',surahNumber:100,surahNameAr:item.surahNameAr,
+        audioPath:item.audioPath,mushafPage:pages[0],mushafPages:pages
+      });
+      const first=host.querySelector('.quran-page-indicator')?.textContent;
+      host.querySelector('.quran-page-nav-button:last-child')?.click();
+      return {pages:pages.map(x=>x.pageNumber),
+        first,last:host.querySelector('.quran-page-indicator')?.textContent,
+        image:host.querySelector('.quran-page-image')?.getAttribute('src')};
+    });
+    if(!continuation.pages.includes(599)||!continuation.pages.includes(600)
+      ||!continuation.first?.includes('1 من')
+      ||!continuation.last?.includes('2 من')
+      ||!continuation.image?.includes('600.svg'))
+      throw Error(browserName+' verified continuation pages missing '+JSON.stringify(continuation));
+    console.log('QURAN_COURSE_CONTINUATION_PASS',browserName,JSON.stringify(continuation.pages));
+    if(browserErrors.length)throw Error(browserName+' page errors: '+browserErrors.slice(0,4).join('; '));
+    console.log('GUIDED_QURAN_BROWSER_PASS',browserName);
+  }finally{await browser.close();}
+}

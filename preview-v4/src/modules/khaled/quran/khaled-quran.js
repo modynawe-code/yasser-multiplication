@@ -1,4 +1,5 @@
 import { mountQuranSurahPlayer } from '../../mashaal/quran/quran-surah-player.js';
+import {loadQuranCoursePages} from '../../../shared/quran/quran-course-page-map.js';
 
 const QURAN_SVG_COMMIT='b91d39e1065b57bdda3e94aca8ecf3575e50e1e6';
 const AUDIO_BASE='https://cdn.quran.ws/KFGQPC/resources/quran-audios/akhdar-sura/sura';
@@ -26,7 +27,7 @@ const FOCUS_BY_SURAH=Object.freeze({
   101:Object.freeze([0,.53]),102:Object.freeze([.53,.47]),
   103:Object.freeze([0,.27]),104:Object.freeze([.27,.41]),105:Object.freeze([.68,.32]),
   106:Object.freeze([0,.30]),107:Object.freeze([.30,.43]),108:Object.freeze([.73,.27]),
-  109:Object.freeze([0,.35]),110:Object.freeze([.35,.29]),111:Object.freeze([.64,.36]),
+  109:Object.freeze([0,.35]),110:Object.freeze([.35,.32]),111:Object.freeze([.64,.36]),
   112:Object.freeze([0,.29]),113:Object.freeze([.29,.34]),114:Object.freeze([.63,.37])
 });
 
@@ -38,16 +39,16 @@ function focusRegionFor(surahNumber,surahNameAr){
 
 function mediaFor([surahNumber,surahNameAr,pageNumber]){
   const code=String(surahNumber).padStart(3,'0');
-  const local604=pageNumber===604?'./assets/recitation/kfqc-hafs-page-604.svg':'';
+  const localPage='./assets/recitation/kfqc-hafs-page-'+pageNumber+'.svg';
   const focusRegion=focusRegionFor(surahNumber,surahNameAr);
   return Object.freeze({
     surahNumber,surahNameAr,pageNumber,
     audioPath:`${AUDIO_BASE}/10-${code}D00-A02.mp3`,
     mushafPage:Object.freeze({
       sourceId:'kfgqpc-hafs-madinah-svg',publisherAr:'مجمع الملك فهد لطباعة المصحف الشريف',
-      riwayahAr:'حفص عن عاصم',pageNumber,imagePath:local604,
+      riwayahAr:'حفص عن عاصم',pageNumber,imagePath:localPage,
       imageUrl:`${SVG_BASE}/${pageNumber}.svg`,fallbackImageUrls:Object.freeze([`${RAW_SVG_BASE}/${pageNumber}.svg`]),
-      distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:Boolean(local604),
+      distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:true,
       ...(focusRegion?{focusRegion}:{})
     })
   });
@@ -86,9 +87,9 @@ function ensureShell(){
 }
 
 export function createKhaledQuranController({showView,onBack}={}){
-  let term=1,player=null,bound=false,selectedSurah=null;
+  let term=1,player=null,bound=false,selectedSurah=null,openTicket=0;
   const byId=id=>document.getElementById(id);
-  const destroyPlayer=()=>{if(!player)return;try{player.destroy();}catch{}player=null;};
+  const destroyPlayer=()=>{openTicket++;if(!player)return;try{player.destroy();}catch{}player=null;};
   function renderTerms(){
     document.querySelectorAll('[data-khaled-quran-term]').forEach(button=>{
       const active=Number(button.dataset.khaledQuranTerm)===term;
@@ -103,11 +104,17 @@ export function createKhaledQuranController({showView,onBack}={}){
       button.setAttribute('aria-label',`سورة ${item.surahNameAr}`);button.addEventListener('click',()=>openSurah(item,button));host.appendChild(button);
     }
   }
-  function openSurah(item,button){
-    destroyPlayer();selectedSurah=item.surahNumber;
+  async function openSurah(item,button){
+    destroyPlayer();const ticket=++openTicket;selectedSurah=item.surahNumber;
     document.querySelectorAll('.khaled-quran-surah').forEach(node=>node.classList.toggle('selected',node===button));
     const host=byId('khaledQuranPlayer');if(!host)return;host.hidden=false;host.innerHTML=`<h2 id="khaledQuranSelectedTitle">سورة ${item.surahNameAr}</h2><div id="khaledQuranPlayerHost"></div>`;
-    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
+    const pages=await loadQuranCoursePages(item);
+    if(ticket!==openTicket)return;
+    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{
+      surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,learnerId:'khaled',
+      audioPath:item.audioPath,mushafPage:pages[0]||item.mushafPage,
+      mushafPages:pages,retryPlayText:'اضغط تشغيل مرة ثانية'
+    });
     host.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
   }
   function setTerm(next){
