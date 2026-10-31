@@ -37,6 +37,7 @@ jobs:
           node tools/build-itqan-cms-tracks.mjs
           node tools/build-quran-svg-pages.mjs
           node tools/verify-quran-itqan-coverage.mjs
+          node tools/build-quran-isolated-views.mjs
           cd ..
           node tools/build-web-preview.mjs
       - name: Install browsers and QA harness
