@@ -42,6 +42,9 @@ test('two linked devices recover independent progress without rewriting other le
   const a=createQuranPracticeCloudSync({authClient:api,storage:phone});
   const b=createQuranPracticeCloudSync({authClient:api,storage:tablet});
   assert.equal((await a.sync()).ok,true);
+  const firstCount=api.sessions.size;
+  assert.equal((await a.sync()).uploadedChunks,0,'unchanged progress must not post again');
+  assert.equal(api.sessions.size,firstCount);
   assert.equal((await b.sync()).ok,true);
   assert.equal((await a.sync()).ok,true);
   await b.sync();
