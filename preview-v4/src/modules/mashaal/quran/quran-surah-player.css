@@ -177,3 +177,15 @@
     font-size:11px;line-height:1.2;text-align:center;
   }
 }
+
+/* Child-specific training: separate instructions, no change to the Mushaf. */
+.quran-practice-instruction{grid-column:1/-1;min-height:50px;background:#f0efff!important;border-color:#8f86c3!important;color:#443b75!important}
+.quran-practice-instruction[hidden]{display:none}
+.quran-learner-khaled .quran-practice-listen,
+.quran-learner-mashaal .quran-practice-listen{font-size:clamp(17px,2.7vw,21px);min-height:60px}
+.quran-learner-khaled .quran-practice-step,
+.quran-learner-mashaal .quran-practice-step{min-height:46px}
+.quran-learner-yasser .quran-practice-blind{border-style:dashed}
+@media(prefers-reduced-motion:no-preference){
+  .quran-practice-step[data-state="current"]{transition:background-color .2s ease,border-color .2s ease}
+}
