@@ -38,16 +38,16 @@ function focusRegionFor(surahNumber,surahNameAr){
 
 function mediaFor([surahNumber,surahNameAr,pageNumber]){
   const code=String(surahNumber).padStart(3,'0');
-  const local604=pageNumber===604?'./assets/recitation/kfqc-hafs-page-604.svg':'';
+  const localPage='./assets/recitation/kfqc-hafs-page-'+pageNumber+'.svg';
   const focusRegion=focusRegionFor(surahNumber,surahNameAr);
   return Object.freeze({
     surahNumber,surahNameAr,pageNumber,
     audioPath:`${AUDIO_BASE}/10-${code}D00-A02.mp3`,
     mushafPage:Object.freeze({
       sourceId:'kfgqpc-hafs-madinah-svg',publisherAr:'مجمع الملك فهد لطباعة المصحف الشريف',
-      riwayahAr:'حفص عن عاصم',pageNumber,imagePath:local604,
+      riwayahAr:'حفص عن عاصم',pageNumber,imagePath:localPage,
       imageUrl:`${SVG_BASE}/${pageNumber}.svg`,fallbackImageUrls:Object.freeze([`${RAW_SVG_BASE}/${pageNumber}.svg`]),
-      distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:Boolean(local604),
+      distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:true,
       ...(focusRegion?{focusRegion}:{})
     })
   });
