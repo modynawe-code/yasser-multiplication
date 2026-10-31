@@ -595,14 +595,14 @@ function mountQuranSurahPlayerCore(host,{
       };
       replaySeekListener=resumeReplay;
       audio.addEventListener('seeked',resumeReplay,{once:true});
-      try{audio.currentTime=replayStart;}
-      catch{cancelReplaySeek();clearAyahSelection();audio.pause();status.textContent='تعذر إعادة الآية';return true;}
-      // No-op seeks may not fire seeked; resume only if the clock is at
-      // the new start and the media engine is not still seeking.
+      // No-op seeks may not emit seeked. Install recovery before setting
+      // currentTime, so a synchronous media event cannot leave a stray timer.
       replaySeekFallback=setTimeout(()=>{
         if(replaySeekPending&&!audio.seeking
           &&Math.abs((Number(audio.currentTime)||0)-replayStart)<0.12)resumeReplay();
       },800);
+      try{audio.currentTime=replayStart;}
+      catch{cancelReplaySeek();clearAyahSelection();audio.pause();status.textContent='تعذر إعادة الآية';return true;}
     }else{
       const start=selectedAyahIndex+1,end=selectedAyahEndIndex+1;
       audio.pause();
