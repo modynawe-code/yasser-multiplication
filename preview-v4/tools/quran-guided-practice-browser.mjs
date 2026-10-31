@@ -57,6 +57,18 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       await page.locator('.quran-itqan-toggle').waitFor({timeout:20000});
       await page.locator('.quran-itqan-toggle').click();
       await page.locator('.quran-range-controls').waitFor({timeout:12000});
+      if(!await page.locator('.quran-practice-listen').isVisible())
+        throw Error(browserName+' '+learner+' missing primary listening action');
+      if(!await page.locator('.quran-practice-done').isHidden())
+        throw Error(browserName+' '+learner+' disabled repeat action should not clutter screen');
+      await page.locator('.quran-practice-listen').click();
+      const started=await page.evaluate(()=>({
+        playing:!window.__qaAudio.at(-1)?.paused,
+        active:!!document.querySelector('.quran-ayah-button.active')
+      }));
+      if(!started.playing||!started.active)
+        throw Error(browserName+' '+learner+' guided listen CTA failed '+JSON.stringify(started));
+      await page.locator('.quran-control').nth(2).click();
       const advanced=page.locator('details.quran-range-controls');
       if(await advanced.evaluate(node=>node.open))
         throw Error(browserName+' '+learner+' advanced range controls not collapsed by default');
@@ -154,8 +166,10 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         return state.last;
       },{who:learner,number:config.surahNumber,wanted:stage});
       await verify('listened');
-      if(await page.locator('.quran-practice-done').isDisabled())
-        throw Error(browserName+' '+learner+' repeat stayed disabled after listening');
+      if(await page.locator('.quran-practice-done').isDisabled()
+        ||!await page.locator('.quran-practice-done').isVisible()
+        ||!await page.locator('.quran-practice-listen').isHidden())
+        throw Error(browserName+' '+learner+' repeat step not exclusively visible after listening');
       const firstStage=await page.locator('.quran-practice-step[data-state="current"]').first().textContent();
       if(!firstStage?.includes('ردد'))
         throw Error(browserName+' '+learner+' missing repeat stage: '+firstStage);
@@ -164,14 +178,18 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       if(learner!=='mashaal'){
         if(!await page.locator('.quran-practice-reviewed').isDisabled())
           throw Error(browserName+' '+learner+' review was possible before hiding mushaf');
-        if(await page.locator('button.quran-practice-blind').isDisabled())
-          throw Error(browserName+' '+learner+' blind test unavailable after repeat');
+        if(await page.locator('button.quran-practice-blind').isDisabled()
+          ||!await page.locator('button.quran-practice-blind').isVisible()
+          ||!await page.locator('.quran-practice-done').isHidden())
+          throw Error(browserName+' '+learner+' blind test not the sole next action');
         await page.locator('button.quran-practice-blind').click();
         const hidden=await page.locator('.quran-page-frame').evaluate(el=>el.classList.contains('quran-practice-blind'));
         if(!hidden)throw Error('self-review blind mode unavailable');
         await page.locator('button.quran-practice-blind').click();
-        if(await page.locator('.quran-practice-reviewed').isDisabled())
-          throw Error(browserName+' '+learner+' self-review not unlocked after blind check');
+        if(await page.locator('.quran-practice-reviewed').isDisabled()
+          ||!await page.locator('.quran-practice-reviewed').isVisible()
+          ||!await page.locator('button.quran-practice-blind').isHidden())
+          throw Error(browserName+' '+learner+' self-review not the sole next action after blind check');
         await page.locator('.quran-practice-reviewed').click();
         await verify('reviewed');
       }else if(!await page.locator('.quran-practice-reviewed').isHidden()){
