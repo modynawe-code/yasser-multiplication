@@ -19,10 +19,19 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       window.__qaAudio=[];
       window.Audio=class MockAudio extends EventTarget{
         constructor(src){
-          super();this.src=src;this.currentTime=0;this.duration=4000;
+          super();this.src=src;this._time=0;this._seekId=0;this.seeking=false;this.duration=4000;
           this.paused=true;this.ended=false;
           this.seekable={length:1,end(){return 4000;}};
           window.__qaAudio.push(this);
+        }
+        get currentTime(){return this._time;}
+        set currentTime(value){
+          this._time=Number(value)||0;this.seeking=true;
+          const seekId=++this._seekId;
+          queueMicrotask(()=>{
+            if(seekId!==this._seekId)return;
+            this.seeking=false;this.dispatchEvent(new Event('seeked'));
+          });
         }
         play(){this.paused=false;return Promise.resolve();}
         pause(){this.paused=true;}
@@ -141,7 +150,7 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
         ||!playbackStatus.resumed.includes('تعمل التلاوة'))
         throw Error(browserName+' '+learner+' incorrect buffering status '+JSON.stringify(playbackStatus));
       for(let cycle=1;cycle<=3;cycle++){
-        const state=await page.evaluate(({end,start})=>{
+        const state=await page.evaluate(({end})=>{
           const audio=window.__qaAudio.at(-1);
           audio.currentTime=end+0.08;
           audio.dispatchEvent(new Event('timeupdate'));
@@ -149,8 +158,12 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
             status:document.querySelector('.quran-player-status')?.textContent};
         },data);
         if(cycle<3){
-          if(Math.abs(state.time-data.start)>0.1||state.paused)
-            throw Error(browserName+' '+learner+' did not repeat full range at cycle '+cycle+' '+JSON.stringify(state));
+          if(!state.paused)throw Error(browserName+' '+learner+' repeat did not pause for seek');
+          await page.waitForFunction(start=>{
+            const audio=window.__qaAudio.at(-1);
+            return !audio.paused&&!audio.seeking
+              &&Math.abs(audio.currentTime-Math.max(0,start-0.35))<0.07;
+          },data.start,{timeout:4000});
         }else if(!state.paused||!state.status.includes('اكتمل تكرار الآيات')){
           throw Error(browserName+' '+learner+' did not finish 3 full repetitions '+JSON.stringify(state));
         }
