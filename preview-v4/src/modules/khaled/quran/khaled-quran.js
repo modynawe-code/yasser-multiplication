@@ -1,4 +1,5 @@
 import { mountQuranSurahPlayer } from '../../mashaal/quran/quran-surah-player.js';
+import {loadQuranCoursePages} from '../../../shared/quran/quran-course-page-map.js';
 
 const QURAN_SVG_COMMIT='b91d39e1065b57bdda3e94aca8ecf3575e50e1e6';
 const AUDIO_BASE='https://cdn.quran.ws/KFGQPC/resources/quran-audios/akhdar-sura/sura';
@@ -86,9 +87,9 @@ function ensureShell(){
 }
 
 export function createKhaledQuranController({showView,onBack}={}){
-  let term=1,player=null,bound=false,selectedSurah=null;
+  let term=1,player=null,bound=false,selectedSurah=null,openTicket=0;
   const byId=id=>document.getElementById(id);
-  const destroyPlayer=()=>{if(!player)return;try{player.destroy();}catch{}player=null;};
+  const destroyPlayer=()=>{openTicket++;if(!player)return;try{player.destroy();}catch{}player=null;};
   function renderTerms(){
     document.querySelectorAll('[data-khaled-quran-term]').forEach(button=>{
       const active=Number(button.dataset.khaledQuranTerm)===term;
@@ -103,11 +104,17 @@ export function createKhaledQuranController({showView,onBack}={}){
       button.setAttribute('aria-label',`سورة ${item.surahNameAr}`);button.addEventListener('click',()=>openSurah(item,button));host.appendChild(button);
     }
   }
-  function openSurah(item,button){
-    destroyPlayer();selectedSurah=item.surahNumber;
+  async function openSurah(item,button){
+    destroyPlayer();const ticket=++openTicket;selectedSurah=item.surahNumber;
     document.querySelectorAll('.khaled-quran-surah').forEach(node=>node.classList.toggle('selected',node===button));
     const host=byId('khaledQuranPlayer');if(!host)return;host.hidden=false;host.innerHTML=`<h2 id="khaledQuranSelectedTitle">سورة ${item.surahNameAr}</h2><div id="khaledQuranPlayerHost"></div>`;
-    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,learnerId:'khaled',audioPath:item.audioPath,mushafPage:item.mushafPage,retryPlayText:'اضغط تشغيل مرة ثانية'});
+    const pages=await loadQuranCoursePages(item);
+    if(ticket!==openTicket)return;
+    player=mountQuranSurahPlayer(byId('khaledQuranPlayerHost'),{
+      surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,learnerId:'khaled',
+      audioPath:item.audioPath,mushafPage:pages[0]||item.mushafPage,
+      mushafPages:pages,retryPlayText:'اضغط تشغيل مرة ثانية'
+    });
     host.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
   }
   function setTerm(next){
