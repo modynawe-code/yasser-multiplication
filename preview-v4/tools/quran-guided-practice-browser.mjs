@@ -211,6 +211,34 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       const stored=await page.evaluate(who=>Object.keys(localStorage)
         .filter(key=>key.startsWith('family-learning:quran-practice:v1:')&&key.endsWith(who)),learner);
       if(stored.length!==1)throw Error('Per learner namespace incorrect '+learner);
+      // User regression: an individual verse must restart fully on repeats
+      // two and three, including its opening phonemes (300+ ms pre-roll).
+      await page.locator('.quran-ayah-button').nth(1).click();
+      const single=await page.evaluate(async n=>{
+        const catalog=await fetch('./assets/recitation/itqan-hafs-tracks.json').then(r=>r.json());
+        const verse=catalog.tracks[String(n)].ayahTimings[1];
+        return {start:verse.startMs/1000,end:verse.endMs/1000};
+      },config.surahNumber);
+      for(let repetition=1;repetition<=3;repetition++){
+        const atBoundary=await page.evaluate(end=>{
+          const audio=window.__qaAudio.at(-1);
+          audio.currentTime=end+0.08;
+          audio.dispatchEvent(new Event('timeupdate'));
+          return {paused:audio.paused,status:document.querySelector('.quran-player-status')?.textContent};
+        },single.end);
+        if(!atBoundary.paused)
+          throw Error(browserName+' '+learner+' individual verse did not pause before replay seek');
+        if(repetition<3){
+          await page.waitForFunction(start=>{
+            const audio=window.__qaAudio.at(-1);
+            return !audio.paused&&!audio.seeking
+              &&Math.abs(audio.currentTime-Math.max(0,start-0.35))<0.07;
+          },single.start,{timeout:4000});
+        }else if(!atBoundary.status.includes('اكتمل تكرار الآية')){
+          throw Error(browserName+' '+learner+' single-verse repeat did not complete');
+        }
+      }
+      console.log('INDIVIDUAL_VERSE_REPLAY_PASS',browserName,learner,'verse 2','repeats 3');
       console.log('GUIDED_QURAN_RANGE_PASS',browserName,learner,
         'surah',config.surahNumber,'range',2,'to',4,'repeats',3);
     }
