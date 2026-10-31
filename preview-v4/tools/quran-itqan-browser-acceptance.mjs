@@ -161,6 +161,39 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
     if(maun.official!=='true'||!maun.width||maun.failed)
       throw Error(name+' Al-Maun official-focus failed '+JSON.stringify(maun));
     console.log(name+' SURAH_107_OFFICIAL_CROP_PASS');
+    // Al-Adiyat verse 10 belongs to the next authentic page (600).
+    // Test that the local pinned page map follows it without a CDN call.
+    await page.evaluate(async()=>{
+      window.__quranTestPlayer?.destroy?.();
+      const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+      const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+      const {loadQuranCoursePages}=await import('./src/shared/quran/quran-course-page-map.js');
+      const chapter=KHALED_QURAN_TERMS[2].find(x=>x.surahNumber===100);
+      if(!chapter)throw Error('Missing Al-Adiyat chapter');
+      const pages=await loadQuranCoursePages(chapter);
+      if(pages.map(p=>p.pageNumber).join(',')!=='599,600')
+        throw Error('Verified two-page Al-Adiyat mapping unavailable');
+      const host=document.createElement('div');document.body.replaceChildren(host);
+      window.__quranTestPlayer=mountQuranSurahPlayer(host,{
+        learnerId:'khaled',surahNumber:100,surahNameAr:chapter.surahNameAr,
+        audioPath:chapter.audioPath,mushafPage:pages[0],mushafPages:pages
+      });
+    });
+    await page.locator('.quran-itqan-toggle').waitFor({timeout:15000});
+    await page.locator('.quran-itqan-toggle').click();
+    await page.locator('.quran-ayah-button').nth(9).click();
+    await page.waitForFunction(()=>window.__quranTestPlayer?.getPageIndex()===1,
+      null,{timeout:15000});
+    await page.waitForFunction(()=>document.querySelector('.quran-mushaf-ayah-path[data-ayah="100:10"]'),
+      null,{timeout:15000});
+    const continued=await page.evaluate(()=>({
+      image:document.querySelector('.quran-page-image')?.currentSrc,
+      imageWidth:document.querySelector('.quran-page-image')?.naturalWidth,
+      index:window.__quranTestPlayer.getPageIndex()
+    }));
+    if(continued.index!==1||!continued.image?.includes('kfqc-hafs-page-600.svg')||!continued.imageWidth)
+      throw Error(name+' offline page continuation failed '+JSON.stringify(continued));
+    console.log(name+' OFFLINE_AYAH_PAGE_FOLLOW_PASS',JSON.stringify(continued));
     await page.screenshot({path:'/tmp/quran-itqan-'+name+'.png',fullPage:true});
     if(errors.length)throw Error(name+' page errors: '+errors.join('; ').slice(0,350));
   }finally{await browser.close();}
