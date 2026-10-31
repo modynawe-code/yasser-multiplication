@@ -5,6 +5,27 @@
 const SOURCE_PIN='b91d39e1065b57bdda3e94aca8ecf3575e50e1e6';
 const URL='./assets/recitation/quran-course-page-map.json';
 let cached=null;
+async function loadPinnedMap(fetchImpl){
+  if(!cached)cached=fetchImpl(URL,{cache:'no-cache'})
+    .then(r=>{if(!r.ok)throw Error('quran-course-pages-unavailable');return r.json();})
+    .catch(()=>null);
+  return cached;
+}
+
+/** Return only source-authenticated verse positions, never inferred offsets. */
+export function pageForBundledQuranAyah(surahNumber,ayahNumber,map){
+  const surah=Number(surahNumber),ayah=Number(ayahNumber);
+  if(map?.schemaVersion!==1||map?.sourcePin!==SOURCE_PIN
+    ||!Number.isInteger(surah)||surah<1||surah>114
+    ||!Number.isInteger(ayah)||ayah<1||ayah>286)return null;
+  const pages=map.surahs?.[String(surah)],versePages=map.ayahPages?.[String(surah)];
+  if(!Array.isArray(pages)||!Array.isArray(versePages)||versePages.length<ayah)return null;
+  const page=versePages[ayah-1];
+  return Number.isInteger(page)&&pages.includes(page)?page:null;
+}
+export async function findBundledQuranAyahPage(surahNumber,ayahNumber,{fetchImpl=globalThis.fetch}={}){
+  return pageForBundledQuranAyah(surahNumber,ayahNumber,await loadPinnedMap(fetchImpl));
+}
 
 export function expandQuranCoursePages(chapter,map){
   const original=chapter?.mushafPage;
@@ -35,9 +56,6 @@ export function expandQuranCoursePages(chapter,map){
 }
 
 export async function loadQuranCoursePages(chapter,{fetchImpl=globalThis.fetch}={}){
-  if(!cached)cached=fetchImpl(URL,{cache:'no-cache'})
-    .then(r=>{if(!r.ok)throw Error('quran-course-pages-unavailable');return r.json();})
-    .catch(()=>null);
-  const map=await cached;
+  const map=await loadPinnedMap(fetchImpl);
   return expandQuranCoursePages(chapter,map);
 }
