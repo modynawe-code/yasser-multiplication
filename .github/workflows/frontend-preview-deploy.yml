@@ -52,6 +52,7 @@ jobs:
         run: |
           node tools/build-itqan-cms-tracks.mjs
           node tools/build-quran-svg-pages.mjs
+          node tools/verify-quran-itqan-coverage.mjs
           node --input-type=module <<'NODE'
           import {readFile} from 'node:fs/promises';
           const catalog=JSON.parse(await readFile('assets/recitation/itqan-hafs-tracks.json','utf8'));
