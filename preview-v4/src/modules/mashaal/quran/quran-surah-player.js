@@ -2,6 +2,7 @@ import {isItqanEnabledOrigin,loadItqanTrack} from '../../../shared/quran/itqan-c
 import {fetchOfficialAyahPolygons} from '../../../shared/quran/quran-svg-ayah-polygons.js';
 import {findOfficialHafsPage,pageIndexInCurriculum} from '../../../shared/quran/quran-svg-page-index.js';
 import {loadQuranPractice,markQuranPractice,getQuranPracticeStage,practiceStorageKey} from '../../../shared/quran/quran-practice-progress.js';
+import {createQuranInstructionVoice} from '../../../shared/quran/quran-instruction-voice.js';
 
 const STYLE_KEY='quran-surah-player';
 // These pinned, verified Hafs SVG pages are already included in this repository.
@@ -204,7 +205,8 @@ function mountQuranSurahPlayerCore(host,{
   let repeatSelect=null,fromSelect=null,toSelect=null,practiceHint=null,practiceBlindButton=null;
   let repeatDoneButton=null,reviewedButton=null,practiceStartButton=null,updatePracticeStep=()=>{};
   let practiceBlind=false,blindWasUsed=false;
-  const stopInstructionVoice=()=>{try{globalThis.speechSynthesis?.cancel();}catch{};};
+  const instructionVoice=createQuranInstructionVoice();
+  const stopInstructionVoice=()=>instructionVoice.stop();
   const resetPracticeConfirmation=()=>{
     if(repeatDoneButton)repeatDoneButton.disabled=true;
     if(practiceBlindButton)practiceBlindButton.disabled=true;
@@ -291,18 +293,13 @@ function mountQuranSurahPlayerCore(host,{
       const instruction=document.createElement('button');
       instruction.type='button';instruction.className='quran-practice-instruction';
       instruction.textContent='🔊 اسمع التعليمات';
-      instruction.hidden=learnerId==='yasser'
-        ||typeof globalThis.SpeechSynthesisUtterance!=='function'
-        ||!globalThis.speechSynthesis?.speak;
+      instruction.hidden=learnerId==='yasser'||!instructionVoice.available();
       instruction.addEventListener('click',()=>{
         if(instruction.hidden)return;
         const line=learnerId==='khaled'
           ?(repeatDone.disabled?'اضغط ابدأ الاستماع، واستمع للآيات بهدوء.':'الآن ردد الآيات بصوتك، ثم اضغط رددت.')
           :(repeatDone.disabled?'اضغطي ابدأ الاستماع، ثم استمعي للآيات.':'الآن رددي الآيات بصوتك، ثم اضغطي رددت.');
-        audio.pause();stopInstructionVoice();
-        const words=new globalThis.SpeechSynthesisUtterance(line);
-        words.lang='ar-SA';words.rate=.85;
-        try{globalThis.speechSynthesis.speak(words);}catch{}
+        audio.pause();instructionVoice.speak(line);
       });
       const repeatDone=document.createElement('button');
       repeatDone.type='button';repeatDone.className='quran-practice-done';repeatDone.disabled=true;
