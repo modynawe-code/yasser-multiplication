@@ -54,7 +54,8 @@ export async function verifyQuranCurriculumCoverage({
       const count=track.ayahTimings.length;
       const missing=Array.from({length:count},(_,i)=>i+1).filter(i=>!found.has(i));
       if(missing.length)throw new Error('incomplete-svg-ayah-geometry-'+learner+'-'+n+':'+missing.join(','));
-      if(!included.includes(chapter.pageNumber))throw new Error('nominal-course-page-does-not-contain-surah-'+learner+'-'+n);
+      const nominal=Number(chapter.pageNumber??chapter.mushafPage?.pageNumber);
+      if(!included.includes(nominal))throw new Error('nominal-course-page-does-not-contain-surah-'+learner+'-'+n);
       const previous=map[String(n)];
       if(previous&&JSON.stringify(previous)!==JSON.stringify(included))
         throw new Error('inconsistent-course-page-map-'+n);
