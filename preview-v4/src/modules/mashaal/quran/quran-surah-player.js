@@ -655,7 +655,7 @@ function mountQuranSurahPlayerCore(host,{
   audio.addEventListener('error',()=>{status.textContent='تعذر تحميل التلاوة';});
   const refreshGeometry=()=>{
     figure.removeAttribute('data-image-error');retryPage.hidden=true;
-    if(!Number.isInteger(surahNumber)||(!ayahs.length&&!normalizedFocusRegion(pages[pageIndex],surahNumber)))return;
+    if(!Number.isInteger(surahNumber)||pages[pageIndex]?.sourceId!=='kfgqpc-hafs-madinah-svg')return;
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
     // The displayed original page may load via <img> even when a CORS fetch
     // for its polygon geometry fails. Try only the same verified page mirrors.
