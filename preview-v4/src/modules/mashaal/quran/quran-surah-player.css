@@ -12,12 +12,28 @@
 .quran-page-image{display:block;width:100%;height:auto;border-radius:14px;background:#fff;user-select:none;-webkit-user-drag:none}
 .quran-page-viewport[data-focused="true"] .quran-page-image{position:absolute;inset:0 auto auto 0;max-width:none;max-height:none;border-radius:0;transform-origin:center top}
 .quran-page-caption{padding:9px 8px 2px;text-align:center;color:#756b53;font-size:13px;font-weight:800;line-height:1.45}
+.quran-verse-position{margin:0 0 8px;padding:8px 12px;text-align:center;border:1px solid #b6d4c2;border-radius:12px;background:#eaf7ef;color:#1d603d;font-weight:900;font-size:15px}
+.quran-verse-position[hidden]{display:none}
+.quran-geometry-hint{margin:7px 3px 0;padding:8px 10px;border-radius:10px;background:#fff4df;color:#704e17;font-size:13px;line-height:1.65;font-weight:750;text-align:center}
+.quran-geometry-hint[hidden]{display:none}
+.quran-geometry-retry{width:100%;min-height:44px;margin:6px auto 2px;border:2px solid #bc9654;border-radius:11px;background:#fff5e1;color:#6b4c1c;font:inherit;font-size:14px;font-weight:850;touch-action:manipulation}
+.quran-geometry-retry[hidden]{display:none}
+.quran-geometry-retry:focus-visible{outline:3px solid #90672a;outline-offset:2px}
+.quran-full-page-toggle{display:block;margin:8px auto 3px;padding:8px 14px;min-height:44px;border:1px solid #b4c9bd;border-radius:12px;background:#f3fbf6;color:#205b3d;font:inherit;font-size:14px;font-weight:800;touch-action:manipulation}
+.quran-full-page-toggle[hidden]{display:none}
+.quran-full-page-toggle:focus-visible{outline:3px solid #205b3d;outline-offset:2px}
+.quran-page-viewport[data-source-view="true"] .quran-page-image{position:relative;display:block;width:100%;height:auto;max-width:100%;transform:none}
+.quran-page-viewport[data-source-view="true"] .quran-mushaf-ayah-overlay{width:100%;height:100%;transform:none}
 .quran-page-nav{display:grid;grid-template-columns:minmax(90px,1fr) auto minmax(90px,1fr);align-items:center;gap:8px;margin-top:8px;direction:rtl}
 .quran-page-nav[hidden]{display:none}
 .quran-page-nav-button{min-height:44px;border:1px solid #d9d2bd;border-radius:14px;background:#fff;color:#4d493d;font:inherit;font-weight:900;padding:8px 12px;touch-action:manipulation}
 .quran-page-nav-button:disabled{opacity:.4;cursor:default}.quran-page-nav-button:not(:disabled):active{transform:scale(.985)}
 .quran-page-indicator{min-width:92px;text-align:center;color:#756b53;font-size:13px;font-weight:900;white-space:nowrap}
 .quran-page-frame[data-image-error="true"]{min-height:180px;display:grid;place-items:center}.quran-page-frame[data-image-error="true"] .quran-page-viewport{display:none}
+.quran-page-retry{min-height:46px;width:100%;padding:9px 12px;border:2px solid #6b9476;border-radius:12px;background:#e8f5ec;color:#24583b;font:inherit;font-weight:900;touch-action:manipulation}
+.quran-page-retry[hidden]{display:none}
+.quran-page-retry:focus-visible{outline:3px solid #285f52;outline-offset:3px}
+.quran-page-frame[data-image-error="true"] .quran-page-caption{font-size:15px;line-height:1.65}
 .quran-transport{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .quran-control{min-height:72px;border:2px solid #e4d6ea;border-radius:20px;background:#fff;padding:11px 14px;color:var(--text);font:inherit;font-weight:950;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 14px rgba(74,48,84,.05);touch-action:manipulation}
 .quran-control span{font-size:25px}.quran-control strong{font-size:18px}.quran-control-primary{background:#fff3fb;border-color:#bb78aa;color:#6c3d62;box-shadow:0 8px 18px rgba(183,121,170,.16)}
@@ -46,3 +62,135 @@
 }
 @media(max-width:620px){.quran-transport{grid-template-columns:1fr}.quran-page-frame{width:min(100%,390px)}.quran-control{min-height:70px}.quran-progress-wrap{grid-template-columns:minmax(0,1fr) auto;gap:10px}.quran-time{min-width:82px}.quran-page-nav{grid-template-columns:1fr auto 1fr}.quran-page-nav-button{min-width:0}}
 @media(prefers-reduced-motion:reduce){.quran-control,.quran-page-nav-button{transition:none}.quran-control:active,.quran-page-nav-button:active{transform:none}}
+
+/* Shared ayah player controls are only rendered when verified same-track timings exist. */
+.quran-ayah-controls{display:grid;gap:12px;padding:14px;border:1px solid #d9e7df;border-radius:20px;background:#f7fcf9}
+.quran-ayah-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.quran-ayah-heading strong{font-size:18px;color:#255b3d}
+.quran-ayah-heading label{font-size:14px;font-weight:900;color:#255b3d}
+.quran-ayah-heading select{min-height:44px;border:1px solid #95bca6;border-radius:10px;background:white;padding:5px 10px;font:inherit;color:#255b3d}
+.quran-ayah-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:310px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.quran-ayah-button{min-height:52px;border:2px solid #cbe0d2;border-radius:14px;background:white;color:#255b3d;font:inherit;font-weight:900;touch-action:manipulation}
+.quran-ayah-button.active{background:#d1f2df;border-color:#428b62}
+.quran-ayah-button:focus-visible,.quran-ayah-heading select:focus-visible{outline:3px solid #316a48;outline-offset:3px}
+@media(orientation:landscape) and (min-width:850px) and (max-height:800px){
+  .quran-surah-player.has-ayah-controls{grid-template-areas:"page controls" "page ayahs" "page progress" "page status"}
+  .quran-surah-player.has-ayah-controls .quran-ayah-controls{grid-area:ayahs}
+  .quran-surah-player.has-ayah-controls .quran-ayah-buttons{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:620px){.quran-ayah-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:350px){.quran-ayah-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* This overlay uses the exact ayahPolygon vector geometry from the matching
+   bundled Madinah Hafs page. The original mushaf image is untouched. */
+.quran-mushaf-ayah-overlay{position:absolute;inset:0;display:block;width:100%;height:100%;pointer-events:none;z-index:2}
+.quran-page-viewport[data-focused="true"] .quran-mushaf-ayah-overlay{height:auto;max-height:none;transform-origin:center top}
+.quran-mushaf-ayah-path{fill:transparent;stroke:transparent;stroke-width:1;pointer-events:all;cursor:pointer;outline:none}
+.quran-mushaf-ayah-path.is-current{fill:rgba(242,197,63,.27);stroke:rgba(136,94,23,.8);stroke-width:1.35}
+.quran-mushaf-ayah-path:focus-visible{stroke:#276d55;stroke-width:3;fill:rgba(165,221,188,.24)}
+.quran-ayah-button.is-current{box-shadow:inset 0 0 0 2px #b18a35}
+.quran-page-viewport:has(.quran-mushaf-ayah-overlay){touch-action:pan-y}
+
+/* Compact transport ONLY when verse-repetition controls are present. 
+   Other children's normal surah player retains its original sizing. */
+.quran-surah-player.has-ayah-controls .quran-transport{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.quran-surah-player.has-ayah-controls .quran-control{min-height:48px;gap:5px;padding:8px 5px;border-radius:14px}
+.quran-surah-player.has-ayah-controls .quran-control span{font-size:18px}
+.quran-surah-player.has-ayah-controls .quran-control strong{font-size:clamp(12px,1.6vw,15px);line-height:1.25}
+@media(max-width:620px){
+  .quran-surah-player.has-ayah-controls .quran-transport{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .quran-surah-player.has-ayah-controls .quran-control{min-height:50px;padding:8px 9px}
+  .quran-surah-player.has-ayah-controls .quran-ayah-controls{padding:10px;gap:8px}
+  .quran-surah-player.has-ayah-controls .quran-ayah-button{min-height:46px}
+  .quran-surah-player.has-ayah-controls .quran-player-status{font-size:14px;min-height:20px}
+}
+
+/* Shared compact transport for all learners, even before per-ayah data exists. */
+@media(max-width:620px){
+  .quran-surah-player:not(.has-ayah-controls) .quran-transport{
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:8px
+  }
+  .quran-surah-player:not(.has-ayah-controls) .quran-control{
+    min-height:52px;gap:6px;padding:8px 9px;border-radius:14px
+  }
+  .quran-surah-player:not(.has-ayah-controls) .quran-control span{font-size:19px}
+  .quran-surah-player:not(.has-ayah-controls) .quran-control strong{
+    font-size:clamp(13px,3.6vw,16px);line-height:1.3
+  }
+}
+
+/* Optional Itqan CMS original-track recording: pilot-only; the baseline stays untouched. */
+.quran-itqan-source-panel{display:grid;gap:8px;padding:11px 14px;border:1px solid #b5d3c4;border-radius:15px;background:#f0f8f4;grid-column:1/-1}
+.quran-itqan-source-name{margin:0;color:#275742;font-size:14px;font-weight:800;line-height:1.65}
+.quran-itqan-toggle{font:inherit;font-weight:900;min-height:50px;border-radius:12px;padding:8px 12px;background:#e0f3e7;color:#175035;border:2px solid #6ea585;touch-action:manipulation}
+.quran-itqan-toggle:focus-visible{outline:3px solid #285f52;outline-offset:2px}
+@media(max-width:620px){.quran-itqan-source-panel{padding:10px;gap:6px}.quran-itqan-toggle{font-size:15px;min-height:52px}}
+
+/* Quran guided practice: opt-in to a same-track verified Itqan recording. */
+.quran-range-controls{display:block;padding:12px;background:#f4f8f4;border:1px solid #d5e5d9;border-radius:15px}
+.quran-range-controls>summary{color:#205b3d;font-weight:900;cursor:pointer;min-height:44px;display:list-item;list-style:disclosure-closed inside;touch-action:manipulation}
+.quran-range-controls[open]>summary{list-style-type:disclosure-open}
+.quran-range-controls>summary:focus-visible{outline:3px solid #285f52;outline-offset:2px;border-radius:5px}
+.quran-range-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.quran-range-controls label{display:grid;gap:5px;font-weight:800}
+.quran-range-controls select{min-width:0;width:100%;min-height:44px;padding:6px;border-radius:10px;border:1px solid #7eac8e;background:white;font:inherit}
+.quran-range-play{grid-column:1/-1;background:#d6efdf;border:2px solid #488e63;color:#20583a;border-radius:12px;min-height:50px;font:inherit;font-weight:900}
+.quran-practice-guided{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border:1px solid #c1dbce;border-radius:15px;background:#f5fbf7;padding:12px}
+.quran-practice-guided>strong,.quran-practice-status{grid-column:1/-1}
+.quran-practice-steps{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:7px;list-style:none;margin:2px 0;padding:0}
+.quran-practice-step{min-height:42px;display:grid;place-items:center;padding:7px 5px;border-radius:12px;border:1px solid #c9d7ce;background:#fff;color:#52705e;font-size:14px;font-weight:850;text-align:center}
+.quran-practice-step[data-state="current"]{background:#deefe4;border-color:#4c9367;color:#1c5737;box-shadow:inset 0 0 0 1px #4c9367}
+.quran-practice-step[data-state="done"]{background:#ebf8ef;border-color:#9bc9ad;color:#376c49}
+.quran-practice-guided button:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
+.quran-practice-guided button:focus-visible{outline:3px solid #285f52;outline-offset:2px}
+.quran-practice-guided button{min-height:50px;border:2px solid #88b7a1;border-radius:12px;background:white;color:#235039;font:inherit;font-weight:800}
+.quran-practice-guided>button{grid-column:1/-1}
+.quran-practice-guided .quran-practice-listen{min-height:54px;background:#d6efdf;border-color:#488e63;color:#20583a}
+.quran-practice-guided .quran-practice-done,
+.quran-practice-guided .quran-practice-blind,
+.quran-practice-guided .quran-practice-reviewed{background:#e4f4e9;border-color:#598f70}
+.quran-practice-guided button[hidden]{display:none}
+.quran-practice-status{margin:3px 0 0;font-size:14px;font-weight:700;color:#295a3e}
+.quran-ayah-button[data-practice-stage="reviewed"]{border-color:#5985b9}
+.quran-ayah-button[data-practice-stage="repeated"]{border-color:#41895c}
+.quran-practice-blind .quran-page-viewport{visibility:hidden}
+.quran-practice-blind .quran-page-caption::after{content:"المصحف مخفي للتسميع الذاتي";display:block;font-weight:800;color:#305d49}
+@media(max-width:540px){.quran-range-controls,.quran-practice-guided{gap:7px;padding:9px}.quran-practice-guided button,.quran-range-play{font-size:14px}}
+
+
+/* Keep recitation controls reachable while the child follows a long Mushaf page.
+   Limited to timed-guided lessons, preserving ordinary surah-player layouts. */
+@media(max-width:620px){
+  .quran-surah-player.has-ayah-controls .quran-transport{
+    position:sticky;
+    bottom:env(safe-area-inset-bottom,0px);
+    z-index:4;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:5px;
+    padding:5px;
+    background:rgba(255,255,255,.98);
+    border:1px solid #dfd8e2;
+    border-radius:14px;
+    box-shadow:0 4px 12px rgba(51,39,62,.12);
+  }
+  .quran-surah-player.has-ayah-controls .quran-control{
+    min-width:0;min-height:54px;padding:4px 1px;
+    display:flex;flex-direction:column;gap:2px;border-radius:10px;
+  }
+  .quran-surah-player.has-ayah-controls .quran-control span{font-size:17px;line-height:1}
+  .quran-surah-player.has-ayah-controls .quran-control strong{
+    font-size:11px;line-height:1.2;text-align:center;
+  }
+}
+
+/* Child-specific training: separate instructions, no change to the Mushaf. */
+.quran-practice-instruction{grid-column:1/-1;min-height:50px;background:#f0efff!important;border-color:#8f86c3!important;color:#443b75!important}
+.quran-practice-instruction[hidden]{display:none}
+.quran-learner-khaled .quran-practice-listen,
+.quran-learner-mashaal .quran-practice-listen{font-size:clamp(17px,2.7vw,21px);min-height:60px}
+.quran-learner-khaled .quran-practice-step,
+.quran-learner-mashaal .quran-practice-step{min-height:46px}
+.quran-learner-yasser .quran-practice-blind{border-style:dashed}
+@media(prefers-reduced-motion:no-preference){
+  .quran-practice-step[data-state="current"]{transition:background-color .2s ease,border-color .2s ease}
+}

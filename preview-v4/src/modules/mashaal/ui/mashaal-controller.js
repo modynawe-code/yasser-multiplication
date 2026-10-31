@@ -104,6 +104,7 @@ export function createMashaalController({repository,onExitToHub,onActivityComple
       return mountQuranSurahPlayer(host,{
         surahNameAr:stimulus.surahNameAr,
         surahNumber:stimulus.surahNumber,
+        learnerId:'mashaal',
         audioPath:model.recitationAudioPath,
         mushafPage:model.recitationMushafPage,
         onCompleted:()=>{
