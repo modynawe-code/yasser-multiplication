@@ -203,6 +203,7 @@ function mountQuranSurahPlayerCore(host,{
   let repeatSelect=null,fromSelect=null,toSelect=null,practiceHint=null,practiceBlindButton=null;
   let repeatDoneButton=null,reviewedButton=null,practiceStartButton=null,updatePracticeStep=()=>{};
   let practiceBlind=false,blindWasUsed=false;
+  const stopInstructionVoice=()=>{try{globalThis.speechSynthesis?.cancel();}catch{};};
   const resetPracticeConfirmation=()=>{
     if(repeatDoneButton)repeatDoneButton.disabled=true;
     if(practiceBlindButton)practiceBlindButton.disabled=true;
@@ -278,11 +279,30 @@ function mountQuranSurahPlayerCore(host,{
       const practice=document.createElement('div');
       practice.className='quran-practice-guided';
       const guide=document.createElement('strong');
-      guide.textContent=learnerId==='mashaal'?'تدرّبي على الحفظ':'تدرّب على الحفظ';
+      guide.textContent=learnerId==='khaled'?'اسمع الآيات ثم رددها بصوتك'
+        :learnerId==='mashaal'?'اسمعي الآيات ثم ردديها':'تدرّب على الحفظ والتسميع';
       const startListen=document.createElement('button');
       startListen.type='button';startListen.className='quran-practice-listen';
       startListen.textContent=learnerId==='mashaal'?'ابدئي الاستماع للآيات':'ابدأ الاستماع للآيات';
       practiceStartButton=startListen;
+      // OS spoken instructions are optional and NEVER used to recite Quran.
+      // They are activated by the child's gesture, and paused before playback.
+      const instruction=document.createElement('button');
+      instruction.type='button';instruction.className='quran-practice-instruction';
+      instruction.textContent='🔊 اسمع التعليمات';
+      instruction.hidden=learnerId==='yasser'
+        ||typeof globalThis.SpeechSynthesisUtterance!=='function'
+        ||!globalThis.speechSynthesis?.speak;
+      instruction.addEventListener('click',()=>{
+        if(instruction.hidden)return;
+        const line=learnerId==='khaled'
+          ?(repeatDone.disabled?'اضغط ابدأ الاستماع، واستمع للآيات بهدوء.':'الآن ردد الآيات بصوتك، ثم اضغط رددت.')
+          :(repeatDone.disabled?'اضغطي ابدأ الاستماع، ثم استمعي للآيات.':'الآن رددي الآيات بصوتك، ثم اضغطي رددت.');
+        audio.pause();stopInstructionVoice();
+        const words=new globalThis.SpeechSynthesisUtterance(line);
+        words.lang='ar-SA';words.rate=.85;
+        try{globalThis.speechSynthesis.speak(words);}catch{}
+      });
       const repeatDone=document.createElement('button');
       repeatDone.type='button';repeatDone.className='quran-practice-done';repeatDone.disabled=true;
       repeatDoneButton=repeatDone;
@@ -323,7 +343,7 @@ function mountQuranSurahPlayerCore(host,{
       practiceHint=document.createElement('p');
       practiceHint.className='quran-practice-status';practiceHint.setAttribute('role','status');
       practiceHint.textContent='اختر آياتك، استمع للتلاوة، ثم ردد بنفسك';
-      practice.append(guide,stageList,startListen,repeatDone,practiceBlindButton,reviewed,practiceHint);
+      practice.append(guide,stageList,instruction,startListen,repeatDone,practiceBlindButton,reviewed,practiceHint);
       // Place the active learning action before the per-verse button grid.
       panel.insertBefore(practice,buttons);
       startListen.addEventListener('click',()=>{
@@ -546,7 +566,7 @@ function mountQuranSurahPlayerCore(host,{
       practiceHint.textContent='للبدء بالحفظ اضغط «استمع للنطاق وكرره» أولًا';
     updateProgress();onCompleted();
   };
-  const playAudio=async()=>{try{await audio.play();if(selectedAyahIndex<0&&!seeking&&audio.currentTime<0.5)fullSurahListening=true;status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
+  const playAudio=async()=>{try{stopInstructionVoice();await audio.play();if(selectedAyahIndex<0&&!seeking&&audio.currentTime<0.5)fullSurahListening=true;status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
   const pauseAudio=()=>{audio.pause();paintListeningAyah();status.textContent='متوقفة مؤقتًا';};
   const restartAudio=async()=>{cancelReplaySeek();fullSurahListening=false;audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
   const stopAudio=()=>{cancelReplaySeek();fullSurahListening=false;audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
@@ -687,7 +707,7 @@ function mountQuranSurahPlayerCore(host,{
     play:playAudio,pause:pauseAudio,restart:restartAudio,stop:stopAudio,
     nextPage(){changePage(pageIndex+1);},previousPage(){changePage(pageIndex-1);},getPageIndex(){return pageIndex;},
     hasCompleted(){return completed;},
-    destroy(){cancelReplaySeek();destroyed=true;overlayEpoch++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+    destroy(){stopInstructionVoice();cancelReplaySeek();destroyed=true;overlayEpoch++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
   });
 }
 
