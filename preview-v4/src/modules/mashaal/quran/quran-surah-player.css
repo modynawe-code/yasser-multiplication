@@ -139,6 +139,11 @@
 .quran-practice-guided button:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
 .quran-practice-guided button:focus-visible{outline:3px solid #285f52;outline-offset:2px}
 .quran-practice-guided button{min-height:50px;border:2px solid #88b7a1;border-radius:12px;background:white;color:#235039;font:inherit;font-weight:800}
+.quran-practice-guided>button{grid-column:1/-1}
+.quran-practice-guided .quran-practice-listen{min-height:54px;background:#d6efdf;border-color:#488e63;color:#20583a}
+.quran-practice-guided .quran-practice-done,
+.quran-practice-guided .quran-practice-blind,
+.quran-practice-guided .quran-practice-reviewed{background:#e4f4e9;border-color:#598f70}
 .quran-practice-guided button[hidden]{display:none}
 .quran-practice-status{margin:3px 0 0;font-size:14px;font-weight:700;color:#295a3e}
 .quran-ayah-button[data-practice-stage="reviewed"]{border-color:#5985b9}
