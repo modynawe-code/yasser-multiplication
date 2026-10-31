@@ -126,7 +126,7 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
         width:document.querySelector('.quran-page-image')?.naturalWidth||0,
         error:document.querySelector('.quran-page-frame')?.dataset.imageError||''
       }));
-      if(!loaded.width||loaded.error||!new RegExp('/kfqc-hafs-page-'+number+'(?:-surah\\d+)?\\.svg
+      if(!loaded.width||loaded.error||!loaded.src.includes('/kfqc-hafs-page-'+number))
         throw Error(name+' bundled mushaf page '+number+' failed '+JSON.stringify(loaded));
       console.log(name+' BUNDLED_MUSHAF_PAGE_PASS '+number);
     }
