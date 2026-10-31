@@ -35,6 +35,7 @@ jobs:
         run: |
           cd preview-v4
           node tools/build-itqan-cms-tracks.mjs
+          node tools/build-quran-svg-pages.mjs
           cd ..
           node tools/build-web-preview.mjs
       - name: Install browsers and QA harness
