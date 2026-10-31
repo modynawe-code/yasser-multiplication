@@ -10,7 +10,9 @@ export function isItqanEnabledOrigin(location=globalThis.location){
   const host=String(location?.hostname||'').toLowerCase();
   return host==='family-learning-preview.modynawe.workers.dev'
     ||host==='family-learning-fatiha-pilot.modynawe.workers.dev'
-    ||((location?.hostname==='localhost'||location?.hostname==='127.0.0.1')
+    ||(host==='modynawe-code.github.io'
+      &&String(location?.pathname||'').startsWith('/yasser-multiplication/'))
+    ||((host==='localhost'||host==='127.0.0.1')
       &&new URLSearchParams(location?.search||'').get('itqanPilot')==='1');
 }
 export function validateItqanCatalogTrack(catalog,surahNumber){
