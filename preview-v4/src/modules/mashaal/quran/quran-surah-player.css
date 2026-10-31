@@ -19,6 +19,11 @@
 .quran-geometry-retry{width:100%;min-height:44px;margin:6px auto 2px;border:2px solid #bc9654;border-radius:11px;background:#fff5e1;color:#6b4c1c;font:inherit;font-size:14px;font-weight:850;touch-action:manipulation}
 .quran-geometry-retry[hidden]{display:none}
 .quran-geometry-retry:focus-visible{outline:3px solid #90672a;outline-offset:2px}
+.quran-full-page-toggle{display:block;margin:8px auto 3px;padding:8px 14px;min-height:44px;border:1px solid #b4c9bd;border-radius:12px;background:#f3fbf6;color:#205b3d;font:inherit;font-size:14px;font-weight:800;touch-action:manipulation}
+.quran-full-page-toggle[hidden]{display:none}
+.quran-full-page-toggle:focus-visible{outline:3px solid #205b3d;outline-offset:2px}
+.quran-page-viewport[data-source-view="true"] .quran-page-image{position:relative;display:block;width:100%;height:auto;max-width:100%;transform:none}
+.quran-page-viewport[data-source-view="true"] .quran-mushaf-ayah-overlay{width:100%;height:100%;transform:none}
 .quran-page-nav{display:grid;grid-template-columns:minmax(90px,1fr) auto minmax(90px,1fr);align-items:center;gap:8px;margin-top:8px;direction:rtl}
 .quran-page-nav[hidden]{display:none}
 .quran-page-nav-button{min-height:44px;border:1px solid #d9d2bd;border-radius:14px;background:#fff;color:#4d493d;font:inherit;font-weight:900;padding:8px 12px;touch-action:manipulation}
