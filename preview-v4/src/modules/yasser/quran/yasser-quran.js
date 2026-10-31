@@ -1,4 +1,5 @@
 import { mountQuranSurahPlayer } from '../../mashaal/quran/quran-surah-player.js';
+import {loadQuranCoursePages} from '../../../shared/quran/quran-course-page-map.js';
 
 const QURAN_SVG_COMMIT='b91d39e1065b57bdda3e94aca8ecf3575e50e1e6';
 const AUDIO_BASE='https://cdn.quran.ws/KFGQPC/resources/quran-audios/akhdar-sura/sura';
@@ -65,7 +66,7 @@ export const YASSER_QURAN_TERMS=Object.freeze({
   2:Object.freeze({recitation:Object.freeze(TERM_2.recitation.map(mediaFor)),memorization:Object.freeze(TERM_2.memorization.map(mediaFor))})
 });
 
-let mounted=false,player=null,term=1,mode='recitation',selected=null,selectedPageNumber=null,repeatTarget=3,repeatCount=0;
+let mounted=false,player=null,term=1,mode='recitation',selected=null,selectedPageNumber=null,repeatTarget=3,repeatCount=0,openTicket=0;
 
 function storage(){try{return globalThis.localStorage;}catch{return null;}}
 function loadProgress(){try{return JSON.parse(storage()?.getItem(STORAGE_KEY)||'{}')||{};}catch{return {};}}
@@ -95,7 +96,7 @@ function ensureStyle(){
   const link=document.createElement('link');link.rel='stylesheet';link.href='src/modules/yasser/quran/yasser-quran.css';link.dataset.moduleStyle='yasser-quran';document.head.appendChild(link);
 }
 function show(id){document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id===id));window.scrollTo(0,0);}
-function destroyPlayer(){if(!player)return;try{player.destroy();}catch{}player=null;}
+function destroyPlayer(){openTicket++;if(!player)return;try{player.destroy();}catch{}player=null;}
 
 function ensureShell(){
   if(document.getElementById('yasserQuranView'))return;
@@ -194,8 +195,8 @@ function toggleBlind(){
   const stage=document.getElementById('yasserQuranStage');const button=document.getElementById('yasserQuranBlind');const hint=document.getElementById('yasserQuranMemoryHint');if(!stage||!button)return;
   const blind=!stage.classList.contains('blind');stage.classList.toggle('blind',blind);button.textContent=blind?'أظهر المصحف':'اختبرني غيب';if(hint)hint.hidden=!blind;
 }
-function openSurah(item,button){
-  destroyPlayer();selected=item;selectedPageNumber=firstPage(item);repeatCount=0;
+async function openSurah(item,button){
+  destroyPlayer();const ticket=++openTicket;selected=item;selectedPageNumber=firstPage(item);repeatCount=0;
   document.querySelectorAll('.yasser-quran-surah').forEach(node=>node.classList.toggle('selected',node===button));
   const stage=document.getElementById('yasserQuranStage');const tools=document.getElementById('yasserQuranMemoryTools');const hint=document.getElementById('yasserQuranMemoryHint');if(!stage)return;
   stage.hidden=false;stage.classList.remove('blind');if(hint)hint.hidden=true;
@@ -204,8 +205,10 @@ function openSurah(item,button){
   if(tools)tools.hidden=mode!=='memorization';
   const blind=document.getElementById('yasserQuranBlind');if(blind)blind.textContent='اختبرني غيب';
   updateLevelButton();saveLast(item,selectedPageNumber);
+  const verifiedPages=await loadQuranCoursePages(item);
+  if(ticket!==openTicket)return;
   player=mountQuranSurahPlayer(document.getElementById('yasserQuranPlayerHost'),{
-    surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,learnerId:'yasser',audioPath:item.audioPath,mushafPage:item.mushafPage,mushafPages:item.mushafPages,durationSeconds:item.durationSeconds,retryPlayText:'اضغط تشغيل مرة ثانية',
+    surahNameAr:item.surahNameAr,surahNumber:item.surahNumber,learnerId:'yasser',audioPath:item.audioPath,mushafPage:verifiedPages[0]||item.mushafPage,mushafPages:verifiedPages,durationSeconds:item.durationSeconds,retryPlayText:'اضغط تشغيل مرة ثانية',
     onPageChange:({pageNumber})=>{if(!pageNumber)return;selectedPageNumber=pageNumber;updateLevelButton();saveLast(item,pageNumber);},
     onCompleted:()=>{
       if(mode!=='memorization'||repeatTarget<=1)return;
