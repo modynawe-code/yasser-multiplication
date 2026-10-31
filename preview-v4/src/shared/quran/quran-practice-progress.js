@@ -49,7 +49,12 @@ export function markQuranPractice(learnerId,{surahNumber,fromAyah,toAyah,stage},
   }
   const bounded=Object.fromEntries(Object.entries(records).slice(-MAX_RECORDS));
   const updated={version:1,records:bounded,last:{surahNumber:surah,ayahNumber:from,stage,updatedAt:date}};
-  try{storage?.setItem(key,JSON.stringify(updated));return true;}catch{return false;}
+  try{
+    storage?.setItem(key,JSON.stringify(updated));
+    // Notify the existing family sync cycle; offline learners keep local state.
+    globalThis.dispatchEvent?.(new Event('family:quran-practice-changed'));
+    return true;
+  }catch{return false;}
 }
 export function getQuranPracticeStage(learnerId,surahNumber,ayahNumber,{storage=globalThis.localStorage}={}){
   if(!validPracticeVerse(surahNumber,ayahNumber))return null;
