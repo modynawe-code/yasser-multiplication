@@ -19,14 +19,18 @@ test('prefer the three verified, bundled Hafs SVG pages over external mirrors',(
   }
 });
 
-test('do not invent local mushaf artwork when that page is not bundled',()=>{
-  const remote=pageSources(chapter(93).mushafPage);
-  assert.equal(remote[0],chapter(93).mushafPage.imageUrl);
-  assert.ok(remote.every(src=>!src.startsWith('./assets/recitation/')));
-  const otherSource=pageSources({
+test('every current Khaled course page prefers locally bundled original artwork',()=>{
+  for(const item of chapters){
+    const sources=pageSources(item.mushafPage);
+    assert.equal(sources[0],
+      './assets/recitation/kfqc-hafs-page-'+item.pageNumber+'.svg');
+    assert.equal(item.mushafPage.offlineBundled,true);
+    assert.ok(sources.some(src=>src.startsWith('https://')));
+  }
+  const unknownSource=pageSources({
     sourceId:'unverified',pageNumber:1,imageUrl:'https://example.test/a.svg'
   });
-  assert.deepEqual(otherSource,['https://example.test/a.svg']);
+  assert.deepEqual(unknownSource,['https://example.test/a.svg']);
 });
 
 test('a failed page has a recoverable retry action without replacing Quran text',async()=>{
