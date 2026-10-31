@@ -7,6 +7,12 @@ const STYLE_KEY='quran-surah-player';
 // These pinned, verified Hafs SVG pages are already included in this repository.
 // Prefer them over remote CDNs so the first and last pages work offline.
 const BUNDLED_HAFS_PAGES=new Set([1,603,604]);
+// Decode lead-in for repeated MP3 verse seeks, without changing original timing.
+export function repeatSeekStartSeconds(startMs){
+  const ms=Number(startMs);
+  if(!Number.isFinite(ms)||ms<0)return 0;
+  return Math.max(0,(ms-350)/1000);
+}
 
 function ensureStyle(){
   if(document.querySelector(`link[data-module-style="${STYLE_KEY}"]`))return;
@@ -364,6 +370,12 @@ function mountQuranSurahPlayerCore(host,{
   let requestedAyahKey='',followTicket=0;
   let selectedAyahIndex=-1,selectedAyahEndIndex=-1,ayahRepeatCount=0;
   let completed=false,destroyed=false,seeking=false,resumeAfterSeek=false,fullSurahListening=false,pageIndex=0,sourceIndex=0,touchStartX=0,touchStartY=0,knownDuration=Number.isFinite(Number(durationSeconds))&&Number(durationSeconds)>0?Number(durationSeconds):0;
+  let replaySeekPending=false,replaySeekListener=null,replaySeekFallback=null;
+  const cancelReplaySeek=()=>{
+    if(replaySeekListener)audio.removeEventListener('seeked',replaySeekListener);
+    if(replaySeekFallback!==null)clearTimeout(replaySeekFallback);
+    replaySeekListener=null;replaySeekFallback=null;replaySeekPending=false;
+  };
   const rangeEnd=range=>{
     try{
       const length=Number(range?.length)||0;
@@ -442,7 +454,7 @@ function mountQuranSurahPlayerCore(host,{
     if(!duration)progress.disabled=true;
     paintSeek(current,duration);time.textContent=`${formatTime(current)} / ${duration?formatTime(duration):'--:--'}`;
   };
-  const beginSeek=()=>{if(seeking||!finiteDuration())return;fullSurahListening=false;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
+  const beginSeek=()=>{if(seeking||!finiteDuration())return;cancelReplaySeek();fullSurahListening=false;seeking=true;resumeAfterSeek=!audio.paused&&!audio.ended;if(resumeAfterSeek)audio.pause();status.textContent='اسحب لاختيار موضع التلاوة';};
   const previewSeek=()=>{const duration=finiteDuration();if(!duration)return;if(!seeking)beginSeek();const target=seekValue();try{audio.currentTime=target;}catch{}paintSeek(target,duration);time.textContent=`${formatTime(target)} / ${formatTime(duration)}`;};
   const paintListeningAyah=()=>{
     const ms=(Number(audio.currentTime)||0)*1000;
@@ -481,7 +493,7 @@ function mountQuranSurahPlayerCore(host,{
     paintListeningAyah();
   };
   const clearAyahSelection=()=>{
-    selectedAyahIndex=-1;selectedAyahEndIndex=-1;ayahRepeatCount=0;paintAyahSelection();
+    cancelReplaySeek();selectedAyahIndex=-1;selectedAyahEndIndex=-1;ayahRepeatCount=0;paintAyahSelection();
   };
   const rangeSelection=()=>{
     const start=Number(fromSelect?.value),end=Number(toSelect?.value);
@@ -514,7 +526,7 @@ function mountQuranSurahPlayerCore(host,{
   };
   const selectRange=async (start,end)=>{
     if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end<start||end>=ayahs.length||destroyed)return;
-    resetPracticeConfirmation();
+    cancelReplaySeek();resetPracticeConfirmation();
     fullSurahListening=false;
     audio.pause();selectedAyahIndex=start;selectedAyahEndIndex=end;
     ayahRepeatCount=0;completed=false;seeking=false;
@@ -536,8 +548,8 @@ function mountQuranSurahPlayerCore(host,{
   };
   const playAudio=async()=>{try{await audio.play();if(selectedAyahIndex<0&&!seeking&&audio.currentTime<0.5)fullSurahListening=true;status.textContent=audio.currentTime>0?'نكمل التلاوة':'تعمل التلاوة الآن';paintListeningAyah();return true;}catch{status.textContent=retryPlayText;return false;}};
   const pauseAudio=()=>{audio.pause();paintListeningAyah();status.textContent='متوقفة مؤقتًا';};
-  const restartAudio=async()=>{fullSurahListening=false;audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
-  const stopAudio=()=>{fullSurahListening=false;audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
+  const restartAudio=async()=>{cancelReplaySeek();fullSurahListening=false;audio.pause();audio.currentTime=selectedAyahIndex>=0?ayahs[selectedAyahIndex].startMs/1000:0;ayahRepeatCount=0;completed=false;seeking=false;resumeAfterSeek=false;updateProgress();return playAudio();};
+  const stopAudio=()=>{cancelReplaySeek();fullSurahListening=false;audio.pause();clearAyahSelection();try{audio.currentTime=0;}catch{}completed=false;seeking=false;resumeAfterSeek=false;updateProgress();paintListeningAyah();status.textContent='متوقفة';};
   const stopOnFamilyNavigation=()=>stopAudio();
   document.addEventListener('family:stop-quran-audio',stopOnFamilyNavigation);
   const showHighlightedVerseOnMushaf=()=>{
@@ -563,15 +575,34 @@ function mountQuranSurahPlayerCore(host,{
     if(revealInMushaf)showHighlightedVerseOnMushaf();
   };
   const handleAyahBoundary=()=>{
+    if(replaySeekPending)return true;
     if(selectedAyahIndex<0||destroyed||seeking)return false;
     const item=ayahs[selectedAyahEndIndex>=selectedAyahIndex?selectedAyahEndIndex:selectedAyahIndex];
     if(!item||audio.currentTime*1000<item.endMs-50)return false;
     ayahRepeatCount++;
     const target=Number(repeatSelect?.value)||1;
     if(ayahRepeatCount<target){
-      try{audio.currentTime=ayahs[selectedAyahIndex].startMs/1000;}catch{clearAyahSelection();audio.pause();return true;}
-      status.textContent='إعادة الآية '+String(selectedAyahIndex+1)+' — '+String(ayahRepeatCount+1)+' من '+String(target);
-      if(audio.paused)void playAudio();
+      // Pause during the media seek; otherwise Safari/MP3 can skip opening
+      // consonants when starting the next repetition.
+      const replayStart=repeatSeekStartSeconds(ayahs[selectedAyahIndex].startMs);
+      audio.pause();replaySeekPending=true;
+      const resumeReplay=()=>{
+        if(!replaySeekPending||destroyed)return;
+        cancelReplaySeek();
+        status.textContent='إعادة الآية '+String(selectedAyahIndex+1)+' — '+String(ayahRepeatCount+1)+' من '+String(target);
+        paintListeningAyah();
+        void playAudio();
+      };
+      replaySeekListener=resumeReplay;
+      audio.addEventListener('seeked',resumeReplay,{once:true});
+      try{audio.currentTime=replayStart;}
+      catch{cancelReplaySeek();clearAyahSelection();audio.pause();status.textContent='تعذر إعادة الآية';return true;}
+      // No-op seeks may not fire seeked; resume only if the clock is at
+      // the new start and the media engine is not still seeking.
+      replaySeekFallback=setTimeout(()=>{
+        if(replaySeekPending&&!audio.seeking
+          &&Math.abs((Number(audio.currentTime)||0)-replayStart)<0.12)resumeReplay();
+      },800);
     }else{
       const start=selectedAyahIndex+1,end=selectedAyahEndIndex+1;
       audio.pause();
@@ -656,7 +687,7 @@ function mountQuranSurahPlayerCore(host,{
     play:playAudio,pause:pauseAudio,restart:restartAudio,stop:stopAudio,
     nextPage(){changePage(pageIndex+1);},previousPage(){changePage(pageIndex-1);},getPageIndex(){return pageIndex;},
     hasCompleted(){return completed;},
-    destroy(){destroyed=true;overlayEpoch++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+    destroy(){cancelReplaySeek();destroyed=true;overlayEpoch++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
   });
 }
 
