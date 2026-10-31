@@ -76,7 +76,7 @@ export function parseOfficialAyahPolygons(svgText,surahNumber,{parserFactory=()=
 export async function fetchOfficialAyahPolygons(pageSource,surahNumber,{fetchImpl=fetch}={}){
   const url=new URL(pageSource,globalThis.location?.href||'https://example.test/');
   const trustedSameOrigin=url.origin===(globalThis.location?.origin||'none')
-    &&/^\/assets\/recitation\/kfqc-hafs-page-\d+\.svg$/.test(url.pathname);
+    &&/^\/assets\/recitation\/kfqc-hafs-page-\d+(?:-surah\d+)?\.svg$/.test(url.pathname);
   const trustedPinned=
     url.hostname==='cdn.jsdelivr.net'&&/^\/gh\/quranpedia\/quran-svg@[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/.test(url.pathname)
     ||url.hostname==='raw.githubusercontent.com'&&/^\/quranpedia\/quran-svg\/[a-f0-9]{40}\/mushafs\/hafs\/kfqc\/svg\/\d+\.svg$/.test(url.pathname);
