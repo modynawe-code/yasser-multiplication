@@ -77,7 +77,7 @@ jobs:
           sw=sw.replace(previous,next);
           const shell='const APP_SHELL=[';
           if(sw.split(shell).length!==2)throw new Error('Unexpected service worker shell');
-          sw=sw.replace(shell,shell+"\n  './assets/recitation/itqan-hafs-tracks.json',\n  './src/shared/quran/itqan-catalog-source.js',\n  './src/shared/quran/quran-svg-ayah-polygons.js',\n  './src/shared/quran/quran-svg-page-index.js',");
+          sw=sw.replace(shell,shell+"\n  './assets/recitation/itqan-hafs-tracks.json',\n  './assets/recitation/quran-course-page-map.json',\n  './src/shared/quran/quran-course-page-map.js',\n  './src/shared/quran/quran-practice-cloud-sync.js',\n  './src/shared/quran/quran-instruction-voice.js',\n  './src/shared/quran/itqan-catalog-source.js',\n  './src/shared/quran/quran-svg-ayah-polygons.js',\n  './src/shared/quran/quran-svg-page-index.js',");
           await writeFile(path,sw);
           const importedPath='dist-web-preview/service-worker-runtime.js';
           const runtime=await readFile(importedPath,'utf8');
@@ -94,6 +94,9 @@ jobs:
           if(meta.mode!='web-production'||meta.cloudSync!==true)throw new Error('Published deployment metadata is invalid');
           const catalog=JSON.parse(fs.readFileSync('dist-web-preview/assets/recitation/itqan-hafs-tracks.json','utf8'));
           if(catalog.schemaVersion!==1||!Object.keys(catalog.tracks||{}).length)throw new Error('Itqan same-track catalog missing from production preview');
+          const map=JSON.parse(fs.readFileSync('dist-web-preview/assets/recitation/quran-course-page-map.json','utf8'));
+          if(map.schemaVersion!==1||Object.keys(map.surahs||{}).length!==32)
+            throw new Error('Verified all-learner source course page map is missing');
           const {collectRequiredQuranPages}=await import('./preview-v4/tools/build-quran-svg-pages.mjs');
           for(const n of collectRequiredQuranPages()){
             const asset='dist-web-preview/assets/recitation/kfqc-hafs-page-'+n+'.svg';
@@ -137,6 +140,7 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -q '"cloudSync": true'
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/assets/recitation/quran-course-page-map.json" | grep -q '"sourcePin"'
           for n in 1 415 453 564 602 603 604; do
             curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/assets/recitation/kfqc-hafs-page-$n.svg" > /dev/null
           done
@@ -179,6 +183,7 @@ jobs:
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/deployment-meta.json" | grep -q '"cloudSync": true'
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/quran-course-page-map.json" | grep -q '"sourcePin"'
           for n in 1 415 453 564 602 603 604; do
             curl --fail --silent --show-error --retry 5 --retry-delay 2 "$BASE/assets/recitation/kfqc-hafs-page-$n.svg" > /dev/null
           done
