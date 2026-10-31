@@ -39,7 +39,7 @@ export async function verifyQuranCurriculumCoverage({
     const svg=await loadText(new URL('../assets/recitation/kfqc-hafs-page-'+n+'.svg',import.meta.url));
     index.set(n,polygonsForPage(svg));
   }
-  const items=QuranCurriculumItems(),report=[],map={};
+  const items=QuranCurriculumItems(),report=[],map={},ayahPages={};
   for(const [learner,chapters] of Object.entries(items)){
     for(const chapter of chapters){
       const n=chapter.surahNumber,track=catalog.tracks[String(n)];
@@ -60,10 +60,21 @@ export async function verifyQuranCurriculumCoverage({
       if(previous&&JSON.stringify(previous)!==JSON.stringify(included))
         throw new Error('inconsistent-course-page-map-'+n);
       map[String(n)]=included;
+      const ayahPage=[];
+      for(let verse=1;verse<=count;verse++){
+        const matches=included.filter(page=>index.get(page).get(n)?.has(verse));
+        if(!matches.length)throw new Error('missing-source-ayah-page-'+n+':'+verse);
+        // An ayah may cross a page boundary. Its first printed page is
+        // canonical for initial focus; next-page navigation remains available.
+        ayahPage.push(matches[0]);
+      }
+      if(ayahPages[String(n)]&&JSON.stringify(ayahPages[String(n)])!==JSON.stringify(ayahPage))
+        throw new Error('inconsistent-source-ayah-pages-'+n);
+      ayahPages[String(n)]=ayahPage;
       report.push({learner,surahNumber:n,ayahs:count,pages:included.length});
     }
   }
-  await writeMap({schemaVersion:1,sourcePin:QURAN_SVG_PIN,surahs:map});
+  await writeMap({schemaVersion:1,sourcePin:QURAN_SVG_PIN,surahs:map,ayahPages});
   return report;
 }
 if(process.argv[1]&&new URL('file://'+process.argv[1]).href===import.meta.url){
