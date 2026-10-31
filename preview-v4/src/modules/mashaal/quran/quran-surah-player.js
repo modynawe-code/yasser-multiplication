@@ -1,6 +1,7 @@
 import {isItqanEnabledOrigin,loadItqanTrack} from '../../../shared/quran/itqan-catalog-source.js';
 import {fetchOfficialAyahPolygons} from '../../../shared/quran/quran-svg-ayah-polygons.js';
 import {findOfficialHafsPage,pageIndexInCurriculum} from '../../../shared/quran/quran-svg-page-index.js';
+import {findBundledQuranAyahPage} from '../../../shared/quran/quran-course-page-map.js';
 import {loadQuranPractice,markQuranPractice,getQuranPracticeStage,practiceStorageKey} from '../../../shared/quran/quran-practice-progress.js';
 import {createQuranInstructionVoice} from '../../../shared/quran/quran-instruction-voice.js';
 
@@ -457,12 +458,15 @@ function mountQuranSurahPlayerCore(host,{
     // Official Quran SVG JSON is the canonical ayah-to-mushaf-page mapping.
     // No inferred page offsets and no alteration of school progress levels.
     const [sura,verse]=key.split(':').map(Number);
-    void findOfficialHafsPage(sura,verse).then(pageNumber=>{
+    // Local map was generated from verified page polygons at build time.
+    // Avoid runtime CDN dependency; canonical Quran SVG JSON is fallback.
+    void findBundledQuranAyahPage(sura,verse).then(async page=>{
+      const pageNumber=page??await findOfficialHafsPage(sura,verse);
       if(destroyed||ticket!==followTicket||pageNumber==null)return;
       const next=pageIndexInCurriculum(pages,pageNumber);
       if(next>=0&&next!==pageIndex)changePage(next);
     }).catch(()=>{
-      // Keep playing even if the Quran SVG CDN is temporarily inaccessible.
+      // Keep playing even if both the local map and CDN are unavailable.
     });
   };
   const updateProgress=()=>{
