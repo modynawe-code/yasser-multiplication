@@ -195,7 +195,7 @@ function mountQuranSurahPlayerCore(host,{
   root.append(figure,transport,progressWrap,status);
   const ayahButtons=[];
   let repeatSelect=null,fromSelect=null,toSelect=null,practiceHint=null,practiceBlindButton=null;
-  let repeatDoneButton=null,reviewedButton=null,updatePracticeStep=()=>{};
+  let repeatDoneButton=null,reviewedButton=null,practiceStartButton=null,updatePracticeStep=()=>{};
   let practiceBlind=false,blindWasUsed=false;
   const resetPracticeConfirmation=()=>{
     if(repeatDoneButton)repeatDoneButton.disabled=true;
@@ -272,7 +272,11 @@ function mountQuranSurahPlayerCore(host,{
       const practice=document.createElement('div');
       practice.className='quran-practice-guided';
       const guide=document.createElement('strong');
-      guide.textContent=learnerId==='mashaal'?'استمعي ثم رددي':'الحفظ: استمع ← ردّد ← اختبر نفسك';
+      guide.textContent=learnerId==='mashaal'?'تدرّبي على الحفظ':'تدرّب على الحفظ';
+      const startListen=document.createElement('button');
+      startListen.type='button';startListen.className='quran-practice-listen';
+      startListen.textContent=learnerId==='mashaal'?'ابدئي الاستماع للآيات':'ابدأ الاستماع للآيات';
+      practiceStartButton=startListen;
       const repeatDone=document.createElement('button');
       repeatDone.type='button';repeatDone.className='quran-practice-done';repeatDone.disabled=true;
       repeatDoneButton=repeatDone;
@@ -303,12 +307,23 @@ function mountQuranSurahPlayerCore(host,{
           if(index===done)node.setAttribute('aria-current','step');
           else node.removeAttribute('aria-current');
         });
+        // One next action at a time; don't overwhelm children with disabled buttons.
+        startListen.hidden=done!==0;
+        repeatDone.hidden=done!==1;
+        const readyToReview=done===2&&blindWasUsed&&!practiceBlind&&!reviewed.disabled;
+        practiceBlindButton.hidden=learnerId==='mashaal'||done!==2||readyToReview;
+        reviewed.hidden=learnerId==='mashaal'||!readyToReview;
       };
       practiceHint=document.createElement('p');
       practiceHint.className='quran-practice-status';practiceHint.setAttribute('role','status');
       practiceHint.textContent='اختر آياتك، استمع للتلاوة، ثم ردد بنفسك';
-      practice.append(guide,stageList,repeatDone,practiceBlindButton,reviewed,practiceHint);
-      panel.append(practice);
+      practice.append(guide,stageList,startListen,repeatDone,practiceBlindButton,reviewed,practiceHint);
+      // Place the active learning action before the per-verse button grid.
+      panel.insertBefore(practice,buttons);
+      startListen.addEventListener('click',()=>{
+        void selectRange(Number(fromSelect.value),Number(toSelect.value));
+      });
+      updatePracticeStep('');
       repeatDone.addEventListener('click',()=>recordPractice('repeated'));
       practiceBlindButton.addEventListener('click',()=>{
         if(learnerId==='mashaal')return;
@@ -318,6 +333,7 @@ function mountQuranSurahPlayerCore(host,{
         audio.pause();
         figure.classList.toggle('quran-practice-blind',practiceBlind);
         practiceBlindButton.textContent=practiceBlind?'أظهر المصحف':'اختبر نفسي غيب';
+        updatePracticeStep('repeated');
         practiceHint.textContent=practiceBlind?'اختبر حفظك بنفسك، ثم أظهر المصحف للتأكد':'ظهر المصحف للتحقق من إجابتك';
       });
       reviewed.addEventListener('click',()=>{
