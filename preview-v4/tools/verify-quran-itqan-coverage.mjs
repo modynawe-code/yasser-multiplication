@@ -1,11 +1,13 @@
 /**
- * Verify whole-curriculum Itqan timings and original Hafs page geometry.
- * This checks source coverage, NOT acoustic synchronization quality.
+ * Source-verified whole-curriculum Itqan timings and original Hafs geometry.
+ * Generates a page map from actual bundled SVG polygons instead of assuming
+ * a short surah occupies only its nominal starting page.
  */
-import {readFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
 import {KHALED_QURAN_TERMS} from '../src/modules/khaled/quran/khaled-quran.js';
 import {YASSER_QURAN_TERMS} from '../src/modules/yasser/quran/yasser-quran.js';
 import {MASHAAL_RECITATION_MEDIA} from '../src/modules/mashaal/curriculum/recitation-media-manifest.js';
+import {collectRequiredQuranPages,QURAN_SVG_PIN} from './build-quran-svg-pages.mjs';
 
 export function QuranCurriculumItems(){
   return {
@@ -14,44 +16,60 @@ export function QuranCurriculumItems(){
     mashaal:MASHAAL_RECITATION_MEDIA
   };
 }
-function verseIds(svg,surahNumber){
-  const verses=new Set();
+function polygonsForPage(svg){
+  const result=new Map();
   for(const match of svg.matchAll(/<path\b[^>]*class="ayahPolygon"[^>]*>/g)){
-    const tag=match[0],chapter=Number(tag.match(/\bsurah="(\d+)"/)?.[1]);
+    const tag=match[0],surah=Number(tag.match(/\bsurah="(\d+)"/)?.[1]);
     const ayah=Number(tag.match(/\bayah="(\d+)"/)?.[1]);
-    if(chapter===surahNumber&&Number.isInteger(ayah)&&ayah>0)verses.add(ayah);
+    if(!Number.isInteger(surah)||surah<1||surah>114||!Number.isInteger(ayah)||ayah<1)continue;
+    if(!result.has(surah))result.set(surah,new Set());
+    result.get(surah).add(ayah);
   }
-  return verses;
+  return result;
 }
-export async function verifyQuranCurriculumCoverage({loadText=async url=>readFile(url,'utf8')}={}){
+export async function verifyQuranCurriculumCoverage({
+  loadText=async url=>readFile(url,'utf8'),writeMap=async value=>
+    writeFile(new URL('../assets/recitation/quran-course-page-map.json',import.meta.url),
+      JSON.stringify(value,null,2)+'\n','utf8')
+}={}){
   const catalog=JSON.parse(await loadText(new URL('../assets/recitation/itqan-hafs-tracks.json',import.meta.url)));
   if(catalog?.schemaVersion!==1)throw new Error('missing-pinned-itqan-catalog');
-  const items=QuranCurriculumItems(),cache=new Map(),report=[];
+  const sourcePages=collectRequiredQuranPages(),index=new Map();
+  for(const n of sourcePages){
+    const svg=await loadText(new URL('../assets/recitation/kfqc-hafs-page-'+n+'.svg',import.meta.url));
+    index.set(n,polygonsForPage(svg));
+  }
+  const items=QuranCurriculumItems(),report=[],map={};
   for(const [learner,chapters] of Object.entries(items)){
     for(const chapter of chapters){
       const n=chapter.surahNumber,track=catalog.tracks[String(n)];
       if(!track?.ayahTimings?.length)throw new Error('no-matching-itqan-ayah-timings-'+learner+'-'+n);
-      const pages=chapter.mushafPages||[chapter.mushafPage];
-      const found=new Set();
-      for(const page of pages){
-        const no=page?.pageNumber;
-        if(!Number.isInteger(no))throw new Error('missing-course-page-'+learner+'-'+n);
-        if(!cache.has(no))cache.set(no,await loadText(new URL('../assets/recitation/kfqc-hafs-page-'+no+'.svg',import.meta.url)));
-        for(const verse of verseIds(cache.get(no),n))found.add(verse);
+      const included=[],found=new Set();
+      for(const page of sourcePages){
+        const verses=index.get(page).get(n);
+        if(!verses?.size)continue;
+        included.push(page);
+        for(const v of verses)found.add(v);
       }
       const count=track.ayahTimings.length;
       const missing=Array.from({length:count},(_,i)=>i+1).filter(i=>!found.has(i));
       if(missing.length)throw new Error('incomplete-svg-ayah-geometry-'+learner+'-'+n+':'+missing.join(','));
-      report.push({learner,surahNumber:n,ayahs:count,pages:pages.length});
+      if(!included.includes(chapter.pageNumber))throw new Error('nominal-course-page-does-not-contain-surah-'+learner+'-'+n);
+      const previous=map[String(n)];
+      if(previous&&JSON.stringify(previous)!==JSON.stringify(included))
+        throw new Error('inconsistent-course-page-map-'+n);
+      map[String(n)]=included;
+      report.push({learner,surahNumber:n,ayahs:count,pages:included.length});
     }
   }
+  await writeMap({schemaVersion:1,sourcePin:QURAN_SVG_PIN,surahs:map});
   return report;
 }
 if(process.argv[1]&&new URL('file://'+process.argv[1]).href===import.meta.url){
   verifyQuranCurriculumCoverage().then(r=>
     console.log('Complete authentic SVG/Itqan curriculum coverage:',JSON.stringify({
       curriculumEntries:r.length,uniqueSurahs:new Set(r.map(s=>s.surahNumber)).size,
-      totalAyahRecords:r.reduce((n,t)=>n+t.ayahs,0)
+      totalAyahRecords:r.reduce((n,t)=>n+t.ayahs,0),multiPage:r.filter(x=>x.pages>1)
     }))
   ).catch(e=>{console.error(e);process.exitCode=1;});
 }
