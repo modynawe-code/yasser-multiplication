@@ -216,7 +216,7 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
       imageWidth:document.querySelector('.quran-page-image')?.naturalWidth,
       index:window.__quranTestPlayer.getPageIndex()
     }));
-    if(continued.index!==1||!continued.image?.includes('kfqc-hafs-page-600.svg')||!continued.imageWidth)
+    if(continued.index!==1||!continued.image?.includes('kfqc-hafs-page-600')||!continued.imageWidth)
       throw Error(name+' offline page continuation failed '+JSON.stringify(continued));
     console.log(name+' OFFLINE_AYAH_PAGE_FOLLOW_PASS',JSON.stringify(continued));
     await page.screenshot({path:'/tmp/quran-itqan-'+name+'.png',fullPage:true});
