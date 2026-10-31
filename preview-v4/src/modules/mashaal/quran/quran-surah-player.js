@@ -87,6 +87,7 @@ function mountQuranSurahPlayerCore(host,{
 
   const root=document.createElement('section');
   root.className='quran-surah-player';
+  if(['khaled','yasser','mashaal'].includes(learnerId))root.classList.add('quran-learner-'+learnerId);
   root.setAttribute('aria-label',`مشغل سورة ${surahNameAr}`);
 
   const figure=document.createElement('figure');
