@@ -74,7 +74,7 @@ jobs:
           if(!/^[a-f0-9]{12}$/.test(sha))throw new Error('Missing immutable GitHub commit SHA');
           const path='dist-web-preview/service-worker.js';
           let sw=await readFile(path,'utf8');
-          const previous='const CACHE_VERSION=`${CACHE_PREFIX}shell-quran-itqan-20261031`;';
+          const previous='const CACHE_VERSION=`${CACHE_PREFIX}shell-229`;';
           const next='const CACHE_VERSION=`${CACHE_PREFIX}shell-quran-itqan-'+sha+'`;';
           if(sw.split(previous).length!==2)throw new Error('Unexpected service worker version: refusing stale release');
           sw=sw.replace(previous,next);
