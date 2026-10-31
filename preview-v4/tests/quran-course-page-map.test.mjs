@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {expandQuranCoursePages} from '../src/shared/quran/quran-course-page-map.js';
+import {expandQuranCoursePages,pageForBundledQuranAyah} from '../src/shared/quran/quran-course-page-map.js';
 import {KHALED_QURAN_TERMS} from '../src/modules/khaled/quran/khaled-quran.js';
 import {YASSER_QURAN_TERMS} from '../src/modules/yasser/quran/yasser-quran.js';
 
@@ -34,4 +34,19 @@ test('unknown or forged map falls back to course original safely',()=>{
     assert.equal(pages.length,1);
     assert.equal(pages[0],chapter.mushafPage);
   }
+});
+
+test('pinned original polygons resolve the right page for individual verses',()=>{
+  const map={
+    schemaVersion:1,sourcePin:pin,
+    surahs:{100:[599,600],98:[598,599]},
+    ayahPages:{100:[599,599,599,599,599,599,599,599,599,600,600],
+      98:[598,598,598,598,598,598,598,599]}
+  };
+  assert.equal(pageForBundledQuranAyah(100,9,map),599);
+  assert.equal(pageForBundledQuranAyah(100,10,map),600);
+  assert.equal(pageForBundledQuranAyah(98,8,map),599);
+  assert.equal(pageForBundledQuranAyah(100,12,map),null);
+  assert.equal(pageForBundledQuranAyah(100,10,{...map,sourcePin:'forged'}),null);
+  assert.equal(pageForBundledQuranAyah(100,10,{...map,ayahPages:{100:[599,601]}}),null);
 });
