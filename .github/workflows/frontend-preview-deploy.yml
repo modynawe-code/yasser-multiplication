@@ -85,8 +85,8 @@ jobs:
           NODE
       - name: Verify preview isolation
         run: |
-          node <<'NODE'
-          const fs=require('node:fs');
+          node --input-type=module <<'NODE'
+          import * as fs from 'node:fs';
           const html=fs.readFileSync('dist-web-preview/index.html','utf8');
           const meta=JSON.parse(fs.readFileSync('dist-web-preview/deployment-meta.json','utf8'));
           if(!html.includes('__FAMILY_API_BASE_URL__="https://yasser-khaled-family-api.modynawe.workers.dev"'))throw new Error('Published family API bootstrap is missing');
