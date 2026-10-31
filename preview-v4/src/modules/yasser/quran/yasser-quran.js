@@ -41,9 +41,9 @@ function mushafPageFor(surahNumber,pageNumber){
   const focusRegion=focusRegionFor(surahNumber,pageNumber);
   return Object.freeze({
     sourceId:'kfgqpc-hafs-madinah-svg',publisherAr:'مجمع الملك فهد لطباعة المصحف الشريف',
-    riwayahAr:'حفص عن عاصم',pageNumber,imagePath:'',
+    riwayahAr:'حفص عن عاصم',pageNumber,imagePath:'./assets/recitation/kfqc-hafs-page-'+pageNumber+'.svg',
     imageUrl:`${SVG_BASE}/${pageNumber}.svg`,fallbackImageUrls:Object.freeze([`${RAW_SVG_BASE}/${pageNumber}.svg`]),
-    distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:false,
+    distributionCommit:QURAN_SVG_COMMIT,imageAspectRatio:.6272727273,offlineBundled:true,
     ...(focusRegion?{focusRegion}: {})
   });
 }
