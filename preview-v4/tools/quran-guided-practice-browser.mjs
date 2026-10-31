@@ -267,7 +267,7 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
     if(!continuation.pages.includes(599)||!continuation.pages.includes(600)
       ||!continuation.first?.includes('1 من')
       ||!continuation.last?.includes('2 من')
-      ||!continuation.image?.includes('600.svg'))
+      ||!continuation.image?.includes('kfqc-hafs-page-600'))
       throw Error(browserName+' verified continuation pages missing '+JSON.stringify(continuation));
     console.log('QURAN_COURSE_CONTINUATION_PASS',browserName,JSON.stringify(continuation.pages));
     if(browserErrors.length)throw Error(browserName+' page errors: '+browserErrors.slice(0,4).join('; '));
