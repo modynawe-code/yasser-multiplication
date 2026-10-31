@@ -242,6 +242,34 @@ for(const [browserName,browserType] of [['chrome',chromium],['webkit',webkit]]){
       console.log('GUIDED_QURAN_RANGE_PASS',browserName,learner,
         'surah',config.surahNumber,'range',2,'to',4,'repeats',3);
     }
+    // Genuine continuation-page regression (Khaled's Al-Adiyat does not fit
+    // entirely on its nominal first Mushaf page).
+    const continuation=await page.evaluate(async()=>{
+      const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+      const {loadQuranCoursePages}=await import('./src/shared/quran/quran-course-page-map.js');
+      const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+      const item=Object.values(KHALED_QURAN_TERMS).flat().find(x=>x.surahNumber===100);
+      const pages=await loadQuranCoursePages(item);
+      window.__qaPlayer?.destroy?.();
+      document.body.replaceChildren();
+      const host=document.createElement('div');
+      document.body.append(host);
+      window.__qaPlayer=mountQuranSurahPlayer(host,{
+        learnerId:'khaled',surahNumber:100,surahNameAr:item.surahNameAr,
+        audioPath:item.audioPath,mushafPage:pages[0],mushafPages:pages
+      });
+      const first=host.querySelector('.quran-page-indicator')?.textContent;
+      host.querySelector('.quran-page-nav-button:last-child')?.click();
+      return {pages:pages.map(x=>x.pageNumber),
+        first,last:host.querySelector('.quran-page-indicator')?.textContent,
+        image:host.querySelector('.quran-page-image')?.getAttribute('src')};
+    });
+    if(!continuation.pages.includes(599)||!continuation.pages.includes(600)
+      ||!continuation.first?.includes('1 من')
+      ||!continuation.last?.includes('2 من')
+      ||!continuation.image?.includes('600.svg'))
+      throw Error(browserName+' verified continuation pages missing '+JSON.stringify(continuation));
+    console.log('QURAN_COURSE_CONTINUATION_PASS',browserName,JSON.stringify(continuation.pages));
     if(browserErrors.length)throw Error(browserName+' page errors: '+browserErrors.slice(0,4).join('; '));
     console.log('GUIDED_QURAN_BROWSER_PASS',browserName);
   }finally{await browser.close();}
