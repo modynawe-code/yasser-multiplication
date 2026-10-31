@@ -1,7 +1,7 @@
 import {isItqanEnabledOrigin,loadItqanTrack} from '../../../shared/quran/itqan-catalog-source.js';
 import {fetchOfficialAyahPolygons} from '../../../shared/quran/quran-svg-ayah-polygons.js';
 import {findOfficialHafsPage,pageIndexInCurriculum} from '../../../shared/quran/quran-svg-page-index.js';
-import {findBundledQuranAyahPage} from '../../../shared/quran/quran-course-page-map.js';
+import {findBundledQuranAyahPage,findBundledSurahView} from '../../../shared/quran/quran-course-page-map.js';
 import {loadQuranPractice,markQuranPractice,getQuranPracticeStage,practiceStorageKey} from '../../../shared/quran/quran-practice-progress.js';
 import {createQuranInstructionVoice} from '../../../shared/quran/quran-instruction-voice.js';
 
@@ -105,6 +105,7 @@ function mountQuranSurahPlayerCore(host,{
   viewport.appendChild(image);
   const overlayPaths=[];
   let verseOverlay=null,overlayEpoch=0,activeFocusRegion=null;
+  let showFullPage=false,surahViewTicket=0;
   const mountOfficialGeometry=geometry=>{
     verseOverlay?.remove();verseOverlay=null;overlayPaths.length=0;
     if(!geometry?.paths?.length)return;
@@ -153,6 +154,9 @@ function mountQuranSurahPlayerCore(host,{
   const caption=document.createElement('figcaption');
   caption.className='quran-page-caption';
 
+  const viewToggle=document.createElement('button');
+  viewToggle.type='button';viewToggle.className='quran-full-page-toggle';
+  viewToggle.hidden=true;viewToggle.textContent='عرض الصفحة كاملة';
   const pageNav=document.createElement('div');
   pageNav.className='quran-page-nav';
   pageNav.setAttribute('role','group');
@@ -169,7 +173,7 @@ function mountQuranSurahPlayerCore(host,{
   const retryPage=document.createElement('button');
   retryPage.type='button';retryPage.className='quran-page-retry';retryPage.hidden=true;
   retryPage.textContent='إعادة تحميل صفحة المصحف';
-  figure.append(versePosition,viewport,caption,geometryHint,retryHighlight,pageNav,retryPage);
+  figure.append(versePosition,viewport,caption,viewToggle,geometryHint,retryHighlight,pageNav,retryPage);
 
   const audio=new Audio(audioPath);
   audio.preload='metadata';
@@ -424,25 +428,59 @@ function mountQuranSurahPlayerCore(host,{
     const page=pages[pageIndex];
     const focusRegion=normalizedFocusRegion(page,surahNumber);
     activeFocusRegion=focusRegion;
-    const sources=pageSources(page);
+    const hasIsolated=!showFullPage&&Boolean(page?.isolatedImagePath);
+    const sources=hasIsolated
+      ?[page.isolatedImagePath,...pageSources(page)]:pageSources(page);
     sourceIndex=0;
     overlayEpoch++;
     if(verseOverlay)mountOfficialGeometry(null);
     figure.removeAttribute('data-image-error');retryPage.hidden=true;geometryHint.hidden=true;retryHighlight.hidden=true;
     viewport.removeAttribute('data-official-focus');
-    if(focusRegion){
+    viewport.removeAttribute('data-source-view');
+    viewToggle.hidden=!page?.isolatedImagePath&&!focusRegion;
+    viewToggle.textContent=showFullPage?'عرض السورة فقط':'عرض الصفحة كاملة';
+    if(hasIsolated){
+      // Let the source SVG define its own exact geometry. No CSS crop.
+      const dims=String(page.isolatedViewBox||'').split(/\s+/).map(Number);
+      activeFocusRegion=null;
+      figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');
+      image.style.removeProperty('transform');
+      viewport.style.aspectRatio=String(dims[2]/dims[3]);
+    }else if(showFullPage){
+      activeFocusRegion=null;
+      figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');
+      viewport.style.removeProperty('aspect-ratio');image.style.removeProperty('transform');
+    }else if(focusRegion){
       figure.dataset.focused='true';viewport.dataset.focused='true';viewport.style.aspectRatio=String(focusRegion.aspect/focusRegion.height);image.style.transform=`translateY(-${focusRegion.top*100}%)`;
     }else{
       figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');viewport.style.removeProperty('aspect-ratio');image.style.removeProperty('transform');
     }
     image.src=sources[0];
-    image.alt=focusRegion?`سورة ${surahNameAr} كما تظهر في صفحة ${page?.pageNumber||''} من مصحف المدينة`:`صفحة ${page?.pageNumber||''} من المصحف التي تحتوي على سورة ${surahNameAr}`;
+    image.alt=hasIsolated||focusRegion&&!showFullPage
+      ?`سورة ${surahNameAr} كما تظهر في صفحة ${page?.pageNumber||''} من مصحف المدينة`
+      :`صفحة ${page?.pageNumber||''} من المصحف التي تحتوي على سورة ${surahNameAr}`;
     const pageLabel=page?.pageNumber?` • صفحة ${page.pageNumber}`:'';
     caption.textContent=focusRegion?`${focusRegion.labelAr||`سورة ${surahNameAr}`} • من مصحف المدينة${pageLabel} • حفص عن عاصم`:`مصحف المدينة • حفص عن عاصم${pageLabel}`;
     pageIndicator.textContent=`صفحة ${pageIndex+1} من ${pages.length}`;
     previousPage.disabled=pageIndex===0;nextPage.disabled=pageIndex===pages.length-1;
     onPageChange({index:pageIndex,count:pages.length,pageNumber:page?.pageNumber||null});
+    // Mashaal's synchronous player uses the same verified map as Khaled/Yasser.
+    // A stale async lookup must never replace a different selected page.
+    const ticket=++surahViewTicket,number=page?.pageNumber,index=pageIndex;
+    if(!page?.isolatedImagePath&&Number.isInteger(number))
+      void findBundledSurahView(number,surahNumber).then(view=>{
+        if(!view||destroyed||ticket!==surahViewTicket||index!==pageIndex)return;
+        pages[index]={...pages[index],isolatedImagePath:view.imagePath,
+          isolatedViewBox:view.viewBox};
+        if(!showFullPage)renderPage();
+        else{viewToggle.hidden=false;viewToggle.textContent='عرض السورة فقط';}
+      }).catch(()=>{});
+    
   };
+  viewToggle.addEventListener('click',()=>{
+    if(viewToggle.hidden)return;
+    showFullPage=!showFullPage;renderPage();
+  });
   const changePage=next=>{
     const target=Math.max(0,Math.min(pages.length-1,next));
     if(target===pageIndex)return;
@@ -663,7 +701,10 @@ function mountQuranSurahPlayerCore(host,{
     const thisEpoch=++overlayEpoch,src=image.currentSrc||image.src;
     // The displayed original page may load via <img> even when a CORS fetch
     // for its polygon geometry fails. Try only the same verified page mirrors.
-    const candidates=[...new Set([src,...pageSources(pages[pageIndex])])];
+    const page=pages[pageIndex];
+    const candidates=[...new Set([src,
+      ...(!showFullPage&&page?.isolatedImagePath?[page.isolatedImagePath]:[]),
+      ...pageSources(page)])];
     void (async()=>{
       for(const candidate of candidates){
         try{return await fetchOfficialAyahPolygons(candidate,surahNumber);}
@@ -677,7 +718,19 @@ function mountQuranSurahPlayerCore(host,{
       const original=normalizedFocusRegion(pages[pageIndex],surahNumber);
       const cropped=geometry?.focusRegion;
       const pageAspect=Number(pages[pageIndex]?.imageAspectRatio);
-      if(cropped&&Number.isFinite(pageAspect)&&pageAspect>0&&Number.isFinite(cropped.top)
+      const usingSourceView=!showFullPage&&sourceIndex===0
+        &&Boolean(pages[pageIndex]?.isolatedImagePath)
+        &&src.endsWith(pages[pageIndex].isolatedImagePath.replace(/^\./,''));
+      const box=geometry?.viewBox?.split(/\s+/).map(Number);
+      if(usingSourceView&&box?.length===4&&box.every(Number.isFinite)
+        &&box[2]>0&&box[3]>0){
+        activeFocusRegion=null;
+        figure.removeAttribute('data-focused');viewport.removeAttribute('data-focused');
+        viewport.dataset.sourceView='true';viewport.dataset.officialFocus='true';
+        viewport.style.aspectRatio=String(box[2]/box[3]);
+        image.style.removeProperty('transform');
+        viewToggle.hidden=false;
+      }else if(!showFullPage&&cropped&&Number.isFinite(pageAspect)&&pageAspect>0&&Number.isFinite(cropped.top)
         &&Number.isFinite(cropped.height)&&cropped.height>0
         &&cropped.top>=0&&cropped.top+cropped.height<=1){
         activeFocusRegion={aspect:pageAspect,
@@ -704,7 +757,8 @@ function mountQuranSurahPlayerCore(host,{
   };
   image.addEventListener('load',refreshGeometry);
   retryHighlight.addEventListener('click',refreshGeometry);
-  image.addEventListener('error',()=>{overlayEpoch++;geometryHint.hidden=true;retryHighlight.hidden=true;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
+  image.addEventListener('error',()=>{overlayEpoch++;geometryHint.hidden=true;retryHighlight.hidden=true;if(verseOverlay)verseOverlay.style.display='none';const page=pages[pageIndex],sources=!showFullPage&&page?.isolatedImagePath
+      ?[page.isolatedImagePath,...pageSources(page)]:pageSources(page);sourceIndex+=1;if(sourceIndex<sources.length){image.src=sources[sourceIndex];return;}figure.dataset.imageError='true';retryPage.hidden=false;caption.textContent='تعذر تحميل صفحة المصحف — لا يتم استبدالها بنص مولّد';});
 
   retryPage.addEventListener('click',renderPage);
   renderPage();
@@ -713,7 +767,7 @@ function mountQuranSurahPlayerCore(host,{
     play:playAudio,pause:pauseAudio,restart:restartAudio,stop:stopAudio,
     nextPage(){changePage(pageIndex+1);},previousPage(){changePage(pageIndex-1);},getPageIndex(){return pageIndex;},
     hasCompleted(){return completed;},
-    destroy(){stopInstructionVoice();cancelReplaySeek();destroyed=true;overlayEpoch++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
+    destroy(){stopInstructionVoice();cancelReplaySeek();destroyed=true;overlayEpoch++;surahViewTicket++;followTicket++;document.removeEventListener('family:stop-quran-audio',stopOnFamilyNavigation);stopAudio();audio.src='';host.classList.remove('quran-player-host');host.innerHTML='';}
   });
 }
 
