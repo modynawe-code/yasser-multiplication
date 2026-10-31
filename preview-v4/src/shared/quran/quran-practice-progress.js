@@ -52,7 +52,7 @@ export function markQuranPractice(learnerId,{surahNumber,fromAyah,toAyah,stage},
   try{
     storage?.setItem(key,JSON.stringify(updated));
     // Notify the existing family sync cycle; offline learners keep local state.
-    globalThis.dispatchEvent?.(new Event('family:quran-practice-changed'));
+    try{globalThis.dispatchEvent?.(new Event('family:quran-practice-changed'));}catch{}
     return true;
   }catch{return false;}
 }
