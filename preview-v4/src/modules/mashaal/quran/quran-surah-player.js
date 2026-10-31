@@ -672,10 +672,14 @@ function mountQuranSurahPlayerCore(host,{
       // Preserve the existing manual focus when the pinned SVG lacks polygons.
       const original=normalizedFocusRegion(pages[pageIndex],surahNumber);
       const cropped=geometry?.focusRegion;
-      if(original&&cropped&&Number.isFinite(cropped.top)
+      const pageAspect=Number(pages[pageIndex]?.imageAspectRatio);
+      if(cropped&&Number.isFinite(pageAspect)&&pageAspect>0&&Number.isFinite(cropped.top)
         &&Number.isFinite(cropped.height)&&cropped.height>0
         &&cropped.top>=0&&cropped.top+cropped.height<=1){
-        activeFocusRegion={...original,top:cropped.top,height:cropped.height};
+        activeFocusRegion={aspect:pageAspect,
+          labelAr:original?.labelAr||'سورة '+surahNameAr,
+          top:cropped.top,height:cropped.height};
+        figure.dataset.focused='true';viewport.dataset.focused='true';
         viewport.dataset.officialFocus='true';
         viewport.style.aspectRatio=String(activeFocusRegion.aspect/activeFocusRegion.height);
         image.style.transform=`translateY(-${activeFocusRegion.top*100}%)`;
