@@ -80,10 +80,10 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
           const image=document.querySelector('.quran-page-image');
           const overlay=document.querySelector('.quran-mushaf-ayah-overlay');
           const a=image?.getBoundingClientRect(),b=overlay?.getBoundingClientRect();
-          return {focused:viewport?.dataset.focused,
+          return {focused:viewport?.dataset.focused,sourceView:viewport?.dataset.sourceView,
             imageY:a?.top,overlayY:b?.top,imageHeight:a?.height,overlayHeight:b?.height};
         });
-        if(aligned.focused!=='true'
+        if((aligned.focused!=='true'&&aligned.sourceView!=='true')
           ||Math.abs(aligned.imageY-aligned.overlayY)>3
           ||Math.abs(aligned.imageHeight-aligned.overlayHeight)>3)
           throw Error(name+' '+learner+' focused short-surah geometry misaligned '+JSON.stringify(aligned));
@@ -126,7 +126,105 @@ for(const [name,browserType] of [['chromium',chromium],['webkit',webkit]]){
         width:document.querySelector('.quran-page-image')?.naturalWidth||0,
         error:document.querySelector('.quran-page-frame')?.dataset.imageError||''
       }));
-      if(!loaded.width||loaded.error||!loaded.src.includes('/kfqc-hafs-page-'+number+'.svg'))
+      if(!loaded.width||loaded.error||!new RegExp('/kfqc-hafs-page-'+number+'(?:-surah\\d+)?\\.svg
+        throw Error(name+' bundled mushaf page '+number+' failed '+JSON.stringify(loaded));
+      console.log(name+' BUNDLED_MUSHAF_PAGE_PASS '+number);
+    }
+    // QUR-02 regression: page 602 previously leaked the previous surah's
+    // last line above Al-Maun. Require a crop derived from real page polygons,
+    // not merely the old manually estimated viewport percentages.
+    await page.evaluate(async()=>{
+      window.__quranTestPlayer?.destroy?.();
+      const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+      const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+      const item=KHALED_QURAN_TERMS[1].find(x=>x.surahNumber===107);
+      if(!item)throw Error('Al-Maun is missing from Khaled curriculum');
+      const host=document.createElement('div');
+      document.body.replaceChildren(host);
+      window.__quranTestPlayer=mountQuranSurahPlayer(host,{
+        surahNumber:item.surahNumber,surahNameAr:item.surahNameAr,
+        mushafPage:item.mushafPage,audioPath:item.audioPath
+      });
+    });
+    await page.waitForFunction(()=>{
+      const viewport=document.querySelector('.quran-page-viewport');
+      return viewport?.dataset.officialFocus==='true'
+        ||document.querySelector('.quran-page-frame')?.dataset.imageError==='true';
+    },null,{timeout:35000});
+    const maun=await page.evaluate(()=>({
+      official:document.querySelector('.quran-page-viewport')?.dataset.officialFocus,
+      src:document.querySelector('.quran-page-image')?.currentSrc,
+      width:document.querySelector('.quran-page-image')?.naturalWidth,
+      cropped:document.querySelector('.quran-page-image')?.style.transform,
+      failed:document.querySelector('.quran-page-frame')?.dataset.imageError
+    }));
+    if(maun.official!=='true'||!maun.width||maun.failed)
+      throw Error(name+' Al-Maun official-focus failed '+JSON.stringify(maun));
+    // Publisher-native per-surah SVG must show the original artwork with a
+    // source-defined viewBox and the matching, unshifted ayah polygons.
+    await page.waitForFunction(()=>document.querySelector('.quran-page-viewport')?.dataset.sourceView==='true',
+      null,{timeout:20000});
+    const native=await page.evaluate(()=>{
+      const image=document.querySelector('.quran-page-image');
+      const overlay=document.querySelector('.quran-mushaf-ayah-overlay');
+      const viewport=document.querySelector('.quran-page-viewport');
+      const a=image?.getBoundingClientRect(),b=overlay?.getBoundingClientRect();
+      return {src:image?.currentSrc||'',sourceView:viewport?.dataset.sourceView,
+        transform:image?.style.transform||'',overlayHeight:b?.height,imageHeight:a?.height};
+    });
+    if(!native.src.includes('kfqc-hafs-page-602-surah107.svg')
+      ||native.sourceView!=='true'||native.transform
+      ||Math.abs(native.imageHeight-native.overlayHeight)>3)
+      throw Error(name+' publisher surah SVG misaligned '+JSON.stringify(native));
+    await page.locator('.quran-full-page-toggle').click();
+    await page.waitForFunction(()=>{
+      const image=document.querySelector('.quran-page-image');
+      return image?.currentSrc.includes('kfqc-hafs-page-602.svg')&&image.complete;
+    },null,{timeout:15000});
+    await page.locator('.quran-full-page-toggle').click();
+    await page.waitForFunction(()=>document.querySelector('.quran-page-viewport')?.dataset.sourceView==='true',
+      null,{timeout:15000});
+    console.log(name+' PUBLISHER_NATIVE_SURAH_VIEW_PASS',JSON.stringify(native));
+    console.log(name+' SURAH_107_OFFICIAL_CROP_PASS');
+    // Al-Adiyat verse 10 belongs to the next authentic page (600).
+    // Test that the local pinned page map follows it without a CDN call.
+    await page.evaluate(async()=>{
+      window.__quranTestPlayer?.destroy?.();
+      const {mountQuranSurahPlayer}=await import('./src/modules/mashaal/quran/quran-surah-player.js');
+      const {KHALED_QURAN_TERMS}=await import('./src/modules/khaled/quran/khaled-quran.js');
+      const {loadQuranCoursePages}=await import('./src/shared/quran/quran-course-page-map.js');
+      const chapter=KHALED_QURAN_TERMS[2].find(x=>x.surahNumber===100);
+      if(!chapter)throw Error('Missing Al-Adiyat chapter');
+      const pages=await loadQuranCoursePages(chapter);
+      if(pages.map(p=>p.pageNumber).join(',')!=='599,600')
+        throw Error('Verified two-page Al-Adiyat mapping unavailable');
+      const host=document.createElement('div');document.body.replaceChildren(host);
+      window.__quranTestPlayer=mountQuranSurahPlayer(host,{
+        learnerId:'khaled',surahNumber:100,surahNameAr:chapter.surahNameAr,
+        audioPath:chapter.audioPath,mushafPage:pages[0],mushafPages:pages
+      });
+    });
+    await page.locator('.quran-itqan-toggle').waitFor({timeout:15000});
+    await page.locator('.quran-itqan-toggle').click();
+    await page.locator('.quran-ayah-button').nth(9).click();
+    await page.waitForFunction(()=>window.__quranTestPlayer?.getPageIndex()===1,
+      null,{timeout:15000});
+    await page.waitForFunction(()=>document.querySelector('.quran-mushaf-ayah-path[data-ayah="100:10"]'),
+      null,{timeout:15000});
+    const continued=await page.evaluate(()=>({
+      image:document.querySelector('.quran-page-image')?.currentSrc,
+      imageWidth:document.querySelector('.quran-page-image')?.naturalWidth,
+      index:window.__quranTestPlayer.getPageIndex()
+    }));
+    if(continued.index!==1||!continued.image?.includes('kfqc-hafs-page-600.svg')||!continued.imageWidth)
+      throw Error(name+' offline page continuation failed '+JSON.stringify(continued));
+    console.log(name+' OFFLINE_AYAH_PAGE_FOLLOW_PASS',JSON.stringify(continued));
+    await page.screenshot({path:'/tmp/quran-itqan-'+name+'.png',fullPage:true});
+    if(errors.length)throw Error(name+' page errors: '+errors.join('; ').slice(0,350));
+  }finally{await browser.close();}
+}
+console.log('QURAN_ITQAN_CHROME_AND_WEBKIT_PASS');
+).test(loaded.src))
         throw Error(name+' bundled mushaf page '+number+' failed '+JSON.stringify(loaded));
       console.log(name+' BUNDLED_MUSHAF_PAGE_PASS '+number);
     }
