@@ -72,6 +72,7 @@ export function createQuranPracticeCloudSync({authClient,storage=globalThis.loca
       if(!authClient.isAuthenticated())return {ok:false,reason:'not-connected'};
       // Read cloud BEFORE uploading to preserve work done on another device.
       const snapshot=await authClient.request('/v1/sync/snapshot');
+      const existingIds=new Set((snapshot?.sessions||[]).map(item=>item?.sessionId).filter(Boolean));
       let restored=0,sent=0;
       for(const learner of LEARNERS){
         const key=practiceStorageKey(learner);
@@ -89,6 +90,7 @@ export function createQuranPracticeCloudSync({authClient,storage=globalThis.loca
           const practice={version:1,records:group,last};
           const blob=JSON.stringify(practice);
           const id='quran-'+learner+'-'+hashRecord(blob)+'-'+hashRecord(blob.split('').reverse().join(''));
+          if(existingIds.has(id))continue;
           await authClient.request('/v1/sync/session',{method:'POST',body:{
             sessionId:id,learnerId:learner,skillId:KIND,mode:'self-report',
             startedAt:null,endedAt:last?.updatedAt||null,
