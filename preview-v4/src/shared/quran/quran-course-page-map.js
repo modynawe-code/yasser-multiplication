@@ -12,6 +12,25 @@ async function loadPinnedMap(fetchImpl){
   return cached;
 }
 
+// This path is emitted only after the build verifies the pinned per-surah
+// SVG matches the full original file, byte-for-byte except the viewBox.
+export function isolatedSurahView(page,surahNumber,map){
+  const number=Number(page),surah=Number(surahNumber);
+  if(map?.schemaVersion!==1||map?.sourcePin!==SOURCE_PIN
+    ||!Number.isInteger(number)||number<1||number>604
+    ||!Number.isInteger(surah)||surah<1||surah>114
+    ||!map.surahs?.[String(surah)]?.includes(number))return null;
+  const saved=map.isolatedViews?.[number+':'+surah];
+  const expected='./assets/recitation/kfqc-hafs-page-'+number+'-surah'+surah+'.svg';
+  const dims=String(saved?.viewBox||'').split(/\s+/).map(Number);
+  if(saved?.imagePath!==expected||dims.length!==4||!dims.every(Number.isFinite)
+    ||dims[2]<=0||dims[3]<=0)return null;
+  return Object.freeze({imagePath:expected,viewBox:saved.viewBox});
+}
+export async function findBundledSurahView(page,surah,{fetchImpl=globalThis.fetch}={}){
+  return isolatedSurahView(page,surah,await loadPinnedMap(fetchImpl));
+}
+
 /** Return only source-authenticated verse positions, never inferred offsets. */
 export function pageForBundledQuranAyah(surahNumber,ayahNumber,map){
   const surah=Number(surahNumber),ayah=Number(ayahNumber);
@@ -39,7 +58,8 @@ export function expandQuranCoursePages(chapter,map){
     ||!nums.includes(Number(chapter.pageNumber)))return existing;
   return nums.map(number=>{
     const known=existing.find(p=>p?.pageNumber===number);
-    if(known)return known;
+    const view=isolatedSurahView(number,n,map);
+    if(known)return view?Object.freeze({...known,isolatedImagePath:view.imagePath,isolatedViewBox:view.viewBox}):known;
     const url=String(original.imageUrl||'');
     if(!/\/\d+\.svg$/.test(url))return null;
     const fallbacks=(original.fallbackImageUrls||[]).map(raw=>
@@ -50,6 +70,7 @@ export function expandQuranCoursePages(chapter,map){
       imageUrl:url.replace(/\/\d+\.svg$/,'/'+number+'.svg'),
       fallbackImageUrls:Object.freeze(fallbacks),
       offlineBundled:true,
+      ...(view?{isolatedImagePath:view.imagePath,isolatedViewBox:view.viewBox}:{}),
       focusRegion:undefined
     });
   }).filter(Boolean);
