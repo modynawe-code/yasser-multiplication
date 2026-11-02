@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DICE_ORIENTATIONS,diceCubeMarkup,cameraTransform} from '../src/modules/games/monopoly/monopoly-interaction.js';
+import {DICE_ORIENTATIONS,diceCubeMarkup,cameraTransform,tileCameraAnchor} from '../src/modules/games/monopoly/monopoly-interaction.js';
 import {createMonopolyState,rollDice,drawCard,pickMonopolyCard,flipMonopolyCard,proposeMonopolyTrade,respondMonopolyTrade} from '../src/modules/games/monopoly/monopoly-engine.js';
 import {applyMonopolyRoomAction} from '../../backend/src/game-room-rules.mjs';
 const players=[{id:'a',name:'أ'},{id:'b',name:'ب'}];
@@ -68,5 +68,22 @@ test('camera keeps perimeter landing tiles outside the stationary event arena',(
     const t=cameraTransform(400,400,target,1.65,{x:edge(target.x/400),y:edge(target.y/400)});
     const x=(target.x*t.scale+t.x)/400,y=(target.y*t.scale+t.y)/400;
     assert.ok(x<.183||x>.817||y<.183||y>.817);
+  }
+});
+
+test('step camera pins each board edge to the safe perimeter lane without losing the piece',()=>{
+  for(const size of [350,390,768]){
+    for(const [target,expected] of [
+      [{x:size*.12,y:size*.5},{x:.14,y:.5}],
+      [{x:size*.88,y:size*.5},{x:.86,y:.5}],
+      [{x:size*.5,y:size*.12},{x:.5,y:.14}],
+      [{x:size*.5,y:size*.88},{x:.5,y:.86}]
+    ]){
+      const anchor=tileCameraAnchor(size,size,target);
+      assert.deepEqual(anchor,expected);
+      const frame=cameraTransform(size,size,target,1.55,anchor);
+      const position={x:(target.x*frame.scale+frame.x)/size,y:(target.y*frame.scale+frame.y)/size};
+      assert.ok(position.x>=0&&position.x<=1&&position.y>=0&&position.y<=1);
+    }
   }
 });

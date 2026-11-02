@@ -7,6 +7,11 @@ export function diceCubeMarkup(value=1){
   const [x,y]=DICE_ORIENTATIONS[value]||DICE_ORIENTATIONS[1];
   return `<span class="mono-cube" style="transform:rotateX(-12deg) rotateY(14deg) rotateX(${x}deg) rotateY(${y}deg)">${[1,6,3,4,2,5].map((face,i)=>`<span class="mono-cube-face mono-cube-face-${i}">${dicePips(face)}</span>`).join('')}</span>`;
 }
+// Keep the moving piece in the appropriate perimeter lane without hiding the event center.
+export function tileCameraAnchor(width,height,target){
+  const lane=value=>value<.25?.14:value>.75?.86:.5;
+  return {x:lane(target.x/Math.max(1,width)),y:lane(target.y/Math.max(1,height))};
+}
 export function cameraTransform(width,height,target,scale,anchor={x:.5,y:.5}){
   const z=Math.max(1,Math.min(2.8,scale));
   const tx=Math.max(width*(1-z),Math.min(0,width*anchor.x-target.x*z));
@@ -46,7 +51,7 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
     const ticket=epoch,animation=cameraAnimation;
     const tick=()=>{if(ticket!==epoch||animation!==cameraAnimation)return;const matrix=getComputedStyle(b).transform,match=matrix.match(/^matrix\(([^,]+)/);w.style.setProperty('--mono-zoom',match?Number(match[1]):scale);if(animation?.playState==='running')zoomFrame=requestAnimationFrame(tick);};tick();
   }
-  function camera(target=null,z=1,instant=false,anchor){
+  function camera(target=null,z=1,instant=false,anchor,duration=550){
     const b=board();if(!b)return Promise.resolve();
     const before=getComputedStyle(b).transform;
     cameraAnimation?.cancel();
@@ -56,11 +61,20 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
     const values=before.match(/^matrix\((.+)\)$/)?.[1].split(',').map(Number);
     const settled=values&&Math.abs(values[0]-scale)<.0001&&Math.abs(values[4]-pan.x)<.01&&Math.abs(values[5]-pan.y)<.01;
     if(instant||reduced()||settled||!b.animate){cameraAnimation=null;syncZoom(true);return Promise.resolve();}
-    const animation=b.animate([{transform:before==='none'?'translate(0px,0px) scale(1)':before},{transform:after}],{duration:550,easing:'cubic-bezier(.22,.7,.2,1)'});
+    const animation=b.animate([{transform:before==='none'?'translate(0px,0px) scale(1)':before},{transform:after}],{duration,easing:'cubic-bezier(.22,.7,.2,1)'});
     cameraAnimation=animation;effects.add(animation);syncZoom();
     return animation.finished.catch(()=>{}).finally(()=>{effects.delete(animation);if(cameraAnimation===animation){cameraAnimation=null;cancelAnimationFrame(zoomFrame);wrap()?.style.setProperty('--mono-zoom',scale);}});
   }
-  function focus(index,z=1.3){const b=board(),tile=b?.querySelector(`[data-index="${index}"]`);if(!tile)return;const target={x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2};const edge=value=>value<.25?.12:value>.75?.88:.5;camera(target,z,false,{x:edge(target.x/b.offsetWidth),y:edge(target.y/b.offsetHeight)});}
+  function focus(index,z=1.3){const b=board(),tile=b?.querySelector(`[data-index="${index}"]`);if(!tile)return;const target={x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2};void camera(target,z,false,tileCameraAnchor(b.offsetWidth,b.offsetHeight,target));}
+  // The earlier segment camera only moved every 3-4 cells; track each actual piece step.
+  // The server/engine remains authoritative for the destination. Manual pinch/pan is respected.
+  function trackStep(index){
+    if(manualCamera)return;
+    const b=board(),tile=b?.querySelector(`[data-index="${index}"]`);
+    if(!tile)return;
+    const target={x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2};
+    void camera(target,1.55,false,tileCameraAnchor(b.offsetWidth,b.offsetHeight,target),300);
+  }
   function overview(){manualCamera=false;camera();}
   async function followSegment(indexes){if(manualCamera)return;const b=board();if(!b)return;const tiles=indexes.map(i=>b.querySelector(`[data-index="${i}"]`)).filter(Boolean);if(!tiles.length)return;const points=tiles.map(tile=>({x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2}));const target={x:(Math.min(...points.map(p=>p.x))+Math.max(...points.map(p=>p.x)))/2,y:(Math.min(...points.map(p=>p.y))+Math.max(...points.map(p=>p.y)))/2};await camera(target,1.35);}
   function progress(text,name,color){const w=wrap();if(!w)return;let node=getElement('monoTurnProgress');if(!node){node=document.createElement('p');node.id='monoTurnProgress';node.className='mono-turn-progress';node.setAttribute('role','status');node.setAttribute('aria-live','polite');w.appendChild(node);}node.textContent=text;node.style.setProperty('--player-color',color||'#244634');node.dataset.playerName=name||'';}
@@ -119,5 +133,5 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
     w?.addEventListener('click',event=>{if(!event.target.closest('#monoCenter')&&performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
     const reset=document.createElement('button');reset.type='button';reset.className='mono-camera-reset';reset.textContent='اللوحة كاملة';reset.setAttribute('aria-label','إعادة عرض اللوحة كاملة');reset.addEventListener('click',overview);const tools=getElement('monoGameTools');if(tools){const toolbar=document.createElement('div');toolbar.className='mono-toolbar';tools.before(toolbar);toolbar.append(tools,reset);}else w?.appendChild(reset);
   }
-  return{install,roll,focus,overview,followSegment,progress,eventScene,money,ownership,announce,sound,unlockAudio,decorateCard,cancel};
+  return{install,roll,focus,trackStep,overview,followSegment,progress,eventScene,money,ownership,announce,sound,unlockAudio,decorateCard,cancel};
 }
