@@ -249,7 +249,7 @@ function hasSave(){try{const raw=JSON.parse(localStorage.getItem(STORE_KEY)||'nu
 function loadSave(){try{return restoreMonopolyState(JSON.parse(localStorage.getItem(STORE_KEY)||'null'));}catch{return null;}}
 
 export function createMonopolyController({onBack}={}){
- let bound=false,state=null,selected=new Set(),recordedWinner='',overlayMode='',playMode='local',selectedOnline='',onlineRoom=null,onlineBusy=false,movementAnimating=false,movementAnimationId=0,movementFocusIndex=null,activeEvent=null,lastOnlineVersion=null,localEventSequence=0,soundContext=null,soundMuted=false;const playedSoundKeys=new Set();
+ let bound=false,state=null,selected=new Set(),recordedWinner='',overlayMode='',playMode='local',selectedOnline='',onlineRoom=null,onlineBusy=false,movementAnimating=false,movementAnimationId=0,movementFocusIndex=null,activeEvent=null,lastOnlineVersion=null,localEventSequence=0,soundContext=null,soundMuted=false,portfolioOwnerId=null;const playedSoundKeys=new Set();
  const interaction=createMonopolyInteraction({getElement:byId,isMuted:()=>soundMuted,onRoll:()=>handleAction('roll'),canRoll:()=>Boolean(state?.phase==='roll'&&!movementAnimating&&!onlineBusy&&canAct('roll'))});
  let queuedRoom=null,transitionGeneration=0,connectionLost=false,recoveringRoom=false,connectionMessage='',recovery=null;const presentedEvents=new Set();
  const onlineSession=createMonopolyOnlineSession({roomClient:createGameRoomClient(),onRoom:handleOnlineRoom,onError:handleOnlineError});
@@ -381,8 +381,50 @@ export function createMonopolyController({onBack}={}){
    if(self)self.innerHTML=bottomPlayer?markup(bottomPlayer):'';
    document.querySelectorAll('#monoGame [data-manage-property]').forEach(button=>button.addEventListener('click',()=>showProperties(Number(button.dataset.manageProperty))));
  }
- function setOverlay(title,body,actions,expanded=false){const panel=byId('monoOverlay'),center=byId('monoCenter');if(!panel)return;overlayMode=title;center?.classList.add('has-event');panel.hidden=false;panel.classList.toggle('mono-overlay--expanded',expanded);panel.classList.toggle('mono-overlay--deed',title==='بطاقة ملكية جديدة');center?.classList.toggle('overlay-deed-open',title==='بطاقة ملكية جديدة');const actor=state?.players[state.phase==='auction'?state.auction?.nextIndex:state.turnIndex];panel.innerHTML=`<p class="mono-event-context">${escapeHtml(actor?.name||'')} · ${onlineBusy?'جارٍ إرسال الحركة…':state?.phase==='trade'?'عرض تبادل':'الدور الحالي'}</p><h2>${escapeHtml(title)}</h2><div class="mono-overlay-body">${body}</div><div class="mono-overlay-actions">${actions}</div>`;panel.querySelector('.mono-overlay-body')?.scrollTo?.(0,0);interaction.eventScene(state?.pending?.index??state?.auction?.index??state?.players[state.turnIndex]?.position??0);panel.querySelectorAll('[data-action]').forEach(button=>{if(onlineBusy||movementAnimating||playMode==='online'&&!canAct(button.dataset.action))button.disabled=true;button.addEventListener('click',()=>handleOverlayAction(button.dataset.action,button.dataset.value));});panel.querySelectorAll('.mono-build-stage[data-stage-level]').forEach(button=>button.addEventListener('click',()=>{panel.querySelectorAll('.mono-build-stage[data-stage-level]').forEach(stage=>stage.setAttribute('aria-pressed',String(stage===button)));renderBuildStage(panel);}));}
- function hideOverlay(){const panel=byId('monoOverlay');if(panel){panel.hidden=true;byId('monoCenter')?.classList.remove('has-event','overlay-deed-open');}overlayMode='';}
+ function setOverlay(title,body,actions,expanded=false){
+   const panel=byId('monoOverlay'),center=byId('monoCenter'),game=byId('monoGame');
+   if(!panel)return;
+   overlayMode=title;
+   const portfolio=title==='إدارة الأملاك';
+   if(portfolio){
+     if(panel.parentElement!==game)game?.append(panel);
+     center?.classList.remove('has-event','overlay-deed-open');
+   }else{
+     if(panel.parentElement!==center)center?.append(panel);
+     center?.classList.add('has-event');
+     center?.classList.toggle('overlay-deed-open',title==='بطاقة ملكية جديدة');
+   }
+   panel.classList.toggle('mono-overlay--portfolio',portfolio);
+   panel.setAttribute('role',portfolio?'dialog':'region');
+   if(portfolio)panel.setAttribute('aria-label','لوحة إدارة أملاك اللاعبين');
+   else panel.removeAttribute('aria-label');
+   panel.hidden=false;
+   panel.classList.toggle('mono-overlay--expanded',expanded);
+   panel.classList.toggle('mono-overlay--deed',title==='بطاقة ملكية جديدة');
+   const actor=state?.players[state.phase==='auction'?state.auction?.nextIndex:state.turnIndex];
+   panel.innerHTML=`<p class="mono-event-context">${escapeHtml(actor?.name||'')} · ${onlineBusy?'جارٍ إرسال الحركة…':state?.phase==='trade'?'عرض تبادل':'الدور الحالي'}</p><h2>${escapeHtml(title)}</h2><div class="mono-overlay-body">${body}</div><div class="mono-overlay-actions">${actions}</div>`;
+   panel.querySelector('.mono-overlay-body')?.scrollTo?.(0,0);
+   if(!portfolio)interaction.eventScene(state?.pending?.index??state?.auction?.index??state?.players[state.turnIndex]?.position??0);
+   panel.querySelectorAll('[data-action]').forEach(button=>{
+     if(onlineBusy||movementAnimating||playMode==='online'&&!canAct(button.dataset.action))button.disabled=true;
+     button.addEventListener('click',()=>handleOverlayAction(button.dataset.action,button.dataset.value));
+   });
+   panel.querySelectorAll('[data-portfolio-owner]').forEach(button=>button.addEventListener('click',()=>{
+     portfolioOwnerId=button.dataset.portfolioOwner;
+     showProperties();
+   }));
+   panel.querySelectorAll('.mono-build-stage[data-stage-level]').forEach(button=>button.addEventListener('click',()=>{panel.querySelectorAll('.mono-build-stage[data-stage-level]').forEach(stage=>stage.setAttribute('aria-pressed',String(stage===button)));renderBuildStage(panel);}));
+ }
+ function hideOverlay(){
+   const panel=byId('monoOverlay');
+   if(panel){
+     panel.hidden=true;
+     panel.classList.remove('mono-overlay--portfolio');
+     const center=byId('monoCenter');if(center&&panel.parentElement!==center)center.append(panel);
+     center?.classList.remove('has-event','overlay-deed-open');
+   }
+   overlayMode='';
+ }
  function syncSoundButton(){const button=byId('monoMuteSound');if(!button)return;button.setAttribute('aria-pressed',String(soundMuted));button.textContent=soundMuted?'تشغيل الصوت':'كتم الصوت';button.setAttribute('aria-label',soundMuted?'تشغيل أصوات اللعبة':'كتم أصوات اللعبة');}
  function playCue(kind,key){if(soundMuted||!key||playedSoundKeys.has(key))return;playedSoundKeys.add(key);if(playedSoundKeys.size>100)playedSoundKeys.delete(playedSoundKeys.values().next().value);interaction.sound(kind==='reveal'?'draw':kind);}
  function setActiveEvent(event,key){if(event)activeEvent={...event,key};}
@@ -473,55 +515,66 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
  function showAuction(){const a=state.auction,p=state.players[a.nextIndex],s=BOARD[a.index];setOverlay(`مزاد · ${s.name}`,`<div class="mono-deed"><span class="mono-deed-band" style="--deed-band:${GROUP_COLOR[s.group]||'#65756b'}"></span><strong>المزايدة على ${escapeHtml(s.name)}</strong><div class="mono-deed-facts"><span>أعلى عرض <b>${digits.format(a.bid)}</b></span><span>${a.bidderId?`المزايد الأعلى <b>${escapeHtml(state.players.find(x=>x.id===a.bidderId)?.name||'لاعب')}</b>`:'لا توجد عروض بعد'}</span><span>الدور <b>${escapeHtml(p?.name||'لاعب')}</b></span><span>الرصيد <b>${digits.format(p?.cash||0)}</b></span></div></div>`,'<button class="btn primary" data-action="bid">ارفع العرض 10</button><button class="btn secondary" data-action="pass-auction">انسحب من المزاد</button>');}
  function showSaleConfirmation(index){const space=BOARD[index],own=state?.ownership?.[index],p=state?.players?.[state.turnIndex];if(!space||!own||own.ownerId!==p?.id)return;const propertyValue=Math.floor(space.price/2),development=((own.houses||0)+(own.hotel?1:0))*Math.floor((space.build||0)/2),total=propertyValue+development;const detail=`<article class="mono-event-card" data-kind="sale"><strong class="mono-event-title">تأكيد بيع الأرض</strong><span class="mono-event-reason">${escapeHtml(space.name)}</span><div class="mono-event-ledger"><div class="mono-event-ledger-row"><span><strong>قيمة الأرض</strong></span><span>+</span><strong>${digits.format(propertyValue)}</strong></div><div class="mono-event-ledger-row"><span><strong>المسترد من التطوير</strong></span><span>+</span><strong>${digits.format(development)}</strong></div></div><b class="mono-event-amount">الإجمالي ${digits.format(total)} ريال</b><p class="mono-event-note">رصيدك الآن ${digits.format(p.cash)}، وبعد البيع ${digits.format(p.cash+total)}.</p></article>`;setOverlay('مراجعة البيع',detail,`<button class="btn primary" data-action="sell-confirm" data-value="${index}">تأكيد البيع</button><button class="btn secondary" data-action="sale-cancel">إلغاء</button>`,true);}
  function showProperties(focusIndex=null){
+   if(!state)return;
    const activePlayer=state.players[state.turnIndex];
-   const ownerGroups=[];
-   for(const player of state.players){
-     const items=BOARD.map((space,index)=>({space,index,ownership:state.ownership[index]})).filter(item=>item.ownership?.ownerId===player.id);
-     if(!items.length)continue;
-     const byGroup=new Map();
-     for(const item of items){
-       const key=item.space.type==='property'?item.space.group:item.space.type;
-       if(!byGroup.has(key))byGroup.set(key,[]);
-       byGroup.get(key).push(item);
-     }
-     ownerGroups.push({player,items,byGroup});
+   const focusOwner=Number.isInteger(focusIndex)?state.ownership[focusIndex]?.ownerId:null;
+   if(focusOwner)portfolioOwnerId=focusOwner;
+   if(!state.players.some(player=>player.id===portfolioOwnerId))portfolioOwnerId=activePlayer.id;
+   const owner=state.players.find(player=>player.id===portfolioOwnerId)||activePlayer;
+   const items=BOARD.map((space,index)=>({space,index,ownership:state.ownership[index]})).filter(item=>item.ownership?.ownerId===owner.id);
+   const byGroup=new Map();
+   for(const item of items){
+     const key=item.space.type==='property'?item.space.group:item.space.type;
+     if(!byGroup.has(key))byGroup.set(key,[]);
+     byGroup.get(key).push(item);
    }
-   const groupLabel=key=>GROUP_LABEL[key]||(key==='railroad'?'المحطات':key==='utility'?'المرافق':key);
-   const playerMarkup=ownerGroups.map(({player,items,byGroup})=>{
-     const completeGroups=[...byGroup.entries()].filter(([key])=>{
-       if(!GROUP_LABEL[key])return false;
-       const groupSpaces=BOARD.map((space,index)=>({space,index})).filter(item=>item.space.type==='property'&&item.space.group===key);
-       return groupSpaces.length>0&&groupSpaces.every(item=>state.ownership[item.index]?.ownerId===player.id);
-     }).length;
-     const sections=[...byGroup.entries()].map(([key,owned])=>{
-       const propertyGroup=Boolean(GROUP_LABEL[key]);
-       const allSpaces=propertyGroup?BOARD.map((space,index)=>({space,index})).filter(item=>item.space.type==='property'&&item.space.group===key):owned;
-       const complete=propertyGroup&&allSpaces.length>0&&allSpaces.every(item=>state.ownership[item.index]?.ownerId===player.id);
-       const count=owned.length,total=propertyGroup?allSpaces.length:owned.length;
-       const heading=`<header class="mono-property-group-head"><strong>${escapeHtml(groupLabel(key))}</strong><span>${digits.format(count)} / ${digits.format(total)} ${propertyGroup?'أراضٍ':'مملوك'}</span><b class="${complete?'is-complete':''}">${complete?'المجموعة مكتملة':propertyGroup?'المجموعة غير مكتملة':''}</b></header>`;
-       const rows=owned.map(({space,index,ownership})=>{
-         const isCurrentOwner=player.id===activePlayer.id;
-         const level=ownership.hotel?'فندق':ownership.houses?`${digits.format(ownership.houses)} بيوت`:'بدون بناء';
-         const canDevelop=complete&&space.type==='property'&&isCurrentOwner&&canBuild(state,index);
-         const developable=complete&&space.type==='property'&&!ownership.hotel&&(ownership.houses||0)<=4;
-         const buildLabel=ownership.houses===4?'بناء فندق':'بناء بيت';
-         const development=developable
-           ?`<button class="btn secondary" data-action="build" data-value="${index}" ${canDevelop?'':'disabled'}>${buildLabel} · ${digits.format(space.build)}</button>`
-           :ownership.hotel?`<span class="mono-property-state">فندق مكتمل</span>`
-           :complete&&space.type==='property'?'<span class="mono-property-state">اكتمل التطوير</span>':'';
-         const saleEnabled=isCurrentOwner&&state.phase==='end';
-         const sale=`<button class="btn secondary" data-action="sell" data-value="${index}" ${saleEnabled?'':'disabled'}>بيع · ${digits.format(Math.floor(space.price/2)+(ownership.houses||0)*Math.floor((space.build||0)/2)+(ownership.hotel?Math.floor((space.build||0)/2):0))}</button>`;
-         return `<article class="mono-property" data-property-index="${index}"><div><strong>${escapeHtml(space.name)}</strong><small>${escapeHtml(groupLabel(key))} · إيجار ${digits.format(rentFor(state,index))} · ${level}</small></div><div class="mono-property-actions">${development}${sale}</div></article>`;
-       }).join('');
-       return `<section class="mono-property-group ${complete?'is-complete':''}">${heading}<div class="mono-property-group-items">${rows}</div></section>`;
-     }).join('');
-     const ownerNote=player.id===activePlayer.id?'دورك الآن · إجراءاتك متاحة':`للعرض · الدور الحالي: ${escapeHtml(activePlayer.name)}`;
-     const lands=items.filter(({space})=>space.type==='property').length,stations=items.filter(({space})=>space.type==='railroad').length,utilities=items.filter(({space})=>space.type==='utility').length;return `<section class="mono-property-owner"><header class="mono-property-owner-head"><strong>${escapeHtml(player.name)}</strong><span>${digits.format(items.length)} ممتلكات</span><small>${digits.format(lands)} أراضٍ · ${digits.format(stations)} محطات · ${digits.format(utilities)} مرافق · ${ownerNote} · ${digits.format(completeGroups)} مجموعات مكتملة</small></header>${sections}</section>`;
+   const completeGroups=[...byGroup.keys()].filter(key=>{
+     if(!GROUP_LABEL[key])return false;
+     const all=BOARD.map((space,index)=>({space,index})).filter(item=>item.space.type==='property'&&item.space.group===key);
+     return all.length>0&&all.every(item=>state.ownership[item.index]?.ownerId===owner.id);
+   }).length;
+   const canOperate=owner.id===activePlayer.id;
+   const tabs=state.players.map(player=>{
+     const count=Object.values(state.ownership).filter(own=>own?.ownerId===player.id).length;
+     const active=player.id===portfolioOwnerId;
+     const accent=ownerColor(player.id);
+     return `<button type="button" class="mono-portfolio-tab" data-portfolio-owner="${escapeHtml(player.id)}" aria-pressed="${active}" style="--portfolio-player:${accent}"><span class="mono-portfolio-tab-dot" aria-hidden="true"></span><strong>${escapeHtml(player.name)}</strong><small>${digits.format(count)} أملاك</small></button>`;
    }).join('');
-   const body=playerMarkup
-     ?`<div class="mono-property-list">${playerMarkup}<p>البناء متاح في دور المالك بعد اكتمال مجموعة اللون، ويُبنى بالتساوي. البيع متاح في مرحلة إنهاء الدور بعد مراجعة قيمة الأرض والتطوير المسترد. استخدم «تبادل الأراضي» للتفاوض مع لاعب آخر.</p></div>`
-     :'<p>لا توجد أملاك مملوكة الآن.</p>';
-   setOverlay('إدارة الأملاك',body,'<button class="btn secondary" data-action="trade-open">تبادل الأراضي</button><button class="btn secondary" data-action="close">رجوع للوحة</button>',true);if(Number.isInteger(focusIndex)){const target=byId('monoOverlay')?.querySelector(`[data-property-index="${focusIndex}"]`);target?.classList.add('mono-property-focus');target?.scrollIntoView?.({block:'center',behavior:'smooth'});}
+   const groups=[...byGroup.entries()].map(([key,owned])=>{
+     const propertyGroup=Boolean(GROUP_LABEL[key]);
+     const all=propertyGroup?BOARD.filter(space=>space.type==='property'&&space.group===key):owned;
+     const complete=propertyGroup&&all.length>0&&all.every(space=>{
+       const index=BOARD.indexOf(space);
+       return state.ownership[index]?.ownerId===owner.id;
+     });
+     const band=GROUP_COLOR[key]||(key==='railroad'?'#526a79':'#5a9ca4');
+     const rows=owned.map(({space,index,ownership})=>{
+       const level=ownership.hotel?'فندق':ownership.houses?`${digits.format(ownership.houses)} بيوت`:'بدون بناء';
+       const canDevelop=complete&&space.type==='property'&&canOperate&&canBuild(state,index);
+       const buildLabel=ownership.houses===4?'بناء فندق':'بناء بيت';
+       const buildButton=complete&&space.type==='property'&&!ownership.hotel
+         ?`<button type="button" class="mono-portfolio-action" data-action="build" data-value="${index}" ${canDevelop?'':'disabled'}>${buildLabel} · ${digits.format(space.build)}</button>`
+         :ownership.hotel?'<span class="mono-portfolio-complete">فندق مكتمل</span>':'';
+       const saleAllowed=canOperate&&state.phase==='end';
+       const refund=Math.floor(space.price/2)+(ownership.houses||0)*Math.floor((space.build||0)/2)+(ownership.hotel?Math.floor((space.build||0)/2):0);
+       return `<article class="mono-portfolio-property" data-property-index="${index}" style="--property-band:${band}">
+         <div class="mono-portfolio-property-info"><strong>${escapeHtml(space.name)}</strong><span class="mono-portfolio-rent">الإيجار <b>${digits.format(rentFor(state,index))}</b> ريال</span><small>${level}</small></div>
+         <div class="mono-portfolio-property-actions">${buildButton}<button type="button" class="mono-portfolio-action mono-portfolio-sale" data-action="sell" data-value="${index}" ${saleAllowed?'':'disabled'}>بيع · ${digits.format(refund)}</button></div>
+       </article>`;
+     }).join('');
+     return `<section class="mono-portfolio-group" style="--group-band:${band}">
+       <header class="mono-portfolio-group-head"><span class="mono-portfolio-group-dot" aria-hidden="true"></span><strong>${escapeHtml(GROUP_LABEL[key]||(key==='railroad'?'المحطات':'المرافق'))}</strong><small>${digits.format(owned.length)} / ${digits.format(all.length)}</small>${complete?'<b class="mono-portfolio-complete">مجموعة مكتملة</b>':''}</header>
+       <div class="mono-portfolio-properties">${rows}</div>
+     </section>`;
+   }).join('');
+   const stats=`<div class="mono-portfolio-summary" style="--portfolio-player:${ownerColor(owner.id)}"><strong>${escapeHtml(owner.name)}</strong><span>الرصيد <b>${digits.format(owner.cash)}</b> ريال</span><span><b>${digits.format(items.length)}</b> أملاك</span><span><b>${digits.format(completeGroups)}</b> مجموعات مكتملة</span>${canOperate?'<small>الدور الحالي · إجراءات المالك متاحة حسب قواعد اللعبة</small>':'<small>عرض فقط · التصرفات متاحة لصاحب الدور</small>'}</div>`;
+   const body=`<nav class="mono-portfolio-tabs" aria-label="اختر اللاعب">${tabs}</nav>${stats}<div class="mono-portfolio-list">${groups||'<p class="mono-portfolio-empty">ما عند هذا اللاعب أملاك حتى الآن. تقدر تختار لاعبًا ثانيًا من الأعلى.</p>'}</div>`;
+   setOverlay('إدارة الأملاك',body,'<button class="btn secondary" data-action="trade-open">تبادل الأراضي</button><button class="btn primary" data-action="close">العودة للوحة</button>',true);
+   if(Number.isInteger(focusIndex)){
+     const target=byId('monoOverlay')?.querySelector(`[data-property-index="${focusIndex}"]`);
+     target?.classList.add('mono-property-focus');
+     target?.scrollIntoView?.({block:'nearest'});
+   }
  }
  function showTrade(){const p=state.players[state.turnIndex],owned=BOARD.map((s,i)=>({s,i,o:state.ownership[i]})).filter(x=>x.o?.ownerId===p.id);const others=state.players.filter(x=>x.id!==p.id&&!x.bankrupt);if(!owned.length||!others.length){setOverlay('تبادل الأراضي','<p>يلزم امتلاك أرض ووجود لاعب آخر لإجراء التبادل.</p>','<button class="btn secondary" data-action="manage">رجوع</button>');return;}const body=`<div class="mono-trade-fields"><label>الأرض المعروضة<select id="monoTradeProperty">${owned.map(({s,i})=>`<option value="${i}">${escapeHtml(s.name)}</option>`).join('')}</select></label><label>مع اللاعب<select id="monoTradePlayer">${others.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name)}</option>`).join('')}</select></label><label>مبلغ تدفعه<input id="monoTradeOffer" type="number" min="0" step="10" value="0"></label><label>مبلغ تستلمه<input id="monoTradeRequest" type="number" min="0" step="10" value="0"></label></div><p>راجِعوا شروط التبادل معًا قبل التأكيد.</p>`;setOverlay('تبادل الأراضي',body,'<button class="btn primary" data-action="trade-confirm">تأكيد التبادل</button><button class="btn secondary" data-action="manage">رجوع</button>');}
  function canAct(action){if(playMode!=='online')return true;if(connectionLost||recoveringRoom)return false;const selfId=onlineSession.snapshot.selfPlayerId;if(!selfId||!state)return false;if(action==='trade-accept'||action==='trade-reject')return state.tradeOffer?.targetId===selfId;if(action==='close'||action==='continue-event'||action==='sale-cancel'||action==='manage'||action==='trade-open'||action==='focus-space')return true;const index=action==='bid'||action==='pass-auction'?state.auction?.nextIndex:state.turnIndex;return state.players[index]?.id===selfId;}
