@@ -7,7 +7,7 @@ import {gameHistoryService} from '../history/game-history-service.js';
 import {installMonopolyRecovery} from './monopoly-recovery.js';
 import {createMonopolyInteraction,diceCubeMarkup} from './monopoly-interaction.js';
 import {pickMonopolyCard,flipMonopolyCard,proposeMonopolyTrade,respondMonopolyTrade} from './monopoly-engine.js';
-import {movementRoute,movementSegments,boardEdge,pieceOffset} from './monopoly-scene.js';
+import {movementRoute,boardEdge,pieceOffset} from './monopoly-scene.js';
 import {deriveMonopolyEvent,dicePips} from './monopoly-presentation.js';
 
 const FIGMA_SPACE_ICONS=Object.freeze({chance:new URL('./assets/figma-icons/chance.png',import.meta.url).href,chest:new URL('./assets/figma-icons/community-chest.png',import.meta.url).href,railroad:new URL('./assets/figma-icons/railroad.png',import.meta.url).href,utilityElectricity:new URL('./assets/figma-icons/utility-electricity.png',import.meta.url).href,utilityWater:new URL('./assets/figma-icons/utility-water.png',import.meta.url).href});
@@ -343,22 +343,20 @@ export function createMonopolyController({onBack}={}){
    const generation=transitionGeneration,board=byId('monoBoard'),movingPlayer=state?.players.find(p=>p.id===playerId);if(!board||!movingPlayer)return;
    const destination=board.querySelector(`[data-index="${to}"]`),standing=board.querySelector(`.mono-piece[data-player-id="${CSS.escape(String(playerId))}"]`);
    const teleport=to===10&&state.log?.includes('السجن'),backward=!teleport&&/ارجع|تراجع/.test(state.lastCard||state.log||'');
-   const route=movementRoute(from,to,{teleport,backward}),segments=movementSegments(from,route);
+   const route=movementRoute(from,to,{teleport,backward});
    const token=document.createElement('span');token.className='mono-moving-token mono-piece is-active';token.dataset.playerId=playerId;token.style.setProperty('--token',ownerColor(playerId));token.innerHTML=`${escapeHtml(movingPlayer.name.slice(0,1))}<span class="mono-piece-name">${escapeHtml(movingPlayer.name)}</span>`;
    if(standing)standing.style.visibility='hidden';board.appendChild(token);byId('monoGame')?.classList.add('mono-is-moving');
    const place=index=>{const tile=board.querySelector(`[data-index="${index}"]`);if(!tile)return;token.dataset.edge=boardEdge(index);token.style.left=`calc(${tile.offsetLeft+tile.offsetWidth/2}px - 16px / var(--mono-zoom,1))`;token.style.top=`calc(${tile.offsetTop+tile.offsetHeight/2}px - 16px / var(--mono-zoom,1))`;};
    try{
-     place(from);let segmentIndex=-1;
+     place(from);
      for(let step=0;step<route.length;step++){
        if(generation!==transitionGeneration||!state)return;
-       const wanted=segments.findLastIndex(segment=>segment.start<=step);
-       if(wanted!==segmentIndex){segmentIndex=wanted;await interaction.followSegment(segments[wanted].indexes);if(generation!==transitionGeneration)return;}
        const index=route[step];place(index);focusMovement(index);
        interaction.progress(`${movingPlayer.name} · الخطوات المتبقية: ${digits.format(route.length-step)}`,movingPlayer.name,ownerColor(playerId));
        await waitForMotion(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches?120:movementStepDuration());
      }
      interaction.progress(`وصل ${movingPlayer.name} إلى ${BOARD[to].name}`,movingPlayer.name,ownerColor(playerId));
-     await waitForMotion(800);
+     await waitForMotion(320);
    }finally{token.remove();if(generation===transitionGeneration)byId('monoGame')?.classList.remove('mono-is-moving');if(standing)standing.style.visibility='';if(generation===transitionGeneration){board.querySelectorAll('.mono-space.is-highlight-target,.mono-space.is-highlight-path').forEach(n=>n.classList.remove('is-highlight-target','is-highlight-path'));destination?.classList.add('is-highlight-target');movementFocusIndex=to;}}
  }
 
@@ -573,7 +571,7 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
    try{
      // Keep the old balance/position visible until the corresponding physical action occurs.
      state=previous;render({deferOutcome:true});state=next;
-     if(action==='roll'||(!action&&previous.phase==='roll'&&next.dice)){interaction.overview();interaction.progress('دور '+actor.name+' · رمي النرد',actor.name,ownerColor(actor.id));await interaction.roll(next.dice);if(generation!==transitionGeneration)return;const result=`${actor.name} · ${digits.format(next.dice[0])} + ${digits.format(next.dice[1])} = ${digits.format(next.dice[0]+next.dice[1])}`;byId('monoDiceTotal').textContent=result;interaction.progress(result,actor.name,ownerColor(actor.id));await waitForMotion(1100);}
+     if(action==='roll'||(!action&&previous.phase==='roll'&&next.dice)){interaction.overview();interaction.progress('دور '+actor.name+' · رمي النرد',actor.name,ownerColor(actor.id));await interaction.roll(next.dice);if(generation!==transitionGeneration)return;const result=`${actor.name} · ${digits.format(next.dice[0])} + ${digits.format(next.dice[1])} = ${digits.format(next.dice[0]+next.dice[1])}`;byId('monoDiceTotal').textContent=result;interaction.progress(result,actor.name,ownerColor(actor.id));await waitForMotion(220);}
      if(generation!==transitionGeneration)return;
      if(from!==to&&Number.isInteger(to)){await animateTokenMove(actor.id,from,to);}
      if(generation!==transitionGeneration)return;

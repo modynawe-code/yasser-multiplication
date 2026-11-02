@@ -20,7 +20,7 @@ export function cameraTransform(width,height,target,scale,anchor={x:.5,y:.5}){
 }
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 export function createMonopolyInteraction({getElement=id=>document.getElementById(id),isMuted=()=>false,onRoll=()=>{},canRoll=()=>false}={}){
-  let diceBuffers=null,diceDecode=null,diceSoundIndex=0,zoomFrame=0,manualCamera=false,cameraAnimation=null;const recordingBytes=Promise.all([1,2,3].map(n=>fetch(new URL(`./assets/audio/dice-roll-${n}.mp3`,import.meta.url)).then(r=>{if(!r.ok)throw new Error('Dice audio unavailable');return r.arrayBuffer();}))).catch(()=>[]);
+  let diceBuffers=null,diceDecode=null,diceSoundIndex=0,zoomFrame=0,manualCamera=false,cameraAnimation=null,lastEventFocus=null;const recordingBytes=Promise.all([1,2,3].map(n=>fetch(new URL(`./assets/audio/dice-roll-${n}.mp3`,import.meta.url)).then(r=>{if(!r.ok)throw new Error('Dice audio unavailable');return r.arrayBuffer();}))).catch(()=>[]);
   let audio=null,epoch=0,scale=1,pan={x:0,y:0},installed=false,lastTap=0,suppressClickUntil=0;
   const cardEffects=new Set();
   const effects=new Set(),voices=new Set(),pointers=new Map();
@@ -75,10 +75,24 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
     const target={x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2};
     void camera(target,1.55,false,tileCameraAnchor(b.offsetWidth,b.offsetHeight,target),300);
   }
-  function overview(){manualCamera=false;camera();}
+  function overview(){manualCamera=false;lastEventFocus=null;return camera();}
   async function followSegment(indexes){if(manualCamera)return;const b=board();if(!b)return;const tiles=indexes.map(i=>b.querySelector(`[data-index="${i}"]`)).filter(Boolean);if(!tiles.length)return;const points=tiles.map(tile=>({x:tile.offsetLeft+tile.offsetWidth/2,y:tile.offsetTop+tile.offsetHeight/2}));const target={x:(Math.min(...points.map(p=>p.x))+Math.max(...points.map(p=>p.x)))/2,y:(Math.min(...points.map(p=>p.y))+Math.max(...points.map(p=>p.y)))/2};await camera(target,1.35);}
   function progress(text,name,color){const w=wrap();if(!w)return;let node=getElement('monoTurnProgress');if(!node){node=document.createElement('p');node.id='monoTurnProgress';node.className='mono-turn-progress';node.setAttribute('role','status');node.setAttribute('aria-live','polite');w.appendChild(node);}node.textContent=text;node.style.setProperty('--player-color',color||'#244634');node.dataset.playerName=name||'';}
-  function eventScene(index){const b=board(),w=wrap(),overlay=getElement('monoOverlay');if(!b||!w||!overlay||overlay.hidden)return;const edge=boardEdge(Number(index)),area=eventArea(w.clientWidth,w.clientHeight,edge);overlay.style.left=area.x+'px';overlay.style.right='auto';overlay.style.top=area.y+'px';overlay.style.width=area.width+'px';overlay.style.maxHeight=area.height+'px';overlay.style.transform='none';overlay.dataset.landingEdge=edge;manualCamera=false;focus(index,1.25);}
+  function eventScene(index){
+    const b=board(),w=wrap(),overlay=getElement('monoOverlay');
+    if(!b||!w||!overlay||overlay.hidden)return;
+    const tileIndex=Number(index),edge=boardEdge(tileIndex),area=eventArea(w.clientWidth,w.clientHeight,edge);
+    overlay.style.left=area.x+'px';overlay.style.right='auto';
+    overlay.style.top=area.y+'px';overlay.style.width=area.width+'px';
+    overlay.style.maxHeight=area.height+'px';overlay.style.transform='none';
+    overlay.dataset.landingEdge=edge;
+    // Rendering can run again when cash, ownership and online state settle.
+    // Re-focusing the same landing tile on every render canceled a running camera
+    // animation and visibly bounced the board behind the event.
+    const key=`${tileIndex}:${w.clientWidth}:${w.clientHeight}`;
+    if(lastEventFocus===key)return;
+    lastEventFocus=key;manualCamera=false;focus(tileIndex,1.25);
+  }
   async function roll(values){
     const ticket=epoch;const dice=[...getElement('monoDice')?.querySelectorAll('.mono-die')||[]];
     await prepareDiceAudio();if(ticket!==epoch)return;sound('roll');
