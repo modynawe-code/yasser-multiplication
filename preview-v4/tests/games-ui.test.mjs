@@ -361,3 +361,13 @@ test('Monopoly property manager lists every owner and exposes building for compl
   assert.match(controller,/البناء متاح في دور المالك بعد اكتمال مجموعة اللون/);
   assert.match(controller,/تبادل الأراضي/);
 });
+
+test('Monopoly uses one camera per movement step and stabilizes each landing event',async()=>{
+  const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
+  const interaction=await read('src/modules/games/monopoly/monopoly-interaction.js');
+  assert.match(controller,/interaction\\.trackStep\\(index\\)/);
+  assert.doesNotMatch(controller,/await interaction\\.followSegment\\(/);
+  assert.match(interaction,/if\\(lastEventFocus===key\\)return/);
+  assert.match(interaction,/getElement\\('monoTurnProgress'\\)\\?\\.remove\\(\\)/);
+  assert.match(interaction,/function overview\\(\\)\\{manualCamera=false;lastEventFocus=null/);
+});

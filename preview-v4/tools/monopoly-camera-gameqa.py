@@ -75,6 +75,23 @@ def run(browser_type, device):
         assert result["camera_positions"]["moving"] >= 4, "Camera did not follow successive board squares"
         assert result["camera_positions"]["overlayVisible"], "Arrival property/event panel hidden"
         assert result["camera_positions"]["squareCount"] == 40
+        # Events must settle without restarting the zoom on every render.
+        page.wait_for_timeout(800)
+        steady_before=page.locator("#monoBoard").evaluate("(el)=>getComputedStyle(el).transform")
+        page.wait_for_timeout(650)
+        steady_after=page.locator("#monoBoard").evaluate("(el)=>getComputedStyle(el).transform")
+        assert steady_before==steady_after, f"Camera jumps behind event: {steady_before} -> {steady_after}"
+        assert page.locator("#monoTurnProgress").count()==0, "Arrival toast obstructs the event"
+        bounds=page.evaluate("""() => {
+            const overlay=document.getElementById('monoOverlay').getBoundingClientRect(),
+                  actions=document.querySelector('#monoOverlay .mono-overlay-actions').getBoundingClientRect(),
+                  board=document.getElementById('monoBoardWrap').getBoundingClientRect();
+            return {overlay:{top:overlay.top,bottom:overlay.bottom,left:overlay.left,right:overlay.right},
+                    actions:{top:actions.top,bottom:actions.bottom},board:{top:board.top,bottom:board.bottom}};
+        }""")
+        assert bounds["actions"]["bottom"]<=bounds["overlay"]["bottom"]+2, f"Event buttons clipped: {bounds}"
+        assert bounds["overlay"]["bottom"]<=bounds["board"]["bottom"]+4, f"Event escapes board: {bounds}"
+        result["transition_geometry"]=bounds
         # Purchase a real square and verify the new estate drawer reflects saved engine ownership.
         page.locator('#monoOverlay [data-action=buy]').click()
         page.wait_for_function("() => document.querySelectorAll('#monoBoard .mono-space.owned').length === 1",timeout=15000)
