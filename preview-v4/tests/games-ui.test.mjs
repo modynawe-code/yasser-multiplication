@@ -371,3 +371,11 @@ test('Monopoly uses one camera per movement step and stabilizes each landing eve
   assert.ok(interaction.includes("getElement('monoTurnProgress')?.remove()"));
   assert.ok(interaction.includes('lastEventFocus=null;return camera()'));
 });
+
+test('Monopoly camera and CSS load with exact deployed release to bypass old iOS cache',async()=>{
+  const build=await read('../tools/build-web-preview.mjs');
+  assert.ok(build.includes("monopoly-controller.js"));
+  assert.ok(build.includes("const cameraImport=\"from './monopoly-interaction.js'\""));
+  assert.ok(build.includes("replaceOnce(monopolyController,cameraImport"));
+  assert.ok(build.includes("monopoly-interaction.css"+''));
+});
