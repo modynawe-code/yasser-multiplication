@@ -368,3 +368,20 @@ body.hub-mode #hubView .learner-card-cta::after{
  body.hub-mode #hubView .learner-grid>.learner-card:hover,
  body.hub-mode #hubView .learner-grid>.learner-card:active{transform:none}
 }
+
+/* Mobile browser audit: readable secondary navigation on all three actions. */
+body.hub-mode #hubView .hub-heading-actions .hub-action-copy small{
+  font-size:11px!important;
+  line-height:1.25!important;
+}
+body.hub-mode #hubView .hub-heading .hub-action:not(.hub-action-games):not(.hub-action-parent) .hub-action-copy strong,
+body.hub-mode #hubView .hub-heading .hub-action:not(.hub-action-games):not(.hub-action-parent) .hub-action-copy small{
+  color:#4b2887!important;
+}
+body.hub-mode #hubView .hub-heading .hub-action:not(.hub-action-games):not(.hub-action-parent){
+  background:#eee2ff;
+  border-color:#d5c5f5;
+}
+@media(max-width:520px){
+  body.hub-mode #hubView .hub-heading .hub-action{min-height:57px}
+}
