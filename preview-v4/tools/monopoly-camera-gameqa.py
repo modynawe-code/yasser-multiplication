@@ -30,6 +30,23 @@ def run(browser_type, device):
         page.locator("#monoStart").click()
         page.locator("#monoGame").wait_for(state="visible", timeout=15000)
         assert page.locator("#monoBoard .mono-space").count() == 40, "Board is incomplete"
+        # Game QA: inspect per-player estates without leaving the live Monopoly board.
+        page.locator('#monoGameTools summary').click()
+        page.locator('#monoManage').click()
+        drawer = page.locator('#monoEstateDrawer')
+        drawer.wait_for(state='visible',timeout=10000)
+        assert drawer.get_attribute('role') == 'dialog', 'Estate panel is not a dialog'
+        assert drawer.locator('[data-mono-estate-owner]').count() == 2
+        assert drawer.locator('.mono-estate-empty').count() == 1, 'No-property state missing'
+        assert page.locator('#monoBoard .mono-space').count() == 40, 'Board unexpectedly changed'
+        page.screenshot(path=str(OUT / f'{browser_type.name}-{label}-estates.png'), full_page=True)
+        drawer.locator('[data-mono-estate-owner]').nth(1).click()
+        assert drawer.locator('[data-mono-estate-owner]').nth(1).get_attribute('aria-pressed') == 'true'
+        assert drawer.locator('.mono-estate-empty').count() == 1
+        drawer.locator('[data-action=estate-close]').first.click()
+        assert not drawer.is_visible(), 'Estate panel did not close'
+        result['estates'] = 'switch and close passed'
+
         page.screenshot(path=str(OUT / f"{browser_type.name}-{label}-before.png"), full_page=True)
         page.evaluate("""() => {
             const board = document.getElementById('monoBoard');

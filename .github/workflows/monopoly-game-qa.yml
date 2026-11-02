@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/monopoly-camera-gameqa-v1
+      - feature/monopoly-estate-drawer-game-ux
       - main
     paths:
       - 'preview-v4/src/modules/games/monopoly/**'
