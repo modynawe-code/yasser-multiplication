@@ -7,7 +7,6 @@ on:
       - 'feature/king-inspector-mainline'
       - 'feature/family-games-mashaal-integration-v1'
       - 'feature/product-ui-reference-v1'
-      - 'feature/monopoly-camera-gameqa-v1'
     paths:
       - 'preview-v4/**'
       - 'tools/build-web-preview.mjs'
