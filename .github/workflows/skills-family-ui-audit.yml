@@ -7,6 +7,7 @@ on:
       - feature/product-ui-reference-v1
     paths:
       - '.github/workflows/skills-family-ui-audit.yml'
+      - 'preview-v4/src/modules/hub/open-family-learner-grid.css'
 
 permissions:
   contents: read

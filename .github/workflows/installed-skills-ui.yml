@@ -10,6 +10,7 @@ on:
       - '.github/workflows/installed-skills-ui.yml'
       - 'preview-v4/tools/skill-webapp-smoke.py'
       - 'preview-v4/src/modules/hub/learning-shell.js'
+      - 'preview-v4/src/modules/hub/open-family-learner-grid.css'
 
 permissions:
   contents: read

@@ -39,6 +39,27 @@ def run_case(browser_type, name, width, height, touch):
         result["horizontal_overflow_px"] = page.evaluate(
             "() => Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)"
         )
+        # Real-browser typography/contrast verification from Taste Skill findings.
+        result["readability"] = page.evaluate("""() => {
+            const nav = [...document.querySelectorAll('#hubView .hub-action-copy small')];
+            const child = document.querySelector('#hubView .learner-card[data-learner-id="khaled"]');
+            const caption = child.querySelector('.learner-card-copy > span');
+            const rgb = css => (css.match(/[\\d.]+/g) || []).slice(0, 3).map(Number);
+            const luminance = values => values.reduce((sum, value, i) => {
+                const x = value / 255;
+                const linear = x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4;
+                return sum + linear * [.2126, .7152, .0722][i];
+            }, 0);
+            const textL = luminance(rgb(getComputedStyle(caption).color));
+            const surfaceL = luminance(rgb(getComputedStyle(child).backgroundColor));
+            const contrast = (Math.max(textL, surfaceL) + .05) / (Math.min(textL, surfaceL) + .05);
+            return {
+                khaledCaptionContrast: Math.round(contrast * 100) / 100,
+                minimumNavTextPx: Math.min(...nav.map(el => parseFloat(getComputedStyle(el).fontSize))),
+            };
+        }""")
+        assert result["readability"]["khaledCaptionContrast"] >= 4.5, "Khaled caption below WCAG AA contrast"
+        assert result["readability"]["minimumNavTextPx"] >= 11, "Launcher navigation captions too small"
         page.screenshot(path=str(OUT / f"{browser_type.name}-{name}-hub.png"), full_page=True)
         page.locator("#hubKhaled").click()
         page.locator("#khaledIntroView.active").wait_for(state="visible", timeout=15000)

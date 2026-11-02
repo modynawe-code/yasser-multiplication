@@ -56,3 +56,8 @@ body.hub-mode{background:#f4f7fb}
 }
 
 @media(prefers-reduced-motion:reduce){.hub-heading .hub-action,.learner-grid>.learner-card{transition:none}.hub-heading .hub-action:hover,.hub-heading .hub-action:active,.learner-grid>.learner-card:hover,.learner-grid>.learner-card:active{transform:none}}
+
+/* Readability gate: retain each child's artwork and accent, but keep text legible. */
+.learner-grid>.learner-card[data-learner-id="khaled"] .learner-card-copy>span{color:#ad4e0d}
+.hub-action-copy small{font-size:11px}
+@media(max-width:520px){.learner-card small{font-size:11px}}
