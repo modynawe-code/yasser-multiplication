@@ -78,7 +78,9 @@ jobs:
         run: |
           set -euo pipefail
           git add .agents/skills/design-taste-frontend .agents/skills/image-to-code .agents/skills/playwright-cli .agents/skills/INSTALL-SOURCES.md
-          git diff --cached --check
+          # Upstream Image to Code Markdown intentionally uses two-space line breaks.
+          # Preserve vendor files byte-for-byte and check only locally authored metadata.
+          git diff --cached --check -- .agents/skills/INSTALL-SOURCES.md
           if git diff --cached --quiet; then
             echo "Pinned skill packages already installed."
             exit 0
