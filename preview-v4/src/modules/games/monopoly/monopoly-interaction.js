@@ -90,8 +90,9 @@ export function createMonopolyInteraction({getElement=id=>document.getElementByI
     // Re-focusing the same landing tile on every render canceled a running camera
     // animation and visibly bounced the board behind the event.
     const key=`${tileIndex}:${w.clientWidth}:${w.clientHeight}`;
+    getElement('monoTurnProgress')?.remove(); // the event card replaces the moving status banner
     if(lastEventFocus===key)return;
-    lastEventFocus=key;manualCamera=false;focus(tileIndex,1.25);
+    lastEventFocus=key;manualCamera=false;focus(tileIndex,1.16);
   }
   async function roll(values){
     const ticket=epoch;const dice=[...getElement('monoDice')?.querySelectorAll('.mono-die')||[]];
