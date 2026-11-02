@@ -1,0 +1,78 @@
+name: Skills - Family UI Live Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/product-ui-reference-v1
+    paths:
+      - '.github/workflows/skills-family-ui-audit.yml'
+      - 'preview-v4/src/modules/hub/open-family-learner-grid.css'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check actual installed skills
+        shell: bash
+        run: |
+          set -euo pipefail
+          for s in design-taste-frontend image-to-code playwright-cli; do
+            test -s ".agents/skills/$s/SKILL.md"
+          done
+          test -s .agents/skills/design-taste-frontend/scripts/inspect.mjs
+          test -s .agents/skills/design-taste-frontend/references/app-screens.md
+      - name: Install Microsoft Playwright CLI runtime
+        run: |
+          npm install --global --ignore-scripts @playwright/cli@0.1.23
+          playwright-cli --help >/dev/null
+      - name: Run Playwright CLI and Taste Skill in real browsers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/family-skills-audit/taste
+          python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 >/tmp/family-skills-audit/http.log 2>&1 &
+          server_pid=$!
+          trap 'playwright-cli close >/dev/null 2>&1 || true; kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8790/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8790/ >/dev/null
+          playwright-cli open --browser=chrome > /tmp/family-skills-audit/cli-open.log
+          playwright-cli goto http://127.0.0.1:8790/ > /tmp/family-skills-audit/cli-navigation.log
+          playwright-cli snapshot > /tmp/family-skills-audit/cli-hub-snapshot.txt
+          playwright-cli eval "document.title" > /tmp/family-skills-audit/cli-title.txt
+          playwright-cli resize 390 844 > /tmp/family-skills-audit/cli-mobile.txt
+          playwright-cli screenshot --filename=/tmp/family-skills-audit/cli-mobile-hub.png > /tmp/family-skills-audit/cli-screenshot.txt
+          playwright-cli eval "document.getElementById('hubKhaled').click()" > /tmp/family-skills-audit/cli-khaled-action.txt
+          playwright-cli snapshot > /tmp/family-skills-audit/cli-khaled-snapshot.txt
+          playwright-cli screenshot --filename=/tmp/family-skills-audit/cli-mobile-khaled.png > /tmp/family-skills-audit/cli-khaled-screenshot.txt
+          playwright-cli close > /tmp/family-skills-audit/cli-close.log
+          # Taste Skill app-mode audit is diagnostic: report FAIL/WARN counts without changing UI.
+          set +e
+          node .agents/skills/design-taste-frontend/scripts/lint.mjs --app preview-v4/src/modules/hub > /tmp/family-skills-audit/taste-lint.txt 2>&1
+          echo $? > /tmp/family-skills-audit/taste-lint-exit.txt
+          node .agents/skills/design-taste-frontend/scripts/inspect.mjs http://127.0.0.1:8790/ --app --widths 1280,800,390 --out /tmp/family-skills-audit/taste > /tmp/family-skills-audit/taste-inspect.txt 2>&1
+          echo $? > /tmp/family-skills-audit/taste-inspect-exit.txt
+          set -e
+          test -s /tmp/family-skills-audit/cli-hub-snapshot.txt
+          test -s /tmp/family-skills-audit/cli-khaled-snapshot.txt
+          test -s /tmp/family-skills-audit/taste/report.json
+          cat /tmp/family-skills-audit/taste-inspect.txt
+      - name: Upload skill reports and screen captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: family-skills-ui-audit
+          path: /tmp/family-skills-audit/
+          retention-days: 7
+          if-no-files-found: warn

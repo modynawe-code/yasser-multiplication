@@ -1,0 +1,76 @@
+name: Diagnose Live Preview Version
+on:
+  push:
+    branches: [feature/product-ui-reference-v1]
+    paths: ['.github/workflows/diagnose-live-preview.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  remote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check deployed Cloudflare assets and headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://family-learning-preview.modynawe.workers.dev"
+          echo "=== Repository SHA ==="
+          echo "$GITHUB_SHA"
+          for path in / /deployment-meta.json /service-worker-runtime.js /service-worker.js /src/modules/hub/open-family-learner-grid.css /src/modules/hub/learner-hub-registry.js /src/main.js /src/startup-shell.js; do
+            echo "=== $path ==="
+            curl --fail --location --silent --show-error --max-time 20 --retry 2 --dump-header /tmp/family-header "$BASE$path?audit=$GITHUB_SHA" --output /tmp/family-body
+            grep -i -E '^(HTTP/|cache-control:|cf-cache-status:|content-type:|etag:|age:)' /tmp/family-header || true
+            wc -c </tmp/family-body
+            sha256sum /tmp/family-body
+            case "$path" in
+              /src/modules/hub/open-family-learner-grid.css)
+                grep -Fq "Family worlds v1" /tmp/family-body && echo "WORLD_CSS_PRESENT=true" || (echo "WORLD_CSS_PRESENT=false"; exit 11)
+                grep -Fq "Mobile browser audit" /tmp/family-body && echo "MOBILE_FIX_PRESENT=true" || (echo "MOBILE_FIX_PRESENT=false"; exit 12)
+                sha256sum preview-v4/src/modules/hub/open-family-learner-grid.css
+                cmp -s /tmp/family-body preview-v4/src/modules/hub/open-family-learner-grid.css && echo "WORLD_CSS_BYTE_MATCH=true" || echo "WORLD_CSS_BYTE_MATCH=false"
+                ;;
+              /src/modules/hub/learner-hub-registry.js)
+                grep -Fq "ابدأ رحلتك" /tmp/family-body && echo "CTA_PRESENT=true" || (echo "CTA_PRESENT=false"; exit 13)
+                ;;
+              /service-worker.js)
+                grep -o 'shell-quran-itqan-[0-9a-f]*' /tmp/family-body | head -1 || true
+                ;;
+              /service-worker-runtime.js)
+                tail -n 1 /tmp/family-body | cut -c 1-120 || true
+                ;;
+              /deployment-meta.json)
+                cat /tmp/family-body
+                ;;
+            esac
+          done
+
+      - name: Assert current interior design release is live
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://family-learning-preview.modynawe.workers.dev"
+          SHA="b5338d9bcc2f" # pinned deployed UI release; workflow-only commits are not deployed
+          matched=false
+          for n in $(seq 1 15); do
+            curl -fsSL --max-time 15 "$BASE/deployment-meta.json?inspect=$SHA-$n" -o /tmp/family-version.json
+            if grep -Fq "\"release\": \"$SHA\"" /tmp/family-version.json; then
+              matched=true
+              break
+            fi
+            sleep 2
+          done
+          cat /tmp/family-version.json
+          if [ "$matched" != true ]; then
+            echo "Live site is not at expected commit $SHA"
+            exit 1
+          fi
+          for tuple in "src/modules/yasser/ui/yasser-home.css|Family worlds: Yasser" "src/modules/khaled/ui/khaled-subject-gateway.css|Family worlds: Khaled" "src/modules/mashaal/ui/mashaal-home.css|Family worlds: Mashaal"; do
+            file="${tuple%%|*}"
+            marker="${tuple#*|}"
+            curl -fsSL --max-time 15 "$BASE/$file?inspect=$SHA" -o /tmp/inner-style.css
+            grep -Fq "$marker" /tmp/inner-style.css || { echo "Missing live CSS: $file"; exit 1; }
+            echo "Confirmed live: $file"
+          done
