@@ -52,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           BASE="https://family-learning-preview.modynawe.workers.dev"
-          SHA="${GITHUB_SHA:0:12}"
+          SHA="b5338d9bcc2f" # pinned deployed UI release; workflow-only commits are not deployed
           matched=false
           for n in $(seq 1 15); do
             curl -fsSL --max-time 15 "$BASE/deployment-meta.json?inspect=$SHA-$n" -o /tmp/family-version.json
