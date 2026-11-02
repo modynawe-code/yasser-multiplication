@@ -46,3 +46,31 @@ jobs:
                 ;;
             esac
           done
+
+      - name: Assert current interior design release is live
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://family-learning-preview.modynawe.workers.dev"
+          SHA="${GITHUB_SHA:0:12}"
+          matched=false
+          for n in $(seq 1 15); do
+            curl -fsSL --max-time 15 "$BASE/deployment-meta.json?inspect=$SHA-$n" -o /tmp/family-version.json
+            if grep -Fq "\"release\": \"$SHA\"" /tmp/family-version.json; then
+              matched=true
+              break
+            fi
+            sleep 2
+          done
+          cat /tmp/family-version.json
+          if [ "$matched" != true ]; then
+            echo "Live site is not at expected commit $SHA"
+            exit 1
+          fi
+          for tuple in "src/modules/yasser/ui/yasser-home.css|Family worlds: Yasser" "src/modules/khaled/ui/khaled-subject-gateway.css|Family worlds: Khaled" "src/modules/mashaal/ui/mashaal-home.css|Family worlds: Mashaal"; do
+            file="${tuple%%|*}"
+            marker="${tuple#*|}"
+            curl -fsSL --max-time 15 "$BASE/$file?inspect=$SHA" -o /tmp/inner-style.css
+            grep -Fq "$marker" /tmp/inner-style.css || { echo "Missing live CSS: $file"; exit 1; }
+            echo "Confirmed live: $file"
+          done
