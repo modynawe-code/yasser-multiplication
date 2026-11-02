@@ -78,6 +78,7 @@ def run(browser_type, device):
         # Purchase a real square and verify the new estate drawer reflects saved engine ownership.
         page.locator('#monoOverlay [data-action=buy]').click()
         page.wait_for_function("() => document.querySelectorAll('#monoBoard .mono-space.owned').length === 1",timeout=15000)
+        page.wait_for_function("() => !document.getElementById('monoManage').disabled",timeout=20000)
         page.locator('#monoGameTools summary').click()
         page.locator('#monoManage').click()
         drawer.wait_for(state='visible',timeout=8000)
