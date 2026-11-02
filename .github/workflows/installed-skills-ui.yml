@@ -11,6 +11,10 @@ on:
       - 'preview-v4/tools/skill-webapp-smoke.py'
       - 'preview-v4/src/modules/hub/learning-shell.js'
       - 'preview-v4/src/modules/hub/open-family-learner-grid.css'
+      - 'preview-v4/src/modules/yasser/ui/yasser-home.css'
+      - 'preview-v4/src/modules/khaled/ui/khaled-subject-gateway.css'
+      - 'preview-v4/src/modules/mashaal/ui/mashaal-home.css'
+      - 'preview-v4/tools/internal-worlds-smoke.py'
 
 permissions:
   contents: read
@@ -40,6 +44,10 @@ jobs:
             --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 2>/tmp/family-skills-http.log' \
             --port 8790 \
             -- python3 preview-v4/tools/skill-webapp-smoke.py
+          python3 .agents/skills/webapp-testing/scripts/with_server.py \
+            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 2>/tmp/family-skills-http-inner.log' \
+            --port 8790 \
+            -- python3 preview-v4/tools/internal-worlds-smoke.py
       - name: Upload UI results and screenshots
         if: always()
         uses: actions/upload-artifact@v4
