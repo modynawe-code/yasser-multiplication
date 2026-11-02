@@ -72,6 +72,9 @@ function applyProfileCopy(copy,profile){
   if(strong)strong.textContent=profile.displayName;
   if(stage)stage.textContent=profile.presentation?.stageLabel||profile.presentation?.subtitle||profile.stage||'مسار تعلم';
   if(summary)summary.textContent=profile.presentation?.summary||'';
+  let action=copy.querySelector('.learner-card-cta');
+  if(!action){action=document.createElement('span');action.className='learner-card-cta';action.setAttribute('aria-hidden','true');copy.appendChild(action);}
+  action.textContent='ابدأ رحلتك';
 }
 
 function applyProfilePresentation(card,profile){
