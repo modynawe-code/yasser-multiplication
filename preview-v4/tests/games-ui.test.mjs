@@ -301,7 +301,7 @@ test('Monopoly retains board alignment and readable event controls with interact
   assert.match(controller,/function clearBoardHighlight\(\)/);
   assert.match(controller,/classList\.add\('is-highlight-path','is-highlight-target'\)/);
   assert.match(controller,/async function animateTokenMove\(playerId,from,to\)/);
-  assert.match(controller,/await interaction.followSegment/);
+  assert.match(controller,/interaction\.trackStep\(index\)/);
   assert.match(controller,/data-action="focus-space"/);
   assert.match(controller,/prefers-reduced-motion:reduce/);
   assert.match(controller,/movementAnimating/);
