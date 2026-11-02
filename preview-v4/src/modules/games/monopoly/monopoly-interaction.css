@@ -105,10 +105,10 @@
 /* Game UI/UX: dedicated property management sheet outside the transforming board.
    Board, dice and event receipts retain their original presentation geometry. */
 #monoGame #monoOverlay.mono-overlay--portfolio{
-  position:absolute;inset-block:8px;inset-inline-end:8px;inset-inline-start:auto;
+  position:fixed;inset-block:12px;inset-inline-end:12px;inset-inline-start:auto;
   display:flex;flex-direction:column;gap:10px;
-  width:min(438px,45vw);height:auto;max-height:calc(100% - 16px);max-width:none;
-  margin:0;padding:18px;box-sizing:border-box;
+  width:min(438px,45vw);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);max-width:none;
+  margin:0;padding:18px;box-sizing:border-box;animation:none;opacity:1;
   transform:none;z-index:40;overflow:hidden;direction:rtl;
   border:1px solid #cad7d0;border-radius:21px;
   background:#fffefa;box-shadow:0 16px 46px #101e1a40;
@@ -177,7 +177,7 @@
 @media(max-width:650px){
  #monoGame #monoOverlay.mono-overlay--portfolio{
    inset-block:auto 0;inset-inline:0;width:100%;height:min(76dvh,680px);
-   max-height:calc(100% - 38px);border-radius:22px 22px 0 0;
+   max-height:calc(100dvh - 38px);border-radius:22px 22px 0 0;
    padding:14px 14px max(14px,env(safe-area-inset-bottom));
    box-shadow:0 -10px 28px #101e1a40;
  }
