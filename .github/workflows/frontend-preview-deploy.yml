@@ -191,13 +191,19 @@ jobs:
             curl -fsSL "$PREVIEW_URL/src/modules/$css?verify=$SHA" -o /tmp/family-live-inner.css
             grep -Fq 'Family worlds:' /tmp/family-live-inner.css
           done
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/main.js" | grep -Fq "learner-hub-registry.js?release=$SHA"
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/modules/hub/learner-hub-registry.js" | grep -Fq "open-family-learner-grid.css?release=$SHA"
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/modules/hub/open-family-learner-grid.css" | grep -Fq 'Family worlds v1'
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/manifest.webmanifest" > /dev/null
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/service-worker.js" > /dev/null
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -q '"cloudSync": true'
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/assets/recitation/quran-course-page-map.json" | grep -q '"sourcePin"'
+          # Fetch the whole response before grep: grep -q can close the pipe early
+          # and make curl fail with exit 23 under pipefail (a false deployment failure).
+          assert_live_text() {
+            curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/$1" -o /tmp/family-assert-live-body
+            grep -Fq "$2" /tmp/family-assert-live-body
+          }
+          assert_live_text src/main.js "learner-hub-registry.js?release=$SHA"
+          assert_live_text src/modules/hub/learner-hub-registry.js "open-family-learner-grid.css?release=$SHA"
+          assert_live_text src/modules/hub/open-family-learner-grid.css "Family worlds v1"
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/manifest.webmanifest" -o /dev/null
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/service-worker.js" -o /dev/null
+          assert_live_text deployment-meta.json '"cloudSync": true'
+          assert_live_text assets/recitation/quran-course-page-map.json '"sourcePin"'
           for n in 1 415 453 564 602 603 604; do
             curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/assets/recitation/kfqc-hafs-page-$n.svg" > /dev/null
           done
