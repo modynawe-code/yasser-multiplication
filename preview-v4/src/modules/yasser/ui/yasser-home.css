@@ -165,3 +165,6 @@ body.intro-mode #introView{background:#eff4fb}
  #introView .has-subject-gateway .subject-choice-mark{height:44px;width:44px}
 }
 @media(prefers-reduced-motion:reduce){#introView .has-subject-gateway .subject-choice{transition:none}}
+
+/* Keep the subject gateway's entire header navy, including the back button row. */
+#introView .intro-card.has-subject-gateway{background:#182e51}

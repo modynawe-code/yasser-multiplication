@@ -33,6 +33,8 @@ def case(browser_type, device):
         page.locator("#hubYasser").click()
         page.locator("#introView.active .intro-card.has-subject-gateway").wait_for(state="visible")
         assert page.locator("#introView .subject-choice").count()==6, "Yasser subject options changed"
+        bg=page.locator("#introView .intro-card.has-subject-gateway").evaluate("(el)=>getComputedStyle(el).backgroundColor")
+        assert bg=="rgb(24, 46, 81)", f"Yasser gateway header not fully navy: {bg}"
         assert page.locator("#introView .intro-card.has-subject-gateway").evaluate("(el)=>getComputedStyle(el).display")=="grid", "Yasser interior skin missing"
         result["screens"].append({"page":"yasser-subjects",**measure(page)})
         page.screenshot(path=str(OUT/f"{browser_type.name}-{name}-yasser-subjects.png"),full_page=True)
