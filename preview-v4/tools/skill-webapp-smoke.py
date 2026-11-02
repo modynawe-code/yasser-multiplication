@@ -44,7 +44,7 @@ def run_case(browser_type, name, width, height, touch):
             const nav = [...document.querySelectorAll('#hubView .hub-action-copy small')];
             const child = document.querySelector('#hubView .learner-card[data-learner-id="khaled"]');
             const caption = child.querySelector('.learner-card-copy > span');
-            const rgb = css => (css.match(/[\\d.]+/g) || []).slice(0, 3).map(Number);
+            const rgb = css => (css.match(/[0-9.]+/g) || []).slice(0, 3).map(Number);
             const luminance = values => values.reduce((sum, value, i) => {
                 const x = value / 255;
                 const linear = x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4;
