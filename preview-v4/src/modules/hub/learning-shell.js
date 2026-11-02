@@ -127,7 +127,7 @@ export function ensureLearningShell(){
     const modal=document.createElement('div');
     modal.className='modal';
     modal.id='familyPinModal';
-    modal.innerHTML=`<div class="card modal-card"><h3 style="margin-top:0">تقرير ولي الأمر</h3><p class="muted">أدخل الرقم السري لعرض تقدم الأطفال.</p><input class="pin" id="familyPinInput" type="password" inputmode="numeric" maxlength="4" /><button class="btn primary" style="width:100%" id="familyPinSubmit">فتح التقرير</button><button class="btn secondary" style="width:100%;margin-top:8px" id="familyPinCancel">إلغاء</button></div>`;
+    modal.innerHTML=`<div class="card modal-card"><h3 style="margin-top:0">تقرير ولي الأمر</h3><p class="muted">أدخل الرقم السري لعرض تقدم الأطفال.</p><input class="pin" id="familyPinInput" name="familyParentPin" aria-label="الرقم السري لولي الأمر" type="password" inputmode="numeric" autocomplete="off" maxlength="4" /><button class="btn primary" style="width:100%" id="familyPinSubmit">فتح التقرير</button><button class="btn secondary" style="width:100%;margin-top:8px" id="familyPinCancel">إلغاء</button></div>`;
     document.body.appendChild(modal);
   }
 }

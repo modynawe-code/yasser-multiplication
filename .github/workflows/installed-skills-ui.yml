@@ -1,0 +1,49 @@
+name: Installed Skills - Web UI Acceptance
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/product-ui-reference-v1
+    paths:
+      - '.agents/skills/**'
+      - '.github/workflows/installed-skills-ui.yml'
+      - 'preview-v4/tools/skill-webapp-smoke.py'
+      - 'preview-v4/src/modules/hub/learning-shell.js'
+
+permissions:
+  contents: read
+
+jobs:
+  webapp-testing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify installed Codex skills
+        run: |
+          test -s .agents/skills/webapp-testing/SKILL.md
+          test -s .agents/skills/webapp-testing/scripts/with_server.py
+          test -s .agents/skills/web-design-guidelines/SKILL.md
+          python3 .agents/skills/webapp-testing/scripts/with_server.py --help
+      - name: Install Playwright and Chromium / WebKit
+        run: |
+          python -m pip install 'playwright==1.56.0'
+          python -m playwright install --with-deps chromium webkit
+      - name: Exercise family app in real browsers
+        run: |
+          python3 .agents/skills/webapp-testing/scripts/with_server.py \
+            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4' \
+            --port 8790 \
+            -- python3 preview-v4/tools/skill-webapp-smoke.py
+      - name: Upload UI results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installed-skills-ui-audit
+          path: /tmp/family-skill-audit
+          retention-days: 7
+          if-no-files-found: warn
