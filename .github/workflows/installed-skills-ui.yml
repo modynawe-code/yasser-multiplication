@@ -36,7 +36,7 @@ jobs:
       - name: Exercise family app in real browsers
         run: |
           python3 .agents/skills/webapp-testing/scripts/with_server.py \
-            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4' \
+            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 2>/tmp/family-skills-http.log' \
             --port 8790 \
             -- python3 preview-v4/tools/skill-webapp-smoke.py
       - name: Upload UI results and screenshots
