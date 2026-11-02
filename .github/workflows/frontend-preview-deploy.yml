@@ -85,6 +85,25 @@ jobs:
           await writeFile(importedPath,runtime+'\n// itqan-quran-release-'+sha+'\n');
           console.log('Quran PWA cache version rotated to',sha);
           NODE
+      - name: Verify release URLs bypass old iOS PWA caches
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const sha=process.env.GITHUB_SHA.slice(0,12);
+          const root='dist-web-preview/';
+          const html=readFileSync(root+'index.html','utf8');
+          const main=readFileSync(root+'src/main.js','utf8');
+          const startup=readFileSync(root+'src/startup-shell.js','utf8');
+          const hub=readFileSync(root+'src/modules/hub/learner-hub-registry.js','utf8');
+          const meta=JSON.parse(readFileSync(root+'deployment-meta.json','utf8'));
+          for(const entry of ['src/startup-shell.js','src/main.js'])
+            if(!html.includes(entry+'?release='+sha))throw new Error('Entry not cache-busted: '+entry);
+          for(const [source,required] of [[main,"./startup-shell.js?release="],[main,"./modules/hub/learner-hub-registry.js?release="],[startup,"./modules/hub/learner-hub-registry.js?release="],[hub,"open-family-learner-grid.css?release="]])
+            if(!source.includes(required+sha))throw new Error('Stale import/style remains: '+required);
+          if(meta.release!==sha)throw new Error('Mismatched deployment release');
+          console.log('All PWA escape paths point to release',sha);
+          NODE
+
       - name: Verify preview isolation
         run: |
           node --input-type=module <<'NODE'
@@ -138,6 +157,12 @@ jobs:
       - name: Smoke test Cloudflare preview
         run: |
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/" | grep -q 'تعلم العائلة'
+          SHA="${GITHUB_SHA:0:12}"
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -Fq "\"release\": \"$SHA\""
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/" | grep -Fq "src/main.js?release=$SHA"
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/main.js" | grep -Fq "learner-hub-registry.js?release=$SHA"
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/modules/hub/learner-hub-registry.js" | grep -Fq "open-family-learner-grid.css?release=$SHA"
+          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/modules/hub/open-family-learner-grid.css" | grep -Fq 'Family worlds v1'
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/manifest.webmanifest" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/service-worker.js" > /dev/null
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -q '"cloudSync": true'
