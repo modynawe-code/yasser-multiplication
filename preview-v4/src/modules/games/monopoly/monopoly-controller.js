@@ -474,11 +474,18 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
  function showAuction(){const a=state.auction,p=state.players[a.nextIndex],s=BOARD[a.index];setOverlay(`مزاد · ${s.name}`,`<div class="mono-deed"><span class="mono-deed-band" style="--deed-band:${GROUP_COLOR[s.group]||'#65756b'}"></span><strong>المزايدة على ${escapeHtml(s.name)}</strong><div class="mono-deed-facts"><span>أعلى عرض <b>${digits.format(a.bid)}</b></span><span>${a.bidderId?`المزايد الأعلى <b>${escapeHtml(state.players.find(x=>x.id===a.bidderId)?.name||'لاعب')}</b>`:'لا توجد عروض بعد'}</span><span>الدور <b>${escapeHtml(p?.name||'لاعب')}</b></span><span>الرصيد <b>${digits.format(p?.cash||0)}</b></span></div></div>`,'<button class="btn primary" data-action="bid">ارفع العرض 10</button><button class="btn secondary" data-action="pass-auction">انسحب من المزاد</button>');}
  function showSaleConfirmation(index){const space=BOARD[index],own=state?.ownership?.[index],p=state?.players?.[state.turnIndex];if(!space||!own||own.ownerId!==p?.id)return;const propertyValue=Math.floor(space.price/2),development=((own.houses||0)+(own.hotel?1:0))*Math.floor((space.build||0)/2),total=propertyValue+development;const detail=`<article class="mono-event-card" data-kind="sale"><strong class="mono-event-title">تأكيد بيع الأرض</strong><span class="mono-event-reason">${escapeHtml(space.name)}</span><div class="mono-event-ledger"><div class="mono-event-ledger-row"><span><strong>قيمة الأرض</strong></span><span>+</span><strong>${digits.format(propertyValue)}</strong></div><div class="mono-event-ledger-row"><span><strong>المسترد من التطوير</strong></span><span>+</span><strong>${digits.format(development)}</strong></div></div><b class="mono-event-amount">الإجمالي ${digits.format(total)} ريال</b><p class="mono-event-note">رصيدك الآن ${digits.format(p.cash)}، وبعد البيع ${digits.format(p.cash+total)}.</p></article>`;setOverlay('مراجعة البيع',detail,`<button class="btn primary" data-action="sell-confirm" data-value="${index}">تأكيد البيع</button><button class="btn secondary" data-action="sale-cancel">إلغاء</button>`,true);}
  function showProperties(focusIndex=null){
+   if(!state)return;
+   const drawer=byId('monoEstateDrawer'),shade=byId('monoEstateShade');if(!drawer||!shade)return;
+   const wasOpen=!drawer.hidden,scrollTop=wasOpen?drawer.querySelector('.mono-estate-content')?.scrollTop||0:0;
+   if(!wasOpen)estateReturnFocus=document.activeElement;
    const activePlayer=state.players[state.turnIndex];
+   const focusedOwner=Number.isInteger(focusIndex)?state.ownership[focusIndex]?.ownerId:null;
+   estateOwnerId=focusedOwner||estateOwnerId||activePlayer.id;
+   if(!state.players.some(player=>player.id===estateOwnerId))estateOwnerId=activePlayer.id;
    const ownerGroups=[];
    for(const player of state.players){
      const items=BOARD.map((space,index)=>({space,index,ownership:state.ownership[index]})).filter(item=>item.ownership?.ownerId===player.id);
-     if(!items.length)continue;
+
      const byGroup=new Map();
      for(const item of items){
        const key=item.space.type==='property'?item.space.group:item.space.type;
@@ -488,7 +495,7 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
      ownerGroups.push({player,items,byGroup});
    }
    const groupLabel=key=>GROUP_LABEL[key]||(key==='railroad'?'المحطات':key==='utility'?'المرافق':key);
-   const playerMarkup=ownerGroups.map(({player,items,byGroup})=>{
+   const playerMarkup=ownerGroups.filter(({player})=>player.id===estateOwnerId).map(({player,items,byGroup})=>{
      const completeGroups=[...byGroup.entries()].filter(([key])=>{
        if(!GROUP_LABEL[key])return false;
        const groupSpaces=BOARD.map((space,index)=>({space,index})).filter(item=>item.space.type==='property'&&item.space.group===key);
@@ -503,14 +510,14 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
        const rows=owned.map(({space,index,ownership})=>{
          const isCurrentOwner=player.id===activePlayer.id;
          const level=ownership.hotel?'فندق':ownership.houses?`${digits.format(ownership.houses)} بيوت`:'بدون بناء';
-         const canDevelop=complete&&space.type==='property'&&isCurrentOwner&&canBuild(state,index);
+         const canDevelop=complete&&space.type==='property'&&isCurrentOwner&&canBuild(state,index)&&canAct('build')&&!onlineBusy&&!movementAnimating;
          const developable=complete&&space.type==='property'&&!ownership.hotel&&(ownership.houses||0)<=4;
          const buildLabel=ownership.houses===4?'بناء فندق':'بناء بيت';
          const development=developable
            ?`<button class="btn secondary" data-action="build" data-value="${index}" ${canDevelop?'':'disabled'}>${buildLabel} · ${digits.format(space.build)}</button>`
            :ownership.hotel?`<span class="mono-property-state">فندق مكتمل</span>`
            :complete&&space.type==='property'?'<span class="mono-property-state">اكتمل التطوير</span>':'';
-         const saleEnabled=isCurrentOwner&&state.phase==='end';
+         const saleEnabled=isCurrentOwner&&state.phase==='end'&&canAct('sell')&&!onlineBusy&&!movementAnimating;
          const sale=`<button class="btn secondary" data-action="sell" data-value="${index}" ${saleEnabled?'':'disabled'}>بيع · ${digits.format(Math.floor(space.price/2)+(ownership.houses||0)*Math.floor((space.build||0)/2)+(ownership.hotel?Math.floor((space.build||0)/2):0))}</button>`;
          return `<article class="mono-property" data-property-index="${index}"><div><strong>${escapeHtml(space.name)}</strong><small>${escapeHtml(groupLabel(key))} · إيجار ${digits.format(rentFor(state,index))} · ${level}</small></div><div class="mono-property-actions">${development}${sale}</div></article>`;
        }).join('');
@@ -522,7 +529,22 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
    const body=playerMarkup
      ?`<div class="mono-property-list">${playerMarkup}<p>البناء متاح في دور المالك بعد اكتمال مجموعة اللون، ويُبنى بالتساوي. البيع متاح في مرحلة إنهاء الدور بعد مراجعة قيمة الأرض والتطوير المسترد. استخدم «تبادل الأراضي» للتفاوض مع لاعب آخر.</p></div>`
      :'<p>لا توجد أملاك مملوكة الآن.</p>';
-   setOverlay('إدارة الأملاك',body,'<button class="btn secondary" data-action="trade-open">تبادل الأراضي</button><button class="btn secondary" data-action="close">رجوع للوحة</button>',true);if(Number.isInteger(focusIndex)){const target=byId('monoOverlay')?.querySelector(`[data-property-index="${focusIndex}"]`);target?.classList.add('mono-property-focus');target?.scrollIntoView?.({block:'center',behavior:'smooth'});}
+   const tabs=state.players.map(player=>{
+     const count=Object.values(state.ownership).filter(ownership=>ownership?.ownerId===player.id).length;
+     const checked=player.id===estateOwnerId;
+     return `<button type='button' class='mono-estate-tab' data-mono-estate-owner='${escapeHtml(player.id)}' aria-pressed='${checked}' style='--estate-player-color:${ownerColor(player.id)}'><span class='mono-estate-dot' aria-hidden='true'></span><strong>${escapeHtml(player.name)}</strong><small>${digits.format(count)} أملاك</small></button>`;
+   }).join('');
+   const owner=state.players.find(player=>player.id===estateOwnerId);
+   const ownsAny=Object.values(state.ownership).some(ownership=>ownership?.ownerId===estateOwnerId);
+   const estateBody=ownsAny?body:`<p class='mono-estate-empty'>ما عند ${escapeHtml(owner?.name||'اللاعب')} أملاك حتى الآن. بتظهر هنا بعد الشراء.</p>`;
+   const overlay=byId('monoOverlay');if(overlay)overlay.hidden=true;
+   byId('monoCenter')?.classList.remove('has-event','overlay-deed-open');
+   overlayMode='إدارة الأملاك';
+   drawer.innerHTML=`<header class='mono-estate-heading'><div><span>لكل لاعب أملاكه</span><h2 id='monoEstateHeading'>إدارة الأملاك</h2><p>الدور الآن: ${escapeHtml(activePlayer.name)}</p></div><button type='button' class='mono-estate-close' data-action='estate-close' aria-label='إغلاق لوحة الأملاك'>✕</button></header><nav class='mono-estate-tabs' aria-label='اختر اللاعب'>${tabs}</nav><div class='mono-estate-content'>${estateBody}</div><footer class='mono-estate-footer'><p>${estateOwnerId===activePlayer.id?'البيع والبناء متاحان في مراحل الدور المسموحة.':'أملاك اللاعب للعرض، ولا يمكن تعديلها إلا في دوره.'}</p><button type='button' class='btn secondary' data-action='trade-open'>تبادل الأراضي</button><button type='button' class='btn primary' data-action='estate-close'>العودة للوحة</button></footer>`;
+   shade.hidden=false;drawer.hidden=false;
+   drawer.querySelector('.mono-estate-content').scrollTop=scrollTop;
+   if(Number.isInteger(focusIndex))drawer.querySelector(`[data-property-index='${focusIndex}']`)?.scrollIntoView?.({block:'nearest'});
+   if(!wasOpen)drawer.querySelector('.mono-estate-close')?.focus();
  }
  function showTrade(){const p=state.players[state.turnIndex],owned=BOARD.map((s,i)=>({s,i,o:state.ownership[i]})).filter(x=>x.o?.ownerId===p.id);const others=state.players.filter(x=>x.id!==p.id&&!x.bankrupt);if(!owned.length||!others.length){setOverlay('تبادل الأراضي','<p>يلزم امتلاك أرض ووجود لاعب آخر لإجراء التبادل.</p>','<button class="btn secondary" data-action="manage">رجوع</button>');return;}const body=`<div class="mono-trade-fields"><label>الأرض المعروضة<select id="monoTradeProperty">${owned.map(({s,i})=>`<option value="${i}">${escapeHtml(s.name)}</option>`).join('')}</select></label><label>مع اللاعب<select id="monoTradePlayer">${others.map(x=>`<option value="${escapeHtml(x.id)}">${escapeHtml(x.name)}</option>`).join('')}</select></label><label>مبلغ تدفعه<input id="monoTradeOffer" type="number" min="0" step="10" value="0"></label><label>مبلغ تستلمه<input id="monoTradeRequest" type="number" min="0" step="10" value="0"></label></div><p>راجِعوا شروط التبادل معًا قبل التأكيد.</p>`;setOverlay('تبادل الأراضي',body,'<button class="btn primary" data-action="trade-confirm">تأكيد التبادل</button><button class="btn secondary" data-action="manage">رجوع</button>');}
  function canAct(action){if(playMode!=='online')return true;if(connectionLost||recoveringRoom)return false;const selfId=onlineSession.snapshot.selfPlayerId;if(!selfId||!state)return false;if(action==='trade-accept'||action==='trade-reject')return state.tradeOffer?.targetId===selfId;if(action==='close'||action==='continue-event'||action==='sale-cancel'||action==='manage'||action==='trade-open'||action==='focus-space')return true;const index=action==='bid'||action==='pass-auction'?state.auction?.nextIndex:state.turnIndex;return state.players[index]?.id===selfId;}
@@ -588,6 +610,20 @@ function showDeedDetails(){if(!state?.pending||!Number.isInteger(state.pending.i
  function maybeRecord(){if(state?.status!=='finished'||!state.winnerId||recordedWinner===state.winnerId)return;recordedWinner=state.winnerId;clearSave();void gameHistoryService.recordGameResult({gameId:'family-monopoly',gameVersion:2,startedAt:state.startedAt||new Date().toISOString(),endedAt:new Date().toISOString(),winnerIds:[state.winnerId],players:state.players.map((p,i)=>({learnerId:p.id,displayName:p.name,seat:i,score:p.cash,outcome:p.id===state.winnerId?'win':'loss',details:{properties:Object.values(state.ownership).filter(o=>o.ownerId===p.id).length}})),details:{board:'knowledge-monopoly-classic-40'}}).catch(()=>null);}
  function openSetup(){connectionLost=false;recoveringRoom=false;transitionGeneration++;queuedRoom=null;interaction.cancel();ensureMonopolyShell();try{soundMuted=localStorage.getItem(SOUND_KEY)==='1';}catch{soundMuted=false;}state=null;activeEvent=null;lastOnlineVersion=null;onlineBusy=false;onlineRoom=null;onlineSession.stop();overlayMode='';resetBoardFocus();hideOverlay();document.body.classList.add('monopoly-game-mode','games-mode');byId('monoSetup').hidden=false;byId('monoGame').hidden=true;status('');const saved=onlineSession.savedResume();if(saved){selectedOnline=saved.selfLearnerId;playMode='online';}renderPicker();renderOnlinePicker();document.querySelectorAll('[data-mono-mode]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.monoMode===playMode)));byId('monoLocalSetup').hidden=playMode!=='local';byId('monoOnlineSetup').hidden=playMode!=='online';show('monopolyGameView');if(saved)void recovery.reconnect();}
  function leave({navigate=true}={}){recoveringRoom=false;onlineBusy=false;connectionLost=false;transitionGeneration++;queuedRoom=null;movementAnimating=false;byId('monoGame')?.classList.remove('mono-is-moving');byId('monoDice')?.classList.remove('mono-dice-await');interaction.cancel();state=null;onlineSession.stop();onlineRoom=null;hideOverlay();document.body.classList.remove('monopoly-game-mode');if(navigate){show('gamesHomeView');onBack?.();}}
- function bind(){if(bound)return;bound=true;ensureMonopolyShell();interaction.install();byId('monopolyGameView')?.addEventListener('pointerdown',()=>interaction.unlockAudio(),{passive:true});recovery=installMonopolyRecovery({isActive:()=>playMode==='online'&&Boolean(byId('monopolyGameView')?.classList.contains('active')),recover:recoverOnlineRoom,suspend:suspendOnlineRoom,disconnected:()=>handleOnlineError(new Error('offline'))});byId('monoBack')?.addEventListener('click',leave);byId('monoDice')?.addEventListener('click',event=>{if(event.target.closest('.mono-die'))handleAction('roll');});byId('monoGameTools')?.addEventListener('click',event=>{if(event.target.closest('button'))byId('monoGameTools').open=false;});byId('monoMuteSound')?.addEventListener('click',()=>{soundMuted=!soundMuted;if(!soundMuted)interaction.unlockAudio();try{localStorage.setItem(SOUND_KEY,soundMuted?'1':'0');}catch{}syncSoundButton();});byId('monoStart')?.addEventListener('click',startNew);byId('monoResume')?.addEventListener('click',resume);byId('monoManage')?.addEventListener('click',()=>showProperties());globalThis.addEventListener?.('resize',()=>interaction.overview(),{passive:true});document.querySelectorAll('[data-mono-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.monoMode)));byId('monoCreateRoom')?.addEventListener('click',createOnlineRoom);byId('monoJoinRoom')?.addEventListener('click',joinOnlineRoom);byId('monoResumeRoom')?.addEventListener('click',()=>{selectedOnline=byId('monoResumeRoom').dataset.learnerId||selectedOnline;void recovery.reconnect();});byId('monoRoomStart')?.addEventListener('click',startOnlineRoom);byId('monoRestart')?.addEventListener('click',()=>{if(confirm('بدء جولة جديدة؟')){transitionGeneration++;interaction.cancel();queuedRoom=null;movementAnimating=false;state=null;clearSave();onlineSession.stop();onlineRoom=null;overlayMode='';openSetup();}});byId('monoGuestToggle')?.addEventListener('change',()=>status(''));byId('monoGuestName')?.addEventListener('input',()=>{const guest=byId('monoPlayerPicker')?.querySelector('[data-mono-player="guest"]');if(guest)guest.textContent=byId('monoGuestName').value;});}
+ function bind(){if(bound)return;bound=true;ensureMonopolyShell();interaction.install();byId('monopolyGameView')?.addEventListener('pointerdown',()=>interaction.unlockAudio(),{passive:true});recovery=installMonopolyRecovery({isActive:()=>playMode==='online'&&Boolean(byId('monopolyGameView')?.classList.contains('active')),recover:recoverOnlineRoom,suspend:suspendOnlineRoom,disconnected:()=>handleOnlineError(new Error('offline'))});byId('monoBack')?.addEventListener('click',leave);byId('monoDice')?.addEventListener('click',event=>{if(event.target.closest('.mono-die'))handleAction('roll');});byId('monoGameTools')?.addEventListener('click',event=>{if(event.target.closest('button'))byId('monoGameTools').open=false;});byId('monoMuteSound')?.addEventListener('click',()=>{soundMuted=!soundMuted;if(!soundMuted)interaction.unlockAudio();try{localStorage.setItem(SOUND_KEY,soundMuted?'1':'0');}catch{}syncSoundButton();});byId('monoStart')?.addEventListener('click',startNew);byId('monoResume')?.addEventListener('click',resume);byId('monoManage')?.addEventListener('click',()=>{estateOwnerId=state?.players[state.turnIndex]?.id||'';showProperties();});
+byId('monoEstateShade')?.addEventListener('click',()=>handleOverlayAction('estate-close'));
+byId('monoEstateDrawer')?.addEventListener('click',event=>{
+  const tab=event.target.closest('[data-mono-estate-owner]');if(tab){estateOwnerId=tab.dataset.monoEstateOwner;showProperties();return;}
+  const action=event.target.closest('[data-action]');if(action&&!action.disabled)handleOverlayAction(action.dataset.action,action.dataset.value);
+});
+byId('monoEstateDrawer')?.addEventListener('keydown',event=>{
+  if(event.key!=='Tab')return;
+  const list=[...event.currentTarget.querySelectorAll('button:not(:disabled)')].filter(button=>button.offsetParent!==null);
+  if(!list.length)return;
+  const first=list[0],last=list[list.length-1];
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!byId('monoEstateDrawer')?.hidden)handleOverlayAction('estate-close');});globalThis.addEventListener?.('resize',()=>interaction.overview(),{passive:true});document.querySelectorAll('[data-mono-mode]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.monoMode)));byId('monoCreateRoom')?.addEventListener('click',createOnlineRoom);byId('monoJoinRoom')?.addEventListener('click',joinOnlineRoom);byId('monoResumeRoom')?.addEventListener('click',()=>{selectedOnline=byId('monoResumeRoom').dataset.learnerId||selectedOnline;void recovery.reconnect();});byId('monoRoomStart')?.addEventListener('click',startOnlineRoom);byId('monoRestart')?.addEventListener('click',()=>{if(confirm('بدء جولة جديدة؟')){transitionGeneration++;interaction.cancel();queuedRoom=null;movementAnimating=false;state=null;clearSave();onlineSession.stop();onlineRoom=null;overlayMode='';openSetup();}});byId('monoGuestToggle')?.addEventListener('change',()=>status(''));byId('monoGuestName')?.addEventListener('input',()=>{const guest=byId('monoPlayerPicker')?.querySelector('[data-mono-player="guest"]');if(guest)guest.textContent=byId('monoGuestName').value;});}
  return Object.freeze({start(){ensureMonopolyShell();bind();openSetup();},leave});
 }
