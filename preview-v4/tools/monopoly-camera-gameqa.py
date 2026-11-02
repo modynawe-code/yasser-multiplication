@@ -77,6 +77,7 @@ def run(browser_type, device):
         page.locator("#monoGameTools summary").click()
         page.locator("#monoManage").click()
 
+        result['stage'] = 'portfolio-open'
         sheet = page.locator("#monoGame > #monoOverlay.mono-overlay--portfolio")
         sheet.wait_for(state="visible", timeout=8000)
         assert sheet.locator(".mono-portfolio-tab").count() == 2
@@ -87,11 +88,13 @@ def run(browser_type, device):
             return {x:b.x,y:b.y,width:b.width,height:b.height,parent:el.parentElement.id,
                 screen:innerWidth,screenHeight:innerHeight};
         }""")
-        assert geometry["parent"] == "monoGame"
+        result['portfolio_geometry'] = geometry
+        assert geometry["parent"] == "monoGame", f'Wrong parent: {geometry}'
         assert geometry["x"] >= -1 and geometry["x"] + geometry["width"] <= width + 1, f"Portfolio clipped: {geometry}"
-        assert geometry["height"] > 240
+        assert geometry["height"] > 240, f'Portfolio drawer too short: {geometry}'
         page.screenshot(path=str(OUT / f"{browser_type.name}-{label}-portfolio.png"), full_page=True)
 
+        result['stage'] = 'tab-switch'
         second = sheet.locator(".mono-portfolio-tab").nth(1)
         second.click()
         assert second.get_attribute("aria-pressed") == "true"
@@ -99,6 +102,7 @@ def run(browser_type, device):
         assert sheet.locator(".mono-portfolio-property").count() == 0
         sheet.locator(".mono-portfolio-tab").first.click()
         assert sheet.locator(".mono-portfolio-property").count() >= 1
+        result['stage'] = 'trade-and-return'
         sheet.locator('[data-action="trade-open"]').click()
         assert page.locator("#monoCenter > #monoOverlay").is_visible(), "Trade flow no longer uses center overlay"
         page.locator('#monoOverlay [data-action="manage"]').click()
@@ -111,7 +115,7 @@ def run(browser_type, device):
         result["status"] = "pass"
     except Exception as exc:
         result["status"] = "fail"
-        result["reason"] = str(exc)
+        result["reason"] = f'{type(exc).__name__}: {exc!r} at {result.get("stage", "start")}'
         try:
             page.screenshot(path=str(OUT / f"{browser_type.name}-{label}-failure.png"), full_page=True)
         except Exception:
