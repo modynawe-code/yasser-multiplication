@@ -54,3 +54,114 @@
 }
 
 @media(prefers-reduced-motion:reduce){.yasser-home-hero::before,.yasser-home-hero::after{transition:none}.subject-choice{transition:none}.subject-choice:hover,.subject-choice:active{transform:none}}
+
+/* Family worlds: Yasser subject selection and multiplication studio. */
+body.intro-mode #introView .intro-shell{padding:14px 0 24px;min-height:calc(100dvh - 28px)}
+#introView .intro-card.has-subject-gateway{
+  display:grid;grid-template-columns:minmax(0,.84fr) minmax(0,1.16fr);
+  grid-template-areas:"back subjects" "badge subjects" "copy subjects" "illustrations subjects";
+  align-items:center;align-content:center;gap:0;max-width:1170px;width:100%;
+  padding:0;overflow:hidden;background:#fff;border:1px solid #dae5f4;
+  border-radius:30px;box-shadow:0 16px 35px rgba(18,39,77,.10);
+  text-align:right;
+}
+#introView .has-subject-gateway .subject-gateway-back{
+  grid-area:back;position:relative;inset:auto;justify-self:start;align-self:start;
+  margin:23px 26px 4px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);color:#fff;min-height:46px;
+}
+#introView .has-subject-gateway .intro-badge{
+  grid-area:badge;justify-self:start;margin:12px 26px 8px;
+  background:#eaf2ff;color:#2457bb;font-size:13px;
+}
+#introView .has-subject-gateway .intro-copy{
+  grid-area:copy;text-align:right;padding:0 28px;
+  align-self:start;
+}
+#introView .has-subject-gateway .intro-copy h1{
+  font-size:clamp(31px,3.4vw,44px);color:#fff;line-height:1.2;margin:4px 0 12px;
+}
+#introView .has-subject-gateway .intro-copy p{
+  color:#d8e7ff;font-size:16px;font-weight:700;line-height:1.6;max-width:390px;margin:0;
+}
+#introView .has-subject-gateway .intro-characters{
+  grid-area:illustrations;align-self:end;min-height:220px;
+  height:260px;margin:12px 15px 0;padding-top:0;justify-content:center;
+}
+#introView .has-subject-gateway .intro-characters .intro-yasser{
+  max-height:260px;height:100%;
+}
+#introView .has-subject-gateway .intro-characters .intro-assistant{
+  max-height:108px;max-width:108px;align-self:end;
+}
+#introView .has-subject-gateway .subject-choice-grid{
+  grid-area:subjects;align-self:stretch;align-content:center;
+  width:100%;margin:0;padding:26px 24px;gap:11px;
+  background:#fff;grid-template-columns:repeat(2,minmax(0,1fr));
+}
+#introView .has-subject-gateway .subject-choice{
+  min-height:146px;grid-template-columns:1fr auto;grid-template-areas:"mark action" "copy copy";
+  gap:8px;padding:17px 16px;align-content:space-between;
+  border:1px solid #dbe4f2;border-radius:20px;background:#f8fbff;
+  box-shadow:none;transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+#introView .has-subject-gateway .subject-choice-mark{
+  grid-area:mark;width:45px;height:45px;font-size:23px;border-radius:13px;
+}
+#introView .has-subject-gateway .subject-choice-copy{grid-area:copy;min-width:0;gap:3px}
+#introView .has-subject-gateway .subject-choice-copy strong{font-size:17px;line-height:1.3;color:#1b2a46}
+#introView .has-subject-gateway .subject-choice-copy small{font-size:12px;line-height:1.45;color:#4c5c75}
+#introView .has-subject-gateway .subject-choice-action{
+  grid-area:action;justify-self:end;align-self:center;color:#2457bb;font-size:13px;
+}
+#introView .has-subject-gateway .subject-choice-action::after{content:" ←";font-size:17px}
+#introView .has-subject-gateway .subject-choice:focus-visible{outline:4px solid #2457bb;outline-offset:2px}
+#introView .has-subject-gateway .subject-choice:first-child{background:#e8f0ff;border-color:#b8cef5}
+#introView .has-subject-gateway .subject-choice-quran{background:#f0f8f2;border-color:#c8e3d2}
+#introView .has-subject-gateway .subject-choice-lessons{background:#f8f3ff;border-color:#decaf5}
+#introView .has-subject-gateway .subject-choice-science{background:#f3f9f7;border-color:#d2e6df}
+#introView .has-subject-gateway .subject-gateway-back,
+#introView .has-subject-gateway .intro-badge,
+#introView .has-subject-gateway .intro-copy,
+#introView .has-subject-gateway .intro-characters{background:#182e51}
+body.intro-mode #introView{background:#eff4fb}
+.yasser-home-panel{border-color:#cfdff6;box-shadow:0 13px 28px rgba(22,56,110,.09)}
+.yasser-home-hero{background:#c4d7fa}
+.yasser-home-training{background:#fff}
+.yasser-home-training .main-actions .btn.primary{background:#2457bb;border-color:#2457bb;color:#fff}
+.yasser-home-progress{border-top-color:#d8e4f6}
+@media(max-width:850px){
+ #introView .intro-card.has-subject-gateway{
+  grid-template-columns:1fr;grid-template-areas:"back" "badge" "copy" "illustrations" "subjects";
+  width:100%;max-width:760px;
+ }
+ #introView .has-subject-gateway .subject-gateway-back{margin:15px 17px 2px}
+ #introView .has-subject-gateway .intro-badge{margin:8px 20px 6px}
+ #introView .has-subject-gateway .intro-copy{padding:0 21px;text-align:center}
+ #introView .has-subject-gateway .intro-copy h1{font-size:31px;margin:0 0 7px}
+ #introView .has-subject-gateway .intro-copy p{margin:0 auto;font-size:13px}
+ #introView .has-subject-gateway .intro-characters{height:160px;min-height:160px;margin:5px 12px 0}
+ #introView .has-subject-gateway .intro-characters .intro-yasser{max-height:160px}
+ #introView .has-subject-gateway .intro-characters .intro-assistant{max-width:66px;max-height:66px}
+ #introView .has-subject-gateway .subject-choice-grid{padding:14px;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #introView .has-subject-gateway .subject-choice{min-height:133px;padding:12px}
+ #introView .has-subject-gateway .subject-choice-copy strong{font-size:15px}
+ #introView .has-subject-gateway .subject-choice-copy small{font-size:11px}
+}
+@media(max-width:520px){
+ #introView .intro-card.has-subject-gateway{border-radius:21px}
+ #introView .has-subject-gateway .intro-copy h1{font-size:27px}
+ #introView .has-subject-gateway .intro-characters{height:135px;min-height:135px}
+ #introView .has-subject-gateway .intro-characters .intro-yasser{max-height:135px}
+ #introView .has-subject-gateway .subject-choice-grid{grid-template-columns:1fr;gap:8px;padding:12px}
+ #introView .has-subject-gateway .subject-choice{
+  min-height:83px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;
+  grid-template-rows:1fr;grid-template-areas:"mark copy action";align-items:center;
+  padding:10px 12px;gap:9px;
+ }
+ #introView .has-subject-gateway .subject-choice-copy strong{font-size:15px}
+ #introView .has-subject-gateway .subject-choice-copy small{font-size:11px}
+ #introView .has-subject-gateway .subject-choice-action{font-size:12px}
+ #introView .has-subject-gateway .subject-choice-mark{height:44px;width:44px}
+}
+@media(prefers-reduced-motion:reduce){#introView .has-subject-gateway .subject-choice{transition:none}}

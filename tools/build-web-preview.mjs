@@ -25,7 +25,10 @@ for(const entry of ['package.json','package-lock.json'])await unlink(join(target
 const moduleEdits=[
   ['src/startup-shell.js',"from './modules/hub/learner-hub-registry.js'"],
   ['src/main.js',"from './modules/hub/learner-hub-registry.js'"],
-  ['src/main.js',"from './startup-shell.js'"]
+  ['src/main.js',"from './startup-shell.js'"],
+  ['src/main.js',"from './modules/yasser/ui/yasser-home-shell.js'"],
+  ['src/main.js',"from './modules/khaled/ui/khaled-home-shell.js'"],
+  ['src/main.js',"from './modules/mashaal/ui/mashaal-shell.js'"]
 ];
 for(const [file,from] of moduleEdits){
   const path=join(target,file);
@@ -37,6 +40,17 @@ const registry=await readFile(registryPath,'utf8');
 const href="link.href='src/modules/hub/open-family-learner-grid.css'";
 await writeFile(registryPath,replaceOnce(registry,href,"link.href='src/modules/hub/open-family-learner-grid.css"+suffix+"'",'hub stylesheet'),'utf8');
 
+// Give changed interior routes the same release guarantee as the family launcher.
+const interiorStyles=[
+  ['src/modules/yasser/ui/yasser-home-shell.js',"src/modules/yasser/ui/yasser-home.css"],
+  ['src/modules/khaled/ui/khaled-home-shell.js',"src/modules/khaled/ui/khaled-subject-gateway.css"],
+  ['src/modules/mashaal/ui/mashaal-shell.js',"src/modules/mashaal/ui/mashaal-home.css"]
+];
+for(const [file,css] of interiorStyles){
+  const path=join(target,file);
+  const contents=await readFile(path,'utf8');
+  await writeFile(path,replaceOnce(contents,css,css+suffix,file),'utf8');
+}
 const main='<script type="module" src="src/main.js"></script>';
 const startup='<script type="module" src="src/startup-shell.js"></script>';
 const bootstrap='<script>globalThis.__FAMILY_API_BASE_URL__="https://yasser-khaled-family-api.modynawe.workers.dev";globalThis.__FAMILY_DEPLOYMENT_MODE__="web-production";</script>';

@@ -95,3 +95,23 @@ test('strong Khaled round completion exposes the approved group celebration',asy
   assert.match(scenes,/if\(pct>=80\)[^\n]*groupCelebration/);
   assert.match(controller,/summary\.masteryScore>=80\?'أبدعت يا خالد/);
 });
+
+
+test('family internal worlds keep all subject actions and gain distinct visual themes',async()=>{
+  const yasser=await read('src/modules/yasser/ui/yasser-home-shell.js');
+  const khaled=await read('src/modules/khaled/ui/khaled-home-shell.js');
+  const mashaal=await read('src/modules/mashaal/ui/mashaal-shell.js');
+  const [yc,kc,mc]=await Promise.all([
+    read('src/modules/yasser/ui/yasser-home.css'),
+    read('src/modules/khaled/ui/khaled-subject-gateway.css'),
+    read('src/modules/mashaal/ui/mashaal-home.css')
+  ]);
+  for(const id of ['introStart','introMathReview','introGrade6Reviews','introMathLessons','introQuran','introScience'])assert.match(yasser,new RegExp('id="'+id+'"'));
+  for(const id of ['khaledMathOpen','khaledScienceOpen','khaledQuranOpen','khaledLiteracyOpen','khaledGrade1ReviewsOpen'])assert.match(khaled,new RegExp('id="'+id+'"'));
+  for(const id of ['mashaalDailyStart','mashaalArabicSectionGrid','mashaalPlayGrid','mashaalDomainGrid'])assert.match(mashaal,new RegExp('id="'+id+'"'));
+  assert.match(yc,/Family worlds: Yasser/);
+  assert.match(kc,/Family worlds: Khaled/);
+  assert.match(mc,/Family worlds: Mashaal/);
+  const build=await read('../tools/build-web-preview.mjs');
+  for(const asset of ['yasser-home.css','khaled-subject-gateway.css','mashaal-home.css'])assert.ok(build.includes(asset));
+});

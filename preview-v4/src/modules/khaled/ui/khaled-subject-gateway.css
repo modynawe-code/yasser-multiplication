@@ -9,3 +9,83 @@
 
 .khaled-subject-card.literacy{grid-column:1/-1}.khaled-subject-card.literacy .khaled-subject-mark{background:#fff4dc;color:#815a17}.khaled-subject-card.literacy em{color:#815a17}
 @media(max-width:700px){.khaled-subject-card.literacy{grid-column:auto}}
+
+/* Family worlds: Khaled's orange subject map uses the launcher palette. */
+#khaledHomeView{background:#fff8f1}
+#khaledHomeView .khaled-subject-shell{
+  max-width:1200px;grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);
+  border:1px solid #f1d9c1;border-radius:28px;
+  box-shadow:0 12px 26px rgba(123,66,23,.08);background:#fff;
+}
+#khaledHomeView .khaled-subject-hero{
+  background:#ffc990;border-color:#eed3b9;padding:25px 26px;gap:17px;
+}
+#khaledHomeView .khaled-subject-hero>.icon-btn{
+  justify-self:start;min-height:46px;background:#fff8f0;border:1px solid #edb776;
+  color:#7d390b;box-shadow:none;
+}
+#khaledHomeView .khaled-subject-copy .kicker{background:#fff1dc;color:#8d410e}
+#khaledHomeView .khaled-subject-copy h2{
+  font-size:clamp(31px,3.5vw,43px);color:#57301b;line-height:1.15;
+}
+#khaledHomeView .khaled-subject-copy p{color:#644b38;font-size:16px}
+#khaledHomeView .khaled-subject-character{
+  height:min(350px,43dvh);width:min(100%,345px);
+  border-radius:55% 55% 0 0;
+  background:radial-gradient(circle at 50% 53%,#ffe0ae 0 47%,transparent 48%);
+}
+#khaledHomeView .khaled-subject-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:24px 23px;
+}
+#khaledHomeView .khaled-subject-card{
+  display:grid;grid-template-columns:1fr auto;grid-template-rows:auto 1fr;
+  gap:9px;grid-template-areas:"symbol action" "copy copy";
+  min-height:154px;padding:16px;border-radius:20px;
+  border:1px solid #eadbd0;background:#fff8f2;box-shadow:none;
+  align-content:space-between;
+}
+#khaledHomeView .khaled-subject-card>span:nth-child(2){grid-area:copy;min-width:0}
+#khaledHomeView .khaled-subject-card .khaled-subject-mark{
+  grid-area:symbol;width:51px;height:51px;font-size:23px;border-radius:16px;
+}
+#khaledHomeView .khaled-subject-card em{grid-area:action;align-self:center;font-size:14px;color:#a54a14}
+#khaledHomeView .khaled-subject-card em::after{content:" ←"}
+#khaledHomeView .khaled-subject-card strong{font-size:20px;line-height:1.25;color:#462e22}
+#khaledHomeView .khaled-subject-card small{font-size:12px;color:#654f42;line-height:1.4}
+#khaledHomeView .khaled-subject-card.math{background:#fff0df;border-color:#f1cfaa}
+#khaledHomeView .khaled-subject-card.science{background:#f0f9f0;border-color:#cfe7d2}
+#khaledHomeView .khaled-subject-card.quran{grid-column:auto;background:#edf8ef;border-color:#cbe5d0}
+#khaledHomeView .khaled-subject-card.literacy{grid-column:auto;background:#fff8de;border-color:#f2e2aa}
+#khaledHomeView .khaled-subject-card:focus-visible{outline:4px solid #b45210;outline-offset:2px}
+#khaledHomeView .khaled-subject-status{background:#fffaf5;border-color:#f1e4d8}
+@media(max-width:760px){
+ #khaledHomeView .khaled-subject-shell{grid-template-columns:1fr;grid-template-areas:"hero" "subjects" "status"}
+ #khaledHomeView .khaled-subject-hero{
+  grid-template-columns:1fr minmax(0,42%);grid-template-rows:auto 1fr;
+  grid-template-areas:"action character" "copy character";
+  min-height:205px;padding:19px;gap:7px;border-inline-end:0;
+ }
+ #khaledHomeView .khaled-subject-hero>.icon-btn{grid-area:action;justify-self:start}
+ #khaledHomeView .khaled-subject-copy{grid-area:copy;align-self:center;text-align:start}
+ #khaledHomeView .khaled-subject-copy h2{font-size:28px}
+ #khaledHomeView .khaled-subject-copy p{font-size:13px}
+ #khaledHomeView .khaled-subject-character{grid-area:character;height:220px;width:100%}
+ #khaledHomeView .khaled-subject-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:13px;gap:9px}
+ #khaledHomeView .khaled-subject-card{min-height:141px;padding:12px}
+ #khaledHomeView .khaled-subject-card strong{font-size:17px}
+}
+@media(max-width:430px){
+ #khaledHomeView .khaled-subject-shell{border-radius:21px}
+ #khaledHomeView .khaled-subject-hero{grid-template-columns:1fr 40%;grid-template-areas:"action character" "copy character";padding:12px}
+ #khaledHomeView .khaled-subject-copy h2{font-size:23px}
+ #khaledHomeView .khaled-subject-character{height:190px}
+ #khaledHomeView .khaled-subject-grid{grid-template-columns:1fr}
+ #khaledHomeView .khaled-subject-card{
+  grid-template-columns:48px minmax(0,1fr) auto;grid-template-rows:1fr;
+  grid-template-areas:"symbol copy action";min-height:92px;gap:10px;
+ }
+ #khaledHomeView .khaled-subject-card strong{font-size:17px}
+ #khaledHomeView .khaled-subject-card small{font-size:11px}
+ #khaledHomeView .khaled-subject-card .khaled-subject-mark{height:47px;width:47px}
+}
+@media(prefers-reduced-motion:reduce){#khaledHomeView .khaled-subject-card{transition:none}}
