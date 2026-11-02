@@ -1,0 +1,55 @@
+name: Monopoly Game QA - Camera and Events
+on:
+  push:
+    branches:
+      - feature/monopoly-camera-gameqa-v1
+      - main
+    paths:
+      - 'preview-v4/src/modules/games/monopoly/**'
+      - 'preview-v4/tests/monopoly-*.test.mjs'
+      - 'preview-v4/tools/monopoly-camera-gameqa.py'
+      - '.github/workflows/monopoly-game-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  game-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify game-specific skills are installed
+        run: |
+          test -s .agents/skills/design-ui-ux-game/SKILL.md
+          test -s .agents/skills/design-ui-ux-game/templates/accessibility-checklist.md
+          test -s .agents/skills/game-qa/SKILL.md
+          test -s .agents/skills/game-qa/mobile-tests.md
+          test -s .agents/skills/game-qa/visual-regression.md
+      - name: Test monopoly engine camera geometry and online actions
+        run: node --test preview-v4/tests/monopoly-*.test.mjs backend/tests/game-rooms.test.mjs
+      - name: Install Playwright test browsers
+        run: |
+          python -m pip install 'playwright==1.56.0'
+          python -m playwright install --with-deps chromium webkit
+      - name: Exercise Monopoly in Chromium and Safari WebKit
+        run: |
+          python3 .agents/skills/webapp-testing/scripts/with_server.py \
+            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 2>/tmp/monopoly-game-http.log' \
+            --port 8790 \
+            -- python3 preview-v4/tools/monopoly-camera-gameqa.py
+      - name: Upload visual game QA and state reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monopoly-camera-qa
+          path: /tmp/monopoly-camera-qa/
+          retention-days: 7
+          if-no-files-found: warn
