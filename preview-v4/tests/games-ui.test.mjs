@@ -346,18 +346,24 @@ test('Monopoly retains board alignment and readable event controls with interact
   assert.doesNotMatch(controller,/monoGame[^\n]*grid-template-rows:auto 1fr/);
 });
 
-test('Monopoly property manager lists every owner and exposes building for completed sets',async()=>{
+test('Monopoly owner-filtered portfolio lists all players and preserves safe build and sale rules',async()=>{
   const controller=await read('src/modules/games/monopoly/monopoly-controller.js');
-  assert.match(controller,/for\(const player of state\.players\)/);
-  assert.match(controller,/mono-property-owner-head/);
-  assert.match(controller,/mono-property-group-head/);
+  const css=await read('src/modules/games/monopoly/monopoly-interaction.css');
+  assert.match(controller,/state\.players\.map\(player=>\{/);
+  assert.match(controller,/data-portfolio-owner/);
+  assert.match(controller,/aria-pressed/);
+  assert.match(controller,/mono-portfolio-summary/);
+  assert.match(controller,/mono-portfolio-group-head/);
+  assert.match(controller,/mono-portfolio-empty/);
   assert.match(controller,/المجموعة مكتملة/);
   assert.match(controller,/data-action="build"/);
-  assert.match(controller,/بناء فندق/);
-  assert.match(controller,/إدارة الأملاك/);
-  assert.match(controller,/للعرض · الدور الحالي:/);
-  assert.match(controller,/محطات/);
-  assert.match(controller,/مرافق/);
-  assert.match(controller,/البناء متاح في دور المالك بعد اكتمال مجموعة اللون/);
+  assert.match(controller,/canBuild\(state,index\)/);
+  assert.match(controller,/data-action="sell"/);
+  assert.match(controller,/owner\.id===activePlayer\.id/);
+  assert.match(controller,/saleAllowed=canOperate&&state\.phase==='end'/);
   assert.match(controller,/تبادل الأراضي/);
+  assert.match(controller,/فندق/);
+  assert.match(controller,/العودة للوحة/);
+  assert.match(css,/#monoGame #monoOverlay\.mono-overlay--portfolio/);
+  assert.match(css,/min-height:44px/);
 });
