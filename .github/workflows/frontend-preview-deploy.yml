@@ -156,10 +156,41 @@ jobs:
 
       - name: Smoke test Cloudflare preview
         run: |
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/" | grep -q 'تعلم العائلة'
+          set -euo pipefail
           SHA="${GITHUB_SHA:0:12}"
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/deployment-meta.json" | grep -Fq "\"release\": \"$SHA\""
-          curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/" | grep -Fq "src/main.js?release=$SHA"
+          # Cloudflare may take a short time to serve a just-deployed release at all edges.
+          # Retry the release signature, not merely HTTP errors; never accept stale HTML.
+          verified=false
+          for attempt in $(seq 1 20); do
+            curl -fsSL --max-time 20 "$PREVIEW_URL/deployment-meta.json?verify=$SHA-$attempt" -o /tmp/family-live-meta.json || true
+            curl -fsSL --max-time 20 "$PREVIEW_URL/?verify=$SHA-$attempt" -o /tmp/family-live-index.html || true
+            if grep -Fq "\"release\": \"$SHA\"" /tmp/family-live-meta.json 2>/dev/null &&
+               grep -Fq "src/main.js?release=$SHA" /tmp/family-live-index.html 2>/dev/null &&
+               grep -Fq 'تعلم العائلة' /tmp/family-live-index.html 2>/dev/null; then
+              verified=true
+              break
+            fi
+            sleep 2
+          done
+          if [ "$verified" != true ]; then
+            echo "Cloudflare preview did not expose expected release $SHA"
+            cat /tmp/family-live-meta.json || true
+            exit 1
+          fi
+          echo "Verified Cloudflare preview release: $SHA"
+          # Every learner entrypoint and stylesheet must carry the exact same version.
+          curl -fsSL "$PREVIEW_URL/src/main.js?verify=$SHA" -o /tmp/family-live-main.js
+          for entry in yasser/ui/yasser-home-shell.js khaled/ui/khaled-home-shell.js mashaal/ui/mashaal-shell.js; do
+            grep -Fq "$entry?release=$SHA" /tmp/family-live-main.js
+          done
+          for asset in "yasser/ui/yasser-home-shell.js|yasser/ui/yasser-home.css" "khaled/ui/khaled-home-shell.js|khaled/ui/khaled-subject-gateway.css" "mashaal/ui/mashaal-shell.js|mashaal/ui/mashaal-home.css"; do
+            js="${asset%%|*}"
+            css="${asset#*|}"
+            curl -fsSL "$PREVIEW_URL/src/modules/$js?verify=$SHA" -o /tmp/family-live-inner.js
+            grep -Fq "$css?release=$SHA" /tmp/family-live-inner.js
+            curl -fsSL "$PREVIEW_URL/src/modules/$css?verify=$SHA" -o /tmp/family-live-inner.css
+            grep -Fq 'Family worlds:' /tmp/family-live-inner.css
+          done
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/main.js" | grep -Fq "learner-hub-registry.js?release=$SHA"
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/modules/hub/learner-hub-registry.js" | grep -Fq "open-family-learner-grid.css?release=$SHA"
           curl --fail --silent --show-error --retry 5 --retry-delay 2 "$PREVIEW_URL/src/modules/hub/open-family-learner-grid.css" | grep -Fq 'Family worlds v1'
