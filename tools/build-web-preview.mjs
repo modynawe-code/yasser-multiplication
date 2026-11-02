@@ -51,6 +51,16 @@ for(const [file,css] of interiorStyles){
   const contents=await readFile(path,'utf8');
   await writeFile(path,replaceOnce(contents,css,css+suffix,file),'utf8');
 }
+// Prevent an older iPhone PWA cache from serving the previous Monopoly drawer.
+const monopolyCatalogPath=join(target,'src/modules/games/game-catalog.js');
+const monopolyCatalog=await readFile(monopolyCatalogPath,'utf8');
+const monopolyModule="load:()=>import('./monopoly/monopoly-controller.js')";
+await writeFile(monopolyCatalogPath,replaceOnce(monopolyCatalog,monopolyModule,"load:()=>import('./monopoly/monopoly-controller.js"+suffix+"')",'Monopoly module release'),'utf8');
+const monopolyInteractionPath=join(target,'src/modules/games/monopoly/monopoly-interaction.js');
+const monopolyInteraction=await readFile(monopolyInteractionPath,'utf8');
+const monopolyCss="style.href='src/modules/games/monopoly/monopoly-interaction.css'";
+await writeFile(monopolyInteractionPath,replaceOnce(monopolyInteraction,monopolyCss,"style.href='src/modules/games/monopoly/monopoly-interaction.css"+suffix+"'",'Monopoly CSS release'),'utf8');
+
 const main='<script type="module" src="src/main.js"></script>';
 const startup='<script type="module" src="src/startup-shell.js"></script>';
 const bootstrap='<script>globalThis.__FAMILY_API_BASE_URL__="https://yasser-khaled-family-api.modynawe.workers.dev";globalThis.__FAMILY_DEPLOYMENT_MODE__="web-production";</script>';
