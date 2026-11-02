@@ -75,6 +75,20 @@ def run(browser_type, device):
         assert result["camera_positions"]["moving"] >= 4, "Camera did not follow successive board squares"
         assert result["camera_positions"]["overlayVisible"], "Arrival property/event panel hidden"
         assert result["camera_positions"]["squareCount"] == 40
+        # Purchase a real square and verify the new estate drawer reflects saved engine ownership.
+        page.locator('#monoOverlay [data-action=buy]').click()
+        page.wait_for_function("() => document.querySelectorAll('#monoBoard .mono-space.owned').length === 1",timeout=15000)
+        page.locator('#monoGameTools summary').click()
+        page.locator('#monoManage').click()
+        drawer.wait_for(state='visible',timeout=8000)
+        assert drawer.locator('[data-property-index]').count() == 1, 'Bought property missing from owner estate'
+        assert drawer.locator('.mono-property-actions button').count() >= 1
+        assert drawer.locator('.mono-estate-tab[aria-pressed=true]').count() == 1
+        assert drawer.locator('.mono-estate-empty').count() == 0
+        result['estates_after_purchase'] = 'owned property and allowed actions shown'
+        page.screenshot(path=str(OUT / f'{browser_type.name}-{label}-owned-estate.png'),full_page=True)
+        drawer.locator('[data-action=estate-close]').first.click()
+        assert page.locator('#monoBoard .mono-space.owned').count() == 1
         assert not issues, f"Unhandled JavaScript errors: {issues}"
         result["status"] = "pass"
         page.screenshot(path=str(OUT / f"{browser_type.name}-{label}-arrival.png"), full_page=True)
