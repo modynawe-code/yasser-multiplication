@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - feature/product-ui-reference-v1
+      - feature/mainline-release-family-ui-20261102
     paths:
       - '.agents/skills/**'
       - '.github/workflows/installed-skills-ui.yml'
@@ -34,6 +35,22 @@ jobs:
           test -s .agents/skills/webapp-testing/scripts/with_server.py
           test -s .agents/skills/web-design-guidelines/SKILL.md
           python3 .agents/skills/webapp-testing/scripts/with_server.py --help
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate merged production build and retained Quran sources
+        run: |
+          cd preview-v4
+          node tools/build-itqan-cms-tracks.mjs
+          node tools/build-quran-svg-pages.mjs
+          node tools/verify-quran-itqan-coverage.mjs
+          node tools/build-quran-isolated-views.mjs
+          cd ..
+          node tools/build-web-preview.mjs
+          test -s dist-web-preview/deployment-meta.json
+          grep -Fq "release=${GITHUB_SHA:0:12}" dist-web-preview/index.html
+          test -s dist-web-preview/src/modules/mashaal/quran/quran-surah-player.js
+          test -s dist-web-preview/src/modules/games/king-inspector/king-inspector-controller.js
       - name: Install Playwright and Chromium / WebKit
         run: |
           python -m pip install 'playwright==1.56.0'
@@ -41,11 +58,11 @@ jobs:
       - name: Exercise family app in real browsers
         run: |
           python3 .agents/skills/webapp-testing/scripts/with_server.py \
-            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 2>/tmp/family-skills-http.log' \
+            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory dist-web-preview 2>/tmp/family-skills-http.log' \
             --port 8790 \
             -- python3 preview-v4/tools/skill-webapp-smoke.py
           python3 .agents/skills/webapp-testing/scripts/with_server.py \
-            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 2>/tmp/family-skills-http-inner.log' \
+            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory dist-web-preview 2>/tmp/family-skills-http-inner.log' \
             --port 8790 \
             -- python3 preview-v4/tools/internal-worlds-smoke.py
       - name: Upload UI results and screenshots
