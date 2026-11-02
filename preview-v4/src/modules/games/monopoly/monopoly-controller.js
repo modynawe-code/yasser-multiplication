@@ -388,6 +388,9 @@ export function createMonopolyController({onBack}={}){
    const portfolio=title==='إدارة الأملاك';
    if(portfolio){
      if(panel.parentElement!==game)game?.append(panel);
+     // Event cards set inline positioning; never reuse those geometry values for the drawer.
+     for(const property of ['left','right','top','bottom','width','max-height','transform'])panel.style.removeProperty(property);
+     delete panel.dataset.landingEdge;
      center?.classList.remove('has-event','overlay-deed-open');
    }else{
      if(panel.parentElement!==center)center?.append(panel);
