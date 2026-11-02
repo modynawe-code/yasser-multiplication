@@ -56,6 +56,12 @@ const monopolyCatalogPath=join(target,'src/modules/games/game-catalog.js');
 const monopolyCatalog=await readFile(monopolyCatalogPath,'utf8');
 const monopolyModule="load:()=>import('./monopoly/monopoly-controller.js')";
 await writeFile(monopolyCatalogPath,replaceOnce(monopolyCatalog,monopolyModule,"load:()=>import('./monopoly/monopoly-controller.js"+suffix+"')",'Monopoly module release'),'utf8');
+// Version the imported camera module too; the controller URL alone is not enough
+// when a previous iOS service worker has cached ./monopoly-interaction.js.
+const monopolyControllerPath=join(target,'src/modules/games/monopoly/monopoly-controller.js');
+const monopolyController=await readFile(monopolyControllerPath,'utf8');
+const cameraImport="from './monopoly-interaction.js'";
+await writeFile(monopolyControllerPath,replaceOnce(monopolyController,cameraImport,"from './monopoly-interaction.js"+suffix+"'",'Monopoly camera release'),'utf8');
 const monopolyInteractionPath=join(target,'src/modules/games/monopoly/monopoly-interaction.js');
 const monopolyInteraction=await readFile(monopolyInteractionPath,'utf8');
 const monopolyCss="style.href='src/modules/games/monopoly/monopoly-interaction.css'";

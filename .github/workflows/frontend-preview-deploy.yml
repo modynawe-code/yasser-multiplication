@@ -97,11 +97,17 @@ jobs:
           const main=readFileSync(root+'src/main.js','utf8');
           const startup=readFileSync(root+'src/startup-shell.js','utf8');
           const hub=readFileSync(root+'src/modules/hub/learner-hub-registry.js','utf8');
+          const monopoly=readFileSync(root+'src/modules/games/monopoly/monopoly-controller.js','utf8');
+          const monopolyCamera=readFileSync(root+'src/modules/games/monopoly/monopoly-interaction.js','utf8');
           const meta=JSON.parse(readFileSync(root+'deployment-meta.json','utf8'));
           for(const entry of ['src/startup-shell.js','src/main.js'])
             if(!html.includes(entry+'?release='+sha))throw new Error('Entry not cache-busted: '+entry);
           for(const [source,required] of [[main,"./startup-shell.js?release="],[main,"./modules/hub/learner-hub-registry.js?release="],[startup,"./modules/hub/learner-hub-registry.js?release="],[hub,"open-family-learner-grid.css?release="]])
             if(!source.includes(required+sha))throw new Error('Stale import/style remains: '+required);
+          if(!monopoly.includes("./monopoly-interaction.js?release="+sha))
+            throw new Error('Monopoly camera module is not cache-busted');
+          if(!monopolyCamera.includes("monopoly-interaction.css?release="+sha))
+            throw new Error('Monopoly camera stylesheet is not cache-busted');
           if(meta.release!==sha)throw new Error('Mismatched deployment release');
           console.log('All PWA escape paths point to release',sha);
           NODE
