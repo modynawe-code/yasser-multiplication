@@ -131,6 +131,15 @@ def run(browser_type,name):
         assert tv.locator(".tv-cell").count()==40
         tv.wait_for_function("() => document.querySelector('#partyBoard')?.classList.contains('has-art')",timeout=15000)
         assert tv.locator(".tv-board.has-art").count()==1, "Original board art not loaded"
+        # A bundled dependency is not visual proof: Chromium must create its Pixi canvas.
+        if name=="chromium":
+            tv.wait_for_function("() => !!document.querySelector('#partyBoard.cinematic-ready canvas.tv-cinematic-canvas')",timeout=18000)
+            canvas=tv.locator("#partyBoard canvas.tv-cinematic-canvas")
+            assert canvas.count()==1,"Bundled WebGL scene not mounted"
+            assert canvas.evaluate("(el) => el.width > 100 && el.height > 100"),"WebGL canvas has no render surface"
+            result["cinematicRenderer"]="pixi.js+gsap canvas mounted"
+        else:
+            result["cinematicRenderer"]="browser fallback permitted; inspect screenshot"
         assert tv.locator("#tvSound").get_attribute("aria-pressed")=="false"
         tv.locator("#tvSound").click()
         assert tv.locator("#tvSound").get_attribute("aria-pressed")=="true"
