@@ -136,6 +136,25 @@ def run(browser_type,name):
         assert tv.locator(".tv-cell").count()==40
         tv.wait_for_function("() => document.querySelector('#partyBoard')?.classList.contains('has-art')",timeout=15000)
         assert tv.locator(".tv-board.has-art").count()==1, "Original board art not loaded"
+        # Visual acceptance: the board dominates the TV stage, with no overflow or baked logo.
+        visual=tv.evaluate("""() => {
+            const get=(s)=>document.querySelector(s)?.getBoundingClientRect();
+            const b=get('#partyBoard'),stage=get('#tvStage'),center=document.querySelector('.tv-board-center');
+            const backdrop=get('.tv-table-surface');
+            return {boardWidth:b?.width,boardHeight:b?.height,stageWidth:stage?.width,
+                    frameBottom:backdrop?.bottom,viewportHeight:innerHeight,
+                    centerBackground:getComputedStyle(center).backgroundImage,
+                    tokenBounds:[...document.querySelectorAll('.tv-token')].map(t=>{
+                      const r=t.getBoundingClientRect();
+                      return {x:r.x,y:r.y,right:r.right,bottom:r.bottom};
+                    })};
+        }""")
+        assert abs(visual["boardWidth"]-visual["boardHeight"])<5,visual
+        assert visual["boardWidth"]>=min(600,visual["viewportHeight"]*.72),visual
+        assert visual["frameBottom"]<=visual["viewportHeight"]+10,visual
+        assert "radial-gradient" in visual["centerBackground"],"Original center logo is not covered"
+        result["tvVisualBaseline"]=visual
+
         # A bundled dependency is not visual proof: Chromium must create its Pixi canvas.
         if name=="chromium":
             tv.wait_for_function("() => !!document.querySelector('#partyBoard.cinematic-ready canvas.tv-cinematic-canvas')",timeout=18000)
