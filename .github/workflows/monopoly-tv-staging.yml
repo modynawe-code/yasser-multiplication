@@ -6,6 +6,7 @@ on:
     paths:
       - 'preview-v4/monopoly-party/**'
       - 'tools/monopoly-tv-renderer/**'
+      - 'preview-v4/tests/monopoly-tv-renderer-contract.test.mjs'
       - 'preview-v4/tools/monopoly-tv-live-qa.py'
       - 'backend/src/game-room-rules.mjs'
       - 'preview-v4/src/modules/games/monopoly/monopoly-engine.js'
@@ -37,7 +38,7 @@ jobs:
         run: |
           test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "Cloudflare staging token unavailable"; exit 1; }
       - name: Verify TV state and permission tests
-        run: node --test preview-v4/tests/monopoly-party.test.mjs
+        run: node --test preview-v4/tests/monopoly-party.test.mjs preview-v4/tests/monopoly-tv-renderer-contract.test.mjs
       - name: Build isolated frontend and configure separate Cloudflare D1
         run: |
           node tools/build-web-preview.mjs
