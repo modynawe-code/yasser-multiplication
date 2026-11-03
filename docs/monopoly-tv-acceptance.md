@@ -33,11 +33,11 @@ Scope: TV viewer, independent phone controllers, isolated staging, Android TV. P
 |---|---|---|---|---|
 | BASE-01 | Reproducible baseline and rollback SHA | Git/GitHub Actions | Baseline tests + rollback documented | PARTIAL |
 | RENDER-01 | Full-screen 16:9 high-quality TV game table, readable from 50-inch distance | PixiJS/WebGL | On-device screenshot; correct 40-tile hit locations and visible property overlays | NOT STARTED |
-| RENDER-02 | Real shadows, surfaces, property states, 2–4 player tokens, houses/hotels | PixiJS/WebGL | Screenshot comparisons before/after, correct board coordinates | NOT STARTED |
-| CAMERA-01 | Idle overview > dice throw > step-by-step follow > landing focus > event > smooth overview | GSAP timeline | Recorded multi-turn video; no competing animations, precise camera follow | NOT STARTED |
+| RENDER-02 | Real shadows, surfaces, property states, 2–4 player tokens, houses/hotels | PixiJS/WebGL | Screenshot comparisons before/after, correct board coordinates | IMPLEMENTED/UNVERIFIED (initial pawn/shadow layer only) |
+| CAMERA-01 | Idle overview > dice throw > step-by-step follow > landing focus > event > smooth overview | GSAP timeline | Recorded multi-turn video; no competing animations, precise camera follow | IMPLEMENTED/UNVERIFIED (camera GSAP; complete scene director pending) |
 | CAMERA-02 | Event safe zones: never cover active tile, token or essential event | GSAP + layout tests | Screenshot checks at 1080p and TV viewport | NOT STARTED |
-| DICE-01 | Two convincing dice with roll, collision, bounce and result from server only | PixiJS + optionally Three.js | Video at normal speed, deterministic outcome verification | NOT STARTED |
-| TOKEN-01 | 2–4 visually distinct pieces turn corners and move one tile at a time | PixiJS + GSAP | Video + motion/position tests | NOT STARTED |
+| DICE-01 | Two convincing dice with roll, collision, bounce and result from server only | PixiJS + optionally Three.js | Video at normal speed, deterministic outcome verification | IMPLEMENTED/UNVERIFIED (2D Pixi dice with GSAP bounce, not physical 3D collision) |
+| TOKEN-01 | 2–4 visually distinct pieces turn corners and move one tile at a time | PixiJS + GSAP | Video + motion/position tests | IMPLEMENTED/UNVERIFIED (Pixi pawns on existing step route) |
 | EVENT-01 | Distinct scenes for buy, rent, auction, build, mortgage, trade, chance, chest, jail, bankruptcy and victory | PixiJS + GSAP | Each event exercised, recorded and checked against server state | NOT STARTED |
 | AUDIO-01 | Dice, steps, money, construction, cards, jail, win, mute and levels | Existing audio + Web Audio | Captured sound and no autoplay failures | NOT STARTED |
 | PHONE-01 | Each player sees turn, actions, cash, property and drag-to-roll | Existing controller + accessibility | 2/3/4 player test on phones | IMPLEMENTED/UNVERIFIED |
@@ -65,3 +65,9 @@ A stage is VERIFIED only with: file paths + commit SHA + test run URL + relevant
 - If WebGL context fails, user must still see a meaningful TV room and be able to return.
 - If animation fails, game state must remain unchanged and resync from server snapshot.
 - Make minimal focused commits and keep a rollback reference.
+
+## 2026-11-03 TV renderer integration checkpoint
+- Commits: `622563a` initial Pixi + GSAP scene, `50401d4` TV integration, `a676b43` Android packaging, `1d4af5c` Chromium actual canvas mount contract, `0fc92cb` Pixi dice drawing, `17abd2a` roll-before-travel integration, `515e198` dice contract tests.
+- Verified earlier integration: [TV+phone browser QA run 41677074222](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677074222) SUCCESS; [Android TV APK run 41676868212](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41676868212) SUCCESS. Those runs precede the new dice animation.
+- Required latest validation: [TV+phone QA run 41677652576](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677652576), [TV staging run 41677652750](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677652750), [Android TV APK run 41677652579](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677652579). Check their conclusions before marking any gate VERIFIED.
+- No user physical TV acceptance has happened. DOM/CSS board remains present. This is a foundation, **not** finished high-fidelity 3D graphics.
