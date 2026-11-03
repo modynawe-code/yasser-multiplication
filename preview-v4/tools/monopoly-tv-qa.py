@@ -161,6 +161,17 @@ def run(browser_type,name):
             canvas=tv.locator("#partyBoard canvas.tv-cinematic-canvas")
             assert canvas.count()==1,"Bundled WebGL scene not mounted"
             assert canvas.evaluate("(el) => el.width > 100 && el.height > 100"),"WebGL canvas has no render surface"
+            # Require the 3D tabletop before ANY dice roll; the renderer must not be
+            # a dice-only overlay hiding the original two-dimensional board.
+            tv.wait_for_function("""() => {
+                const board=document.querySelector('#partyBoard');
+                const layer=board?.querySelector('canvas.tv-three-dice-canvas');
+                return board?.classList.contains('tv-3d-board-ready') &&
+                    layer?.dataset.table==='3d' &&
+                    getComputedStyle(layer).visibility==='visible';
+            }""",timeout=20000)
+            tv.screenshot(path=str(OUT/"chromium-tv-3d-table-lobby.png"),full_page=True)
+            result["real3DTable"]="textured lit board mounted before roll"
             result["cinematicRenderer"]="pixi.js+gsap canvas mounted"
         else:
             result["cinematicRenderer"]="browser fallback permitted; inspect screenshot"
