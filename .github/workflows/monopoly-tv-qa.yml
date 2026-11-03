@@ -7,6 +7,7 @@ on:
     paths:
       - 'preview-v4/monopoly-party/**'
       - 'tools/monopoly-tv-renderer/**'
+      - 'preview-v4/tests/monopoly-tv-renderer-contract.test.mjs'
       - 'preview-v4/tests/monopoly-party.test.mjs'
       - 'preview-v4/tools/monopoly-tv-qa.py'
       - '.github/workflows/monopoly-tv-qa.yml'
@@ -28,7 +29,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Unit tests - board geometry and role safeguards
-        run: node --test preview-v4/tests/monopoly-party.test.mjs backend/tests/game-rooms.test.mjs
+        run: node --test preview-v4/tests/monopoly-party.test.mjs preview-v4/tests/monopoly-tv-renderer-contract.test.mjs backend/tests/game-rooms.test.mjs
       - name: Bundle local PixiJS and GSAP scene for browser QA
         run: |
           npm install --prefix tools/monopoly-tv-renderer --ignore-scripts --no-audit --no-fund
