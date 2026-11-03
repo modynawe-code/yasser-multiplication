@@ -76,6 +76,19 @@ jobs:
           curl -fsSL "$WEB/monopoly-party/tv/tv.js" -o /tmp/monopoly-tv-client.mjs
           curl -fsSL "$WEB/monopoly-party/controller/remote.js" -o /tmp/monopoly-phone-client.mjs
           node preview-v4/tools/monopoly-tv-backend-qa.mjs
+      - name: Verify live TV, QR, host and second phone on Chromium and Safari WebKit
+        run: |
+          python3 -m pip install 'playwright==1.56.0'
+          python3 -m playwright install --with-deps chromium webkit
+          python3 preview-v4/tools/monopoly-tv-live-qa.py
+      - name: Save live browser screenshots and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monopoly-tv-staging-live-qa
+          path: /tmp/monopoly-tv-live-qa/
+          retention-days: 10
+          if-no-files-found: warn
       - name: Staging entrypoints
         if: always()
         run: |
