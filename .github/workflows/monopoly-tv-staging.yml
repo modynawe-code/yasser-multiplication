@@ -5,6 +5,9 @@ on:
       - feature/monopoly-tv-multiscreen-v1
     paths:
       - 'preview-v4/monopoly-party/**'
+      - 'preview-v4/tools/monopoly-tv-live-qa.py'
+      - 'backend/src/game-room-rules.mjs'
+      - 'preview-v4/src/modules/games/monopoly/monopoly-engine.js'
       - 'tools/monopoly-tv-staging.mjs'
       - 'preview-v4/tools/monopoly-tv-live-qa.py'
       - '.github/workflows/monopoly-tv-staging.yml'

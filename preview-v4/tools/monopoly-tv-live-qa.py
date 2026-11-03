@@ -11,6 +11,16 @@ ART=Path("/tmp/monopoly-tv-live-qa")
 ART.mkdir(parents=True,exist_ok=True)
 STAMP=str(int(time.time()))[-7:]
 
+def navigate(page,url):
+    # Cloudflare test edges occasionally reset a TLS handshake; retry only
+    # page navigation, never a state-changing POST action.
+    for attempt in range(4):
+        try:
+            return page.goto(url,wait_until="domcontentloaded",timeout=55000)
+        except Exception:
+            if attempt==3:raise
+            page.wait_for_timeout((attempt+1)*1500)
+
 def execute(kind,browser):
     result={"browser":kind,"mode":"live-staging","status":"failed"}
     errors=[]
@@ -24,7 +34,7 @@ def execute(kind,browser):
         for page in [tv,*phones]:
             page.on("pageerror",lambda err:errors.append(str(err)))
         host=phones[0]
-        host.goto(ORIGIN+"/monopoly-party/controller/",wait_until="domcontentloaded",timeout=55000)
+        navigate(host,ORIGIN+"/monopoly-party/controller/")
         host.locator("input[name=name]").fill("TV اختبار "+kind+" "+STAMP)
         host.locator("button[value=create]").click()
         host.locator("#remoteStage").wait_for(state="visible",timeout=25000)
@@ -32,13 +42,13 @@ def execute(kind,browser):
         assert len(code)==6 and code.isdigit(), "Server did not issue a six-digit code"
 
         # Television joins only as spectator; remaining phones take real player seats.
-        tv.goto(ORIGIN+"/monopoly-party/tv/",wait_until="domcontentloaded",timeout=55000)
+        navigate(tv,ORIGIN+"/monopoly-party/tv/")
         tv.locator("#tvJoinForm input[name=code]").fill(code)
         tv.locator("#tvJoinForm button").click()
         tv.locator("#tvStage").wait_for(state="visible",timeout=25000)
         tv.locator("#tvCode").get_by_text(code).wait_for(timeout=10000)
         for i,player in enumerate(phones[1:],start=1):
-            player.goto(ORIGIN+"/monopoly-party/controller/",wait_until="domcontentloaded",timeout=55000)
+            navigate(player,ORIGIN+"/monopoly-party/controller/")
             player.locator("input[name=name]").fill(f"لاعب {i+1} {kind} {STAMP}")
             player.locator("input[name=code]").fill(code)
             player.locator("button[value=join]").click()
@@ -54,8 +64,12 @@ def execute(kind,browser):
         result["qr"]="local-encoded HTTPS URL"
         result["boardArt"]="loaded"
 
-        host.locator('#remoteActions button[data-action=start]').wait_for(state="visible",timeout=20000)
-        host.locator('#remoteActions button[data-action=start]').click()
+        # Spectator sees all joined players first; the host must also receive
+        # the latest room version or its start action correctly gets HTTP 409.
+        host.locator(".remote-player").nth(len(phones)-1).wait_for(state="visible",timeout=25000)
+        assert host.locator(".remote-player").count()==len(phones)
+        host.locator('#remoteActions button[data-action=start]:not([disabled])').wait_for(state="visible",timeout=20000)
+        host.locator('#remoteActions button[data-action=start]:not([disabled])').click()
         host.locator('#remoteActions button[data-action=roll]').wait_for(state="visible",timeout=20000)
 
         # Safari touch and Chromium pointer input are exercised via the actual UI.
