@@ -59,19 +59,19 @@ export function createThreeDice(board){
   const materials=FACES.map(n=>new MeshStandardMaterial({
     map:textures[n-1],roughness:.32,metalness:.06
   }));
-  const geometry=new BoxGeometry(1.45,1.45,1.45);
+  const geometry=new BoxGeometry(1.03,1.03,1.03);
   const group=new Group();scene.add(group);
   const dice=[0,1].map(i=>{
     const die=new Mesh(geometry,materials);
-    die.position.x=(i===0?-1:1)*1.13;
+    die.position.x=(i===0?-1:1)*.76;
     group.add(die);return die;
   });
   // Contact shadow is a transparent plane behind the cubes.
-  const shadowGeometry=new PlaneGeometry(1.8,1.8);
+  const shadowGeometry=new PlaneGeometry(1.25,1.25);
   const shadowMaterial=new MeshBasicMaterial({color:0x071b16,transparent:true,opacity:.24,side:DoubleSide,depthWrite:false});
   const shadows=dice.map((die)=>{
     const m=new Mesh(shadowGeometry,shadowMaterial);
-    m.position.set(die.position.x+.15,-.55,-1.45);
+    m.position.set(die.position.x+.10,-.35,-.9);
     group.add(m);return m;
   });
   // A real, light-reactive 3D tabletop. Original forty tiles stay exact in the
@@ -257,7 +257,7 @@ export function createThreeDice(board){
       return new Quaternion().setFromUnitVectors(normal,new Vector3(0,0,1));
     });
     dice.forEach((die,i)=>{
-      die.position.set((i===0?-1:1)*1.13,-.2,0);
+      die.position.set((i===0?-1:1)*.76,-.25,0);
       die.quaternion.copy(target[i]);
       die.rotation.x+=Math.PI*2;die.rotation.y+=Math.PI*2;
     });
@@ -282,7 +282,7 @@ export function createThreeDice(board){
         die.quaternion.copy(target[i]);
         // GSAP rotates exactly two full revolutions and lands on the server face.
         const rx=die.rotation.x,ry=die.rotation.y;
-        tl.fromTo(die.position,{y:2.7+i*.5},{y:-.2,duration:.85,ease:'bounce.out'},i*.09);
+        tl.fromTo(die.position,{y:1.65+i*.3},{y:-.25,duration:.85,ease:'bounce.out'},i*.09);
         tl.fromTo(die.rotation,{x:rx,y:ry},{x:rx+Math.PI*2,y:ry+Math.PI*2,duration:.77,ease:'power3.out'},i*.09);
       });
     });
