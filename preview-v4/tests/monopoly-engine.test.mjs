@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOARD,bidAuction,buildHouse,canBuild,buyProperty,createMonopolyState,drawCard,pickMonopolyCard,flipMonopolyCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
+import {BOARD,bidAuction,buildHouse,canBuild,buyProperty,createMonopolyState,drawCard,pickMonopolyCard,flipMonopolyCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty,canMortgage,canUnmortgage,mortgageProperty,unmortgageProperty,mortgageValue,redemptionCost} from '../src/modules/games/monopoly/monopoly-engine.js';
 
 const players=[{id:'a',name:'أ'},{id:'b',name:'ب'}];
 
@@ -118,4 +118,58 @@ test('four houses upgrade to a hotel and the board rent level is reflected',()=>
   const saleBefore=s.players[0].cash;
   s=sellProperty(s,21);
   assert.equal(s.players[0].cash,saleBefore+Math.floor(BOARD[21].price/2)+5*Math.floor(BOARD[21].build/2));
+});
+
+
+test('mortgage blocks rent, repeat mortgage, illegal sale and trade; redemption charges bank interest',()=>{
+  let s=createMonopolyState(players);
+  s.phase='end';
+  s.ownership={3:{ownerId:'a',houses:0}};
+  const initialCash=s.players[0].cash;
+  assert.equal(mortgageValue(3),Math.floor(BOARD[3].price/2));
+  assert.equal(redemptionCost(3),mortgageValue(3)+Math.ceil(mortgageValue(3)*.1));
+  assert.equal(canMortgage(s,3),true);
+  const mortgaged=mortgageProperty(s,3);
+  assert.notStrictEqual(mortgaged,s);
+  assert.equal(mortgaged.ownership[3].mortgaged,true);
+  assert.equal(mortgaged.players[0].cash,initialCash+mortgageValue(3));
+  assert.equal(rentFor(mortgaged,3),0);
+  assert.equal(canMortgage(mortgaged,3),false);
+  assert.strictEqual(mortgageProperty(mortgaged,3),mortgaged);
+  assert.strictEqual(sellProperty(mortgaged,3),mortgaged);
+  assert.strictEqual(tradeProperty(mortgaged,3,'b'),mortgaged);
+  assert.equal(canUnmortgage(mortgaged,3),true);
+  const redeemed=unmortgageProperty(mortgaged,3);
+  assert.equal(redeemed.ownership[3].mortgaged,false);
+  assert.equal(redeemed.players[0].cash,initialCash+mortgageValue(3)-redemptionCost(3));
+  assert.equal(rentFor(redeemed,3),BOARD[3].rent);
+  assert.strictEqual(unmortgageProperty(redeemed,3),redeemed);
+});
+test('mortgage cannot bypass group building protections or insufficient redemption funds',()=>{
+  let s=createMonopolyState(players);
+  s.phase='end';
+  s.ownership={37:{ownerId:'a',houses:2},39:{ownerId:'a',houses:0}};
+  assert.equal(canMortgage(s,37),false);
+  assert.equal(canMortgage(s,39),false,'no title can be mortgaged while group has buildings');
+  s.ownership[37].houses=0;
+  assert.equal(canMortgage(s,37),true);
+  s=mortgageProperty(s,37);
+  assert.equal(canBuild(s,39),false,'a mortgaged group cannot receive new buildings');
+  s.players[0].cash=0;
+  assert.equal(canUnmortgage(s,37),false);
+  assert.strictEqual(unmortgageProperty(s,37),s);
+  s.turnIndex=1;
+  assert.equal(canMortgage(s,39),false,'other player cannot mortgage your property');
+  assert.equal(canMortgage(s,0),false,'starting square cannot be mortgaged');
+});
+test('landing on another player mortgaged property does not transfer rent or bankrupt',()=>{
+  let s=createMonopolyState(players);
+  s.ownership={3:{ownerId:'a',houses:0,mortgaged:true}};
+  s.turnIndex=1;s.players[1].position=1;s.phase='roll';
+  const next=rollDice(s,[1,1]);
+  assert.equal(next.players[1].position,3);
+  assert.equal(next.players[1].cash,1500);
+  assert.equal(next.players[0].cash,1500);
+  assert.equal(next.phase,'end');
+  assert.match(next.log,/مرهون/);
 });
