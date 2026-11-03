@@ -116,3 +116,22 @@ test('authoritative event scene types provide visible and cancellable state-spec
   assert.match(entry,/cinematic\?\.presentEvent\(byId\('tvCenterScene'\),\{phase:/);
   assert.doesNotMatch(scene,/submitAction|createRoom|fetch\(/);
 });
+
+test('Three.js owns a textured, lit, actual 3D board while keeping 40 original tiles',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/const boardGroup=new Group\(\);scene\.add\(boardGroup\)/);
+  assert.match(d,/const slabGeo=new BoxGeometry\(/);
+  assert.match(d,/const feltGeo=new BoxGeometry\(/);
+  assert.match(d,/const rimGeoHorizontal=new BoxGeometry\(/);
+  assert.match(d,/const geo=new PlaneGeometry\(surfaceHeight,surfaceHeight\)/);
+  assert.match(d,/new CanvasTexture\(canvas\)/);
+  assert.match(d,/board\.classList\.add\('tv-3d-board-ready'\)/);
+  assert.match(d,/board\.classList\.remove\('tv-3d-board-ready'\)/);
+  assert.match(d,/canvasElement\.dataset\.table='3d'/);
+  assert.match(scene,/threeDice=createThreeDice\(board\)/);
+  assert.match(scene,/function setBoardArt\(source\)/);
+  assert.match(entry,/cinematic\?\.setBoardArt\(boardArtSource\)/);
+  assert.match(entry,/if\(boardArtSource\)cinematic\.setBoardArt\(boardArtSource\)/);
+  assert.match(css,/\.tv-board\.tv-3d-board-ready/);
+  assert.doesNotMatch(d,/submitAction|createRoom|fetch\(/);
+});
