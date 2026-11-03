@@ -160,6 +160,14 @@ def run(browser_type,name):
         host.locator('#remoteActions button[data-action=buy]').wait_for(timeout=12000)
         tv.wait_for_function("() => document.querySelector('#tvEvent')?.textContent?.includes('أرض متاحة للشراء')",timeout=15000)
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=7000)
+        if name=="chromium":
+            # Verify Three.js actually mounted and drew 3D dice in a real browser.
+            tv.wait_for_function("() => !!document.querySelector('#partyBoard canvas.tv-three-dice-canvas')",timeout=15000)
+            three_canvas=tv.locator("#partyBoard canvas.tv-three-dice-canvas")
+            assert three_canvas.evaluate("(el) => el.width > 100 && el.height > 100"),"Three.js dice canvas is blank-sized"
+            assert three_canvas.evaluate("(el) => getComputedStyle(el).visibility === 'visible'"),"3D dice layer is not visible"
+            result["threeDice"]="3D WebGL canvas active with server-provided dice"
+
         assert tv.locator('.tv-token').count()==2
         tv.screenshot(path=str(OUT/f"{name}-tv-arrival.png"),full_page=True)
         host.screenshot(path=str(OUT/f"{name}-host-buy.png"),full_page=True)
