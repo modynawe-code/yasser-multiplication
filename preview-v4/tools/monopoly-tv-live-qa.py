@@ -71,20 +71,22 @@ def execute(kind,browser):
 
         # Buy when the random square is purchasable; otherwise handle card stages.
         chosen=[]
-        for _ in range(6):
-            buttons=host.locator('#remoteActions button[data-action]')
-            actions=[buttons.nth(i).get_attribute("data-action") for i in range(buttons.count())]
-            if "buy" in actions:
-                host.locator('#remoteActions [data-action=buy]').click()
-                chosen.append("buy")
-                host.wait_for_timeout(600)
-            elif "card-pick" in actions or "card-flip" in actions or "card" in actions:
-                kind_action=next(s for s in ["card-pick","card-flip","card"] if s in actions)
-                host.locator(f'#remoteActions [data-action="{kind_action}"]').click()
-                chosen.append(kind_action)
-                host.wait_for_timeout(600)
-            else:
-                break
+        for _ in range(7):
+            # A pending HTTP action intentionally disables its button. Do not
+            # click a stale button merely because it is visible in the DOM.
+            host.wait_for_function("""() => {
+                const btn=document.querySelector('#remoteActions button[data-action]:not([disabled])');
+                return btn && ['buy','card-pick','card-flip','card','end'].includes(btn.dataset.action);
+            }""",timeout=25000)
+            action=host.locator('#remoteActions button[data-action]:not([disabled])').first.get_attribute('data-action')
+            if action=="end":break
+            assert action in ("buy","card-pick","card-flip","card"),action
+            host.locator(f'#remoteActions button[data-action="{action}"]:not([disabled])').click()
+            chosen.append(action)
+            host.wait_for_function("""previous => {
+                const next=document.querySelector('#remoteActions button[data-action]:not([disabled])');
+                return next && next.dataset.action!==previous;
+            }""",arg=action,timeout=25000)
 
         # Verify session resume without consuming another player seat.
         host.reload(wait_until="domcontentloaded")
