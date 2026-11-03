@@ -168,3 +168,9 @@ A stage is VERIFIED only with: file paths + commit SHA + test run URL + relevant
 - Focused changes in this checkpoint: idle/pre-roll center DOM scene is hidden (room state remains in the side rail); fallback center uses the same green felt family; Three.js pawn scale is reduced from `0.90/1.00` to `0.68/0.72`. Added renderer-contract coverage for all three.
 - Targeted renderer contract tests: **13/13 passed locally**. Staging browser QA, screenshot review after change, and deployment are pending. No approval of camera perspective, full visual quality, Android TV hardware, or production release is implied.
 - Rollback baseline: `0fe870a20c39ab39ef735628018bb2d1e2db2a2c`.
+
+## Follow-up verification — 2026-11-03
+- The prior checkpoint was subsequently validated on source commit `cc42b7df0ea9252041db0cb8cd9c7cf6c63e052c` (tree identical to local commit `cd4923cd`).
+- Renderer contract tests: 13/13 passed locally; [Preview V4 CI 41698680002](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41698680002), [TV/Phone QA 41698680044](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41698680044), [isolated Staging 41698679948](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41698679948), [Android TV APK 41698680050](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41698680050) all SUCCESS on that SHA.
+- Inspected post-change Chromium screenshots from the TV/Phone and live-Staging workflow artifacts. The idle/roll center is clear and the fallback uses felt green; Three.js pawns are visibly smaller. Live Staging QA passed four-player Chromium and two-player WebKit sessions, including roll/buy and refresh/reconnect checks.
+- Staging metadata then reported release `cc42b7df0ea9`. The cloud browser has WebGL disabled; physical Android TV performance, camera perspective acceptance, and user visual approval remain pending. No production deployment.
