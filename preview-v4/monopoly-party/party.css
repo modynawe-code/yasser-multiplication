@@ -128,3 +128,8 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 }
 .tv-center-scene[data-phase=moving] .tv-center-die{animation:party-dice .65s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.tv-center-die{animation:none!important}}
+
+/* The WebGL scene paints real pawn geometry; keep DOM tokens as a resilient fallback. */
+.tv-board.cinematic-ready .tv-token{visibility:hidden}
+.tv-board .tv-cinematic-canvas{display:block;contain:layout paint}
+@media(prefers-reduced-motion:reduce){.tv-board .tv-cinematic-canvas{transition:none}}
