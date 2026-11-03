@@ -37,8 +37,7 @@ for(const relative of required){
   await cp(source,destination);
   copied+=size;
 }
-const index=String.raw\`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/><title>احتكار المعرفة TV</title><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<meta http-equiv="refresh" content="0;url=monopoly-party/tv/"/></head><body><a href="monopoly-party/tv/">شغّل احتكار المعرفة TV</a></body></html>\`;
+const index='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/><title>احتكار المعرفة TV</title><meta http-equiv="refresh" content="0;url=monopoly-party/tv/"/></head><body><a href="monopoly-party/tv/">شغّل احتكار المعرفة TV</a></body></html>';
 await writeFile(path.join(dest,'index.html'),index);
 console.log('TV-only Android bundle:',required.length,'files; bytes:',copied,'(family learning app excluded)');
 if(copied>3_000_000)throw new Error('TV-only web bundle unexpectedly large');
