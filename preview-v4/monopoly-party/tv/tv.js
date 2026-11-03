@@ -7,7 +7,7 @@ const status=byId('connectionStatus');
 const board=byId('partyBoard');
 const tokenLayer=document.createElement('div');tokenLayer.className='tv-tokens';
 const cells=new Map(),pieces=new Map();
-let previousRoom=null,sequence=0,latestState=null;
+let previousRoom=null,sequence=0,latestState=null,voiceEnabled=false,soundContext=null,overviewTimer=null,lastFocus=-1;
 const conn=makePartyConnection({role:'spectator',onRoom:renderRoom,onStatus:(value,error)=>{
   status.textContent=value==='connected'?'متصل بالغرفة':'الاتصال غير متاح'+(error?.status?' ('+error.status+')':'');
   status.classList.toggle('offline',value!=='connected');
@@ -21,6 +21,7 @@ function boardSetup(){
     node.style.setProperty('--group',GROUP_COLORS[item.group]||'#97b39c');
     node.append(el('strong','',item.name));
     if(item.price)node.append(el('small','',item.price+' ر'));
+    node.append(el('span','tv-buildings'));
     cells.set(i,node);board.append(node);
   });
   const center=el('div','tv-board-center');
@@ -47,12 +48,12 @@ function addRoster(room){
 }
 function place(playerId,index,animate=false){
   const tile=cells.get(index),piece=pieces.get(playerId);if(!tile||!piece)return;
-  const cell=tile.getBoundingClientRect(),b=board.getBoundingClientRect();
-  const radius=Math.max(16,Math.min(35,cell.width*.52));
+  // Use untransformed coordinates so camera zoom never displaces player pieces.
+  const radius=Math.max(16,Math.min(35,tile.offsetWidth*.52));
   piece.style.width=radius+'px';piece.style.height=radius+'px';
   if(!animate)piece.style.transition='none';
-  piece.style.left=(cell.left-b.left+cell.width/2-radius/2)+'px';
-  piece.style.top=(cell.top-b.top+cell.height/2-radius/2)+'px';
+  piece.style.left=(tile.offsetLeft+tile.offsetWidth/2-radius/2)+'px';
+  piece.style.top=(tile.offsetTop+tile.offsetHeight/2-radius/2)+'px';
   if(!animate)requestAnimationFrame(()=>{piece.style.transition='';});
 }
 function syncPieces(state){
@@ -66,6 +67,61 @@ function syncPieces(state){
     }
     node.classList.toggle('active',state.players[state.turnIndex]?.id===p.id);
   });
+}
+function sound(kind){
+  if(!voiceEnabled)return;
+  try{
+    const Audio=window.AudioContext||window.webkitAudioContext;
+    if(!Audio)return;
+    soundContext||=new Audio();
+    if(soundContext.state==='suspended')void soundContext.resume();
+    const source=soundContext.createOscillator(),volume=soundContext.createGain();
+    const now=soundContext.currentTime;
+    source.type=kind==='step'?'triangle':'sine';
+    const pitch=kind==='dice'?180:kind==='purchase'?650:kind==='step'?290:560;
+    source.frequency.setValueAtTime(pitch,now);
+    source.frequency.exponentialRampToValueAtTime(kind==='dice'?90:pitch*1.25,now+.18);
+    volume.gain.setValueAtTime(kind==='step'?.026:.075,now);
+    volume.gain.exponentialRampToValueAtTime(.001,now+.23);
+    source.connect(volume).connect(soundContext.destination);
+    source.start(now);source.stop(now+.24);
+  }catch{}
+}
+function resetCamera(){
+  lastFocus=-1;
+  clearTimeout(overviewTimer);
+  board.style.transform='scale(1)';
+  board.style.transformOrigin='50% 50%';
+  cells.forEach(cell=>cell.classList.remove('is-focused'));
+}
+function focusCamera(index,zoom=1.09){
+  const tile=cells.get(index);if(!tile)return;
+  cells.forEach(cell=>cell.classList.toggle('is-focused',cell===tile));
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){resetCamera();return;}
+  lastFocus=index;
+  const x=(tile.offsetLeft+tile.offsetWidth/2)/Math.max(1,board.offsetWidth)*100,
+        y=(tile.offsetTop+tile.offsetHeight/2)/Math.max(1,board.offsetHeight)*100;
+  board.style.transformOrigin=x.toFixed(2)+'% '+y.toFixed(2)+'%';
+  board.style.transform='scale('+zoom+')';
+  clearTimeout(overviewTimer);
+  overviewTimer=setTimeout(()=>{board.style.transform='scale(1)';},1600);
+}
+function syncBuildings(state){
+  for(const [index,cell] of cells){
+    const own=state.ownership?.[index],build=cell.querySelector('.tv-buildings');
+    if(!own){
+      cell.classList.remove('owned');cell.style.removeProperty('--owner');
+      if(build)build.replaceChildren();continue;
+    }
+    cell.classList.add('owned');
+    const playerIndex=state.players.findIndex(p=>p.id===own.ownerId);
+    cell.style.setProperty('--owner',PARTY_COLORS[Math.max(0,playerIndex)%PARTY_COLORS.length]);
+    if(build){
+      build.replaceChildren();
+      if(own.hotel)build.append(el('span','tv-hotel','🏨'));
+      else for(let i=0;i<Math.min(4,own.houses||0);i++)build.append(el('span','tv-house','⌂'));
+    }
+  }
 }
 function renderEvent(state){
   const dest=byId('tvEvent');dest.replaceChildren();
@@ -87,6 +143,15 @@ function renderEvent(state){
   if(state.status==='finished')headline='نهاية الجولة';
   dest.append(el('strong','',headline),el('p','',state.log||'تابع اللعبة من الجوال'));
   if(name)dest.append(el('p','','الموقع: '+name));
+  if(state.phase==='property'&&state.pending?.index!==undefined){
+    const tile=BOARD[state.pending.index];
+    dest.append(el('p','tv-highlight','السعر: '+tile.price+' ريال · القرار من جوال اللاعب'));
+  }else if(state.phase==='auction'&&state.auction)
+    dest.append(el('p','tv-highlight','أعلى مزايدة: '+state.auction.bid+' ريال'));
+  if(state.tradeOffer&&state.phase==='trade'){
+    const tile=BOARD[state.tradeOffer.index],to=state.players.find(p=>p.id===state.tradeOffer.targetId);
+    dest.append(el('p','','تبادل '+(tile?.name||'أرض')+' مع '+(to?.name||'اللاعب')));
+  }
   if(state.phase==='card'&&pending?.stage==='face'&&pending.card?.text)dest.append(el('p','',pending.card.text));
   byId('tvPhase').textContent='المرحلة: '+state.phase+' · الدور: '+(player?.name||'—');
   const dice=byId('tvDice');dice.replaceChildren();
@@ -95,10 +160,10 @@ function renderEvent(state){
 async function animateArrival(prev,next,token,generation){
   const from=prev?.position,to=next?.position;
   if(!Number.isInteger(from)||!Number.isInteger(to)||from===to){place(next.id,to,false);return;}
-  const route=movementRoute(from,to,{teleport:to===10&&next.jailed});
+  const route=movementRoute(from,to,{teleport:(to===10&&next.jailed)||latestState?.presentation?.action==='card'});
   for(const pos of route){
     if(generation!==sequence)return;
-    place(next.id,pos,true);
+    place(next.id,pos,true);focusCamera(pos,1.075);sound('step');
     await new Promise(resolve=>setTimeout(resolve,240));
   }
 }
@@ -109,17 +174,24 @@ async function renderRoom(room){
   latestState=state;
   byId('tvJoin').hidden=true;byId('tvStage').hidden=false;
   drawQr(room.code);addRoster(room);syncPieces(state);
-  for(const [i,own] of Object.entries(state.ownership||{})){
-    const tile=cells.get(Number(i));if(tile){tile.classList.add('owned');tile.style.setProperty('--owner',PARTY_COLORS[Math.max(0,state.players.findIndex(p=>p.id===own.ownerId))%PARTY_COLORS.length]);}
-  }
+  syncBuildings(state);
   if(!old||old.code!==room.code||old.status==='waiting'||state.status==='waiting'){
     state.players.forEach(p=>place(p.id,p.position||0,false));renderEvent(state);return;
   }
   const moving=state.players.find(p=>old.state?.players?.some(prev=>prev.id===p.id&&prev.position!==p.position));
   if(moving){
+    byId('tvEvent').replaceChildren(el('strong','','القطعة تتحرك…'));
+    byId('tvDice').replaceChildren(...(state.dice||[]).map(v=>el('div','tv-die rolling',v)));
+    if(old.state?.phase==='roll'&&state.dice)sound('dice');
     state.players.filter(p=>p.id!==moving.id).forEach(p=>place(p.id,p.position||0,false));
     await animateArrival(old.state.players.find(p=>p.id===moving.id),moving,moving,generation);
-  }else state.players.forEach(p=>place(p.id,p.position||0,false));
+    if(generation!==sequence)return;
+    focusCamera(moving.position,1.05);
+    if(state.ownership?.[moving.position])sound('purchase');
+  }else{
+    state.players.forEach(p=>place(p.id,p.position||0,false));
+    if(state.presentation?.action==='buy'||state.presentation?.action==='build')sound('purchase');
+  }
   if(generation===sequence)renderEvent(state);
 }
 byId('tvJoinForm').addEventListener('submit',async e=>{
@@ -131,6 +203,13 @@ byId('tvJoinForm').addEventListener('submit',async e=>{
   finally{button.disabled=false;}
 });
 byId('tvDisconnect').addEventListener('click',()=>{conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
+byId('tvOverview').addEventListener('click',resetCamera);
+byId('tvSound').addEventListener('click',()=>{
+  voiceEnabled=!voiceEnabled;
+  byId('tvSound').setAttribute('aria-pressed',String(voiceEnabled));
+  byId('tvSound').textContent=voiceEnabled?'🔊 الصوت مفعّل':'🔇 تفعيل الصوت';
+  if(voiceEnabled)sound('purchase');
+});
 boardSetup();
 const initial=new URL(location.href).searchParams.get('code');if(roomCode(initial))byId('tvJoinForm').elements.code.value=initial;
 void conn.resume();
