@@ -116,6 +116,13 @@ export function createThreeDice(board){
       // Transparent pixels in the source artwork must not expose dark wood.
       ctx.fillStyle='#eee8d4';ctx.fillRect(0,0,1024,1024);
       ctx.drawImage(img,0,0,1024,1024);
+      // Clean the non-playable border in the supplied board scan; retain the 40 tiles.
+      const outerMargin=60;
+      ctx.fillStyle='#eee8d4';
+      ctx.fillRect(0,0,outerMargin,1024);
+      ctx.fillRect(1024-outerMargin,0,outerMargin,1024);
+      ctx.fillRect(0,0,1024,outerMargin);
+      ctx.fillRect(0,1024-outerMargin,1024,outerMargin);
       // Source art includes a printed brand in its center. Preserve the 40 tiles.
       const inset=188,edge=1024-2*inset;
       const gradient=ctx.createRadialGradient(512,430,30,512,512,500);
