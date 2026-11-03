@@ -259,7 +259,9 @@ async function renderRoom(room){
   drawQr(room.code);addRoster(room);syncPieces(state);
   cinematic?.sync(state);
   syncBuildings(state);
-  if(!old||old.code!==room.code||old.status==='waiting'||state.status==='waiting'){
+  // A spectator may skip intermediate phases while polling. Preserve a real
+  // waiting→post-roll transition so server-authoritative dice and movement still play.
+  if(!old||old.code!==room.code||state.status==='waiting'){
     state.players.forEach(p=>place(p.id,p.position||0,false));renderEvent(state);return;
   }
   const moving=state.players.find(p=>old.state?.players?.some(prev=>prev.id===p.id&&prev.position!==p.position));
@@ -267,7 +269,8 @@ async function renderRoom(room){
     updateCenterScene(state,true);
     byId('tvEvent').replaceChildren(el('strong','','القطعة تتحرك…'));
     byId('tvDice').replaceChildren(...(state.dice||[]).map(v=>el('div','tv-die rolling',v)));
-    if(old.state?.phase==='roll'&&state.dice){
+    if((old.state?.phase==='roll'||state.presentation?.action==='roll')&&
+       Array.isArray(state.dice)&&state.dice.length===2){
       sound('dice');
       if(cinematic){await cinematic.rollDice(state.dice,old.state);if(generation!==sequence)return;
         cinematic.clearDice();}
