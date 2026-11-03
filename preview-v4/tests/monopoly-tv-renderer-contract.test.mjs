@@ -20,7 +20,7 @@ test('TV integrates local bundled renderer and retains DOM fallback',()=>{
   assert.match(entry,/cinematic\?\.sync\(state\)/);
   assert.match(entry,/await cinematic\.move\(/);
   assert.match(entry,/cinematic\.focus\(index,zoom\)/);
-  assert.match(entry,/catch\(error=>\{console\.warn/);
+  assert.match(entry,/catch\(error=>\{[^}]*console\.warn\('TV cinematic renderer unavailable/);
   assert.match(css,/\.tv-board\.cinematic-ready \.tv-token\{visibility:hidden\}/);
 });
 test('rendering does not authorize server money, player actions or mutate snapshots',()=>{
