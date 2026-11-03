@@ -461,3 +461,34 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
   .tv-view .tv-table-surface{width:100%;max-width:none}
   .tv-view .tv-rail{display:flex;flex-wrap:wrap;flex-direction:row}
 }
+
+/* The real Three.js table is the visible board when ready. DOM 40-cell grid
+   remains in place for ownership/building overlays and accessible fallback. */
+.tv-view .tv-board.tv-3d-board-ready{
+  background-image:none!important;
+  background-color:transparent!important;
+  border-color:#8e6836;
+}
+.tv-view .tv-board.tv-3d-board-ready .tv-cell{
+  background:transparent!important;
+  border-color:transparent!important;
+  z-index:9;
+}
+.tv-view .tv-board.tv-3d-board-ready .tv-cell.owned{
+  box-shadow:inset 0 0 0 3px var(--owner);
+}
+.tv-view .tv-board.tv-3d-board-ready .tv-board-center{
+  background:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  z-index:9;
+  pointer-events:none;
+}
+.tv-view .tv-board.tv-3d-board-ready .tv-board-center .tv-center-scene{
+  pointer-events:none;
+}
+.tv-view .tv-board.tv-3d-board-ready .tv-three-dice-canvas{
+  display:block;
+  contain:layout paint;
+}
+.tv-view .tv-board.tv-3d-board-ready .tv-tokens{visibility:hidden}
