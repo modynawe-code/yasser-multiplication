@@ -247,11 +247,14 @@ export function createThreeDice(board){
   function draw(){
     if(disposed)return;
     resize();
+    camera.lookAt(0,0,-.8);
     renderer.render(scene,camera);
   }
   function clear(){
     timeline?.kill();timeline=null;
     shown=false;group.visible=false;
+    camera.position.set(0,0,10);
+    board.classList.remove('tv-3d-rolling');
     canvas.style.visibility=(boardReady||pawns.size)?'visible':'hidden';
     draw();
   }
@@ -268,10 +271,12 @@ export function createThreeDice(board){
       die.quaternion.copy(target[i]);
       die.rotation.x+=Math.PI*2;die.rotation.y+=Math.PI*2;
     });
-    shown=true;group.visible=true;canvas.dataset.dice=values.join(',');canvas.style.visibility='visible';
+    shown=true;group.visible=true;board.classList.add('tv-3d-rolling');
+    canvas.dataset.dice=values.join(',');canvas.style.visibility='visible';
     draw();
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       dice.forEach((die,i)=>die.quaternion.copy(target[i]));
+      board.classList.remove('tv-3d-rolling');
       draw();return true;
     }
     return await new Promise(resolve=>{
@@ -279,12 +284,20 @@ export function createThreeDice(board){
         onUpdate:draw,
         onComplete:()=>{
           timeline=null;
+          camera.position.set(0,0,10);
+          board.classList.remove('tv-3d-rolling');
           dice.forEach((die,i)=>die.quaternion.copy(target[i]));
           draw();resolve(true);
         },
-        onInterrupt:()=>{timeline=null;resolve(false);}
+        onInterrupt:()=>{
+          timeline=null;camera.position.set(0,0,10);
+          board.classList.remove('tv-3d-rolling');draw();resolve(false);
+        }
       });
       timeline=tl;
+      // Genuine Three.js perspective camera crane, not a CSS zoom.
+      tl.to(camera.position,{y:2.1,z:10.4,duration:.38,ease:'power2.out'},0);
+      tl.to(camera.position,{y:0,z:10,duration:.43,ease:'power2.inOut'},.75);
       dice.forEach((die,i)=>{
         die.quaternion.copy(target[i]);
         // GSAP rotates exactly two full revolutions and lands on the server face.
