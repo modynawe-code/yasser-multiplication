@@ -129,6 +129,12 @@ def run(browser_type,name):
         tv.locator("#tvCode").get_by_text("123456").wait_for(timeout=15000)
         assert tv.locator("#tvQr svg").count()==1,"QR rendering failed"
         assert tv.locator(".tv-cell").count()==40
+        tv.wait_for_function("() => document.querySelector('#partyBoard')?.classList.contains('has-art')",timeout=15000)
+        assert tv.locator(".tv-board.has-art").count()==1, "Original board art not loaded"
+        assert tv.locator("#tvSound").get_attribute("aria-pressed")=="false"
+        tv.locator("#tvSound").click()
+        assert tv.locator("#tvSound").get_attribute("aria-pressed")=="true"
+        tv.locator("#tvOverview").click()
         guest.goto(BASE+"monopoly-party/controller/",wait_until="load")
         guest.locator("input[name=name]").fill("ضيف")
         guest.locator("input[name=code]").fill("123456")
@@ -178,7 +184,18 @@ def run(browser_type,name):
         host.locator('#remoteActions button[data-action=end]').click()
         guest.locator('#remoteActions button[data-action=roll]').wait_for(timeout=12000)
         assert guest.locator('#remoteActions button[data-action=roll]').count()==1
-        assert server.actions==["start","roll","buy","build","trade","trade-accept","end"],server.actions
+        assert guest.locator(".remote-dice-gesture").count()==1
+        # Swipe up sends exactly one action, and synthetic click must not duplicate.
+        gesture=guest.locator('#remoteActions button[data-action=roll]')
+        rect=gesture.bounding_box()
+        assert rect is not None
+        guest.mouse.move(rect["x"]+rect["width"]/2,rect["y"]+rect["height"]*.7)
+        guest.mouse.down()
+        guest.mouse.move(rect["x"]+rect["width"]/2,rect["y"]+rect["height"]*.15,steps=6)
+        guest.mouse.up()
+        guest.locator('#remoteActions button[data-action=buy]').wait_for(timeout=12000)
+        assert server.actions==["start","roll","buy","build","trade","trade-accept","end","roll"],server.actions
+        assert server.actions.count("roll")==2
         assert server.state["ownership"]["3"]["ownerId"]=="p2"
         assert server.state["players"][0]["cash"]==1390
         layout=tv.evaluate("""() => {
