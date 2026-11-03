@@ -110,13 +110,18 @@ class MockRoom:
         answer(404,{"error":"not_found"})
 def run(browser_type,name):
     server=MockRoom();errors=[]
-    browser=browser_type.launch(headless=True)
+    args={"headless":True}
+    if name=="chromium":
+        args["args"]=["--enable-webgl","--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader"]
+    browser=browser_type.launch(**args)
     tvc=browser.new_context(viewport={"width":1280,"height":720},service_workers="block",locale="ar-SA")
     hc=browser.new_context(viewport={"width":390,"height":844},is_mobile=name=="webkit",has_touch=True,service_workers="block",locale="ar-SA")
     gc=browser.new_context(viewport={"width":390,"height":844},is_mobile=name=="webkit",has_touch=True,service_workers="block",locale="ar-SA")
     for c in [tvc,hc,gc]:c.route("**/v1/games/rooms**",server.handle)
     tv=tvc.new_page();host=hc.new_page();guest=gc.new_page()
+    tv_console=[]
     for p in [tv,host,guest]:p.on("pageerror",lambda e:errors.append(str(e)))
+    tv.on("console",lambda msg:tv_console.append(msg.text) if msg.type in ("warning","error") else None)
     result={"browser":name}
     try:
         host.goto(BASE+"monopoly-party/controller/",wait_until="load")
@@ -162,13 +167,19 @@ def run(browser_type,name):
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=7000)
         if name=="chromium":
             # Verify Three.js actually mounted and drew 3D dice in a real browser.
-            tv.wait_for_function("() => !!document.querySelector('#partyBoard canvas.tv-three-dice-canvas')",timeout=15000)
-            three_canvas=tv.locator("#partyBoard canvas.tv-three-dice-canvas")
-            assert three_canvas.evaluate("(el) => el.width > 100 && el.height > 100"),"Three.js dice canvas is blank-sized"
-            assert three_canvas.evaluate("(el) => getComputedStyle(el).visibility === 'visible'"),"3D dice layer is not visible"
-            assert three_canvas.get_attribute("data-pawns")=="2","3D player pieces are not mounted"
-            assert three_canvas.get_attribute("data-dice")=="1,2","3D dice differ from authoritative server state"
-            result["threeDice"]="3D WebGL canvas active with server-provided dice"
+            supports_webgl2=tv.evaluate("() => !!document.createElement('canvas').getContext('webgl2')")
+            result["supportsWebGL2"]=supports_webgl2
+            if supports_webgl2:
+                tv.wait_for_function("() => !!document.querySelector('#partyBoard canvas.tv-three-dice-canvas')",timeout=15000)
+            else:
+                result["threeDice"]="WebGL2 unavailable in headless; Pixi fallback"
+            if supports_webgl2:
+                three_canvas=tv.locator("#partyBoard canvas.tv-three-dice-canvas")
+                assert three_canvas.evaluate("(el) => el.width > 100 && el.height > 100"),"Three.js dice canvas is blank-sized"
+                assert three_canvas.evaluate("(el) => getComputedStyle(el).visibility === 'visible'"),"3D dice layer is not visible"
+                assert three_canvas.get_attribute("data-pawns")=="2","3D player pieces are not mounted"
+                assert three_canvas.get_attribute("data-dice")=="1,2","3D dice differ from authoritative server state"
+                result["threeDice"]="3D WebGL canvas active with server-provided dice"
 
         assert tv.locator('.tv-token').count()==2
         tv.screenshot(path=str(OUT/f"{name}-tv-arrival.png"),full_page=True)
@@ -226,7 +237,7 @@ def run(browser_type,name):
         assert not errors,errors
         result.update({"status":"pass","actions":server.actions,"tvBoard":layout,"qr":"local SVG","spectatorSeats":0})
     except Exception as error:
-        result.update({"status":"fail","error":f"{type(error).__name__}: {error}","actions":server.actions,"pageErrors":errors})
+        result.update({"status":"fail","error":f"{type(error).__name__}: {error}","actions":server.actions,"pageErrors":errors,"tvConsole":tv_console[-16:]})
         for p,label in [(tv,"tv"),(host,"host"),(guest,"guest")]:
             try:p.screenshot(path=str(OUT/f"{name}-{label}-failure.png"),full_page=True)
             except Exception:pass
