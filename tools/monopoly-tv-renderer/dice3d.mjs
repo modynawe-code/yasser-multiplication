@@ -117,6 +117,7 @@ export function createThreeDice(board){
       if(fresh&&cell)pawn.group.position.copy(worldPoint(cell));
       pawn.group.scale.setScalar(.9+(i===0?.1:0));
     });
+    canvas.dataset.pawns=String(pawns.size);
     canvas.style.visibility='visible';draw();
   }
   async function movePawn(id,index,duration=.24){
@@ -134,11 +135,15 @@ export function createThreeDice(board){
     });
   }
   let timeline=null,disposed=false,shown=false;
+  let renderWidth=0,renderHeight=0;
   function resize(){
     if(disposed)return;
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
-    renderer.setSize(w,h,false);
-    camera.aspect=w/h;camera.updateProjectionMatrix();
+    if(w!==renderWidth||h!==renderHeight){
+      renderWidth=w;renderHeight=h;
+      renderer.setSize(w,h,false);
+      camera.aspect=w/h;camera.updateProjectionMatrix();
+    }
   }
   function draw(){
     if(disposed)return;
@@ -164,7 +169,7 @@ export function createThreeDice(board){
       die.quaternion.copy(target[i]);
       die.rotation.x+=Math.PI*2;die.rotation.y+=Math.PI*2;
     });
-    shown=true;group.visible=true;canvas.style.visibility='visible';
+    shown=true;group.visible=true;canvas.dataset.dice=values.join(',');canvas.style.visibility='visible';
     draw();
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       dice.forEach((die,i)=>die.quaternion.copy(target[i]));
