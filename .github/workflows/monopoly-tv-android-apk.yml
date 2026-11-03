@@ -1,0 +1,123 @@
+name: Monopoly TV Android APK
+on:
+  push:
+    branches:
+      - feature/monopoly-tv-multiscreen-v1
+    paths:
+      - 'preview-v4/monopoly-party/**'
+      - 'tools/build-mobile.mjs'
+      - '.github/workflows/monopoly-tv-android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-tv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Check phone + TV browser tests
+        run: node --test preview-v4/tests/monopoly-party.test.mjs
+      - name: Install Android toolchain
+        run: npm install --no-audit --no-fund
+      - name: Build isolated TV bundle
+        run: npm run mobile:prepare
+      - name: Configure TV-only app identity
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const config=JSON.parse(readFileSync('capacitor.config.json','utf8'));
+          config.appId='com.modynawe.monopolytv';
+          config.appName='احتكار المعرفة TV';
+          config.webDir='dist-mobile';
+          writeFileSync('capacitor.config.json',JSON.stringify(config,null,2)+'\n');
+          NODE
+      - name: Generate Android TV wrapper
+        run: |
+          npx cap add android
+          npx cap sync android
+      - name: Route Android TV launcher to the existing TV view
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('android/app/src/main/java/com/modynawe/monopolytv/MainActivity.java')
+          assert path.exists(), "Generated MainActivity missing"
+          source=path.read_text()
+          start=source.index('public class MainActivity')
+          source=source[:start]+'''public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(android.os.Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  // Use the bundled, self-hosted game rather than navigating to an external host.
+                  getBridge().getWebView().loadUrl("https://localhost/monopoly-party/tv/");
+              }
+          }
+          '''
+          assert 'import com.getcapacitor.BridgeActivity;' in source
+          path.write_text(source)
+          PY
+      - name: Configure Leanback launcher and optional touchscreen
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('android/app/src/main/AndroidManifest.xml')
+          xml=path.read_text()
+          assert '<application' in xml
+          xml=xml.replace('<application', '''<uses-feature android:name="android.software.leanback" android:required="false" />
+              <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+              <application''',1)
+          assert xml.count('android:name=".MainActivity"')==1
+          xml=xml.replace('android:name=".MainActivity"', 'android:name=".MainActivity" android:screenOrientation="landscape"',1)
+          assert '<category android:name="android.intent.category.LAUNCHER" />' in xml
+          xml=xml.replace('<category android:name="android.intent.category.LAUNCHER" />','''<category android:name="android.intent.category.LAUNCHER" />
+                          <category android:name="android.intent.category.LEANBACK_LAUNCHER" />''',1)
+          xml=xml.replace('<application', '<application android:banner="@drawable/monopoly_tv_banner"',1)
+          path.write_text(xml)
+          PY
+          python3 -m pip install 'Pillow>=10,<13'
+          python3 - <<'PY'
+          from PIL import Image,ImageDraw,ImageFont
+          from pathlib import Path
+          image=Image.new('RGB',(320,180),(13,47,30));draw=ImageDraw.Draw(image)
+          for y in range(180):
+              draw.line((0,y,320,y),fill=(12+int(y*.07),55+int(y*.03),35+int(y*.04)))
+          draw.rounded_rectangle((13,14,307,165),radius=18,outline=(212,176,80),width=4)
+          for x in range(3):
+              draw.rounded_rectangle((38+x*52,38,78+x*52,78),radius=8,fill=(244,232,196),outline=(176,143,63),width=2)
+              for px,py in [(51+x*52,51),(65+x*52,64)]:
+                  draw.ellipse((px-3,py-3,px+3,py+3),fill=(26,65,41))
+          font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',21)
+          draw.text((39,108),'KNOWLEDGE TV',font=font,fill=(244,219,136))
+          target=Path('android/app/src/main/res/drawable')
+          target.mkdir(parents=True,exist_ok=True)
+          image.save(target/'monopoly_tv_banner.png',optimize=True)
+          PY
+      - name: Verify TV package and launch configuration
+        run: |
+          grep -q 'LEANBACK_LAUNCHER' android/app/src/main/AndroidManifest.xml
+          grep -q 'android.hardware.touchscreen' android/app/src/main/AndroidManifest.xml
+          grep -q 'https://localhost/monopoly-party/tv/' android/app/src/main/java/com/modynawe/monopolytv/MainActivity.java
+          test -f android/app/src/main/res/drawable/monopoly_tv_banner.png
+          test -f dist-mobile/monopoly-party/tv/index.html
+          test -f dist-mobile/monopoly-party/controller/index.html
+      - name: Build independent Android TV APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+        working-directory: android
+      - name: Upload TV APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: monopoly-tv-android-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error
