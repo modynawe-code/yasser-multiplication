@@ -1,7 +1,7 @@
 import {createVaultState,applyVaultAction,GAME_ID as VAULT_ID} from '../../preview-v4/src/modules/games/gold-vault/gold-vault-engine.js';
 import { addFamilyWordCategoriesRoomPlayer, applyFamilyWordCategoriesRoomAction, createInitialFamilyWordCategoriesRoomState, projectFamilyWordCategoriesRoomState } from './family-word-categories-engine.mjs';
 import { addKingInspectorRoomPlayer, applyKingInspectorRoomAction, createInitialKingInspectorRoomState, projectKingInspectorRoomState, KING_INSPECTOR_GAME_ID } from './king-inspector-game-engine.mjs';
-import { bidAuction, buildHouse, buyProperty, createMonopolyState, drawCard, endTurn, passAuction, payJail, rollDice, sellProperty, skipProperty, tradeProperty, pickMonopolyCard, flipMonopolyCard, proposeMonopolyTrade, respondMonopolyTrade } from '../../preview-v4/src/modules/games/monopoly/monopoly-engine.js';
+import { bidAuction, buildHouse, buyProperty, createMonopolyState, drawCard, endTurn, passAuction, payJail, rollDice, sellProperty, mortgageProperty, unmortgageProperty, skipProperty, tradeProperty, pickMonopolyCard, flipMonopolyCard, proposeMonopolyTrade, respondMonopolyTrade } from '../../preview-v4/src/modules/games/monopoly/monopoly-engine.js';
 import {
   CLASSIC_MOVE_STATE,
   classicAbleToPlay,
@@ -282,6 +282,8 @@ export function applyMonopolyRoomAction(state,{playerId,type,payload={}}={}){
   else if(action==='end')next=endTurn(state);
   else if(action==='sell')next=sellProperty(state,Number(payload.index));
   else if(action==='build')next=buildHouse(state,Number(payload.index));
+  else if(action==='mortgage')next=mortgageProperty(state,Number(payload.index));
+  else if(action==='unmortgage')next=unmortgageProperty(state,Number(payload.index));
   else if(action==='trade')next=proposeMonopolyTrade(state,Number(payload.index),String(payload.targetId||''),payload.offerCash??0,payload.requestCash??0);
   else if(action==='trade-accept'||action==='trade-reject')next=respondMonopolyTrade(state,playerId,action==='trade-accept');
   else return{ok:false,reason:'unsupported-action'};
