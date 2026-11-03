@@ -339,7 +339,7 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-view .party-brand p{font-size:10px;color:#aec8b5}
 .tv-view .party-logo{width:33px;height:33px;border-radius:9px;font-size:18px}
 .tv-view .tv-table-layout{
-  --tv-board-size:min(90dvh - 72px,calc(100vw - 360px),1120px);
+  --tv-board-size:min(calc(100dvh - 74px),calc(100vw - 350px),1120px);
   display:grid;
   grid-template-columns:minmax(140px,1fr) minmax(0,var(--tv-board-size)) minmax(140px,1fr);
   max-width:1900px;
@@ -448,7 +448,7 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-view .tv-rail .tv-panel .party-hint{line-height:1.4}
 @media (max-width:1100px){
   .tv-view .tv-table-layout{
-    --tv-board-size:min(88dvh - 67px,calc(100vw - 240px));
+    --tv-board-size:min(calc(100dvh - 74px),calc(100vw - 240px));
     grid-template-columns:minmax(118px,1fr) minmax(0,var(--tv-board-size));
     gap:9px;
   }
