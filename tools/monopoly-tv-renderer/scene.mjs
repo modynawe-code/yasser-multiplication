@@ -17,9 +17,16 @@ export async function createCinematicScene({board,cells,colors}){
   const actors=new Map(), layer=new Container(), light=new Graphics();
   app.stage.addChild(light,layer);
   let destroyed=false,currentState=null;
+  // Use board-local coordinates, even with artwork padding or GSAP camera transforms.
   const xy=index=>{
     const cell=cells.get(index);
-    return cell?{x:cell.offsetLeft+cell.offsetWidth/2,y:cell.offsetTop+cell.offsetHeight/2}:null;
+    if(!cell)return null;
+    const box=board.getBoundingClientRect(),tile=cell.getBoundingClientRect();
+    const sx=board.clientWidth/Math.max(1,box.width),sy=board.clientHeight/Math.max(1,box.height);
+    return {
+      x:limit((tile.left+tile.width/2-box.left)*sx,12,Math.max(12,board.clientWidth-12)),
+      y:limit((tile.top+tile.height/2-box.top)*sy,12,Math.max(12,board.clientHeight-12))
+    };
   };
   const makePawn=(name,color)=>{
     const root=new Container();
