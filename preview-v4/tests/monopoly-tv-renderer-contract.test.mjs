@@ -73,3 +73,14 @@ test('3D pieces use mesh geometry and authoritative board coordinates',()=>{
   assert.match(scene,/threeDice\.movePawn\(id,index,duration\)/);
   assert.match(scene,/layer\.visible=false/);
 });
+
+test('GSAP camera uses clamped XY follow and returns to overview after an event',()=>{
+  assert.match(scene,/const maxX=\(scale-1\)\*w\/2,maxY=\(scale-1\)\*h\/2/);
+  assert.match(scene,/const x=limit\(\(w\/2-point\.x\)\*scale,-maxX,maxX\)/);
+  assert.match(scene,/const y=limit\(\(h\/2-point\.y\)\*scale,-maxY,maxY\)/);
+  assert.match(scene,/transformOrigin:'50% 50%',scale,x,y/);
+  assert.match(scene,/transformOrigin:'50% 50%',scale:1,x:0,y:0/);
+  assert.match(entry,/overviewTimer=setTimeout\(\(\)=>\{/);
+  assert.match(entry,/if\(generation===sequence\)cinematic\?\.overview\(\)/);
+  assert.match(entry,/clearTimeout\(overviewTimer\);\+\+sequence/);
+});
