@@ -30,7 +30,7 @@ test('rendering does not authorize server money, player actions or mutate snapsh
 });
 
 test('cinematic dice are drawn from authoritative faces before piece travel',()=>{
-  assert.match(scene,/function rollDice\(values\)/);
+  assert.match(scene,/async function rollDice\(values(?:,previousState=null)?\)/);
   assert.match(scene,/values\.every\(n=>Number\.isInteger\(n\)&&n>=1&&n<=6\)/);
   assert.match(scene,/pipLayout\[number\]/);
   assert.match(scene,/gsap\.timeline\(/);
