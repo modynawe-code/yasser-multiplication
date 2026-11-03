@@ -93,3 +93,12 @@ test('event card reveal is GSAP-driven, cancellable and never writes game state'
   assert.match(entry,/cinematic\?\.presentEvent\(byId\('tvCenterScene'\)/);
   assert.match(entry,/cinematic\?\.clearEvent\(byId\('tvCenterScene'\)\)/);
 });
+
+test('spectator does not skip the first authoritative roll when polling jumps from waiting',()=>{
+  assert.doesNotMatch(entry,/old\.status==='waiting'\|\|state\.status==='waiting'/);
+  assert.match(entry,/if\(!old\|\|old\.code!==room\.code\|\|state\.status==='waiting'\)/);
+  assert.match(entry,/state\.presentation\?\.action==='roll'/);
+  assert.match(entry,/old\.state\?\.phase==='roll'/);
+  assert.match(entry,/Array\.isArray\(state\.dice\)&&state\.dice\.length===2/);
+  assert.match(entry,/await cinematic\.rollDice\(state\.dice,old\.state\)/);
+});
