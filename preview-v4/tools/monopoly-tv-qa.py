@@ -166,6 +166,8 @@ def run(browser_type,name):
             three_canvas=tv.locator("#partyBoard canvas.tv-three-dice-canvas")
             assert three_canvas.evaluate("(el) => el.width > 100 && el.height > 100"),"Three.js dice canvas is blank-sized"
             assert three_canvas.evaluate("(el) => getComputedStyle(el).visibility === 'visible'"),"3D dice layer is not visible"
+            assert three_canvas.get_attribute("data-pawns")=="2","3D player pieces are not mounted"
+            assert three_canvas.get_attribute("data-dice")=="1,2","3D dice differ from authoritative server state"
             result["threeDice"]="3D WebGL canvas active with server-provided dice"
 
         assert tv.locator('.tv-token').count()==2
