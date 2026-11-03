@@ -492,3 +492,10 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
   contain:layout paint;
 }
 .tv-view .tv-board.tv-3d-board-ready .tv-tokens{visibility:hidden}
+
+/* Keep the center empty for actual 3D dice and moving pieces. Event card enters
+   only when the authoritative movement completes. */
+.tv-view .tv-board-center .tv-center-scene[data-phase=moving]{
+  visibility:hidden!important;
+  opacity:0!important;
+}
