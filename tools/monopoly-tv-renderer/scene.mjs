@@ -52,20 +52,33 @@ export async function createCinematicScene({board,cells,colors}){
     if(destroyed)return;
     sync(state);
   }
+  // Center the moving pawn while clamping translation to the visible board.
+  // Render-space only; the game and 40 source tile coordinates remain unchanged.
   function focus(index,zoom=1.12){
     if(destroyed)return;
-    gsap.killTweensOf(board);
     const point=xy(index);
     if(!point)return;
-    const x=point.x/Math.max(1,board.offsetWidth)*100,y=point.y/Math.max(1,board.offsetHeight)*100;
-    gsap.set(board,{transformOrigin:x.toFixed(2)+'% '+y.toFixed(2)+'%'});
-    gsap.to(board,{scale:reduced()?1:zoom,duration:reduced()?0:.52,ease:'power2.out',overwrite:true});
-    light.clear().circle(point.x,point.y,limit(board.offsetWidth*.04,20,45)).fill({color:0xf6d678,alpha:.16});
+    const w=Math.max(1,board.offsetWidth),h=Math.max(1,board.offsetHeight);
+    const scale=reduced()?1:limit(zoom,1,1.35);
+    const maxX=(scale-1)*w/2,maxY=(scale-1)*h/2;
+    const x=limit((w/2-point.x)*scale,-maxX,maxX);
+    const y=limit((h/2-point.y)*scale,-maxY,maxY);
+    const travel=scale<=1.09;
+    gsap.killTweensOf(board);
+    gsap.to(board,{
+      transformOrigin:'50% 50%',scale,x,y,
+      duration:reduced()?0:travel?.24:.65,
+      ease:travel?'power1.inOut':'power2.inOut',overwrite:true
+    });
+    light.clear().circle(point.x,point.y,limit(w*.04,20,45)).fill({color:0xf6d678,alpha:.16});
   }
   function overview(){
     if(destroyed)return;
     gsap.killTweensOf(board);
-    gsap.to(board,{scale:1,duration:reduced()?0:.7,ease:'power2.inOut'});
+    gsap.to(board,{
+      transformOrigin:'50% 50%',scale:1,x:0,y:0,
+      duration:reduced()?0:.72,ease:'power2.inOut',overwrite:true
+    });
     light.clear();
   }
   async function move(id,index,duration=.24){
