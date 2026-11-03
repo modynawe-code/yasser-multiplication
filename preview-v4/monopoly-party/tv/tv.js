@@ -55,7 +55,7 @@ function drawQr(code){
   const url=publicJoinUrl(code);
   const qr=qrcode(0,'M');qr.addData(url);qr.make();
   byId('tvQr').innerHTML=qr.createSvgTag({cellSize:5,margin:12,scalable:true});
-  byId('tvRemoteLink').href=url;byId('tvRemoteLink').textContent=url;
+  byId('tvRemoteLink').href=url;byId('tvRemoteLink').textContent='فتح رابط الدخول بالجوال';
   byId('tvCode').textContent=code;
 }
 function addRoster(room){
@@ -71,11 +71,14 @@ function addRoster(room){
 function place(playerId,index,animate=false){
   const tile=cells.get(index),piece=pieces.get(playerId);if(!tile||!piece)return;
   // Use untransformed coordinates so camera zoom never displaces player pieces.
-  const radius=Math.max(16,Math.min(35,tile.offsetWidth*.52));
+  const radius=Math.max(14,Math.min(32,tile.offsetWidth*.48));
   piece.style.width=radius+'px';piece.style.height=radius+'px';
   if(!animate)piece.style.transition='none';
-  piece.style.left=(tile.offsetLeft+tile.offsetWidth/2-radius/2)+'px';
-  piece.style.top=(tile.offsetTop+tile.offsetHeight/2-radius/2)+'px';
+  // Cell and token overlay may have different padding origins in the art-backed board.
+  const relativeX=tile.offsetLeft-tokenLayer.offsetLeft+tile.offsetWidth/2;
+  const relativeY=tile.offsetTop-tokenLayer.offsetTop+tile.offsetHeight/2;
+  piece.style.left=Math.max(2,Math.min(tokenLayer.clientWidth-radius-2,relativeX-radius/2))+'px';
+  piece.style.top=Math.max(2,Math.min(tokenLayer.clientHeight-radius-2,relativeY-radius/2))+'px';
   if(!animate)requestAnimationFrame(()=>{piece.style.transition='';});
 }
 function syncPieces(state){
@@ -183,8 +186,8 @@ function updateCenterScene(state,moving=false){
   scene.style.setProperty('--scene-band',color);
   dice.replaceChildren();
   if(state.status==='waiting'){
-    symbol.textContent='🎲';heading.textContent='احتكار المعرفة';
-    detail.textContent='ينضم اللاعبون من الجوال قبل بدء الجولة';return;
+    symbol.textContent='🎲';heading.textContent='جاهزون للعب؟';
+    detail.textContent='بانتظار انضمام لاعب آخر وبدء الجولة';return;
   }
   if(moving){
     symbol.textContent='🎲';heading.textContent='القطعة تتحرك';
@@ -274,6 +277,7 @@ async function renderRoom(room){
   if(state.phase==='roll'||state.status==='waiting')cinematic?.clearDice();
   latestState=state;
   byId('tvJoin').hidden=true;byId('tvStage').hidden=false;
+  byId('tvStage').classList.toggle('is-live',state.status==='playing'||state.status==='finished');
   drawQr(room.code);addRoster(room);syncPieces(state);
   cinematic?.sync(state);
   syncBuildings(state);
