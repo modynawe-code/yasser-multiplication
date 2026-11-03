@@ -14,6 +14,7 @@ function setStatus(text){get('remoteJoinError').textContent=text;}
 async function sendAction(type,payload={}){
   if(pending)return;
   pending=true;
+  get('remoteActionError').textContent='';
   get('remoteActions').querySelectorAll('button').forEach(button=>button.disabled=true);
   get('remotePortfolio').querySelectorAll('button').forEach(button=>button.disabled=true);
   get('remoteTurnHint').textContent='جارٍ إرسال الحركة…';
@@ -24,8 +25,8 @@ async function sendAction(type,payload={}){
     if(type==='buy'||type==='build')sound('purchase');
     else if(type!=='roll')sound('tap');
   }catch(error){
-    get('remoteTurnDetails').textContent=error.status===409?
-      'حدث تغيير في الغرفة، تم تحديث الحالة. حاول مجددًا إذا كان دورك.':
+    get('remoteActionError').textContent=error.status===409?
+      'تغيرت حالة الغرفة. تحقق من دورك وحاول مجددًا.':
       'تعذّر تنفيذ الحركة: '+(error.message||'اتصال غير متاح');
     sound('error');
   }finally{

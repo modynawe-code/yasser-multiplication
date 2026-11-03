@@ -158,11 +158,19 @@ export function makePartyConnection({role,client=createGameRoomClient(),storage=
       if(!resolvePartyAction(room.state,session.playerId,type,payload))throw new Error('action not allowed in current turn');
       busy=true;
       try{
-        const result=await client.submitAction({code:session.code,token:session.token,expectedVersion:room.version,type,payload});
-        setRoom(result.room);onStatus('connected');return result.room;
-      }catch(error){
-        if(error.body?.room)setRoom(error.body.room);
-        throw error;
+        // A concurrent join changes room.version without changing the turn.
+        // Retry only START (not repeatable cash-changing commands).
+        for(let attempt=0;attempt<3;attempt++){
+          try{
+            const result=await client.submitAction({code:session.code,token:session.token,expectedVersion:room.version,type,payload});
+            setRoom(result.room);onStatus('connected');return result.room;
+          }catch(error){
+            if(error.body?.room)setRoom(error.body.room);
+            if(type!=='start'||error.status!==409||error.body?.error!=='version_conflict'||
+              room?.status!=='waiting'||!partyActions(room.state,session.playerId).some(a=>a.type==='start')||attempt===2)
+              throw error;
+          }
+        }
       }finally{busy=false;}
     },
     leave(){

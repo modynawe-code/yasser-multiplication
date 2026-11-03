@@ -144,3 +144,27 @@ test('owner can mortgage and redeem property only within the rules and available
   assert.equal(partyPortfolioActions(game,'host').some(x=>x.type==='unmortgage'),false);
   assert.equal(partyPortfolioActions({...game,phase:'property'},'host').length,0);
 });
+
+test('host START retries only an optimistic version conflict caused by another player joining',async()=>{
+  const map=new Map(),storage={getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
+  const waiting={status:'waiting',players:[{id:'host'},{id:'guest'}]};
+  const room=(version,status='waiting')=>({code:'123456',gameId:'family-monopoly',version,status,selfPlayerId:'host',state:status==='waiting'?waiting:{...waiting,status:'playing',phase:'roll',turnIndex:0}});
+  let attempts=0;
+  const client={
+    createRoom:async()=>({playerToken:'secret',room:room(1)}),
+    submitAction:async({expectedVersion,type})=>{
+      attempts++;assert.equal(type,'start');
+      if(attempts===1){
+        assert.equal(expectedVersion,1);
+        throw Object.assign(new Error('stale'),{status:409,body:{error:'version_conflict',room:room(2)}});
+      }
+      assert.equal(expectedVersion,2);
+      return {room:room(3,'playing')};
+    }
+  };
+  const connection=makePartyConnection({role:'player',client,storage});
+  await connection.create('مضيف');
+  assert.equal((await connection.action('start')).status,'playing');
+  assert.equal(attempts,2);
+  connection.leave();
+});
