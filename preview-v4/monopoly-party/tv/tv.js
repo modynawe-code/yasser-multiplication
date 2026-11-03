@@ -252,6 +252,7 @@ async function renderRoom(room){
   if(!room||room.gameId!=='family-monopoly')return;
   const old=previousRoom;previousRoom=room;
   const generation=++sequence, state=room.state;
+  if(state.phase==='roll'||state.status==='waiting')cinematic?.clearDice();
   latestState=state;
   byId('tvJoin').hidden=true;byId('tvStage').hidden=false;
   drawQr(room.code);addRoster(room);syncPieces(state);
@@ -265,7 +266,10 @@ async function renderRoom(room){
     updateCenterScene(state,true);
     byId('tvEvent').replaceChildren(el('strong','','القطعة تتحرك…'));
     byId('tvDice').replaceChildren(...(state.dice||[]).map(v=>el('div','tv-die rolling',v)));
-    if(old.state?.phase==='roll'&&state.dice)sound('dice');
+    if(old.state?.phase==='roll'&&state.dice){
+      sound('dice');
+      if(cinematic){await cinematic.rollDice(state.dice);if(generation!==sequence)return;}
+    }
     state.players.filter(p=>p.id!==moving.id).forEach(p=>place(p.id,p.position||0,false));
     await animateArrival(old.state.players.find(p=>p.id===moving.id),moving,moving,generation);
     if(generation!==sequence)return;
@@ -285,7 +289,7 @@ byId('tvJoinForm').addEventListener('submit',async e=>{
   catch(err){byId('tvJoinError').textContent='تعذّر الربط: '+(err.status||err.message);}
   finally{button.disabled=false;}
 });
-byId('tvDisconnect').addEventListener('click',()=>{cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
+byId('tvDisconnect').addEventListener('click',()=>{cinematic?.clearDice();cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
 byId('tvOverview').addEventListener('click',resetCamera);
 byId('tvSound').addEventListener('click',()=>{
   voiceEnabled=!voiceEnabled;
