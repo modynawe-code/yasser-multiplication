@@ -1,0 +1,48 @@
+name: Monopoly TV and Phone Controller QA
+on:
+  push:
+    branches:
+      - main
+      - feature/monopoly-tv-multiscreen-v1
+    paths:
+      - 'preview-v4/monopoly-party/**'
+      - 'preview-v4/tests/monopoly-party.test.mjs'
+      - 'preview-v4/tools/monopoly-tv-qa.py'
+      - '.github/workflows/monopoly-tv-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tv-remote-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests - board geometry and role safeguards
+        run: node --test preview-v4/tests/monopoly-party.test.mjs backend/tests/game-rooms.test.mjs
+      - name: Install Playwright and browser engines
+        run: |
+          python -m pip install 'playwright==1.56.0'
+          python -m playwright install --with-deps chromium webkit
+      - name: Exercise TV with independent phone controllers
+        run: |
+          python3 .agents/skills/webapp-testing/scripts/with_server.py \
+            --server 'python3 -m http.server 8790 --bind 127.0.0.1 --directory preview-v4 2>/tmp/monopoly-tv-http.log' \
+            --port 8790 \
+            -- python3 preview-v4/tools/monopoly-tv-qa.py
+      - name: Upload screenshots and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monopoly-tv-qa
+          path: /tmp/monopoly-tv-qa/
+          retention-days: 7
+          if-no-files-found: warn
