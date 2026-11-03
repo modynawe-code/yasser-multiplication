@@ -35,7 +35,7 @@ test('cinematic dice are drawn from authoritative faces before piece travel',()=
   assert.match(scene,/pipLayout\[number\]/);
   assert.match(scene,/gsap\.timeline\(/);
   assert.match(scene,/onInterrupt:/);
-  assert.match(entry,/await cinematic\.rollDice\(state\.dice\)/);
+  assert.match(entry,/await cinematic\.rollDice\(state\.dice,old\.state\)/);
   assert.match(entry,/if\(generation!==sequence\)return/);
   assert.match(entry,/cinematic\?\.clearDice\(\)/);
 });
