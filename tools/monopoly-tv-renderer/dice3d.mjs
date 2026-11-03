@@ -244,9 +244,13 @@ export function createThreeDice(board){
       camera.aspect=w/h;camera.updateProjectionMatrix();
     }
   }
+  let maxCameraLift=0;
   function draw(){
     if(disposed)return;
     resize();
+    maxCameraLift=Math.max(maxCameraLift,camera.position.y);
+    canvas.dataset.maxCameraLift=maxCameraLift.toFixed(2);
+    canvas.dataset.cameraRestored=String(Math.abs(camera.position.y)<.02&&!board.classList.contains('tv-3d-rolling'));
     camera.lookAt(0,0,-.8);
     renderer.render(scene,camera);
   }
