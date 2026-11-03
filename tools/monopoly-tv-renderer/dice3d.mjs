@@ -113,16 +113,18 @@ export function createThreeDice(board){
       canvas.width=canvas.height=1024;
       const ctx=canvas.getContext('2d');
       if(!ctx)return;
+      // Transparent pixels in the source artwork must not expose dark wood.
+      ctx.fillStyle='#eee8d4';ctx.fillRect(0,0,1024,1024);
       ctx.drawImage(img,0,0,1024,1024);
       // Source art includes a printed brand in its center. Preserve the 40 tiles.
       const inset=188,edge=1024-2*inset;
       const gradient=ctx.createRadialGradient(512,430,30,512,512,500);
-      gradient.addColorStop(0,'#e7e6ca');
-      gradient.addColorStop(.58,'#d0d8bd');
-      gradient.addColorStop(1,'#9fb6a4');
+      gradient.addColorStop(0,'#39775a');
+      gradient.addColorStop(.58,'#245941');
+      gradient.addColorStop(1,'#153c2d');
       ctx.fillStyle=gradient;
       ctx.fillRect(inset,inset,edge,edge);
-      ctx.strokeStyle='rgba(202,167,100,.75)';
+      ctx.strokeStyle='rgba(205,169,96,.8)';
       ctx.lineWidth=5;ctx.strokeRect(inset+9,inset+9,edge-18,edge-18);
       // Embossed decorative central emblem, not an oversized logo or UI panel.
       ctx.save();ctx.translate(512,512);ctx.rotate(Math.PI/4);
@@ -133,7 +135,8 @@ export function createThreeDice(board){
       ctx.restore();
       const texture=new CanvasTexture(canvas);
       texture.colorSpace=SRGBColorSpace;texture.anisotropy=4;
-      const material=new MeshStandardMaterial({map:texture,roughness:.78,metalness:0});
+      // Printed board inks retain original colors; wood rim/pawns still react to real lighting.
+      const material=new MeshBasicMaterial({map:texture});
       if(artPlane){
         boardGroup.remove(artPlane);
         artPlane.geometry.dispose();artPlane.material.dispose();boardTexture?.dispose();
@@ -160,7 +163,9 @@ export function createThreeDice(board){
   let lastCells=null;
   function worldPoint(cell){
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
-    const worldH=2*Math.tan(camera.fov*Math.PI/360)*camera.position.z;
+    // Project against each pawn's z=1 depth, not the z=0 image plane.
+    // This removes the outward displacement near corner tiles.
+    const worldH=2*Math.tan(camera.fov*Math.PI/360)*(camera.position.z-1);
     return new Vector3(((cell.offsetLeft+cell.offsetWidth/2)/w-.5)*worldH*w/h,
       (.5-(cell.offsetTop+cell.offsetHeight/2)/h)*worldH,1);
   }
