@@ -5,6 +5,7 @@ on:
       - feature/monopoly-tv-multiscreen-v1
     paths:
       - 'preview-v4/monopoly-party/**'
+      - 'tools/monopoly-tv-renderer/**'
       - 'preview-v4/tools/monopoly-tv-live-qa.py'
       - 'backend/src/game-room-rules.mjs'
       - 'preview-v4/src/modules/games/monopoly/monopoly-engine.js'
@@ -41,6 +42,11 @@ jobs:
         run: |
           node tools/build-web-preview.mjs
           node tools/monopoly-tv-staging.mjs
+      - name: Bundle local PixiJS and GSAP renderer (no external runtime CDN)
+        run: |
+          npm install --prefix tools/monopoly-tv-renderer --ignore-scripts --no-audit --no-fund
+          node tools/monopoly-tv-renderer/build.mjs dist-web-preview/monopoly-party/vendor/cinematic-scene.mjs
+          test -s dist-web-preview/monopoly-party/vendor/cinematic-scene.mjs
       - name: Audit staging API bootstrap
         run: |
           node --input-type=module <<'NODE'
