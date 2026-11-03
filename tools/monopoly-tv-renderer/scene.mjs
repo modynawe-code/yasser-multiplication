@@ -1,6 +1,7 @@
 // TV presentation only. Never mutate game state or trust snapshots for permission decisions.
 import { Application, Container, Graphics } from 'pixi.js';
 import { gsap } from 'gsap';
+import { createThreeDice } from './dice3d.mjs';
 
 const limit=(n,min,max)=>Math.min(max,Math.max(min,n));
 function rgb(hex){return Number(String(hex||'#18a775').replace('#','0x'))||0x18a775;}
@@ -81,7 +82,7 @@ export async function createCinematicScene({board,cells,colors}){
   };
   const diceLayer=new Container();
   app.stage.addChild(diceLayer);
-  let diceTimeline=null;
+  let diceTimeline=null,threeDice=null,threeUnavailable=false;
   function paintDie(number){
     const side=limit(board.offsetWidth*.092,36,86);
     const g=new Graphics();
@@ -93,14 +94,24 @@ export async function createCinematicScene({board,cells,colors}){
     return g;
   }
   function clearDice(){
+    threeDice?.clear();
     if(diceTimeline){diceTimeline.kill();diceTimeline=null;}
     const nodes=diceLayer.removeChildren();
     for(const node of nodes)node.destroy({children:true});
   }
-  function rollDice(values){
+  async function rollDice(values){
     if(destroyed||!Array.isArray(values)||values.length!==2||
        !values.every(n=>Number.isInteger(n)&&n>=1&&n<=6))return Promise.resolve(false);
     clearDice();
+    if(!threeUnavailable){
+      try{
+        threeDice||=createThreeDice(board);
+        if(await threeDice.roll(values))return true;
+      }catch(error){
+        console.warn('Three.js dice unavailable; using PixiJS dice fallback',error);
+        threeDice?.destroy();threeDice=null;threeUnavailable=true;
+      }
+    }
     const centerX=board.offsetWidth/2,centerY=board.offsetHeight/2;
     const side=limit(board.offsetWidth*.092,36,86);
     const dice=values.map((face,i)=>{
@@ -121,15 +132,16 @@ export async function createCinematicScene({board,cells,colors}){
       });
     });
   }
-  function resize(state){if(destroyed)return;for(const p of state?.players||[]){const actor=actors.get(p.id),point=xy(p.position||0);if(actor&&point){gsap.killTweensOf(actor.position);actor.position.set(point.x,point.y);}}}
+  function resize(state){if(destroyed)return;threeDice?.resize();for(const p of state?.players||[]){const actor=actors.get(p.id),point=xy(p.position||0);if(actor&&point){gsap.killTweensOf(actor.position);actor.position.set(point.x,point.y);}}}
   function destroy(){
     if(destroyed)return;destroyed=true;
     gsap.killTweensOf(board);
     for(const a of actors.values())gsap.killTweensOf(a.position);
     actors.clear();
     clearDice();
+    threeDice?.destroy();threeDice=null;
     app.destroy(true,{children:true});
     gsap.set(board,{clearProps:'transform,transformOrigin'});
   }
-  return {sync,refresh,focus,overview,move,rollDice,clearDice,resize,destroy,engine:'pixi.js+gsap'};
+  return {sync,refresh,focus,overview,move,rollDice,clearDice,resize,destroy,engine:'pixi.js+gsap+three.js'};
 }
