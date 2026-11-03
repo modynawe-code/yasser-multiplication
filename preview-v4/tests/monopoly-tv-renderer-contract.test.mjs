@@ -84,3 +84,12 @@ test('GSAP camera uses clamped XY follow and returns to overview after an event'
   assert.match(entry,/if\(generation===sequence\)cinematic\?\.overview\(\)/);
   assert.match(entry,/clearTimeout\(overviewTimer\);\+\+sequence/);
 });
+
+test('event card reveal is GSAP-driven, cancellable and never writes game state',()=>{
+  assert.match(scene,/function presentEvent\(node,\{phase='end',index=null\}=\{\}\)/);
+  assert.match(scene,/eventTimeline=gsap\.timeline/);
+  assert.match(scene,/function clearEvent\(node\)/);
+  assert.match(scene,/eventTimeline\?\.kill\(\)/);
+  assert.match(entry,/cinematic\?\.presentEvent\(byId\('tvCenterScene'\)/);
+  assert.match(entry,/cinematic\?\.clearEvent\(byId\('tvCenterScene'\)\)/);
+});
