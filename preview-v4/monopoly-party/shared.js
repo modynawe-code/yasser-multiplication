@@ -1,4 +1,4 @@
-import { BOARD,canBuild } from '../src/modules/games/monopoly/monopoly-engine.js';
+import { BOARD,canBuild,canMortgage,canUnmortgage,mortgageValue,redemptionCost } from '../src/modules/games/monopoly/monopoly-engine.js';
 import { createGameRoomClient } from '../src/modules/games/online/game-room-client.js';
 
 export { BOARD };
@@ -49,6 +49,8 @@ export function partyPortfolioActions(state,playerId){
     if(!tile)return [];
     const out=[];
     if(canBuild(state,index))out.push({type:'build',index,label:ownership.houses===4?'بناء فندق':'بناء بيت',payload:{index}});
+    if(canMortgage(state,index))out.push({type:'mortgage',index,label:'رهن · استلام '+mortgageValue(index)+' ريال',payload:{index}});
+    if(canUnmortgage(state,index))out.push({type:'unmortgage',index,label:'فك الرهن · دفع '+redemptionCost(index)+' ريال',payload:{index}});
     if(state.phase==='end')out.push({type:'sell',index,label:'بيع الملكية',payload:{index}});
     if(state.phase==='end'&&state.players.some(p=>p.id!==playerId&&!p.bankrupt))
       out.push({type:'trade',index,label:'عرض تبادل',payload:{index}});

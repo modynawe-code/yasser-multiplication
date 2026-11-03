@@ -117,7 +117,7 @@ function renderPortfolio(state,self){
   for(const [key,ownership] of owns){
     const index=Number(key),tile=BOARD[index],item=element('article','remote-estate');
     const info=element('div','remote-estate-info');
-    info.append(element('strong','',tile.name),element('small','','المجموعة: '+(tile.group||tile.type)+' · '+(ownership.hotel?'فندق':(ownership.houses||0)+' بيوت')));
+    info.append(element('strong','',tile.name),element('small','','المجموعة: '+(tile.group||tile.type)+' · '+(ownership.mortgaged?'مرهونة · لا إيجار':ownership.hotel?'فندق':(ownership.houses||0)+' بيوت')));
     const actions=element('div','remote-estate-actions');
     permissions.filter(a=>a.index===index).forEach(action=>{
       const button=element('button','party-btn secondary',action.label);

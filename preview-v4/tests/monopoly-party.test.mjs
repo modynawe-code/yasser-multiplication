@@ -125,3 +125,22 @@ test('native Android TV QR opens the public phone controller, not localhost',()=
     else globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__=old;
   }
 });
+
+test('owner can mortgage and redeem property only within the rules and available funds',()=>{
+  const game={
+    ...state('end'),
+    ownership:{5:{ownerId:'host',houses:0,mortgaged:false}},
+    players:[{id:'host',name:'الأول',cash:1000},{id:'guest',name:'الثاني',cash:800}]
+  };
+  const possible=partyPortfolioActions(game,'host');
+  assert.equal(possible.find(x=>x.type==='mortgage')?.index,5);
+  assert.equal(partyPortfolioActions(game,'guest').length,0);
+  assert.equal(resolvePartyAction(game,'guest','mortgage',{index:5}),null);
+  assert.equal(resolvePartyAction(game,'host','mortgage',{index:5}).type,'mortgage');
+  game.ownership[5].mortgaged=true;
+  assert.equal(partyPortfolioActions(game,'host').some(x=>x.type==='mortgage'),false);
+  assert.equal(partyPortfolioActions(game,'host').some(x=>x.type==='unmortgage'),true);
+  game.players[0].cash=0;
+  assert.equal(partyPortfolioActions(game,'host').some(x=>x.type==='unmortgage'),false);
+  assert.equal(partyPortfolioActions({...game,phase:'property'},'host').length,0);
+});
