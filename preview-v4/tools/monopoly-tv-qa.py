@@ -152,7 +152,11 @@ def run(browser_type,name):
         assert abs(visual["boardWidth"]-visual["boardHeight"])<5,visual
         assert visual["boardWidth"]>=min(600,visual["viewportHeight"]*.72),visual
         assert visual["frameBottom"]<=visual["viewportHeight"]+10,visual
-        assert "radial-gradient" in visual["centerBackground"],"Original center logo is not covered"
+        # The Three.js surface now replaces the old CSS logo mask. Both render paths
+        # must hide the printed center, without requiring obsolete CSS gradients.
+        three_ready=tv.locator("#partyBoard.tv-3d-board-ready").count()==1
+        assert three_ready or "radial-gradient" in visual["centerBackground"],"Original center logo is not covered"
+        result["boardSurface"]="three.js" if three_ready else "CSS/DOM fallback"
         result["tvVisualBaseline"]=visual
 
         # A bundled dependency is not visual proof: Chromium must create its Pixi canvas.
