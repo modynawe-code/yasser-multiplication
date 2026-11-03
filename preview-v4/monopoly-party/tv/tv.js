@@ -25,9 +25,12 @@ function boardSetup(){
     cells.set(i,node);board.append(node);
   });
   const center=el('div','tv-board-center');
-  const title=el('div');
-  title.append(el('div','center-mark','🎲'),el('h2','','احتكار المعرفة'),el('p','','العب من جوالك · الشاشة تتابع الحكاية'));
-  center.append(title);board.append(center,tokenLayer);
+  const scene=el('div','tv-center-scene');scene.id='tvCenterScene';scene.dataset.phase='waiting';
+  const symbol=el('div','center-mark','🎲');symbol.id='tvCenterSymbol';
+  const heading=el('h2','','احتكار المعرفة');heading.id='tvCenterHeadline';
+  const detail=el('p','','العب من جوالك · الشاشة تتابع الحكاية');detail.id='tvCenterDetail';
+  const dice=el('div','tv-center-dice');dice.id='tvCenterDice';
+  scene.append(symbol,heading,detail,dice);center.append(scene);board.append(center,tokenLayer);
 }
 async function loadBoardArt(){
   // Reuse the same checked Arabic Figma board art as the original Monopoly.
@@ -148,7 +151,56 @@ function syncBuildings(state){
     }
   }
 }
+function updateCenterScene(state,moving=false){
+  const scene=byId('tvCenterScene'),heading=byId('tvCenterHeadline'),
+        detail=byId('tvCenterDetail'),symbol=byId('tvCenterSymbol'),
+        dice=byId('tvCenterDice');
+  if(!scene||!heading||!detail||!symbol||!dice)return;
+  const playing=state.status==='playing';
+  scene.parentElement.classList.toggle('is-playing',playing);
+  const phase=moving?'moving':state.status==='waiting'?'waiting':state.phase||'end';
+  scene.dataset.phase=phase;
+  const player=state.players?.[state.turnIndex];
+  const position=state.pending?.index??player?.position;
+  const space=BOARD[position],color=GROUP_COLORS[space?.group]||'#d4b66c';
+  scene.style.setProperty('--scene-band',color);
+  dice.replaceChildren();
+  if(state.status==='waiting'){
+    symbol.textContent='🎲';heading.textContent='احتكار المعرفة';
+    detail.textContent='ينضم اللاعبون من الجوال قبل بدء الجولة';return;
+  }
+  if(moving){
+    symbol.textContent='🎲';heading.textContent='القطعة تتحرك';
+    detail.textContent='تابع مسار '+(player?.name||'اللاعب')+' على اللوحة';
+  }else if(phase==='roll'){
+    symbol.textContent='🎲';heading.textContent='دور '+(player?.name||'اللاعب');
+    detail.textContent='ارمِ النرد من جوالك';
+  }else if(phase==='property'){
+    symbol.textContent='🏠';heading.textContent=space?.name||'صك ملكية';
+    detail.textContent='صك ملكية متاح · '+(space?.price??0)+' ريال';
+  }else if(phase==='auction'){
+    symbol.textContent='🔨';heading.textContent='مزاد '+(space?.name||'أرض');
+    detail.textContent='أعلى مزايدة: '+(state.auction?.bid??0)+' ريال';
+  }else if(phase==='card'){
+    symbol.textContent='🃏';heading.textContent='فرصة أو جماعة';
+    detail.textContent=state.pending?.stage==='face'?
+      String(state.pending?.card?.text||'اكشف البطاقة من الجوال'):
+      'تظهر البطاقة للجميع · القرار من الجوال';
+  }else if(phase==='trade'){
+    symbol.textContent='🤝';heading.textContent='عرض تبادل';
+    detail.textContent='بانتظار قبول أو رفض اللاعب الآخر';
+  }else if(state.status==='finished'){
+    symbol.textContent='🏆';heading.textContent='انتهت الجولة';
+    detail.textContent=state.log||'تهانينا للفائز';
+  }else{
+    symbol.textContent='✓';heading.textContent='اكتمل الحدث';
+    detail.textContent=state.log||'العودة إلى الجولة';
+  }
+  if(state.dice?.length===2)
+    state.dice.forEach(value=>dice.append(el('span','tv-center-die',value)));
+}
 function renderEvent(state){
+  updateCenterScene(state);
   const dest=byId('tvEvent');dest.replaceChildren();
   if(state.status==='waiting'){
     dest.append(el('strong','','بانتظار بدء اللعبة'),el('p','','ينضم لاعبان على الأقل، ثم يضغط المضيف «ابدأ اللعبة» من جواله.'));
@@ -205,6 +257,7 @@ async function renderRoom(room){
   }
   const moving=state.players.find(p=>old.state?.players?.some(prev=>prev.id===p.id&&prev.position!==p.position));
   if(moving){
+    updateCenterScene(state,true);
     byId('tvEvent').replaceChildren(el('strong','','القطعة تتحرك…'));
     byId('tvDice').replaceChildren(...(state.dice||[]).map(v=>el('div','tv-die rolling',v)));
     if(old.state?.phase==='roll'&&state.dice)sound('dice');

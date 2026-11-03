@@ -78,6 +78,12 @@ def execute(kind,browser):
         else:
             host.locator('#remoteActions button[data-action=roll]').click()
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=22000)
+        assert tv.locator('#tvCenterScene').count()==1, 'Cinematic center scene missing'
+        tv.wait_for_function("""() => {
+            const node=document.querySelector('#tvCenterScene');
+            return node && node.dataset.phase!=='waiting'
+               && document.querySelector('#tvCenterHeadline')?.textContent!=='احتكار المعرفة';
+        }""",timeout=22000)
         tv.screenshot(path=str(ART/f"{kind}-tv-after-dice.png"),full_page=True)
         assert tv.locator(".tv-token").count()==len(phones)
         for other in phones[1:]:

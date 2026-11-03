@@ -91,3 +91,40 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .remote-dice-gesture::after{content:"اسحب للأعلى للرمي ↑";display:block;font-size:12px;opacity:.77;margin-top:8px}
 .remote-dice-gesture.remote-dice-thrown{transform:translateY(-10px) rotate(-3deg);transition:transform .25s ease-out}
 @media (prefers-reduced-motion:reduce){.remote-dice-gesture.remote-dice-thrown{transform:none;transition:none}}
+
+/* TV cinematic center scene: the middle is reserved for the current event,
+   never a static brand overlay once play starts. */
+.tv-center-scene{
+  --scene-band:#d4b66c;
+  width:min(100%,580px);min-width:0;display:grid;justify-items:center;align-content:center;
+  gap:clamp(4px,.7vw,13px);padding:clamp(12px,2vw,28px);
+  border-radius:clamp(12px,1.6vw,24px);
+}
+.tv-board-center.is-playing .tv-center-scene{
+  background:linear-gradient(170deg,#fff9e9eF,#ede7ccee);
+  border:2px solid #af9d75;box-shadow:0 12px 28px #1f322322;
+}
+.tv-board-center.is-playing .tv-center-scene::before{
+  content:"";height:clamp(4px,.6vw,9px);width:min(100%,220px);
+  border-radius:10px;background:var(--scene-band);
+}
+.tv-board-center.is-playing .center-mark{font-size:clamp(23px,3vw,53px);line-height:1.05}
+.tv-board-center.is-playing h2{
+  font-size:clamp(17px,2.6vw,45px);max-width:100%;line-height:1.1;
+  overflow-wrap:anywhere;margin:2px 0;
+}
+.tv-board-center.is-playing p{
+  font-size:clamp(11px,1.28vw,21px);
+  max-width:90%;margin:2px 0;line-height:1.4;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;
+}
+.tv-center-dice{display:flex;gap:clamp(6px,.8vw,13px);justify-content:center}
+.tv-center-die{
+  display:grid;place-items:center;
+  width:clamp(26px,3.5vw,54px);height:clamp(26px,3.5vw,54px);
+  background:#fffdf7;color:#163c2b;border-radius:clamp(5px,.7vw,11px);
+  font:900 clamp(17px,2.1vw,34px)/1 system-ui;
+  box-shadow:inset 0 -3px #c8c1ad,0 4px 9px #0002;
+}
+.tv-center-scene[data-phase=moving] .tv-center-die{animation:party-dice .65s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.tv-center-die{animation:none!important}}
