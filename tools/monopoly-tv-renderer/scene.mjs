@@ -72,7 +72,11 @@ export async function createCinematicScene({board,cells,colors}){
     if(destroyed)return;
     const actor=actors.get(id),point=xy(index);
     if(!actor||!point)return;
-    if(threeDice)return await threeDice.movePawn(id,index,duration);
+    if(threeDice){
+      const done=await threeDice.movePawn(id,index,duration);
+      if(done)actor.position.set(point.x,point.y); // keep 2D fallback aligned
+      return done;
+    }
     gsap.killTweensOf(actor.position);
     if(reduced()){actor.position.set(point.x,point.y);return;}
     await new Promise(resolve=>gsap.to(actor.position,{x:point.x,y:point.y,duration,ease:'power1.inOut',onComplete:resolve,onInterrupt:resolve}));
@@ -103,14 +107,15 @@ export async function createCinematicScene({board,cells,colors}){
     const nodes=diceLayer.removeChildren();
     for(const node of nodes)node.destroy({children:true});
   }
-  async function rollDice(values){
+  async function rollDice(values,previousState=null){
     if(destroyed||!Array.isArray(values)||values.length!==2||
        !values.every(n=>Number.isInteger(n)&&n>=1&&n<=6))return Promise.resolve(false);
     clearDice();
     if(!threeUnavailable){
       try{
         threeDice||=createThreeDice(board);
-        if(currentState?.players){threeDice.syncPawns(currentState.players,cells,colors);layer.visible=false;}
+        const initial=previousState?.players?.length?previousState:currentState;
+        if(initial?.players){threeDice.syncPawns(initial.players,cells,colors);layer.visible=false;}
         if(await threeDice.roll(values))return true;
       }catch(error){
         console.warn('Three.js dice unavailable; using PixiJS dice fallback',error);
