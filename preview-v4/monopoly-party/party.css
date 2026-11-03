@@ -148,3 +148,42 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
   .tv-player{padding:9px}
   .tv-side{gap:10px}
 }
+
+/* Distinct cinematic event treatments. Data attributes come from authoritative
+   server state; purely presentational and safe to skip in reduced-motion. */
+.tv-board-center.is-playing .tv-center-scene[data-event=purchase],
+.tv-board-center.is-playing .tv-center-scene[data-event=build]{
+  --event-ink:#174c38;
+  background:radial-gradient(ellipse at 50% 0%,#fff9df 0%,#f0e1b5 72%,#d8c08b 100%);
+  border:2px solid #c29a45;
+  box-shadow:0 12px 32px #2d311b33,0 0 0 1px #fff5d0aa inset;
+}
+.tv-board-center.is-playing .tv-center-scene[data-event=mortgage],
+.tv-board-center.is-playing .tv-center-scene[data-event=sale]{
+  background:linear-gradient(165deg,#fff8e8,#e6e5dc);
+  border:2px solid #899990;
+  box-shadow:0 12px 26px #17271c30;
+}
+.tv-board-center.is-playing .tv-center-scene[data-event=jail]{
+  background:repeating-linear-gradient(100deg,#f4ede0,#f4ede0 18px,#e7ddcd 18px,#e7ddcd 23px);
+  border:3px solid #786b5e;
+  box-shadow:inset 0 0 0 3px #f8eee0,0 12px 28px #25211d40;
+}
+.tv-board-center.is-playing .tv-center-scene[data-event=trade],
+.tv-board-center.is-playing .tv-center-scene[data-event=auction]{
+  background:linear-gradient(155deg,#f9f4e9,#dceadd);
+  border:2px solid #76a58b;
+}
+.tv-board-center.is-playing .tv-center-scene[data-event=finished]{
+  background:radial-gradient(ellipse at top,#fff7ce,#ead69a);
+  border:3px solid #c49a3e;
+  box-shadow:0 0 35px #e6c6656b,0 12px 35px #34250d52;
+}
+.tv-board-center.is-playing .tv-center-scene[data-event=card]{
+  background:linear-gradient(150deg,#fdf3e4,#f0d7ac);
+  border:2px solid #b98a54;
+}
+.tv-center-scene[data-event] h2{overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){
+  .tv-center-scene{animation:none!important}
+}
