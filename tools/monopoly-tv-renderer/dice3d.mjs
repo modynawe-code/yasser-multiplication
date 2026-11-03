@@ -3,7 +3,7 @@ import {
   WebGLRenderer,Scene,PerspectiveCamera,AmbientLight,DirectionalLight,
   Mesh,BoxGeometry,MeshStandardMaterial,CanvasTexture,Group,
   PlaneGeometry,MeshBasicMaterial,DoubleSide,Vector3,Quaternion,SRGBColorSpace,
-  CylinderGeometry,SphereGeometry,CircleGeometry
+  CylinderGeometry,SphereGeometry,CircleGeometry,TextureLoader
 } from 'three';
 import {gsap} from 'gsap';
 
@@ -74,6 +74,83 @@ export function createThreeDice(board){
     m.position.set(die.position.x+.15,-.55,-1.45);
     group.add(m);return m;
   });
+  // A real, light-reactive 3D tabletop. Original forty tiles stay exact in the
+  // source artwork; only its printed center is overpainted with a felt inlay.
+  const boardGroup=new Group();scene.add(boardGroup);
+  const boardResources=[];
+  let boardTexture=null,boardReady=false,artVersion=0;
+  const BOARD_DEPTH=-.83;
+  const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*(camera.position.z-BOARD_DEPTH);
+  const slabMat=new MeshStandardMaterial({color:0x77502d,roughness:.52,metalness:.08});
+  const rimMat=new MeshStandardMaterial({color:0xcea55a,roughness:.28,metalness:.62});
+  const feltMat=new MeshStandardMaterial({color:0x173c2c,roughness:.94,metalness:0});
+  const slabGeo=new BoxGeometry(surfaceHeight+.12,surfaceHeight+.12,.26);
+  const feltGeo=new BoxGeometry(surfaceHeight+.23,surfaceHeight+.23,.13);
+  const rimGeoHorizontal=new BoxGeometry(surfaceHeight+.32,.085,.2);
+  const rimGeoVertical=new BoxGeometry(.085,surfaceHeight+.32,.2);
+  boardResources.push(slabMat,rimMat,feltMat,slabGeo,feltGeo,rimGeoHorizontal,rimGeoVertical);
+  const feltSlab=new Mesh(feltGeo,feltMat);
+  feltSlab.position.z=BOARD_DEPTH-.36;boardGroup.add(feltSlab);
+  const slab=new Mesh(slabGeo,slabMat);
+  slab.position.z=BOARD_DEPTH-.18;boardGroup.add(slab);
+  for(const side of [-1,1]){
+    const h=new Mesh(rimGeoHorizontal,rimMat);
+    h.position.set(0,side*(surfaceHeight/2+.07),BOARD_DEPTH-.11);
+    boardGroup.add(h);
+    const v=new Mesh(rimGeoVertical,rimMat);
+    v.position.set(side*(surfaceHeight/2+.07),0,BOARD_DEPTH-.11);
+    boardGroup.add(v);
+  }
+  let artPlane=null;
+  // Image is supplied only by the already-loaded self-hosted board source.
+  function setBoardArt(source){
+    if(disposed||typeof source!=='string'||!source.startsWith('data:image/png;base64,'))return;
+    const revision=++artVersion;
+    const img=new Image();
+    img.onload=()=>{
+      if(disposed||revision!==artVersion)return;
+      const canvas=document.createElement('canvas');
+      canvas.width=canvas.height=1024;
+      const ctx=canvas.getContext('2d');
+      if(!ctx)return;
+      ctx.drawImage(img,0,0,1024,1024);
+      // Source art includes a printed brand in its center. Preserve the 40 tiles.
+      const inset=154,edge=1024-2*inset;
+      const gradient=ctx.createRadialGradient(512,430,30,512,512,540);
+      gradient.addColorStop(0,'#e7e6ca');
+      gradient.addColorStop(.58,'#d0d8bd');
+      gradient.addColorStop(1,'#9fb6a4');
+      ctx.fillStyle=gradient;
+      ctx.fillRect(inset,inset,edge,edge);
+      ctx.strokeStyle='rgba(202,167,100,.75)';
+      ctx.lineWidth=5;ctx.strokeRect(inset+9,inset+9,edge-18,edge-18);
+      // Embossed decorative central emblem, not an oversized logo or UI panel.
+      ctx.save();ctx.translate(512,512);ctx.rotate(Math.PI/4);
+      ctx.strokeStyle='rgba(236,224,175,.25)';ctx.lineWidth=12;
+      ctx.strokeRect(-185,-185,370,370);
+      ctx.strokeStyle='rgba(52,92,71,.16)';ctx.lineWidth=3;
+      ctx.strokeRect(-170,-170,340,340);
+      ctx.restore();
+      const texture=new CanvasTexture(canvas);
+      texture.colorSpace=SRGBColorSpace;texture.anisotropy=4;
+      const material=new MeshStandardMaterial({map:texture,roughness:.78,metalness:0});
+      if(artPlane){
+        boardGroup.remove(artPlane);
+        artPlane.geometry.dispose();artPlane.material.dispose();boardTexture?.dispose();
+      }
+      const geo=new PlaneGeometry(surfaceHeight,surfaceHeight);
+      artPlane=new Mesh(geo,material);
+      artPlane.position.z=BOARD_DEPTH+.015;
+      boardGroup.add(artPlane);
+      boardTexture=texture;boardReady=true;
+      board.classList.add('tv-3d-board-ready');
+      canvasElement.dataset.table='3d';
+      draw();
+    };
+    img.onerror=()=>{board.classList.remove('tv-3d-board-ready');};
+    img.src=source;
+  }
+  const canvasElement=canvas;
   // Shared WebGL context: three-dimensional player pieces with server-owned positions.
   const pawnBody=new CylinderGeometry(.13,.19,.34,20);
   const pawnTop=new SphereGeometry(.135,16,12);
@@ -153,7 +230,7 @@ export function createThreeDice(board){
   function clear(){
     timeline?.kill();timeline=null;
     shown=false;group.visible=false;
-    canvas.style.visibility=pawns.size?'visible':'hidden';
+    canvas.style.visibility=(boardReady||pawns.size)?'visible':'hidden';
     draw();
   }
   async function roll(values){
@@ -203,11 +280,15 @@ export function createThreeDice(board){
       scene.remove(pawn.group);pawn.material.dispose();pawn.shade.material.dispose();
     }
     pawns.clear();pawnBody.dispose();pawnTop.dispose();pawnBase.dispose();pawnShadow.dispose();
+    if(artPlane){boardGroup.remove(artPlane);artPlane.geometry.dispose();artPlane.material.dispose();}
+    boardTexture?.dispose();
+    for(const resource of boardResources)resource.dispose();
+    board.classList.remove('tv-3d-board-ready');
     for(const t of textures)t.dispose();
     for(const m of materials)m.dispose();
     geometry.dispose();shadowGeometry.dispose();shadowMaterial.dispose();
     renderer.dispose();canvas.remove();
   }
   group.visible=false;canvas.style.visibility='hidden';
-  return {roll,clear,syncPawns,movePawn,resize:draw,destroy,get active(){return shown;},engine:'three.js'};
+  return {roll,clear,syncPawns,movePawn,setBoardArt,resize:draw,destroy,get active(){return shown;},get boardReady(){return boardReady;},engine:'three.js'};
 }
