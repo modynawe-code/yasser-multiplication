@@ -185,6 +185,8 @@ def run(browser_type,name):
         tv.screenshot(path=str(OUT/f"{name}-tv-arrival.png"),full_page=True)
         host.screenshot(path=str(OUT/f"{name}-host-buy.png"),full_page=True)
         host.locator('#remoteActions button[data-action=buy]').click()
+        tv.locator('#tvCenterScene[data-event=purchase]').wait_for(timeout=15000)
+        tv.screenshot(path=str(OUT/f"{name}-tv-purchase.png"),full_page=True)
         host.locator('#remoteActions button[data-action=end]').wait_for(timeout=12000)
 
         # Exercise group development and trading with a prepared legal two-title set.
@@ -195,6 +197,8 @@ def run(browser_type,name):
         building.wait_for(state="visible",timeout=15000)
         building.click()
         host.wait_for_function("() => document.querySelector('#remoteGameLog')?.textContent?.includes('بيت جديد')",timeout=12000)
+        tv.locator('#tvCenterScene[data-event=build]').wait_for(timeout=15000)
+        tv.screenshot(path=str(OUT/f"{name}-tv-building.png"),full_page=True)
         assert any(x.get("houses",0)>0 for x in server.state["ownership"].values())
         trade=host.locator("#remotePortfolio .remote-estate").nth(1).locator("button").filter(has_text="عرض تبادل")
         trade.click()
