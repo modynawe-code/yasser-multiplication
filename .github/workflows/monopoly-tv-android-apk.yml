@@ -5,7 +5,7 @@ on:
       - feature/monopoly-tv-multiscreen-v1
     paths:
       - 'preview-v4/monopoly-party/**'
-      - 'tools/build-mobile.mjs'
+      - 'tools/build-monopoly-tv-mobile.mjs'
       - '.github/workflows/monopoly-tv-android-apk.yml'
   workflow_dispatch:
 
@@ -27,10 +27,27 @@ jobs:
           java-version: '21'
       - name: Check phone + TV browser tests
         run: node --test preview-v4/tests/monopoly-party.test.mjs
+      - name: Cache independent Android TV signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: monopoly-tv-debug-signing-v1
+      - name: Generate stable TV signing identity when missing
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" \
+              -storepass android -alias androiddebugkey -keypass android \
+              -dname "CN=Monopoly TV,O=Family,C=SA" -keyalg RSA -keysize 2048 -validity 10000
+          fi
       - name: Install Android toolchain
         run: npm install --no-audit --no-fund
-      - name: Build isolated TV bundle
-        run: npm run mobile:prepare
+      - name: Build lean TV-only web bundle
+        run: |
+          node tools/build-monopoly-tv-mobile.mjs
+          du -sh dist-mobile
+          test ! -d dist-mobile/assets/recitation
+          test -f dist-mobile/monopoly-party/tv/index.html
       - name: Bind Android TV test app to isolated game API, never production D1
         run: |
           node --input-type=module <<'NODE'
@@ -116,6 +133,26 @@ jobs:
           target.mkdir(parents=True,exist_ok=True)
           image.save(target/'monopoly_tv_banner.png',optimize=True)
           PY
+      - name: Use persistent Android TV debug signer
+        run: |
+          cat >> android/app/build.gradle <<'GRADLE'
+
+          android {
+              signingConfigs {
+                  stableTvDebug {
+                      storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
+                      storePassword "android"
+                      keyAlias "androiddebugkey"
+                      keyPassword "android"
+                  }
+              }
+              buildTypes {
+                  debug {
+                      signingConfig signingConfigs.stableTvDebug
+                  }
+              }
+          }
+          GRADLE
       - name: Verify TV package and launch configuration
         run: |
           grep -q 'LEANBACK_LAUNCHER' android/app/src/main/AndroidManifest.xml
@@ -129,6 +166,17 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
         working-directory: android
+      - name: Verify TV APK signature matches persistent signer
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -f "$APK"
+          test -n "$APKSIGNER"
+          STORED="$(keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey | sed -n 's/^[[:space:]]*SHA256: //p' | head -n 1 | tr -d ':' | tr 'A-F' 'a-f')"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee tv-apk-signing-report.txt
+          SIGNED="$(sed -n 's/^.*certificate SHA-256 digest: //p' tv-apk-signing-report.txt | head -n 1 | tr 'A-F' 'a-f')"
+          test -n "$STORED"
+          test "$STORED" = "$SIGNED"
       - name: Upload TV APK
         uses: actions/upload-artifact@v4
         with:
