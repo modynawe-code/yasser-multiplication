@@ -162,6 +162,21 @@ function updateCenterScene(state,moving=false){
   scene.parentElement.classList.toggle('is-playing',playing);
   const phase=moving?'moving':state.status==='waiting'?'waiting':state.phase||'end';
   scene.dataset.phase=phase;
+  // Server-provided presentation metadata only: never infer or change financial outcomes.
+  const action=String(state.presentation?.action||'');
+  const actionScenes={
+    buy:{kind:'purchase',symbol:'🏠',title:'تم شراء الملكية'},
+    build:{kind:'build',symbol:'🏗️',title:'تم تطوير الملكية'},
+    mortgage:{kind:'mortgage',symbol:'📜',title:'تم رهن الملكية'},
+    unmortgage:{kind:'mortgage',symbol:'🔓',title:'تم فك الرهن'},
+    sell:{kind:'sale',symbol:'💰',title:'تم بيع الملكية'},
+    jail:{kind:'jail',symbol:'🔒',title:'حدث السجن'},
+    'trade-accept':{kind:'trade',symbol:'🤝',title:'اكتمل التبادل'},
+    'trade-reject':{kind:'trade',symbol:'✕',title:'رُفض التبادل'},
+    'pass-auction':{kind:'auction',symbol:'🔨',title:'انتهت المزايدة'}
+  };
+  const actionScene=phase==='end'&&!moving?actionScenes[action]:null;
+  scene.dataset.event=actionScene?.kind||phase;
   const player=state.players?.[state.turnIndex];
   const position=state.pending?.index??player?.position;
   const space=BOARD[position],color=GROUP_COLORS[space?.group]||'#d4b66c';
@@ -194,6 +209,9 @@ function updateCenterScene(state,moving=false){
   }else if(state.status==='finished'){
     symbol.textContent='🏆';heading.textContent='انتهت الجولة';
     detail.textContent=state.log||'تهانينا للفائز';
+  }else if(actionScene){
+    symbol.textContent=actionScene.symbol;heading.textContent=actionScene.title;
+    detail.textContent=state.log||'تم تحديث حالة الجولة';
   }else{
     symbol.textContent='✓';heading.textContent='اكتمل الحدث';
     detail.textContent=state.log||'العودة إلى الجولة';
@@ -286,7 +304,7 @@ async function renderRoom(room){
   }
   if(generation===sequence){
     renderEvent(state);
-    cinematic?.presentEvent(byId('tvCenterScene'),{phase:state.status==='finished'?'finished':state.phase,index:state.pending?.index});
+    cinematic?.presentEvent(byId('tvCenterScene'),{phase:state.status==='finished'?'finished':byId('tvCenterScene')?.dataset.event||state.phase,index:state.pending?.index});
     if(cinematic && moving){
       // The card is readable before the view returns to a full board overview.
       overviewTimer=setTimeout(()=>{
