@@ -257,6 +257,26 @@ def run(browser_type,name):
         }""")
         assert layout["width"]>400 and layout["width"]<=layout["screenWidth"],layout
         assert abs(layout["width"]-layout["height"])<3,layout
+        # A professional TV layout must allocate real pixels to the game surface,
+        # not merely pass an aspect-ratio check with a tiny square board.
+        assert layout["width"]>=610,{"problem":"board too small at 1280x720","layout":layout}
+        assert tv.locator("#tvStage.is-live").count()==1,"live-stage design never activated"
+        assert tv.locator(".tv-join-panel .tv-qr").evaluate("(el)=>getComputedStyle(el).display==='none'"),"QR must collapse after starting"
+        tv.screenshot(path=str(OUT/f"{name}-tv-final-720p.png"),full_page=True)
+        tvc.set_viewport_size({"width":1920,"height":1080})
+        tv.wait_for_timeout(450)
+        large=tv.evaluate("""() => {
+          const board=document.querySelector('#partyBoard').getBoundingClientRect();
+          const table=document.querySelector('.tv-table-surface').getBoundingClientRect();
+          const stage=document.querySelector('#tvStage').getBoundingClientRect();
+          return {boardWidth:board.width,boardHeight:board.height,tableBottom:table.bottom,
+                  viewportWidth:innerWidth,viewportHeight:innerHeight,stageWidth:stage.width};
+        }""")
+        assert large["boardWidth"]>=900,{"problem":"TV board too small at 1080p","layout":large}
+        assert large["tableBottom"]<=large["viewportHeight"]+15,large
+        tv.screenshot(path=str(OUT/f"{name}-tv-final-1080p.png"),full_page=True)
+        result["tvProfessionalLayout"]={"at720p":layout,"at1080p":large}
+
         assert not errors,errors
         result.update({"status":"pass","actions":server.actions,"tvBoard":layout,"qr":"local SVG","spectatorSeats":0})
     except Exception as error:
