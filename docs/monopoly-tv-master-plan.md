@@ -125,5 +125,7 @@ Secondary: Backend/API, Networking, Data, Security, UI/UX, Animation, Performanc
 | Date | Stage | Work | Commit / QA | State |
 |---|---|---|---|---|
 | 2026-11-03 | Planning | Verified current engine, D1 rooms, polling and skills; created tracked roadmap | this file | Planned, not implemented |
+| 2026-11-03 | Stage 1 prototype | Independent TV board + local QR + phone remote for 2–4 players; existing family room API client; board animations and purchase actions | `monopoly-tv-qa.yml` [run 41659103795](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41659103795): 19 unit tests, 2 Playwright E2E browser passes | Implemented on isolated feature branch; simulated backend only |
+| 2026-11-03 | Stage 1 verification | Verified mocked Chrome + Safari session: host create, second phone join, TV spectator joins, QR display, roll, buy, end-turn; reviewed visual screenshots | [run 41659103795](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41659103795) | Real Cloudflare room, Android TV device and production deployment **not verified** |
 
-**Next executable step:** Stage 0 baseline and Stage 1 vertical slice: join one TV viewer and two phone controllers to one room, verify role boundary, then deterministic dice action from phone and render on TV. Keep existing UI routes untouched.
+**Next executable step:** verify 1 TV spectator + 2 phone players against a **non-production staging room** (or a verified real room with explicit acceptance), validate reconnect and correct full game state; only then expose a separately labeled test URL. Add explicit staging environment to avoid writing to production D1. Continue stage 0 game rule coverage and stage 1 visual calibration. Keep `main` untouched until production readiness.
