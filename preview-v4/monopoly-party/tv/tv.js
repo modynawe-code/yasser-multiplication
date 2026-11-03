@@ -87,8 +87,14 @@ function syncPieces(state){
     node.classList.toggle('active',state.players[state.turnIndex]?.id===p.id);
   });
 }
+const diceRecordings=[1,2,3].map(index=>new URL('../../src/modules/games/monopoly/assets/audio/dice-roll-'+index+'.mp3',import.meta.url).href);
 function sound(kind){
   if(!voiceEnabled)return;
+  if(kind==='dice'){
+    const clip=new Audio(diceRecordings[Math.floor(Math.random()*diceRecordings.length)]);
+    clip.volume=.6;void clip.play().catch(()=>{});
+    return;
+  }
   try{
     const Audio=window.AudioContext||window.webkitAudioContext;
     if(!Audio)return;

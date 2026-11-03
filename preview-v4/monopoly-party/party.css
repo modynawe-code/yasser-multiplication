@@ -86,3 +86,8 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-board.has-art .tv-cell>strong,.tv-board.has-art .tv-cell>small{visibility:hidden}
 .tv-board.has-art .tv-cell.is-focused{box-shadow:inset 0 0 0 3px #dcb052;background:#fff8ca24}
 .tv-board.has-art .tv-board-center{background:linear-gradient(145deg,#f1e9d2ed,#efe8d2ec);border:0;border-radius:14px}
+
+.remote-dice-gesture{touch-action:none;user-select:none;position:relative;overflow:hidden;transform:translateZ(0)}
+.remote-dice-gesture::after{content:"اسحب للأعلى للرمي ↑";display:block;font-size:12px;opacity:.77;margin-top:8px}
+.remote-dice-gesture.remote-dice-thrown{transform:translateY(-10px) rotate(-3deg);transition:transform .25s ease-out}
+@media (prefers-reduced-motion:reduce){.remote-dice-gesture.remote-dice-thrown{transform:none;transition:none}}

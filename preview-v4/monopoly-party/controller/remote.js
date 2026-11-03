@@ -18,11 +18,11 @@ async function sendAction(type,payload={}){
   get('remotePortfolio').querySelectorAll('button').forEach(button=>button.disabled=true);
   get('remoteTurnHint').textContent='جارٍ إرسال الحركة…';
   try{
+    if(type==='roll')sound('dice');
     await connection.action(type,payload);
     get('remoteJoinError').textContent='';
-    if(type==='roll')sound('dice');
-    else if(type==='buy'||type==='build')sound('purchase');
-    else sound('tap');
+    if(type==='buy'||type==='build')sound('purchase');
+    else if(type!=='roll')sound('tap');
   }catch(error){
     get('remoteTurnDetails').textContent=error.status===409?
       'حدث تغيير في الغرفة، تم تحديث الحالة. حاول مجددًا إذا كان دورك.':
@@ -34,7 +34,13 @@ async function sendAction(type,payload={}){
   }
 }
 let soundContext=null;
+const diceRecordings=[1,2,3].map(index=>new URL('../../src/modules/games/monopoly/assets/audio/dice-roll-'+index+'.mp3',import.meta.url).href);
 function sound(type){
+  if(type==='dice'){
+    const clip=new Audio(diceRecordings[Math.floor(Math.random()*diceRecordings.length)]);
+    clip.volume=.5;void clip.play().catch(()=>{});
+    return;
+  }
   try{
     const Audio=window.AudioContext||window.webkitAudioContext;
     if(!Audio)return;
@@ -51,7 +57,31 @@ function sound(type){
 function actionButton(item){
   const button=element('button','party-btn'+(['skip','pass-auction','trade-reject'].includes(item.type)?' secondary':''),item.label);
   button.type='button';button.dataset.action=item.type;button.disabled=pending;
-  button.addEventListener('click',()=>{void sendAction(item.type,item.payload||{});});
+  if(item.type==='roll'){
+    let start=null,suppressUntil=0;
+    button.classList.add('remote-dice-gesture');
+    button.setAttribute('aria-label','ارمِ النرد: اضغط أو اسحب للأعلى');
+    button.addEventListener('pointerdown',event=>{
+      if(button.disabled)return;
+      start={y:event.clientY,id:event.pointerId};
+      button.setPointerCapture?.(event.pointerId);
+    });
+    button.addEventListener('pointerup',event=>{
+      if(!start||start.id!==event.pointerId)return;
+      const movement=start.y-event.clientY;start=null;
+      if(movement>35){
+        suppressUntil=performance.now()+700;
+        button.classList.add('remote-dice-thrown');
+        setTimeout(()=>button.classList.remove('remote-dice-thrown'),350);
+        void sendAction('roll');
+      }
+    });
+    button.addEventListener('pointercancel',()=>{start=null;});
+    button.addEventListener('click',event=>{
+      if(performance.now()<suppressUntil){event.preventDefault();return;}
+      void sendAction('roll');
+    });
+  }else button.addEventListener('click',()=>{void sendAction(item.type,item.payload||{});});
   return button;
 }
 function tradeForm(index,state){
