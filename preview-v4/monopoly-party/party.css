@@ -73,3 +73,16 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-highlight{color:#f4d37a!important;font-weight:850}
 .tv-options{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tv-options button{flex:1;min-height:45px;padding:7px;font-size:12px}
 @media (prefers-reduced-motion:reduce){.tv-board{transition:none!important}}
+
+/* High resolution source artwork, using precisely the same tile grid margins as
+   the live Monopoly board. A readable DOM fallback remains when offline. */
+.tv-board.has-art{
+  padding:calc(7.09375% - 3px) calc(7.15625% - 3px) calc(7.15625% - 3px) calc(7.09375% - 3px);
+  grid-template-columns:1.625fr repeat(9,minmax(0,1fr)) 1.625fr;
+  grid-template-rows:1.625fr repeat(9,minmax(0,1fr)) 1.625fr;
+  background-color:#f2efdd;background-repeat:no-repeat;background-position:center;background-size:100% 100%;
+}
+.tv-board.has-art .tv-cell{background:transparent;border-color:transparent;border-top-color:transparent}
+.tv-board.has-art .tv-cell>strong,.tv-board.has-art .tv-cell>small{visibility:hidden}
+.tv-board.has-art .tv-cell.is-focused{box-shadow:inset 0 0 0 3px #dcb052;background:#fff8ca24}
+.tv-board.has-art .tv-board-center{background:linear-gradient(145deg,#f1e9d2ed,#efe8d2ec);border:0;border-radius:14px}

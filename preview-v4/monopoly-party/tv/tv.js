@@ -29,6 +29,25 @@ function boardSetup(){
   title.append(el('div','center-mark','🎲'),el('h2','','احتكار المعرفة'),el('p','','العب من جوالك · الشاشة تتابع الحكاية'));
   center.append(title);board.append(center,tokenLayer);
 }
+async function loadBoardArt(){
+  // Reuse the same checked Arabic Figma board art as the original Monopoly.
+  // The 40 DOM cells still own pieces, houses, hotels and ownership highlights.
+  try{
+    const url=new URL('../../src/modules/games/monopoly/assets/figma-arabic/board-from-variable-template.png.b64',import.meta.url);
+    const response=await fetch(url,{cache:'force-cache'});
+    if(!response.ok)throw new Error('board artwork unavailable');
+    const source=(await response.text()).trim();
+    if(!/^[a-zA-Z0-9+/=\s]+$/.test(source)||source.length<1000)throw new Error('invalid board artwork');
+    board.style.backgroundImage='url("data:image/png;base64,'+source.replace(/\s+/g,'')+'")';
+    board.classList.add('has-art');
+    if(latestState)latestState.players.forEach(player=>place(player.id,player.position||0,false));
+    return true;
+  }catch{
+    // A disconnected/offline TV keeps the readable accessible DOM fallback.
+    board.classList.remove('has-art');
+    return false;
+  }
+}
 function drawQr(code){
   const url=publicJoinUrl(code);
   const qr=qrcode(0,'M');qr.addData(url);qr.make();
@@ -211,6 +230,7 @@ byId('tvSound').addEventListener('click',()=>{
   if(voiceEnabled)sound('purchase');
 });
 boardSetup();
+void loadBoardArt();
 const initial=new URL(location.href).searchParams.get('code');if(roomCode(initial))byId('tvJoinForm').elements.code.value=initial;
 void conn.resume();
 window.addEventListener('resize',()=>{if(latestState)latestState.players?.forEach(p=>place(p.id,p.position||0,false));});
