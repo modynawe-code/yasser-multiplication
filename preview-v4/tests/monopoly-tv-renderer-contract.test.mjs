@@ -135,3 +135,15 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.match(css,/\.tv-board\.tv-3d-board-ready/);
   assert.doesNotMatch(d,/submitAction|createRoom|fetch\(/);
 });
+
+test('dice roll uses a real Three.js camera crane and always restores the tile projection',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/camera\.lookAt\(0,0,-\.8\)/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:2\.1,z:10\.4/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:0,z:10/);
+  assert.match(d,/camera\.position\.set\(0,0,10\)/);
+  assert.match(d,/board\.classList\.add\('tv-3d-rolling'\)/);
+  assert.match(d,/board\.classList\.remove\('tv-3d-rolling'\)/);
+  assert.match(css,/\.tv-board\.tv-3d-board-ready\.tv-3d-rolling \.tv-cell/);
+  assert.match(d,/prefers-reduced-motion/);
+});
