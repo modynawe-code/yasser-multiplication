@@ -305,3 +305,18 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){
   .tv-view .tv-table-surface,.tv-view .tv-center-scene{transition:none!important}
 }
+
+/* Mask the permanent, baked-in center logo on the original board art.
+   Keep the original 40 property squares and their precise positions untouched. */
+.tv-view .tv-board.has-art .tv-board-center{
+  background:
+    radial-gradient(circle at 50% 48%,#fff8e9 0%,#f1e9d3 69%,#dfd4b6 100%);
+  border:3px solid #887550;
+  box-shadow:0 0 0 3px #e3d8b5 inset,0 0 20px #3b342018 inset;
+}
+.tv-view .tv-board.has-art .tv-board-center.is-playing{
+  background:
+    radial-gradient(ellipse at 50% 45%,#fff8e9,#e6e3c8 80%,#d4cfae);
+}
+.tv-view .tv-tokens{overflow:hidden;contain:paint}
+.tv-view .tv-board.cinematic-ready .tv-token{visibility:hidden}
