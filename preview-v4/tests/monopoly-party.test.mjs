@@ -105,7 +105,7 @@ test('duplicate room versions cannot replay a camera movement or UI callback',as
   session.leave();
 });
 test('TV-only viewer is unable to authorize owner property mutations',async()=>{
-  const state={...state('end'),ownership:{1:{ownerId:'host',houses:0},3:{ownerId:'host',houses:0}}};
-  assert.equal(resolvePartyAction(state,'guest','sell',{index:3}),null);
-  assert.equal(resolvePartyAction(state,'nonexistent','build',{index:3}),null);
+  const game={...state('end'),ownership:{1:{ownerId:'host',houses:0},3:{ownerId:'host',houses:0}}};
+  assert.equal(resolvePartyAction(game,'guest','sell',{index:3}),null);
+  assert.equal(resolvePartyAction(game,'nonexistent','build',{index:3}),null);
 });
