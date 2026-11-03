@@ -163,7 +163,7 @@ export async function createCinematicScene({board,cells,colors}){
     eventTimeline?.kill();
     gsap.killTweensOf(node);
     if(reduced()){gsap.set(node,{autoAlpha:1,scale:1,y:0});return;}
-    const dramatic=new Set(['property','card','auction','trade','finished']).has(phase);
+    const dramatic=new Set(['property','card','auction','trade','finished','purchase','build','mortgage','sale','jail']).has(phase);
     if(!dramatic){gsap.set(node,{autoAlpha:1,scale:1,y:0});return;}
     eventTimeline=gsap.timeline({onComplete:()=>{eventTimeline=null;}});
     eventTimeline.fromTo(node,{autoAlpha:.45,scale:.94,y:16},
