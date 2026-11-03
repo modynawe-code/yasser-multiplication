@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOARD,partyActions,roomCode,tileCoordinates,publicJoinUrl,makePartyConnection} from '../monopoly-party/shared.js';
+import {BOARD,partyActions,partyPortfolioActions,resolvePartyAction,roomCode,tileCoordinates,publicJoinUrl,makePartyConnection} from '../monopoly-party/shared.js';
 
 test('TV board represents each of 40 unique squares including all four corners',()=>{
   assert.equal(BOARD.length,40);
@@ -63,4 +63,49 @@ test('spectator may join and resume but cannot create or issue player commands',
   await second.resume();
   assert.equal(second.room.version,2);
   second.leave();conn.leave();
+});
+
+test('property manager restricts building, selling and trading to the owner at valid phases',()=>{
+  const game={
+    ...state('end'),
+    ownership:{1:{ownerId:'host',houses:2},3:{ownerId:'host',houses:0}},
+    players:[{id:'host',name:'الأول',cash:1000},{id:'guest',name:'الثاني',cash:800}]
+  };
+  assert.deepEqual(partyPortfolioActions(game,'guest'),[]);
+  const actions=partyPortfolioActions(game,'host');
+  assert.equal(actions.filter(a=>a.type==='build').length,2);
+  assert.equal(actions.filter(a=>a.type==='sell').length,2);
+  assert.equal(actions.filter(a=>a.type==='trade').length,2);
+  assert.equal(resolvePartyAction(game,'host','build',{index:1}).type,'build');
+  assert.equal(resolvePartyAction(game,'host','sell',{index:3}).type,'sell');
+  assert.equal(resolvePartyAction(game,'host','trade',{index:3}).type,'trade');
+  assert.equal(resolvePartyAction(game,'host','sell',{index:2}),null);
+  assert.equal(resolvePartyAction(game,'guest','trade',{index:3}),null);
+  assert.equal(partyPortfolioActions({...game,phase:'roll'},'host').filter(a=>a.type==='sell').length,0);
+  assert.equal(partyPortfolioActions({...game,phase:'roll'},'host').filter(a=>a.type==='build').length,2);
+  assert.equal(partyPortfolioActions({...game,phase:'property'},'host').length,0);
+  assert.equal(partyPortfolioActions({...game,players:[{id:'host',name:'الأول',cash:10},game.players[1]]},'host').filter(a=>a.type==='build').length,0);
+});
+test('duplicate room versions cannot replay a camera movement or UI callback',async()=>{
+  const storage=new Map();
+  const state={status:'waiting',players:[{id:'host'}]};
+  let received=0,lookups=0;
+  const client={
+    createRoom:async()=>({playerToken:'secret',room:{code:'123456',gameId:'family-monopoly',version:0,selfPlayerId:'host',state}}),
+    getRoom:async()=>{lookups++;return{room:{code:'123456',gameId:'family-monopoly',version:0,selfPlayerId:'host',state}};}
+  };
+  const session=makePartyConnection({role:'player',client,
+    storage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
+    onRoom:()=>received++});
+  await session.create('host');
+  assert.equal(received,1);
+  await new Promise(resolve=>setTimeout(resolve,1400));
+  assert.ok(lookups>=1);
+  assert.equal(received,1);
+  session.leave();
+});
+test('TV-only viewer is unable to authorize owner property mutations',async()=>{
+  const state={...state('end'),ownership:{1:{ownerId:'host',houses:0},3:{ownerId:'host',houses:0}}};
+  assert.equal(resolvePartyAction(state,'guest','sell',{index:3}),null);
+  assert.equal(resolvePartyAction(state,'nonexistent','build',{index:3}),null);
 });
