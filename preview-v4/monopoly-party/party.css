@@ -405,19 +405,14 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-view .tv-wait{margin:3px 0 7px;color:#c8d9c9}
 .tv-view .tv-board.has-art .tv-board-center{
   position:relative;
-  background:radial-gradient(ellipse at 50% 40%,#f4efdf 0%,#e7e4cf 72%,#d4ccad 100%);
-  border:2px solid #b6a77f;
-  border-radius:clamp(6px,1vw,14px);
+  background:linear-gradient(145deg,#2c6d50 0%,#1d5039 56%,#143b2b 100%);
+  border:0;
+  border-radius:0;
+  box-shadow:none;
 }
-.tv-view .tv-center-scene[data-phase=waiting]{
-  max-width:300px;
-  width:min(72%,300px);
-  padding:clamp(10px,1vw,17px);
-  border-radius:14px;
-  color:#214c37;
-  background:linear-gradient(155deg,#fff9eacc,#ece3cbcc);
-  border:1px solid #ad9a6f;
-  box-shadow:0 10px 25px #344d2e20;
+.tv-view .tv-center-scene[data-phase=waiting],
+.tv-view .tv-center-scene[data-phase=roll]{
+  display:none;
 }
 .tv-view .tv-board-center.is-playing .tv-center-scene{
   width:min(78%,395px);

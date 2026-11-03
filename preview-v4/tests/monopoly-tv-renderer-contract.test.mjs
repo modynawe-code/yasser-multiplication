@@ -136,6 +136,13 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.doesNotMatch(d,/submitAction|createRoom|fetch\(/);
 });
 
+test('TV idle and pre-roll center stay open, with readable-sized 3D pawns',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(css,/\.tv-center-scene\[data-phase=waiting\],\s*\.tv-view \.tv-center-scene\[data-phase=roll\]\{\s*display:none;/);
+  assert.match(css,/\.tv-view \.tv-board\.has-art \.tv-board-center\{[\s\S]*?background:linear-gradient\(145deg,#2c6d50 0%,#1d5039 56%,#143b2b 100%\)/);
+  assert.match(d,/pawn\.group\.scale\.setScalar\(\.68\+\(i===0\?\.04:0\)\)/);
+});
+
 test('dice roll uses a real Three.js camera crane and always restores the tile projection',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/camera\.lookAt\(0,0,-\.8\)/);

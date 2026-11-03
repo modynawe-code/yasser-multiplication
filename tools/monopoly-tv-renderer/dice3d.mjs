@@ -206,7 +206,7 @@ export function createThreeDice(board){
       if(!pawn){pawn=makePawn(colors[i%colors.length]||'#18a775');pawns.set(p.id,pawn);fresh=true;}
       const cell=cells.get(p.position||0);
       if(fresh&&cell)pawn.group.position.copy(worldPoint(cell));
-      pawn.group.scale.setScalar(.9+(i===0?.1:0));
+      pawn.group.scale.setScalar(.68+(i===0?.04:0));
     });
     canvas.dataset.pawns=String(pawns.size);
     // QA-only geometry diagnostic: projected 3D origin vs actual DOM tile center.
