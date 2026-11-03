@@ -7,7 +7,7 @@ const status=byId('connectionStatus');
 const board=byId('partyBoard');
 const tokenLayer=document.createElement('div');tokenLayer.className='tv-tokens';
 const cells=new Map(),pieces=new Map();
-let previousRoom=null,sequence=0,latestState=null,voiceEnabled=false,soundContext=null,overviewTimer=null,lastFocus=-1,cinematic=null;
+let previousRoom=null,sequence=0,latestState=null,voiceEnabled=false,soundContext=null,overviewTimer=null,lastFocus=-1,cinematic=null,boardArtSource=null;
 const conn=makePartyConnection({role:'spectator',onRoom:renderRoom,onStatus:(value,error)=>{
   status.textContent=value==='connected'?'متصل بالغرفة':'الاتصال غير متاح'+(error?.status?' ('+error.status+')':'');
   status.classList.toggle('offline',value!=='connected');
@@ -41,8 +41,10 @@ async function loadBoardArt(){
     if(!response.ok)throw new Error('board artwork unavailable');
     const source=(await response.text()).trim();
     if(!/^[a-zA-Z0-9+/=\s]+$/.test(source)||source.length<1000)throw new Error('invalid board artwork');
-    board.style.backgroundImage='url("data:image/png;base64,'+source.replace(/\s+/g,'')+'")';
+    boardArtSource='data:image/png;base64,'+source.replace(/\s+/g,'');
+    board.style.backgroundImage='url("'+boardArtSource+'")';
     board.classList.add('has-art');
+    cinematic?.setBoardArt(boardArtSource);
     if(latestState)latestState.players.forEach(player=>place(player.id,player.position||0,false));
     return true;
   }catch{
@@ -337,7 +339,7 @@ boardSetup();
 // The optional bundled renderer is served locally; a failed WebGL context keeps DOM play usable.
 void import('../vendor/cinematic-scene.mjs').then(async module=>{
   cinematic=await module.createCinematicScene({board,cells,colors:PARTY_COLORS});
-  if(cinematic){board.classList.add('cinematic-ready');if(latestState)cinematic.sync(latestState);}
+  if(cinematic){board.classList.add('cinematic-ready');if(boardArtSource)cinematic.setBoardArt(boardArtSource);if(latestState)cinematic.sync(latestState);}
 }).catch(error=>{console.warn('TV cinematic renderer unavailable; retaining accessible DOM fallback',error);});
 void loadBoardArt();
 const initial=new URL(location.href).searchParams.get('code');if(roomCode(initial))byId('tvJoinForm').elements.code.value=initial;
