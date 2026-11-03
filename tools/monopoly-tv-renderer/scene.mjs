@@ -155,6 +155,24 @@ export async function createCinematicScene({board,cells,colors}){
       });
     });
   }
+  // Presentation-only event director: camera lands, card appears, then returns.
+  // The authoritative game phase and card content are never created here.
+  let eventTimeline=null;
+  function presentEvent(node,{phase='end',index=null}={}){
+    if(destroyed||!node)return;
+    eventTimeline?.kill();
+    gsap.killTweensOf(node);
+    if(reduced()){gsap.set(node,{autoAlpha:1,scale:1,y:0});return;}
+    const dramatic=new Set(['property','card','auction','trade','finished']).has(phase);
+    if(!dramatic){gsap.set(node,{autoAlpha:1,scale:1,y:0});return;}
+    eventTimeline=gsap.timeline({onComplete:()=>{eventTimeline=null;}});
+    eventTimeline.fromTo(node,{autoAlpha:.45,scale:.94,y:16},
+      {autoAlpha:1,scale:1,y:0,duration:.55,ease:'back.out(1.35)',overwrite:true});
+  }
+  function clearEvent(node){
+    eventTimeline?.kill();eventTimeline=null;
+    if(node){gsap.killTweensOf(node);gsap.set(node,{clearProps:'transform,opacity,visibility'});}
+  }
   function resize(state){if(destroyed)return;threeDice?.resize();for(const p of state?.players||[]){const actor=actors.get(p.id),point=xy(p.position||0);if(actor&&point){gsap.killTweensOf(actor.position);actor.position.set(point.x,point.y);}}}
   function destroy(){
     if(destroyed)return;destroyed=true;
@@ -162,9 +180,10 @@ export async function createCinematicScene({board,cells,colors}){
     for(const a of actors.values())gsap.killTweensOf(a.position);
     actors.clear();
     clearDice();
+    clearEvent();
     threeDice?.destroy();threeDice=null;
     app.destroy(true,{children:true});
     gsap.set(board,{clearProps:'transform,transformOrigin'});
   }
-  return {sync,refresh,focus,overview,move,rollDice,clearDice,resize,destroy,engine:'pixi.js+gsap+three.js'};
+  return {sync,refresh,focus,overview,move,rollDice,clearDice,presentEvent,clearEvent,resize,destroy,engine:'pixi.js+gsap+three.js'};
 }
