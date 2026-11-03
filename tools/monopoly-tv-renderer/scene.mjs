@@ -111,6 +111,19 @@ export async function createCinematicScene({board,cells,colors}){
   const diceLayer=new Container();
   app.stage.addChild(diceLayer);
   let diceTimeline=null,threeDice=null,threeUnavailable=false;
+  // Mount the shared Three.js scene at TV start, not only after the first roll.
+  // If WebGL fails, the accessible Pixi/DOM board remains available.
+  try{
+    threeDice=createThreeDice(board);
+    layer.visible=false;
+  }catch(error){
+    threeUnavailable=true;
+    console.warn('Three.js board unavailable; keeping PixiJS board fallback',error);
+  }
+  function setBoardArt(source){
+    if(destroyed)return;
+    if(threeDice)threeDice.setBoardArt(source);
+  }
   function paintDie(number){
     const side=limit(board.offsetWidth*.092,36,86);
     const g=new Graphics();
@@ -192,5 +205,5 @@ export async function createCinematicScene({board,cells,colors}){
     app.destroy(true,{children:true});
     gsap.set(board,{clearProps:'transform,transformOrigin'});
   }
-  return {sync,refresh,focus,overview,move,rollDice,clearDice,presentEvent,clearEvent,resize,destroy,engine:'pixi.js+gsap+three.js'};
+  return {sync,refresh,focus,overview,move,rollDice,clearDice,setBoardArt,presentEvent,clearEvent,resize,destroy,engine:'pixi.js+gsap+three.js'};
 }
