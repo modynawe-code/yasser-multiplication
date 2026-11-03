@@ -154,6 +154,8 @@ export function createThreeDice(board){
       boardGroup.add(artPlane);
       boardTexture=texture;boardReady=true;
       board.classList.add('tv-3d-board-ready');
+      board.dataset.displayEngine='three.js-table';
+      board.dataset.displayReason='texture-ready';
       canvasElement.dataset.table='3d';
       draw();
     };
