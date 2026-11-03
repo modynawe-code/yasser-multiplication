@@ -207,6 +207,14 @@ def run(browser_type,name):
         host.locator('#remoteActions button[data-action=roll]').click()
         host.locator('#remoteActions button[data-action=buy]').wait_for(timeout=12000)
         tv.wait_for_function("() => document.querySelector('#tvEvent')?.textContent?.includes('أرض متاحة للشراء')",timeout=15000)
+        if name=="chromium":
+            tv.wait_for_function("""() => {
+              const c=document.querySelector('#partyBoard canvas.tv-three-dice-canvas');
+              return Number(c?.dataset.maxCameraLift||0)>1.6 &&
+                c?.dataset.cameraRestored==='true';
+            }""",timeout=15000)
+            result["cameraCrane"]="Three.js camera lifted and returned to original tile alignment"
+
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=7000)
         if name=="chromium":
             # Verify Three.js actually mounted and drew 3D dice in a real browser.
