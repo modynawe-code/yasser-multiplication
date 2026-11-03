@@ -36,7 +36,7 @@ Scope: TV viewer, independent phone controllers, isolated staging, Android TV. P
 | RENDER-02 | Real shadows, surfaces, property states, 2–4 player tokens, houses/hotels | PixiJS/WebGL | Screenshot comparisons before/after, correct board coordinates | IMPLEMENTED/UNVERIFIED (initial pawn/shadow layer only) |
 | CAMERA-01 | Idle overview > dice throw > step-by-step follow > landing focus > event > smooth overview | GSAP timeline | Recorded multi-turn video; no competing animations, precise camera follow | IMPLEMENTED/UNVERIFIED (camera GSAP; complete scene director pending) |
 | CAMERA-02 | Event safe zones: never cover active tile, token or essential event | GSAP + layout tests | Screenshot checks at 1080p and TV viewport | NOT STARTED |
-| DICE-01 | Two convincing dice with roll, collision, bounce and result from server only | PixiJS + optionally Three.js | Video at normal speed, deterministic outcome verification | IMPLEMENTED/UNVERIFIED (2D Pixi dice with GSAP bounce, not physical 3D collision) |
+| DICE-01 | Two convincing dice with roll, collision, bounce and result from server only | PixiJS + optionally Three.js | Video at normal speed, deterministic outcome verification | IMPLEMENTED/UNVERIFIED (Three.js BoxGeometry, six textured faces and GSAP bounce; real physics collision and visual approval pending) |
 | TOKEN-01 | 2–4 visually distinct pieces turn corners and move one tile at a time | PixiJS + GSAP | Video + motion/position tests | IMPLEMENTED/UNVERIFIED (Pixi pawns on existing step route) |
 | EVENT-01 | Distinct scenes for buy, rent, auction, build, mortgage, trade, chance, chest, jail, bankruptcy and victory | PixiJS + GSAP | Each event exercised, recorded and checked against server state | NOT STARTED |
 | AUDIO-01 | Dice, steps, money, construction, cards, jail, win, mute and levels | Existing audio + Web Audio | Captured sound and no autoplay failures | NOT STARTED |
@@ -71,3 +71,11 @@ A stage is VERIFIED only with: file paths + commit SHA + test run URL + relevant
 - Verified earlier integration: [TV+phone browser QA run 41677074222](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677074222) SUCCESS; [Android TV APK run 41676868212](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41676868212) SUCCESS. Those runs precede the new dice animation.
 - Required latest validation: [TV+phone QA run 41677652576](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677652576), [TV staging run 41677652750](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677652750), [Android TV APK run 41677652579](https://github.com/modynawe-code/yasser-multiplication/actions/runs/41677652579). Check their conclusions before marking any gate VERIFIED.
 - No user physical TV acceptance has happened. DOM/CSS board remains present. This is a foundation, **not** finished high-fidelity 3D graphics.
+
+## 2026-11-03 Three.js volumetric dice checkpoint
+- Three.js version `0.187.0` pinned in isolated renderer dependencies; `tools/monopoly-tv-renderer/dice3d.mjs` creates real BoxGeometry meshes, six textured face materials, directional + ambient lights and an overlay WebGL canvas.
+- The visible face is chosen only from `state.dice`, with quaternion orientation for each server-defined result. GSAP animates 3D cube rotations and bounces. No local random rolls or monetary actions.
+- On WebGL/context initialization failure, renderer gracefully returns to the previous PixiJS dice path. Context is initialized lazily, with cleanup on scene destruction.
+- `preview-v4/tools/monopoly-tv-qa.py` now requires a visible Three.js canvas in Chromium during an actual two-player simulated turn, and the contract test requires 3D geometry and server result mapping.
+- Commits: `4cc0346` dependency, `63ed585` actual Three.js dice, `18f3817` wiring and fallback, `ee9b6de` contract, `fbc274b` browser check.
+- **No physical cube simulation/rigid-body physics yet**; no approved high-fidelity complete game scene yet. The last build and visual QA conclusions must be checked before approval.
