@@ -28,3 +28,14 @@ test('rendering does not authorize server money, player actions or mutate snapsh
   assert.match(scene,/prefers-reduced-motion/);
   assert.match(scene,/function destroy\(/);
 });
+
+test('cinematic dice are drawn from authoritative faces before piece travel',()=>{
+  assert.match(scene,/function rollDice\(values\)/);
+  assert.match(scene,/values\.every\(n=>Number\.isInteger\(n\)&&n>=1&&n<=6\)/);
+  assert.match(scene,/pipLayout\[number\]/);
+  assert.match(scene,/gsap\.timeline\(/);
+  assert.match(scene,/onInterrupt:/);
+  assert.match(entry,/await cinematic\.rollDice\(state\.dice\)/);
+  assert.match(entry,/if\(generation!==sequence\)return/);
+  assert.match(entry,/cinematic\?\.clearDice\(\)/);
+});
