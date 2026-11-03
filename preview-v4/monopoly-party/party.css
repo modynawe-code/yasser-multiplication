@@ -499,3 +499,14 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
   visibility:hidden!important;
   opacity:0!important;
 }
+
+/* During the brief physical Three.js camera crane, DOM-owned indicators would
+   otherwise remain in a flat projection. Hide them only until camera settles. */
+.tv-view .tv-board.tv-3d-board-ready.tv-3d-rolling .tv-cell{
+  visibility:hidden;
+}
+@media(prefers-reduced-motion:reduce){
+  .tv-view .tv-board.tv-3d-board-ready.tv-3d-rolling .tv-cell{
+    visibility:visible;
+  }
+}
