@@ -3,7 +3,7 @@ import {
   WebGLRenderer,Scene,PerspectiveCamera,AmbientLight,DirectionalLight,
   Mesh,BoxGeometry,MeshStandardMaterial,CanvasTexture,Group,
   PlaneGeometry,MeshBasicMaterial,DoubleSide,Vector3,Quaternion,SRGBColorSpace,
-  CylinderGeometry,SphereGeometry,CircleGeometry,TextureLoader
+  CylinderGeometry,SphereGeometry,CircleGeometry
 } from 'three';
 import {gsap} from 'gsap';
 
@@ -115,8 +115,8 @@ export function createThreeDice(board){
       if(!ctx)return;
       ctx.drawImage(img,0,0,1024,1024);
       // Source art includes a printed brand in its center. Preserve the 40 tiles.
-      const inset=154,edge=1024-2*inset;
-      const gradient=ctx.createRadialGradient(512,430,30,512,512,540);
+      const inset=188,edge=1024-2*inset;
+      const gradient=ctx.createRadialGradient(512,430,30,512,512,500);
       gradient.addColorStop(0,'#e7e6ca');
       gradient.addColorStop(.58,'#d0d8bd');
       gradient.addColorStop(1,'#9fb6a4');
