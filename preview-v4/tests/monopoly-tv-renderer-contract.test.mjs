@@ -102,3 +102,17 @@ test('spectator does not skip the first authoritative roll when polling jumps fr
   assert.match(entry,/Array\.isArray\(state\.dice\)&&state\.dice\.length===2/);
   assert.match(entry,/await cinematic\.rollDice\(state\.dice,old\.state\)/);
 });
+
+test('authoritative event scene types provide visible and cancellable state-specific presentations',()=>{
+  for(const action of ['buy','build','mortgage','unmortgage','sell','jail','trade-accept','trade-reject']){
+    assert.ok(entry.includes("'"+action+"':")||entry.includes(action+':'),"missing action scene: "+action);
+  }
+  for(const kind of ['purchase','build','mortgage','sale','jail','trade']){
+    assert.match(scene,new RegExp("'"+kind+"'"));
+    assert.match(css,new RegExp('data-event='+kind));
+  }
+  assert.match(entry,/scene\.dataset\.event=actionScene\?\.kind\|\|phase/);
+  assert.match(entry,/detail\.textContent=state\.log\|\|'تم تحديث حالة الجولة'/);
+  assert.match(entry,/cinematic\?\.presentEvent\(byId\('tvCenterScene'\),\{phase:/);
+  assert.doesNotMatch(scene,/submitAction|createRoom|fetch\(/);
+});
