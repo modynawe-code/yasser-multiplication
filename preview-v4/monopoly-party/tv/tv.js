@@ -25,9 +25,12 @@ function boardSetup(){
     cells.set(i,node);board.append(node);
   });
   const center=el('div','tv-board-center');
-  const title=el('div');
-  title.append(el('div','center-mark','🎲'),el('h2','','احتكار المعرفة'),el('p','','العب من جوالك · الشاشة تتابع الحكاية'));
-  center.append(title);board.append(center,tokenLayer);
+  const stage=el('section','tv-center-stage');stage.id='tvCenterStage';
+  const eyebrow=el('p','tv-center-eyebrow','طاولة اللعب');eyebrow.id='tvCenterEyebrow';
+  const title=el('h2','tv-center-title','بانتظار اللاعبين');title.id='tvCenterTitle';
+  const copy=el('p','tv-center-copy','جاهزين للجولة؟');copy.id='tvCenterCopy';
+  // The two real dice belong in the board center, not in a competing side HUD.
+  stage.append(eyebrow,title,copy,byId('tvDice'));center.append(stage);board.append(center,tokenLayer);
 }
 async function loadBoardArt(){
   // Reuse the same checked Arabic Figma board art as the original Monopoly.
@@ -148,7 +151,78 @@ function syncBuildings(state){
     }
   }
 }
+function animateCenter(state){
+  const stage=byId('tvCenterStage');
+  if(!stage)return;
+  const turn=state.players?.[state.turnIndex],pending=state.pending;
+  const square=pending?.index===undefined?BOARD[turn?.position]:BOARD[pending.index];
+  const phrase=state.log||'';
+  let eyebrow='طاولة اللعب',title='بانتظار اللاعبين',copy='يدخل اللاعبون بالغرفة من جوالاتهم';
+  if(state.status==='finished'){
+    eyebrow='انتهت الجولة';
+    title='الفائز '+(state.players?.find(p=>p.id===state.winnerId)?.name||'');
+    copy='تهانينا!';
+  }else if(state.status==='playing'){
+    const turnName=turn?.name||'اللاعب';
+    if(state.phase==='roll'){
+      eyebrow='الدور الآن · '+turnName;
+      title='ارمِ النرد';
+      copy='ارمِ النرد من جوالك';
+    }else if(state.phase==='property'){
+      eyebrow='صك ملكية · قرار الشراء';
+      title=square?.name||'أرض جديدة';
+      copy='السعر '+(square?.price||0)+' ريال · اختر من جوالك';
+    }else if(state.phase==='auction'){
+      eyebrow='مزاد مباشر';
+      title=square?.name||'المزاد';
+      copy='أعلى عرض '+(state.auction?.bid||0)+' ريال';
+    }else if(state.phase==='card'){
+      eyebrow='فرصة أو صندوق الجماعة';
+      title=pending?.stage==='face'?'كشف البطاقة':'بطاقة مغلقة';
+      copy=pending?.stage==='face'?pending.card?.text||phrase:'اسحب واكشف من جوالك';
+    }else if(state.phase==='trade'){
+      eyebrow='تبادل الأملاك';
+      title=square?.name||'عرض تبادل';
+      copy='بانتظار موافقة اللاعب الثاني';
+    }else{
+      eyebrow='انتهاء الحدث · '+turnName;
+      title=phrase.includes('بنى')?'تم البناء':phrase.includes('رهن')?'إدارة الرهن':square?.name||'تم الحدث';
+      copy=phrase||'واصل اللعب من جوالك';
+    }
+  }
+  const key=[state.status,state.phase,pending?.index??'',state.presentation?.sequence??''].join(':');
+  if(stage.dataset.scene!==key){
+    stage.dataset.scene=key;
+    stage.classList.remove('tv-center-enter');
+    void stage.offsetWidth;
+    stage.classList.add('tv-center-enter');
+  }
+  stage.dataset.phase=state.phase||state.status;
+  stage.style.setProperty('--scene-accent',GROUP_COLORS[square?.group]||'#e4bf64');
+  byId('tvCenterEyebrow').textContent=eyebrow;
+  byId('tvCenterTitle').textContent=title;
+  byId('tvCenterCopy').textContent=copy;
+}
+function makeDie(value,rolling=false){
+  const face=el('div','tv-die'+(rolling?' rolling':''));
+  face.setAttribute('role','img');face.setAttribute('aria-label','نرد '+value);
+  const dots={
+    1:[[50,50]],
+    2:[[25,25],[75,75]],
+    3:[[25,25],[50,50],[75,75]],
+    4:[[25,25],[75,25],[25,75],[75,75]],
+    5:[[25,25],[75,25],[50,50],[25,75],[75,75]],
+    6:[[25,20],[75,20],[25,50],[75,50],[25,80],[75,80]]
+  };
+  for(const [x,y] of dots[Number(value)]||dots[1]){
+    const dot=el('span','tv-die-pip');
+    dot.style.left=x+'%';dot.style.top=y+'%';
+    face.append(dot);
+  }
+  return face;
+}
 function renderEvent(state){
+  animateCenter(state);
   const dest=byId('tvEvent');dest.replaceChildren();
   if(state.status==='waiting'){
     dest.append(el('strong','','بانتظار بدء اللعبة'),el('p','','ينضم لاعبان على الأقل، ثم يضغط المضيف «ابدأ اللعبة» من جواله.'));
@@ -180,7 +254,7 @@ function renderEvent(state){
   if(state.phase==='card'&&pending?.stage==='face'&&pending.card?.text)dest.append(el('p','',pending.card.text));
   byId('tvPhase').textContent='المرحلة: '+state.phase+' · الدور: '+(player?.name||'—');
   const dice=byId('tvDice');dice.replaceChildren();
-  (state.dice||[]).forEach(v=>dice.append(el('div','tv-die',v)));
+  (state.dice||[]).forEach(v=>dice.append(makeDie(v)));
 }
 async function animateArrival(prev,next,token,generation){
   const from=prev?.position,to=next?.position;
@@ -206,7 +280,7 @@ async function renderRoom(room){
   const moving=state.players.find(p=>old.state?.players?.some(prev=>prev.id===p.id&&prev.position!==p.position));
   if(moving){
     byId('tvEvent').replaceChildren(el('strong','','القطعة تتحرك…'));
-    byId('tvDice').replaceChildren(...(state.dice||[]).map(v=>el('div','tv-die rolling',v)));
+    byId('tvDice').replaceChildren(...(state.dice||[]).map(v=>makeDie(v,true)));
     if(old.state?.phase==='roll'&&state.dice)sound('dice');
     state.players.filter(p=>p.id!==moving.id).forEach(p=>place(p.id,p.position||0,false));
     await animateArrival(old.state.players.find(p=>p.id===moving.id),moving,moving,generation);

@@ -91,3 +91,46 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .remote-dice-gesture::after{content:"اسحب للأعلى للرمي ↑";display:block;font-size:12px;opacity:.77;margin-top:8px}
 .remote-dice-gesture.remote-dice-thrown{transform:translateY(-10px) rotate(-3deg);transition:transform .25s ease-out}
 @media (prefers-reduced-motion:reduce){.remote-dice-gesture.remote-dice-thrown{transform:none;transition:none}}
+
+/* Cinematic board center: two visible dice and only the current event, not a
+   permanent title or duplicate HUD. All animation is presentation-only. */
+.tv-board-center,.tv-board.has-art .tv-board-center{
+  background:transparent;border:0;box-shadow:none;padding:clamp(8px,1.6vw,25px);
+  display:grid;place-items:center;overflow:visible;
+}
+.tv-center-stage{
+  --scene-accent:#e4bf64;
+  width:min(100%,440px);min-height:160px;max-height:88%;
+  padding:clamp(15px,1.8vw,30px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(6px,.8vw,14px);
+  background:linear-gradient(140deg,#faf5e9f4,#f1e7cdf4);
+  border:2px solid var(--scene-accent);border-radius:21px;
+  box-shadow:0 14px 30px #332c1950, inset 0 1px 0 #fff;
+  overflow:hidden;direction:rtl;
+}
+.tv-center-stage[data-phase=roll]{border-color:#b89b58}
+.tv-center-stage[data-phase=property]{border-top:10px solid var(--scene-accent)}
+.tv-center-stage[data-phase=auction]{border-color:#cf7c46}
+.tv-center-stage[data-phase=trade]{border-color:#4c9db1}
+.tv-center-stage[data-phase=finished]{border-color:#d0a432}
+.tv-center-eyebrow{margin:0!important;font-size:clamp(10px,1vw,17px)!important;color:#74603c!important;font-weight:850;letter-spacing:.012em}
+.tv-center-stage .tv-center-title{margin:0;font-size:clamp(22px,2.65vw,46px);line-height:1.15;color:#20452e;overflow-wrap:anywhere;text-wrap:balance}
+.tv-center-stage .tv-center-copy{margin:0!important;max-width:100%;font-size:clamp(12px,1.05vw,19px)!important;line-height:1.5;color:#3d5c47!important;overflow-wrap:anywhere}
+.tv-center-stage .tv-dice{min-height:clamp(54px,6vw,95px);margin:clamp(4px,.7vw,12px) 0 0;gap:clamp(9px,1.3vw,22px)}
+.tv-center-stage .tv-die{
+  position:relative;display:block;width:clamp(45px,5vw,80px);min-height:0;flex:none;
+  background:linear-gradient(145deg,#fffef9,#e3dfd2);border:2px solid #fff;
+  border-radius:17px;box-shadow:inset 0 -6px #bbb5a4,0 10px 15px #13271e45;
+  transform:perspective(200px) rotateX(8deg) rotateY(-8deg);
+}
+.tv-center-stage .tv-die-pip{
+  position:absolute;width:15%;aspect-ratio:1;border-radius:50%;background:#284c39;
+  transform:translate(-50%,-50%);box-shadow:inset 0 1px 2px #0009;
+}
+.tv-center-stage.tv-center-enter{animation:tv-scene-reveal .32s ease-out}
+@keyframes tv-scene-reveal{
+  from{opacity:.65;transform:translateY(12px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){.tv-center-stage.tv-center-enter{animation:none}}
