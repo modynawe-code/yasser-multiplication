@@ -263,7 +263,7 @@ def run(browser_type,name):
         assert tv.locator("#tvStage.is-live").count()==1,"live-stage design never activated"
         assert tv.locator(".tv-join-panel .tv-qr").evaluate("(el)=>getComputedStyle(el).display==='none'"),"QR must collapse after starting"
         tv.screenshot(path=str(OUT/f"{name}-tv-final-720p.png"),full_page=True)
-        tvc.set_viewport_size({"width":1920,"height":1080})
+        tv.set_viewport_size({"width":1920,"height":1080})
         tv.wait_for_timeout(450)
         large=tv.evaluate("""() => {
           const board=document.querySelector('#partyBoard').getBoundingClientRect();
