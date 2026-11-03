@@ -283,6 +283,7 @@ async function renderRoom(room){
   }
   if(generation===sequence){
     renderEvent(state);
+    cinematic?.presentEvent(byId('tvCenterScene'),{phase:state.status==='finished'?'finished':state.phase,index:state.pending?.index});
     if(cinematic && moving){
       // The card is readable before the view returns to a full board overview.
       overviewTimer=setTimeout(()=>{
@@ -299,7 +300,7 @@ byId('tvJoinForm').addEventListener('submit',async e=>{
   catch(err){byId('tvJoinError').textContent='تعذّر الربط: '+(err.status||err.message);}
   finally{button.disabled=false;}
 });
-byId('tvDisconnect').addEventListener('click',()=>{clearTimeout(overviewTimer);++sequence;cinematic?.clearDice();cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
+byId('tvDisconnect').addEventListener('click',()=>{clearTimeout(overviewTimer);++sequence;cinematic?.clearEvent(byId('tvCenterScene'));cinematic?.clearDice();cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
 byId('tvOverview').addEventListener('click',resetCamera);
 byId('tvSound').addEventListener('click',()=>{
   voiceEnabled=!voiceEnabled;
