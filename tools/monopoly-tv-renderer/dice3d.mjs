@@ -2,7 +2,8 @@
 import {
   WebGLRenderer,Scene,PerspectiveCamera,AmbientLight,DirectionalLight,
   Mesh,BoxGeometry,MeshStandardMaterial,CanvasTexture,Group,
-  PlaneGeometry,MeshBasicMaterial,DoubleSide,Vector3,Quaternion,SRGBColorSpace
+  PlaneGeometry,MeshBasicMaterial,DoubleSide,Vector3,Quaternion,SRGBColorSpace,
+  CylinderGeometry,SphereGeometry,CircleGeometry
 } from 'three';
 import {gsap} from 'gsap';
 
@@ -73,6 +74,65 @@ export function createThreeDice(board){
     m.position.set(die.position.x+.15,-.55,-1.45);
     group.add(m);return m;
   });
+  // Shared WebGL context: three-dimensional player pieces with server-owned positions.
+  const pawnBody=new CylinderGeometry(.13,.19,.34,20);
+  const pawnTop=new SphereGeometry(.135,16,12);
+  const pawnBase=new CylinderGeometry(.23,.23,.065,24);
+  const pawnShadow=new CircleGeometry(.23,24);
+  const pawns=new Map();
+  let lastCells=null;
+  function worldPoint(cell){
+    const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
+    const worldH=2*Math.tan(camera.fov*Math.PI/360)*camera.position.z;
+    return new Vector3(((cell.offsetLeft+cell.offsetWidth/2)/w-.5)*worldH*w/h,
+      (.5-(cell.offsetTop+cell.offsetHeight/2)/h)*worldH,1);
+  }
+  function makePawn(color){
+    const material=new MeshStandardMaterial({color,metalness:.55,roughness:.24});
+    const g=new Group();
+    const body=new Mesh(pawnBody,material),top=new Mesh(pawnTop,material),
+      base=new Mesh(pawnBase,material);
+    body.position.y=.17;top.position.y=.39;base.position.y=-.045;
+    const shade=new Mesh(pawnShadow,new MeshBasicMaterial({color:0x06241b,transparent:true,opacity:.34,depthWrite:false}));
+    shade.position.set(.08,-.21,-.28);
+    g.add(shade,base,body,top);
+    scene.add(g);
+    return {group:g,material,shade};
+  }
+  function syncPawns(players,cells,colors){
+    if(disposed)return;
+    lastCells=cells;
+    const list=players||[],ids=new Set(list.map(p=>p.id));
+    for(const [id,pawn] of pawns){
+      if(!ids.has(id)){
+        gsap.killTweensOf(pawn.group.position);
+        scene.remove(pawn.group);pawn.material.dispose();
+        pawn.shade.material.dispose();pawns.delete(id);
+      }
+    }
+    list.forEach((p,i)=>{
+      let pawn=pawns.get(p.id),fresh=false;
+      if(!pawn){pawn=makePawn(colors[i%colors.length]||'#18a775');pawns.set(p.id,pawn);fresh=true;}
+      const cell=cells.get(p.position||0);
+      if(fresh&&cell)pawn.group.position.copy(worldPoint(cell));
+      pawn.group.scale.setScalar(.9+(i===0?.1:0));
+    });
+    canvas.style.visibility='visible';draw();
+  }
+  async function movePawn(id,index,duration=.24){
+    const pawn=pawns.get(id),cell=lastCells?.get(index);
+    if(disposed||!pawn||!cell)return false;
+    const point=worldPoint(cell);
+    gsap.killTweensOf(pawn.group.position);
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      pawn.group.position.copy(point);draw();return true;
+    }
+    return new Promise(resolve=>{
+      gsap.to(pawn.group.position,{x:point.x,y:point.y,z:point.z,
+        duration,ease:'power1.inOut',onUpdate:draw,onComplete:()=>resolve(true),
+        onInterrupt:()=>resolve(false)});
+    });
+  }
   let timeline=null,disposed=false,shown=false;
   function resize(){
     if(disposed)return;
@@ -87,7 +147,9 @@ export function createThreeDice(board){
   }
   function clear(){
     timeline?.kill();timeline=null;
-    shown=false;canvas.style.visibility='hidden';
+    shown=false;group.visible=false;
+    canvas.style.visibility=pawns.size?'visible':'hidden';
+    draw();
   }
   async function roll(values){
     if(disposed||!Array.isArray(values)||values.length!==2||
@@ -102,7 +164,7 @@ export function createThreeDice(board){
       die.quaternion.copy(target[i]);
       die.rotation.x+=Math.PI*2;die.rotation.y+=Math.PI*2;
     });
-    shown=true;canvas.style.visibility='visible';
+    shown=true;group.visible=true;canvas.style.visibility='visible';
     draw();
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       dice.forEach((die,i)=>die.quaternion.copy(target[i]));
@@ -131,11 +193,16 @@ export function createThreeDice(board){
   function destroy(){
     if(disposed)return;
     clear();disposed=true;
+    for(const pawn of pawns.values()){
+      gsap.killTweensOf(pawn.group.position);
+      scene.remove(pawn.group);pawn.material.dispose();pawn.shade.material.dispose();
+    }
+    pawns.clear();pawnBody.dispose();pawnTop.dispose();pawnBase.dispose();pawnShadow.dispose();
     for(const t of textures)t.dispose();
     for(const m of materials)m.dispose();
     geometry.dispose();shadowGeometry.dispose();shadowMaterial.dispose();
     renderer.dispose();canvas.remove();
   }
-  canvas.style.visibility='hidden';
-  return {roll,clear,resize:draw,destroy,get active(){return shown;},engine:'three.js'};
+  group.visible=false;canvas.style.visibility='hidden';
+  return {roll,clear,syncPawns,movePawn,resize:draw,destroy,get active(){return shown;},engine:'three.js'};
 }
