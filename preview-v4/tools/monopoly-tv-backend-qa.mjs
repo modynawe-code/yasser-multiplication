@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
 
 const BASE=process.env.TV_LOCAL_API||'http://127.0.0.1:8789';
-const ORIGIN='http://127.0.0.1:8790';
+const ORIGIN=process.env.TV_TEST_ORIGIN||'http://127.0.0.1:8790';
 const slug=label=>label+'-'+randomBytes(4).toString('hex');
 async function request(path,{body,token}={}){
   const headers={'content-type':'application/json','origin':ORIGIN};
