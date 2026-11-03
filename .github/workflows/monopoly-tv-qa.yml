@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - feature/monopoly-tv-multiscreen-v1
+      - feature/monopoly-tv-cinematic-center-v1
     paths:
       - 'preview-v4/monopoly-party/**'
       - 'preview-v4/tests/monopoly-party.test.mjs'

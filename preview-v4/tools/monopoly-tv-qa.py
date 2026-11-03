@@ -129,6 +129,8 @@ def run(browser_type,name):
         tv.locator("#tvCode").get_by_text("123456").wait_for(timeout=15000)
         assert tv.locator("#tvQr svg").count()==1,"QR rendering failed"
         assert tv.locator(".tv-cell").count()==40
+        assert tv.locator("#tvDice").evaluate("el => Boolean(el.closest('.tv-center-stage'))")
+        assert tv.locator("#tvCenterTitle").inner_text().strip()=="بانتظار اللاعبين"
         tv.wait_for_function("() => document.querySelector('#partyBoard')?.classList.contains('has-art')",timeout=15000)
         assert tv.locator(".tv-board.has-art").count()==1, "Original board art not loaded"
         assert tv.locator("#tvSound").get_attribute("aria-pressed")=="false"
@@ -152,6 +154,10 @@ def run(browser_type,name):
         tv.wait_for_function("() => document.querySelector('#tvEvent')?.textContent?.includes('أرض متاحة للشراء')",timeout=15000)
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=7000)
         assert tv.locator('.tv-token').count()==2
+        tv.locator('#tvCenterStage[data-phase="property"]').wait_for(state="visible",timeout=10000)
+        assert tv.locator("#tvCenterTitle").inner_text().strip()=="طريف"
+        assert tv.locator("#tvDice .tv-die").count()==2
+        assert tv.locator("#tvDice .tv-die-pip").count()>=2,"Pip dice missing"
         tv.screenshot(path=str(OUT/f"{name}-tv-arrival.png"),full_page=True)
         host.screenshot(path=str(OUT/f"{name}-host-buy.png"),full_page=True)
         host.locator('#remoteActions button[data-action=buy]').click()
