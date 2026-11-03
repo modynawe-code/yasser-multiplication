@@ -39,3 +39,24 @@ test('cinematic dice are drawn from authoritative faces before piece travel',()=
   assert.match(entry,/if\(generation!==sequence\)return/);
   assert.match(entry,/cinematic\?\.clearDice\(\)/);
 });
+
+test('genuine 3D dice use Three.js geometry, six face textures and authoritative results',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/from 'three'/);
+  assert.match(d,/new BoxGeometry\(/);
+  assert.match(d,/new WebGLRenderer\(/);
+  assert.match(d,/new MeshStandardMaterial\(/);
+  assert.match(d,/new DirectionalLight\(/);
+  assert.match(d,/const FACES=\[3,4,2,5,1,6\]/);
+  assert.match(d,/FACES\.indexOf\(value\)/);
+  assert.match(d,/setFromUnitVectors\(/);
+  assert.match(d,/Number\.isInteger\(v\)&&v>=1&&v<=6/);
+  assert.match(d,/prefers-reduced-motion/);
+  assert.match(d,/renderer\.dispose\(\)/);
+  assert.match(scene,/createThreeDice\(board\)/);
+  assert.match(scene,/threeDice\.roll\(values\)/);
+  assert.match(scene,/using PixiJS dice fallback/);
+  assert.doesNotMatch(d,/submitAction|createRoom|game\.cash\s*=/);
+  const pkg=JSON.parse(read('../tools/monopoly-tv-renderer/package.json'));
+  assert.equal(pkg.dependencies.three,'0.187.0');
+});
