@@ -5,6 +5,9 @@ import {movementRoute} from '../../src/modules/games/monopoly/monopoly-scene.js'
 const byId=id=>document.getElementById(id);
 const status=byId('connectionStatus');
 const board=byId('partyBoard');
+// Diagnostic identity is exposed on the page, not taken as visual acceptance.
+board.dataset.displayEngine='dom-fallback';
+board.dataset.displayReason='initializing';
 const tokenLayer=document.createElement('div');tokenLayer.className='tv-tokens';
 const cells=new Map(),pieces=new Map();
 let previousRoom=null,sequence=0,latestState=null,voiceEnabled=false,soundContext=null,overviewTimer=null,lastFocus=-1,cinematic=null,boardArtSource=null;
@@ -339,8 +342,14 @@ boardSetup();
 // The optional bundled renderer is served locally; a failed WebGL context keeps DOM play usable.
 void import('../vendor/cinematic-scene.mjs').then(async module=>{
   cinematic=await module.createCinematicScene({board,cells,colors:PARTY_COLORS});
-  if(cinematic){board.classList.add('cinematic-ready');if(boardArtSource)cinematic.setBoardArt(boardArtSource);if(latestState)cinematic.sync(latestState);}
-}).catch(error=>{console.warn('TV cinematic renderer unavailable; retaining accessible DOM fallback',error);});
+  if(cinematic){
+    board.classList.add('cinematic-ready');
+    board.dataset.displayEngine='pixi-three';
+    board.dataset.displayReason='waiting-for-board-texture';
+    if(boardArtSource)cinematic.setBoardArt(boardArtSource);
+    if(latestState)cinematic.sync(latestState);
+  }
+}).catch(error=>{board.dataset.displayEngine='dom-fallback';board.dataset.displayReason='renderer-load-error';console.warn('TV cinematic renderer unavailable; retaining accessible DOM fallback',error);});
 void loadBoardArt();
 const initial=new URL(location.href).searchParams.get('code');if(roomCode(initial))byId('tvJoinForm').elements.code.value=initial;
 void conn.resume();
