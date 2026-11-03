@@ -16,7 +16,7 @@ export async function createCinematicScene({board,cells,colors}){
   board.append(canvas);
   const actors=new Map(), layer=new Container(), light=new Graphics();
   app.stage.addChild(light,layer);
-  let destroyed=false;
+  let destroyed=false,currentState=null;
   const xy=index=>{
     const cell=cells.get(index);
     return cell?{x:cell.offsetLeft+cell.offsetWidth/2,y:cell.offsetTop+cell.offsetHeight/2}:null;
@@ -35,6 +35,7 @@ export async function createCinematicScene({board,cells,colors}){
   };
   function sync(state){
     if(destroyed||!state?.players)return;
+    currentState=state;
     const ids=new Set(state.players.map(p=>p.id));
     for(const [id,actor] of actors){if(!ids.has(id)){gsap.killTweensOf(actor.position);layer.removeChild(actor);actor.destroy({children:true});actors.delete(id);}}
     state.players.forEach((p,i)=>{
@@ -44,6 +45,8 @@ export async function createCinematicScene({board,cells,colors}){
       if(point&&actor.__fresh!==false){actor.position.set(point.x,point.y);actor.__fresh=false;}
       actor.alpha=state.players[state.turnIndex]?.id===p.id?1:.84;
     });
+    if(threeDice){threeDice.syncPawns(state.players,cells,colors);layer.visible=false;}
+    else layer.visible=true;
   }
   function refresh(state){
     if(destroyed)return;
@@ -69,6 +72,7 @@ export async function createCinematicScene({board,cells,colors}){
     if(destroyed)return;
     const actor=actors.get(id),point=xy(index);
     if(!actor||!point)return;
+    if(threeDice)return await threeDice.movePawn(id,index,duration);
     gsap.killTweensOf(actor.position);
     if(reduced()){actor.position.set(point.x,point.y);return;}
     await new Promise(resolve=>gsap.to(actor.position,{x:point.x,y:point.y,duration,ease:'power1.inOut',onComplete:resolve,onInterrupt:resolve}));
@@ -106,10 +110,11 @@ export async function createCinematicScene({board,cells,colors}){
     if(!threeUnavailable){
       try{
         threeDice||=createThreeDice(board);
+        if(currentState?.players){threeDice.syncPawns(currentState.players,cells,colors);layer.visible=false;}
         if(await threeDice.roll(values))return true;
       }catch(error){
         console.warn('Three.js dice unavailable; using PixiJS dice fallback',error);
-        threeDice?.destroy();threeDice=null;threeUnavailable=true;
+        threeDice?.destroy();threeDice=null;threeUnavailable=true;layer.visible=true;
       }
     }
     const centerX=board.offsetWidth/2,centerY=board.offsetHeight/2;
