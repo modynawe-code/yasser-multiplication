@@ -40,7 +40,7 @@ export async function createCinematicScene({board,cells,colors}){
       let actor=actors.get(p.id);
       if(!actor){actor=makePawn(p.name,colors[i%colors.length]);actors.set(p.id,actor);}
       const point=xy(p.position||0);
-      if(point&&!gsap.isTweening(actor.position))actor.position.set(point.x,point.y);
+      if(point&&actor.__fresh!==false){actor.position.set(point.x,point.y);actor.__fresh=false;}
       actor.alpha=state.players[state.turnIndex]?.id===p.id?1:.84;
     });
   }
@@ -72,7 +72,7 @@ export async function createCinematicScene({board,cells,colors}){
     if(reduced()){actor.position.set(point.x,point.y);return;}
     await new Promise(resolve=>gsap.to(actor.position,{x:point.x,y:point.y,duration,ease:'power1.inOut',onComplete:resolve,onInterrupt:resolve}));
   }
-  function resize(state){if(destroyed)return;refresh(state);}
+  function resize(state){if(destroyed)return;for(const p of state?.players||[]){const actor=actors.get(p.id),point=xy(p.position||0);if(actor&&point){gsap.killTweensOf(actor.position);actor.position.set(point.x,point.y);}}}
   function destroy(){
     if(destroyed)return;destroyed=true;
     gsap.killTweensOf(board);
