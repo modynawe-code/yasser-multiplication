@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOARD,bidAuction,buildHouse,canBuild,buyProperty,createMonopolyState,drawCard,pickMonopolyCard,flipMonopolyCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty} from '../src/modules/games/monopoly/monopoly-engine.js';
+import {BOARD,bidAuction,buildHouse,canBuild,buyProperty,createMonopolyState,drawCard,pickMonopolyCard,flipMonopolyCard,endTurn,passAuction,rentFor,rentSchedule,rollDice,sellProperty,skipProperty,tradeProperty,canMortgage,canUnmortgage,mortgageProperty,unmortgageProperty,mortgageValue,redemptionCost} from '../src/modules/games/monopoly/monopoly-engine.js';
 
 const players=[{id:'a',name:'أ'},{id:'b',name:'ب'}];
 
@@ -118,4 +118,31 @@ test('four houses upgrade to a hotel and the board rent level is reflected',()=>
   const saleBefore=s.players[0].cash;
   s=sellProperty(s,21);
   assert.equal(s.players[0].cash,saleBefore+Math.floor(BOARD[21].price/2)+5*Math.floor(BOARD[21].build/2));
+});
+
+test('mortgage and redemption change cash and enforce zero rent while mortgaged',()=>{
+  let game=createMonopolyState(players);
+  game.phase='end';game.ownership[5]={ownerId:'a',houses:0,mortgaged:false};
+  const principal=mortgageValue(5),fee=redemptionCost(5),initial=game.players[0].cash;
+  assert.ok(principal>0);
+  assert.equal(canMortgage(game,5),true);
+  assert.ok(rentFor(game,5)>0);
+  game=mortgageProperty(game,5);
+  assert.equal(game.ownership[5].mortgaged,true);
+  assert.equal(game.players[0].cash,initial+principal);
+  assert.equal(rentFor(game,5),0);
+  assert.strictEqual(mortgageProperty(game,5),game);
+  assert.equal(canUnmortgage(game,5),true);
+  game=unmortgageProperty(game,5);
+  assert.equal(game.ownership[5].mortgaged,false);
+  assert.equal(game.players[0].cash,initial+principal-fee);
+  assert.ok(rentFor(game,5)>0);
+});
+test('built property groups cannot be mortgaged, including adjacent unbuilt group members',()=>{
+  const game=createMonopolyState(players);game.phase='end';
+  game.ownership[37]={ownerId:'a',houses:1};
+  game.ownership[39]={ownerId:'a',houses:0};
+  assert.equal(canMortgage(game,37),false);
+  assert.equal(canMortgage(game,39),false);
+  assert.strictEqual(mortgageProperty(game,39),game);
 });

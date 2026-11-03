@@ -227,3 +227,23 @@ test('a losing concurrent join removes its temporary seat before returning confl
   assert.match(source,/DELETE FROM game_room_players WHERE room_id=\? AND player_id=\?/);
   assert.match(source,/return fail\(409,'room_changed'\)/);
 });
+
+test('online Monopoly room rejects non-owner mortgage, then permits owner redemption',()=>{
+  let room=createInitialMonopolyRoomState('host');
+  const joined=addMonopolyRoomPlayer(room,'guest');
+  assert.equal(joined.ok,true);room=joined.state;
+  const started=applyMonopolyRoomAction(room,{playerId:'host',type:'start'});
+  assert.equal(started.ok,true);
+  const game=started.state;game.phase='end';game.ownership[5]={ownerId:'host',houses:0,mortgaged:false};
+  const denied=applyMonopolyRoomAction(game,{playerId:'guest',type:'mortgage',payload:{index:5}});
+  assert.equal(denied.ok,false);
+  assert.equal(denied.reason,'not-your-turn');
+  const first=applyMonopolyRoomAction(game,{playerId:'host',type:'mortgage',payload:{index:5}});
+  assert.equal(first.ok,true);
+  assert.equal(first.state.ownership[5].mortgaged,true);
+  assert.equal(first.state.turnIndex,game.turnIndex);
+  assert.equal(applyMonopolyRoomAction(first.state,{playerId:'host',type:'mortgage',payload:{index:5}}).reason,'invalid-action');
+  const restored=applyMonopolyRoomAction(first.state,{playerId:'host',type:'unmortgage',payload:{index:5}});
+  assert.equal(restored.ok,true);
+  assert.equal(restored.state.ownership[5].mortgaged,false);
+});
