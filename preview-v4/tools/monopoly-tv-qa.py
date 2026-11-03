@@ -61,7 +61,8 @@ class MockRoom:
             turn=self.state.get("turnIndex",0)
             player=self.tokens[token]
             turn_id=self.state["players"][turn]["id"] if self.status=="playing" else "p1"
-            if player!=turn_id:
+            allowed_response=action in ("trade-accept","trade-reject") and self.state.get("tradeOffer",{}).get("targetId")==player
+            if player!=turn_id and not allowed_response:
                 answer(409,{"error":"not-your-turn"});return
             if action=="start" and self.status=="waiting" and len(self.players)>=2:
                 self.status="playing"
@@ -78,6 +79,26 @@ class MockRoom:
                 self.state["players"][turn]["cash"]-=60
                 self.state["phase"]="end";self.state["pending"]=None
                 self.state["log"]="اشترى طريف مقابل 60 ريال"
+            elif action=="build" and self.state.get("phase") in ("end","roll"):
+                key=str(body.get("index"))
+                if key not in self.state["ownership"] or self.state["ownership"][key]["ownerId"]!=player:
+                    answer(409,{"error":"invalid_build"});return
+                self.state["ownership"][key]["houses"]+=1
+                self.state["players"][turn]["cash"]-=50
+                self.state["log"]="تم بناء بيت جديد"
+            elif action=="trade" and self.state.get("phase")=="end":
+                self.state["tradeOffer"]={"index":body.get("index"),"targetId":body.get("targetId"),"fromId":player,
+                                        "offerCash":body.get("offerCash",0),"requestCash":body.get("requestCash",0)}
+                self.state["phase"]="trade"
+                self.state["log"]="بانتظار موافقة اللاعب الآخر"
+            elif action in ("trade-accept","trade-reject") and self.state.get("phase")=="trade":
+                offer=self.state["tradeOffer"]
+                if player!=offer["targetId"]:
+                    answer(409,{"error":"trade_recipient_only"});return
+                if action=="trade-accept":
+                    self.state["ownership"][str(offer["index"])]["ownerId"]=player
+                self.state["tradeOffer"]=None;self.state["phase"]="end"
+                self.state["log"]="تم تنفيذ التبادل" if action=="trade-accept" else "تم رفض التبادل"
             elif action=="end" and self.state.get("phase")=="end":
                 self.state["turnIndex"]=1;self.state["phase"]="roll";self.state["dice"]=None
                 self.state["log"]="دور الضيف"
@@ -129,12 +150,37 @@ def run(browser_type,name):
         host.screenshot(path=str(OUT/f"{name}-host-buy.png"),full_page=True)
         host.locator('#remoteActions button[data-action=buy]').click()
         host.locator('#remoteActions button[data-action=end]').wait_for(timeout=12000)
+
+        # Exercise group development and trading with a prepared legal two-title set.
+        server.state["ownership"]["1"]={"ownerId":"p1","houses":0}
+        server.version+=1
+        host.locator("#remotePortfolio .remote-estate").nth(1).wait_for(timeout=12000)
+        building=host.locator("#remotePortfolio button").filter(has_text="بناء بيت").first
+        building.wait_for(state="visible",timeout=15000)
+        building.click()
+        host.wait_for_function("() => document.querySelector('#remoteGameLog')?.textContent?.includes('بيت جديد')",timeout=12000)
+        assert any(x.get("houses",0)>0 for x in server.state["ownership"].values())
+        trade=host.locator("#remotePortfolio .remote-estate").nth(1).locator("button").filter(has_text="عرض تبادل")
+        trade.click()
+        host.locator("#remoteTradePanel select").select_option("p2")
+        host.locator("#remoteTradePanel [name=offerCash]").fill("0")
+        host.locator("#remoteTradePanel [name=requestCash]").fill("0")
+        host.locator("#remoteTradePanel button[type=submit]").click()
+        guest.locator('#remoteActions button[data-action=trade-accept]').wait_for(timeout=12000)
+        guest.screenshot(path=str(OUT/f"{name}-trade-offer.png"),full_page=True)
+        guest.locator('#remoteActions button[data-action=trade-accept]').click()
+        host.locator('#remoteActions button[data-action=end]').wait_for(timeout=12000)
+        assert server.state["ownership"]["3"]["ownerId"]=="p2"
+        host.reload(wait_until="load")
+        host.locator('#remoteActions button[data-action=end]').wait_for(timeout=12000)
+        tv.reload(wait_until="load")
+        tv.locator("#tvCode").get_by_text("123456").wait_for(timeout=12000)
         host.locator('#remoteActions button[data-action=end]').click()
         guest.locator('#remoteActions button[data-action=roll]').wait_for(timeout=12000)
         assert guest.locator('#remoteActions button[data-action=roll]').count()==1
-        assert server.actions==["start","roll","buy","end"],server.actions
-        assert server.state["ownership"]["3"]["ownerId"]=="p1"
-        assert server.state["players"][0]["cash"]==1440
+        assert server.actions==["start","roll","buy","build","trade","trade-accept","end"],server.actions
+        assert server.state["ownership"]["3"]["ownerId"]=="p2"
+        assert server.state["players"][0]["cash"]==1390
         layout=tv.evaluate("""() => {
             const b=document.querySelector('#partyBoard').getBoundingClientRect();
             return {width:b.width,height:b.height,screenWidth:innerWidth,screenHeight:innerHeight};
