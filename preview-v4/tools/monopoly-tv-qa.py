@@ -190,6 +190,15 @@ def run(browser_type,name):
         guest.locator("#remoteCode").get_by_text("123456").wait_for(timeout=15000)
         host.locator('#remoteActions button[data-action=start]').wait_for(timeout=12000)
         tv.locator(".tv-player").nth(1).wait_for(timeout=10000)
+        if name=="chromium":
+            tv.wait_for_function("""() => {
+              const c=document.querySelector('#partyBoard canvas.tv-three-dice-canvas');
+              return c?.dataset.pawns==='2' && c?.dataset.maxPawnOffset!==undefined;
+            }""",timeout=15000)
+            pawn_error=int(tv.locator("#partyBoard canvas.tv-three-dice-canvas").get_attribute("data-max-pawn-offset"))
+            assert pawn_error<=4,{"problem":"3D pawn does not align with original tile center","offsetPx":pawn_error}
+            result["max3DPawnOffsetPx"]=pawn_error
+
         host.screenshot(path=str(OUT/f"{name}-host-lobby.png"),full_page=True)
         tv.screenshot(path=str(OUT/f"{name}-tv-lobby.png"),full_page=True)
         host.locator('#remoteActions button[data-action=start]').click()
