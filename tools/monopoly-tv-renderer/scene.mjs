@@ -72,14 +72,64 @@ export async function createCinematicScene({board,cells,colors}){
     if(reduced()){actor.position.set(point.x,point.y);return;}
     await new Promise(resolve=>gsap.to(actor.position,{x:point.x,y:point.y,duration,ease:'power1.inOut',onComplete:resolve,onInterrupt:resolve}));
   }
+  // Server-authoritative dice: Pixi draws the exact supplied faces, GSAP animates presentation only.
+  const pipLayout={
+    1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],
+    4:[[-1,-1],[1,-1],[-1,1],[1,1]],
+    5:[[-1,-1],[1,-1],[0,0],[-1,1],[1,1]],
+    6:[[-1,-1],[1,-1],[-1,0],[1,0],[-1,1],[1,1]]
+  };
+  const diceLayer=new Container();
+  app.stage.addChild(diceLayer);
+  let diceTimeline=null;
+  function paintDie(number){
+    const side=limit(board.offsetWidth*.092,36,86);
+    const g=new Graphics();
+    g.roundRect(-side/2+4,-side/2+9,side,side,side*.16).fill({color:0x0a2419,alpha:.32});
+    g.roundRect(-side/2,-side/2,side,side,side*.16).fill(0xfff9e9).stroke({color:0xc8a45d,width:side*.035});
+    g.roundRect(-side/2+side*.07,-side/2+side*.06,side*.86,side*.12,side*.04).fill({color:0xffffff,alpha:.5});
+    for(const [px,py] of pipLayout[number]||[])
+      g.circle(px*side*.245,py*side*.245,side*.065).fill(0x183d2b);
+    return g;
+  }
+  function clearDice(){
+    if(diceTimeline){diceTimeline.kill();diceTimeline=null;}
+    const nodes=diceLayer.removeChildren();
+    for(const node of nodes)node.destroy({children:true});
+  }
+  function rollDice(values){
+    if(destroyed||!Array.isArray(values)||values.length!==2||
+       !values.every(n=>Number.isInteger(n)&&n>=1&&n<=6))return Promise.resolve(false);
+    clearDice();
+    const centerX=board.offsetWidth/2,centerY=board.offsetHeight/2;
+    const side=limit(board.offsetWidth*.092,36,86);
+    const dice=values.map((face,i)=>{
+      const die=paintDie(face);
+      die.position.set(centerX+(i===0?-1:1)*side*.68,centerY);
+      die.alpha=1;diceLayer.addChild(die);return die;
+    });
+    if(reduced())return Promise.resolve(true);
+    return new Promise(resolve=>{
+      const tl=gsap.timeline({
+        onComplete:()=>{diceTimeline=null;resolve(true);},
+        onInterrupt:()=>{diceTimeline=null;resolve(false);}
+      });
+      diceTimeline=tl;
+      dice.forEach((die,i)=>{
+        tl.fromTo(die,{y:centerY-side*.9,rotation:(i?-1:1)*Math.PI*.75,alpha:.5},
+          {y:centerY,rotation:0,alpha:1,duration:.63,ease:'bounce.out'},i*.1);
+      });
+    });
+  }
   function resize(state){if(destroyed)return;for(const p of state?.players||[]){const actor=actors.get(p.id),point=xy(p.position||0);if(actor&&point){gsap.killTweensOf(actor.position);actor.position.set(point.x,point.y);}}}
   function destroy(){
     if(destroyed)return;destroyed=true;
     gsap.killTweensOf(board);
     for(const a of actors.values())gsap.killTweensOf(a.position);
     actors.clear();
+    clearDice();
     app.destroy(true,{children:true});
     gsap.set(board,{clearProps:'transform,transformOrigin'});
   }
-  return {sync,refresh,focus,overview,move,resize,destroy,engine:'pixi.js+gsap'};
+  return {sync,refresh,focus,overview,move,rollDice,clearDice,resize,destroy,engine:'pixi.js+gsap'};
 }
