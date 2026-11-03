@@ -1,4 +1,4 @@
-import { BOARD } from '../src/modules/games/monopoly/monopoly-engine.js';
+import { BOARD,canBuild } from '../src/modules/games/monopoly/monopoly-engine.js';
 import { createGameRoomClient } from '../src/modules/games/online/game-room-client.js';
 
 export { BOARD };
@@ -38,6 +38,30 @@ export function partyActions(state,playerId){
   if(phase==='end')return [{type:'end',label:'إنهاء الدور'}];
   return [];
 }
+// Portfolio decisions are not turn-advancing actions; show them separately.
+export function partyPortfolioActions(state,playerId){
+  if(state?.status!=='playing'||state.players?.[state.turnIndex]?.id!==playerId)return [];
+  const allowed=new Set(['roll','end']);
+  if(!allowed.has(state.phase))return [];
+  return Object.entries(state.ownership||{}).flatMap(([key,ownership])=>{
+    if(ownership?.ownerId!==playerId)return [];
+    const index=Number(key),tile=BOARD[index];
+    if(!tile)return [];
+    const out=[];
+    if(canBuild(state,index))out.push({type:'build',index,label:ownership.houses===4?'بناء فندق':'بناء بيت',payload:{index}});
+    if(state.phase==='end')out.push({type:'sell',index,label:'بيع الملكية',payload:{index}});
+    if(state.phase==='end'&&state.players.some(p=>p.id!==playerId&&!p.bankrupt))
+      out.push({type:'trade',index,label:'عرض تبادل',payload:{index}});
+    return out;
+  });
+}
+export function resolvePartyAction(state,playerId,type,payload={}){
+  const regular=partyActions(state,playerId).find(item=>item.type===type);
+  if(regular)return regular;
+  const index=Number(payload.index);
+  if(!Number.isInteger(index))return null;
+  return partyPortfolioActions(state,playerId).find(item=>item.type===type&&item.index===index)||null;
+}
 export function playerAccent(state,playerId){
   const index=state?.players?.findIndex(x=>x.id===playerId)??-1;
   return PARTY_COLORS[(index<0?0:index)%PARTY_COLORS.length];
@@ -59,17 +83,17 @@ export function makePartyConnection({role,client=createGameRoomClient(),storage=
   if(role!=='player'&&role!=='spectator')throw new TypeError('invalid party role');
   const storageKey='monopoly-party-v1-'+role;
   const identityKey=storageKey+'-identity';
-  let identity=storage?.getItem(identityKey)||'';
+  let identity='';try{identity=storage?.getItem(identityKey)||'';}catch{}
   if(!/^(tv|phone)-[a-f0-9]{16}$/.test(identity)){
     const random=new Uint8Array(8);globalThis.crypto.getRandomValues(random);
     identity=(role==='spectator'?'tv':'phone')+'-'+Array.from(random,b=>b.toString(16).padStart(2,'0')).join('');
-    storage?.setItem(identityKey,identity);
+    try{storage?.setItem(identityKey,identity);}catch{}
   }
-  let session=null,room=null,timer=null,stopped=false,polling=false,busy=false;
-  function persist(){if(session)storage?.setItem(storageKey,JSON.stringify(session));}
+  let session=null,room=null,timer=null,stopped=false,polling=false,busy=false,generation=0,retryDelay=1250;
+  function persist(){if(session)try{storage?.setItem(storageKey,JSON.stringify(session));}catch{}}
   function setRoom(next){
     if(!next||next.gameId!==PARTY_GAME_ID)throw new Error('wrong room game');
-    if(room?.code===next.code&&Number(next.version)<Number(room.version))return;
+    if(room?.code===next.code&&Number(next.version)<=Number(room.version))return;
     room=next;
     onRoom(next,session);
   }
@@ -78,18 +102,21 @@ export function makePartyConnection({role,client=createGameRoomClient(),storage=
     stopped=false;
     const poll=async()=>{
       if(stopped||polling||!session)return;
+      const current=generation;
       polling=true;
       try{
         const r=await client.getRoom({code:session.code,token:session.token});
-        setRoom(r.room);onStatus('connected');
-      }catch(error){onStatus('offline',error);}finally{
+        if(stopped||current!==generation)return;
+        retryDelay=1250;setRoom(r.room);onStatus('connected');
+      }catch(error){if(current===generation){retryDelay=Math.min(12000,retryDelay*1.7);onStatus('offline',error);}}finally{
         polling=false;
-        if(!stopped&&session)timer=setTimeout(poll,1250);
+        if(!stopped&&current===generation&&session)timer=setTimeout(poll,retryDelay);
       }
     };
     timer=setTimeout(poll,1250);
   }
   async function accept(result){
+    generation++;
     if(!result?.playerToken||!result?.room)throw new Error('room join failed');
     session={code:result.room.code,token:result.playerToken,playerId:result.room.selfPlayerId,role,identity};
     persist();setRoom(result.room);startPolling();onStatus('connected');
@@ -110,19 +137,19 @@ export function makePartyConnection({role,client=createGameRoomClient(),storage=
     async resume(){
       let saved;try{saved=JSON.parse(storage?.getItem(storageKey)||'null');}catch{return null;}
       if(!saved||saved.role!==role||saved.identity!==identity||!roomCode(saved.code)||!saved.token)return null;
-      session=saved;
+      session=saved;generation++;
       try{
         const result=await client.getRoom({code:saved.code,token:saved.token});
         setRoom(result.room);startPolling();onStatus('connected');return result.room;
       }catch(error){
-        if(error.status===401||error.status===404){storage?.removeItem(storageKey);session=null;room=null;}
+        if(error.status===401||error.status===404){try{storage?.removeItem(storageKey);}catch{}session=null;room=null;}
         onStatus('offline',error);return null;
       }
     },
     async action(type,payload={}){
       if(role!=='player')throw new Error('spectator actions are forbidden');
       if(!session||!room||busy)throw new Error('action unavailable');
-      if(!partyActions(room.state,session.playerId).some(item=>item.type===type))throw new Error('action not allowed in current turn');
+      if(!resolvePartyAction(room.state,session.playerId,type,payload))throw new Error('action not allowed in current turn');
       busy=true;
       try{
         const result=await client.submitAction({code:session.code,token:session.token,expectedVersion:room.version,type,payload});
@@ -133,8 +160,8 @@ export function makePartyConnection({role,client=createGameRoomClient(),storage=
       }finally{busy=false;}
     },
     leave(){
-      stopped=true;if(timer!==null)clearTimeout(timer);timer=null;
-      storage?.removeItem(storageKey);session=null;room=null;
+      stopped=true;generation++;if(timer!==null)clearTimeout(timer);timer=null;
+      try{storage?.removeItem(storageKey);}catch{}session=null;room=null;
     }
   });
 }
