@@ -60,3 +60,16 @@ test('genuine 3D dice use Three.js geometry, six face textures and authoritative
   const pkg=JSON.parse(read('../tools/monopoly-tv-renderer/package.json'));
   assert.equal(pkg.dependencies.three,'0.187.0');
 });
+
+test('3D pieces use mesh geometry and authoritative board coordinates',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/new CylinderGeometry\(/);
+  assert.match(d,/new SphereGeometry\(/);
+  assert.match(d,/function syncPawns\(players,cells,colors\)/);
+  assert.match(d,/function movePawn\(id,index,duration/);
+  assert.match(d,/canvas\.dataset\.pawns=String\(pawns\.size\)/);
+  assert.match(d,/canvas\.dataset\.dice=values\.join\(','\)/);
+  assert.match(scene,/threeDice\.syncPawns\(state\.players,cells,colors\)/);
+  assert.match(scene,/threeDice\.movePawn\(id,index,duration\)/);
+  assert.match(scene,/layer\.visible=false/);
+});
