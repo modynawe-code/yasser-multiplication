@@ -31,6 +31,18 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build isolated TV bundle
         run: npm run mobile:prepare
+      - name: Bind Android TV test app to isolated game API, never production D1
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const file='dist-mobile/monopoly-party/tv/index.html';
+          const html=readFileSync(file,'utf8');
+          if(!html.includes('</head>')||html.includes('__FAMILY_API_BASE_URL__'))
+            throw new Error('Unexpected TV app API bootstrap');
+          const api='https://monopoly-tv-api-staging.modynawe.workers.dev';
+          writeFileSync(file,html.replace('</head>',
+            '<script>globalThis.__FAMILY_API_BASE_URL__='+JSON.stringify(api)+';</script></head>'));
+          NODE
       - name: Configure TV-only app identity
         run: |
           node --input-type=module <<'NODE'
