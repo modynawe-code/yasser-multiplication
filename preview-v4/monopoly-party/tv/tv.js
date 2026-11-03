@@ -268,7 +268,8 @@ async function renderRoom(room){
     byId('tvDice').replaceChildren(...(state.dice||[]).map(v=>el('div','tv-die rolling',v)));
     if(old.state?.phase==='roll'&&state.dice){
       sound('dice');
-      if(cinematic){await cinematic.rollDice(state.dice);if(generation!==sequence)return;}
+      if(cinematic){await cinematic.rollDice(state.dice,old.state);if(generation!==sequence)return;
+        cinematic.clearDice();}
     }
     state.players.filter(p=>p.id!==moving.id).forEach(p=>place(p.id,p.position||0,false));
     await animateArrival(old.state.players.find(p=>p.id===moving.id),moving,moving,generation);
