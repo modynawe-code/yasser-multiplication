@@ -6,6 +6,7 @@ on:
     paths:
       - 'preview-v4/monopoly-party/**'
       - 'tools/monopoly-tv-staging.mjs'
+      - 'preview-v4/tools/monopoly-tv-live-qa.py'
       - '.github/workflows/monopoly-tv-staging.yml'
   workflow_dispatch:
 
@@ -89,6 +90,22 @@ jobs:
           path: /tmp/monopoly-tv-live-qa/
           retention-days: 10
           if-no-files-found: warn
+      - name: Install browser runtimes for real TV + phone staging acceptance
+        run: |
+          python3 -m pip install 'playwright==1.56.0'
+          python3 -m playwright install --with-deps chromium webkit
+      - name: Play full real-room interactions in Chromium and mobile Safari
+        env:
+          TV_TEST_ORIGIN: https://monopoly-tv-staging.modynawe.workers.dev
+        run: python3 preview-v4/tools/monopoly-tv-live-qa.py
+      - name: Upload real staging screenshots and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monopoly-tv-live-staging
+          path: /tmp/monopoly-tv-live-qa/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Staging entrypoints
         if: always()
         run: |
