@@ -40,8 +40,11 @@ jobs:
           if(!html.includes('</head>')||html.includes('__FAMILY_API_BASE_URL__'))
             throw new Error('Unexpected TV app API bootstrap');
           const api='https://monopoly-tv-api-staging.modynawe.workers.dev';
+          const join='https://monopoly-tv-staging.modynawe.workers.dev/monopoly-party/controller/';
           writeFileSync(file,html.replace('</head>',
-            '<script>globalThis.__FAMILY_API_BASE_URL__='+JSON.stringify(api)+';</script></head>'));
+            '<script>globalThis.__FAMILY_API_BASE_URL__='+JSON.stringify(api)+
+            ';globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__='+JSON.stringify(join)+
+            ';</script></head>'));
           NODE
       - name: Configure TV-only app identity
         run: |

@@ -109,3 +109,19 @@ test('TV-only viewer is unable to authorize owner property mutations',async()=>{
   assert.equal(resolvePartyAction(game,'guest','sell',{index:3}),null);
   assert.equal(resolvePartyAction(game,'nonexistent','build',{index:3}),null);
 });
+
+test('native Android TV QR opens the public phone controller, not localhost',()=>{
+  const old=globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__;
+  globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__='https://monopoly-tv-staging.modynawe.workers.dev/monopoly-party/controller/';
+  try{
+    const link=publicJoinUrl('009123',{origin:'https://localhost',href:'https://localhost/monopoly-party/tv/'});
+    assert.equal(new URL(link).origin,'https://monopoly-tv-staging.modynawe.workers.dev');
+    assert.equal(new URL(link).searchParams.get('code'),'009123');
+    assert.ok(!link.includes('localhost'));
+    const web=publicJoinUrl('009123',{origin:'https://monopoly-tv-staging.modynawe.workers.dev',href:'https://monopoly-tv-staging.modynawe.workers.dev/monopoly-party/tv/'});
+    assert.equal(new URL(web).origin,'https://monopoly-tv-staging.modynawe.workers.dev');
+  }finally{
+    if(old===undefined)delete globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__;
+    else globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__=old;
+  }
+});

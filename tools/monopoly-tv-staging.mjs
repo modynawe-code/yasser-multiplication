@@ -23,7 +23,7 @@ else console.log('Private staging DB already exists');
 const id=String(database.uuid||database.id||'');
 if(!/^[a-f0-9-]{36}$/.test(id))throw new Error('Unexpected staging database id');
 const conf=JSON.parse(await readFile('backend/wrangler.jsonc','utf8'));
-conf.name=apiName;conf.vars={ALLOWED_ORIGINS:frontend,SESSION_TTL_DAYS:'3'};
+conf.name=apiName;conf.vars={ALLOWED_ORIGINS:frontend+',https://localhost',SESSION_TTL_DAYS:'3'};
 conf.d1_databases=[{binding:'DB',database_name:dbName,database_id:id,migrations_dir:'migrations'}];
 delete conf.ai;delete conf.ratelimits;
 await writeFile('backend/wrangler.tv-staging.jsonc',JSON.stringify(conf,null,2)+'\n');

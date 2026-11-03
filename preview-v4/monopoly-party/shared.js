@@ -73,7 +73,11 @@ export function remoteJoinUrl(code,{location=globalThis.location}={}){
 }
 // Only the public six-digit room code is embedded in shareable URLs; never tokens.
 export function publicJoinUrl(code,location=globalThis.location){
-  const url=new URL('../controller/',location.href.includes('/monopoly-party/')?
+  const external=typeof globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__==='string'?
+    globalThis.__MONOPOLY_PUBLIC_CONTROLLER_URL__:'';
+  // In the installed TV app, localhost is not a phone-accessible address.
+  const native=location.origin==='https://localhost'&&external.startsWith('https://');
+  const url=native?new URL(external):new URL('../controller/',location.href.includes('/monopoly-party/')?
     new URL('./',location.href):new URL('./monopoly-party/tv/',location.href));
   if(roomCode(code))url.searchParams.set('code',roomCode(code));
   return url.toString();

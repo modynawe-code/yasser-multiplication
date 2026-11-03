@@ -11,6 +11,13 @@ async function request(path,{body,token}={}){
   assert.equal(r.headers.get('access-control-allow-origin'),ORIGIN,'CORS origin is not allowed');
   return {status:r.status,json:await r.json()};
 }
+// Capacitor TV makes cross-origin requests from its bundled https://localhost WebView.
+const native=await fetch(BASE+'/v1/games/rooms',{method:'OPTIONS',headers:{
+  origin:'https://localhost','access-control-request-method':'POST',
+  'access-control-request-headers':'content-type,x-game-token'
+}});
+assert.equal(native.status,204,'TV WebView CORS preflight rejected');
+assert.equal(native.headers.get('access-control-allow-origin'),'https://localhost','TV WebView origin is not allowlisted');
 const create=await request('/v1/games/rooms',{body:{gameId:'family-monopoly',learnerId:slug('phone-host'),displayName:'مضيف'}});
 assert.equal(create.status,201,JSON.stringify(create.json));
 const room=create.json.room,token1=create.json.playerToken;
