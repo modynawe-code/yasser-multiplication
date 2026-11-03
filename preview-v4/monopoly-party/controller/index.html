@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>احتكار المعرفة | يد التحكم</title><meta name="theme-color" content="#10231c"/>
+<link rel="stylesheet" href="../party.css"/></head>
+<body class="party-page">
+<main class="remote-page">
+<header class="party-header"><div class="party-brand"><div class="party-logo" aria-hidden="true">🎲</div><div><h1>احتكار المعرفة</h1><p>يد تحكم اللاعب</p></div></div><span id="remoteStatus" class="party-status offline" role="status">غير متصل</span></header>
+<section id="remoteJoin" class="remote-card"><h2>ادخل اللعبة من جوالك</h2><p class="party-hint">اختر اسمك، ثم أنشئ غرفة أو انضم إلى غرفة موجودة. التلفزيون يعرض اللعب، وكل لاعب يتحكم بنفسه.</p>
+<form id="remoteForm" class="party-form">
+<label>اسم اللاعب<input name="name" maxlength="35" autocomplete="nickname" required placeholder="اكتب اسمك"/></label>
+<label>رمز الغرفة (عند الانضمام)<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000"/></label>
+<button type="submit" name="mode" value="create" class="party-btn">إنشاء غرفة جديدة</button>
+<button type="submit" name="mode" value="join" class="party-btn secondary">الانضمام إلى غرفة</button></form>
+<p id="remoteJoinError" class="party-error" role="alert"></p>
+</section>
+<div id="remoteStage" hidden>
+<section class="remote-card"><div class="remote-top"><strong>الغرفة</strong><div id="remoteCode" class="remote-code"></div></div><div class="remote-top" style="margin-top:12px"><a id="tvLink" href="../tv/" target="_blank" rel="noopener">شاشة التلفزيون</a><button id="copyJoin" class="party-btn secondary" type="button">نسخ رابط الانضمام</button></div><p class="party-hint">افتح شاشة التلفزيون بالرمز نفسه، ثم ارسل رابط الانضمام لبقية اللاعبين.</p></section>
+<section class="remote-turn" aria-live="polite"><div id="remoteTurnHint">بانتظار اللاعبين</div><h2 id="remoteTurnTitle">يا هلا!</h2><p id="remoteTurnDetails">خل اللاعبين يدخلون الغرفة.</p><div id="remoteActions" class="remote-actions"></div></section>
+<section class="remote-card"><h2>اللاعبون</h2><div id="remotePlayers" class="remote-players"></div></section>
+<section class="remote-card"><h2>ملخص اللعبة</h2><p id="remoteGameLog" class="remote-details">بعد بدء اللعب تظهر أحداث الجولة هنا.</p><p id="remoteCurrentProperty" class="remote-details"></p></section>
+</div>
+<footer class="remote-footer"><button id="remoteLeave" class="party-btn secondary" hidden>مغادرة هذه الشاشة</button><a class="party-btn secondary" href="../../">رجوع للتطبيق</a></footer>
+</main>
+<script type="module" src="./remote.js"></script></body></html>
