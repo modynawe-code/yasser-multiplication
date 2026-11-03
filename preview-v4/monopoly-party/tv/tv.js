@@ -252,6 +252,7 @@ async function renderRoom(room){
   if(!room||room.gameId!=='family-monopoly')return;
   const old=previousRoom;previousRoom=room;
   const generation=++sequence, state=room.state;
+  clearTimeout(overviewTimer);
   if(state.phase==='roll'||state.status==='waiting')cinematic?.clearDice();
   latestState=state;
   byId('tvJoin').hidden=true;byId('tvStage').hidden=false;
@@ -280,7 +281,15 @@ async function renderRoom(room){
     state.players.forEach(p=>place(p.id,p.position||0,false));
     if(state.presentation?.action==='buy'||state.presentation?.action==='build')sound('purchase');
   }
-  if(generation===sequence)renderEvent(state);
+  if(generation===sequence){
+    renderEvent(state);
+    if(cinematic && moving){
+      // The card is readable before the view returns to a full board overview.
+      overviewTimer=setTimeout(()=>{
+        if(generation===sequence)cinematic?.overview();
+      },2600);
+    }
+  }
 }
 byId('tvJoinForm').addEventListener('submit',async e=>{
   e.preventDefault();const code=roomCode(new FormData(e.currentTarget).get('code'));
@@ -290,7 +299,7 @@ byId('tvJoinForm').addEventListener('submit',async e=>{
   catch(err){byId('tvJoinError').textContent='تعذّر الربط: '+(err.status||err.message);}
   finally{button.disabled=false;}
 });
-byId('tvDisconnect').addEventListener('click',()=>{cinematic?.clearDice();cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
+byId('tvDisconnect').addEventListener('click',()=>{clearTimeout(overviewTimer);++sequence;cinematic?.clearDice();cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
 byId('tvOverview').addEventListener('click',resetCamera);
 byId('tvSound').addEventListener('click',()=>{
   voiceEnabled=!voiceEnabled;
