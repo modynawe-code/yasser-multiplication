@@ -1,0 +1,45 @@
+name: Monopoly TV Local Worker and D1 Integration
+on:
+  push:
+    branches: [feature/monopoly-tv-multiscreen-v1]
+    paths:
+      - 'preview-v4/tools/monopoly-tv-backend-qa.mjs'
+      - '.github/workflows/monopoly-tv-backend-qa.yml'
+      - 'backend/src/**'
+      - 'backend/migrations/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  isolated-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Create isolated development config (never connect production D1)
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const c=JSON.parse(readFileSync('backend/wrangler.jsonc','utf8'));
+          c.name='monopoly-tv-test-local';
+          delete c.account_id;
+          delete c.ai;
+          delete c.ratelimits;
+          c.vars.ALLOWED_ORIGINS='http://127.0.0.1:8790';
+          c.d1_databases[0].database_id='00000000-0000-0000-0000-000000000001';
+          writeFileSync('backend/wrangler.tv-local.jsonc',JSON.stringify(c,null,2));
+          NODE
+      - name: Install Wrangler 4
+        run: npx --yes wrangler@4 --version
+      - name: Apply D1 migrations into local-only SQLite
+        run: npx --yes wrangler@4 d1 migrations apply yasser-khaled-family --config backend/wrangler.tv-local.jsonc --local
+      - name: Test real HTTP routing, roles, versions and CORS against local Worker
+        run: |
+          python3 .agents/skills/webapp-testing/scripts/with_server.py \
+            --server 'npx --yes wrangler@4 dev --config backend/wrangler.tv-local.jsonc --port 8789 --ip 127.0.0.1' \
+            --port 8789 \
+            -- node preview-v4/tools/monopoly-tv-backend-qa.mjs
