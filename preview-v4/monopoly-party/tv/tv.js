@@ -7,7 +7,7 @@ const status=byId('connectionStatus');
 const board=byId('partyBoard');
 const tokenLayer=document.createElement('div');tokenLayer.className='tv-tokens';
 const cells=new Map(),pieces=new Map();
-let previousRoom=null,sequence=0,latestState=null,voiceEnabled=false,soundContext=null,overviewTimer=null,lastFocus=-1;
+let previousRoom=null,sequence=0,latestState=null,voiceEnabled=false,soundContext=null,overviewTimer=null,lastFocus=-1,cinematic=null;
 const conn=makePartyConnection({role:'spectator',onRoom:renderRoom,onStatus:(value,error)=>{
   status.textContent=value==='connected'?'متصل بالغرفة':'الاتصال غير متاح'+(error?.status?' ('+error.status+')':'');
   status.classList.toggle('offline',value!=='connected');
@@ -116,6 +116,7 @@ function sound(kind){
   }catch{}
 }
 function resetCamera(){
+  if(cinematic){cinematic.overview();return;}
   lastFocus=-1;
   clearTimeout(overviewTimer);
   board.style.transform='scale(1)';
@@ -123,6 +124,7 @@ function resetCamera(){
   cells.forEach(cell=>cell.classList.remove('is-focused'));
 }
 function focusCamera(index,zoom=1.09){
+  if(cinematic){cinematic.focus(index,zoom);return;}
   const tile=cells.get(index);if(!tile)return;
   cells.forEach(cell=>cell.classList.toggle('is-focused',cell===tile));
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){resetCamera();return;}
@@ -240,8 +242,10 @@ async function animateArrival(prev,next,token,generation){
   const route=movementRoute(from,to,{teleport:(to===10&&next.jailed)||latestState?.presentation?.action==='card'});
   for(const pos of route){
     if(generation!==sequence)return;
-    place(next.id,pos,true);focusCamera(pos,1.075);sound('step');
-    await new Promise(resolve=>setTimeout(resolve,240));
+    if(cinematic){await cinematic.move(next.id,pos,.24);if(generation!==sequence)return;}
+    else place(next.id,pos,true);
+    focusCamera(pos,1.075);sound('step');
+    if(!cinematic)await new Promise(resolve=>setTimeout(resolve,240));
   }
 }
 async function renderRoom(room){
@@ -251,6 +255,7 @@ async function renderRoom(room){
   latestState=state;
   byId('tvJoin').hidden=true;byId('tvStage').hidden=false;
   drawQr(room.code);addRoster(room);syncPieces(state);
+  cinematic?.sync(state);
   syncBuildings(state);
   if(!old||old.code!==room.code||old.status==='waiting'||state.status==='waiting'){
     state.players.forEach(p=>place(p.id,p.position||0,false));renderEvent(state);return;
@@ -280,7 +285,7 @@ byId('tvJoinForm').addEventListener('submit',async e=>{
   catch(err){byId('tvJoinError').textContent='تعذّر الربط: '+(err.status||err.message);}
   finally{button.disabled=false;}
 });
-byId('tvDisconnect').addEventListener('click',()=>{conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
+byId('tvDisconnect').addEventListener('click',()=>{cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
 byId('tvOverview').addEventListener('click',resetCamera);
 byId('tvSound').addEventListener('click',()=>{
   voiceEnabled=!voiceEnabled;
@@ -289,7 +294,12 @@ byId('tvSound').addEventListener('click',()=>{
   if(voiceEnabled)sound('purchase');
 });
 boardSetup();
+// The optional bundled renderer is served locally; a failed WebGL context keeps DOM play usable.
+void import('../vendor/cinematic-scene.mjs').then(async module=>{
+  cinematic=await module.createCinematicScene({board,cells,colors:PARTY_COLORS});
+  if(cinematic){board.classList.add('cinematic-ready');if(latestState)cinematic.sync(latestState);}
+}).catch(error=>{console.warn('TV cinematic renderer unavailable; retaining accessible DOM fallback',error);});
 void loadBoardArt();
 const initial=new URL(location.href).searchParams.get('code');if(roomCode(initial))byId('tvJoinForm').elements.code.value=initial;
 void conn.resume();
-window.addEventListener('resize',()=>{if(latestState)latestState.players?.forEach(p=>place(p.id,p.position||0,false));});
+window.addEventListener('resize',()=>{if(latestState){latestState.players?.forEach(p=>place(p.id,p.position||0,false));cinematic?.resize(latestState);}});
