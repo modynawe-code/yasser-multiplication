@@ -175,7 +175,7 @@ function updateCenterScene(state,moving=false){
     'trade-reject':{kind:'trade',symbol:'✕',title:'رُفض التبادل'},
     'pass-auction':{kind:'auction',symbol:'🔨',title:'انتهت المزايدة'}
   };
-  const actionScene=phase==='end'&&!moving?actionScenes[action]:null;
+  const actionScene=!moving&&(phase==='end'||(phase==='roll'&&action==='build'))?actionScenes[action]:null;
   scene.dataset.event=actionScene?.kind||phase;
   const player=state.players?.[state.turnIndex];
   const position=state.pending?.index??player?.position;
@@ -189,6 +189,9 @@ function updateCenterScene(state,moving=false){
   if(moving){
     symbol.textContent='🎲';heading.textContent='القطعة تتحرك';
     detail.textContent='تابع مسار '+(player?.name||'اللاعب')+' على اللوحة';
+  }else if(actionScene){
+    symbol.textContent=actionScene.symbol;heading.textContent=actionScene.title;
+    detail.textContent=state.log||'تم تحديث حالة الجولة';
   }else if(phase==='roll'){
     symbol.textContent='🎲';heading.textContent='دور '+(player?.name||'اللاعب');
     detail.textContent='ارمِ النرد من جوالك';
@@ -209,9 +212,6 @@ function updateCenterScene(state,moving=false){
   }else if(state.status==='finished'){
     symbol.textContent='🏆';heading.textContent='انتهت الجولة';
     detail.textContent=state.log||'تهانينا للفائز';
-  }else if(actionScene){
-    symbol.textContent=actionScene.symbol;heading.textContent=actionScene.title;
-    detail.textContent=state.log||'تم تحديث حالة الجولة';
   }else{
     symbol.textContent='✓';heading.textContent='اكتمل الحدث';
     detail.textContent=state.log||'العودة إلى الجولة';
