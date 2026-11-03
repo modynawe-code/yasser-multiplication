@@ -200,6 +200,16 @@ export function createThreeDice(board){
       pawn.group.scale.setScalar(.9+(i===0?.1:0));
     });
     canvas.dataset.pawns=String(pawns.size);
+    // QA-only geometry diagnostic: projected 3D origin vs actual DOM tile center.
+    const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
+    const offsets=list.map(p=>{
+      const cell=cells.get(p.position||0),pawn=pawns.get(p.id);
+      if(!cell||!pawn)return 0;
+      const screen=pawn.group.position.clone().project(camera);
+      return Math.hypot((screen.x+1)*w/2-(cell.offsetLeft+cell.offsetWidth/2),
+        (1-screen.y)*h/2-(cell.offsetTop+cell.offsetHeight/2));
+    });
+    canvas.dataset.maxPawnOffset=String(Math.round(Math.max(0,...offsets)));
     canvas.style.visibility='visible';draw();
   }
   async function movePawn(id,index,duration=.24){
