@@ -17,7 +17,7 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .party-btn.secondary{background:#263f32;color:#edf9ec;border:1px solid #6a8d70;box-shadow:none}
 .party-error{color:#ffce9d;min-height:1.3em;font-weight:700;font-size:13px}
 .party-hint{color:#9bc3a9;font-size:12px}
-.tv-stage{max-width:1900px;margin:auto;display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,min(82vh,1120px)) minmax(190px,1fr);align-items:center;gap:clamp(12px,2vw,30px)}
+.tv-stage{max-width:1900px;margin:auto;display:grid;grid-template-columns:minmax(174px,.85fr) minmax(0,min(88vh,1240px)) minmax(174px,.85fr);align-items:center;gap:clamp(12px,2vw,30px)}
 .tv-side{align-self:stretch;display:flex;flex-direction:column;gap:13px;min-width:0}
 .tv-panel{background:linear-gradient(145deg,#1b3b2d,#123024);border:1px solid #4c7257;border-radius:18px;padding:clamp(14px,2vw,23px);box-shadow:0 14px 32px #0002}
 .tv-panel h2{font-size:clamp(17px,1.35vw,23px);margin:0 0 13px}.tv-code{font:900 clamp(26px,3vw,44px)/1 system-ui;letter-spacing:.2em;color:#f0d37a;text-align:center;direction:ltr}
@@ -133,3 +133,18 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-board.cinematic-ready .tv-token{visibility:hidden}
 .tv-board .tv-cinematic-canvas{display:block;contain:layout paint}
 @media(prefers-reduced-motion:reduce){.tv-board .tv-cinematic-canvas{transition:none}}
+
+/* TV presentation: give the board priority while retaining readable, compact HUD rails. */
+@media (min-width:1100px) and (min-height:650px){
+  .tv-stage{max-width:2100px;gap:clamp(10px,1.2vw,22px)}
+  .tv-panel{padding:clamp(11px,1.25vw,20px)}
+  .tv-board-frame{
+    background:linear-gradient(138deg,#f1dfb7 0%,#8d703b 12%,#e2c98e 28%,#806135 54%,#f6e4b6 80%,#765a32 100%);
+    border:3px solid #513c24;
+    box-shadow:0 9px 0 #342617,0 22px 50px #0009,0 0 0 1px #edd49a70 inset;
+  }
+  .tv-qr{min-height:120px;margin:10px auto;border-width:6px}
+  .tv-qr svg{width:min(130px,10vw)}
+  .tv-player{padding:9px}
+  .tv-side{gap:10px}
+}
