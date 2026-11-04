@@ -52,7 +52,7 @@ export async function createCinematicScene({board,cells,colors}){
       if(point&&actor.__fresh!==false){actor.position.set(point.x,point.y);actor.__fresh=false;}
       actor.alpha=state.players[state.turnIndex]?.id===p.id?1:.84;
     });
-    if(threeDice){threeDice.syncPawns(state.players,cells,colors);layer.visible=false;}
+    if(threeDice){threeDice.syncPawns(state.players,cells,colors,state.ownership||{});layer.visible=false;}
     else layer.visible=true;
   }
   function refresh(state){
@@ -148,7 +148,7 @@ export async function createCinematicScene({board,cells,colors}){
       try{
         threeDice||=createThreeDice(board);
         const initial=previousState?.players?.length?previousState:currentState;
-        if(initial?.players){threeDice.syncPawns(initial.players,cells,colors);layer.visible=false;}
+        if(initial?.players){threeDice.syncPawns(initial.players,cells,colors,initial.ownership||{});layer.visible=false;}
         if(await threeDice.roll(values))return true;
       }catch(error){
         console.warn('Three.js dice unavailable; using PixiJS dice fallback',error);

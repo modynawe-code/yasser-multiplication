@@ -462,7 +462,15 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-view .tv-board.tv-3d-board-ready{
   background-image:none!important;
   background-color:transparent!important;
-  border-color:#8e6836;
+  border:0;
+  overflow:visible;
+}
+.tv-view .tv-board-frame.tv-3d-board-ready{
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  overflow:visible;
 }
 .tv-view .tv-board.tv-3d-board-ready .tv-cell{
   background:transparent!important;
@@ -470,8 +478,9 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
   z-index:9;
 }
 .tv-view .tv-board.tv-3d-board-ready .tv-cell.owned{
-  box-shadow:inset 0 0 0 3px var(--owner);
+  box-shadow:none;
 }
+.tv-view .tv-board.tv-3d-board-ready .tv-buildings{visibility:hidden}
 .tv-view .tv-board.tv-3d-board-ready .tv-board-center{
   background:none!important;
   border:0!important;

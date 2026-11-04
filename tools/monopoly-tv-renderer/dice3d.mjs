@@ -13,6 +13,7 @@ const NORMALS=[
   new Vector3(0,1,0),new Vector3(0,-1,0),
   new Vector3(0,0,1),new Vector3(0,0,-1)
 ];
+const CAMERA_FACE_NORMAL=new Vector3(0,.85,.53).normalize();
 const PIPS={
   1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],
   4:[[-1,-1],[1,-1],[-1,1],[1,1]],
@@ -48,8 +49,9 @@ export function createThreeDice(board){
   canvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8';
   board.append(canvas);
   const scene=new Scene();
-  const camera=new PerspectiveCamera(38,1,.1,40);
-  camera.position.set(0,0,10);
+  const camera=new PerspectiveCamera(34,1,.1,50);
+  const overviewCamera={x:0,y:11,z:6.4};
+  camera.position.set(overviewCamera.x,overviewCamera.y,overviewCamera.z);
   const ambient=new AmbientLight(0xffffff,2.1);scene.add(ambient);
   const key=new DirectionalLight(0xffedce,3.2);
   key.position.set(-3,5,8);scene.add(key);
@@ -71,7 +73,8 @@ export function createThreeDice(board){
   const shadowMaterial=new MeshBasicMaterial({color:0x071b16,transparent:true,opacity:.24,side:DoubleSide,depthWrite:false});
   const shadows=dice.map((die)=>{
     const m=new Mesh(shadowGeometry,shadowMaterial);
-    m.position.set(die.position.x+.10,-.35,-.9);
+    m.rotation.x=-Math.PI/2;
+    m.position.set(die.position.x+.10,.025,-.08);
     group.add(m);return m;
   });
   // A real, light-reactive 3D tabletop. Original forty tiles stay exact in the
@@ -79,26 +82,30 @@ export function createThreeDice(board){
   const boardGroup=new Group();scene.add(boardGroup);
   const boardResources=[];
   let boardTexture=null,boardReady=false,artVersion=0;
-  const BOARD_DEPTH=-.83;
-  const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*(camera.position.z-BOARD_DEPTH);
+  const BOARD_DEPTH=0;
+  const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*camera.position.distanceTo(new Vector3(0,0,BOARD_DEPTH));
+  const surfaceSize=surfaceHeight*.94;
   const slabMat=new MeshStandardMaterial({color:0x77502d,roughness:.52,metalness:.08});
   const rimMat=new MeshStandardMaterial({color:0xcea55a,roughness:.28,metalness:.62});
   const feltMat=new MeshStandardMaterial({color:0x173c2c,roughness:.94,metalness:0});
-  const slabGeo=new BoxGeometry(surfaceHeight+.12,surfaceHeight+.12,.26);
-  const feltGeo=new BoxGeometry(surfaceHeight+.23,surfaceHeight+.23,.13);
-  const rimGeoHorizontal=new BoxGeometry(surfaceHeight+.32,.085,.2);
-  const rimGeoVertical=new BoxGeometry(.085,surfaceHeight+.32,.2);
+  const slabGeo=new BoxGeometry(surfaceSize+.16,surfaceSize+.16,.28);
+  const feltGeo=new BoxGeometry(surfaceSize+.28,surfaceSize+.28,.14);
+  const rimGeoHorizontal=new BoxGeometry(surfaceSize+.34,.09,.11);
+  const rimGeoVertical=new BoxGeometry(.11,surfaceSize+.34,.09);
   boardResources.push(slabMat,rimMat,feltMat,slabGeo,feltGeo,rimGeoHorizontal,rimGeoVertical);
+  // The board artwork and tabletop now lie flat on the XZ ground plane.
+  // Three.js owns the real overhead perspective; tiles remain baked into the exact source image.
+  boardGroup.rotation.x=-Math.PI/2;
   const feltSlab=new Mesh(feltGeo,feltMat);
-  feltSlab.position.z=BOARD_DEPTH-.36;boardGroup.add(feltSlab);
+  feltSlab.position.z=-.42;boardGroup.add(feltSlab);
   const slab=new Mesh(slabGeo,slabMat);
-  slab.position.z=BOARD_DEPTH-.18;boardGroup.add(slab);
+  slab.position.z=-.14;boardGroup.add(slab);
   for(const side of [-1,1]){
     const h=new Mesh(rimGeoHorizontal,rimMat);
-    h.position.set(0,side*(surfaceHeight/2+.07),BOARD_DEPTH-.11);
+    h.position.set(0,side*(surfaceSize/2+.065),.015);
     boardGroup.add(h);
     const v=new Mesh(rimGeoVertical,rimMat);
-    v.position.set(side*(surfaceHeight/2+.07),0,BOARD_DEPTH-.11);
+    v.position.set(side*(surfaceSize/2+.065),0,.015);
     boardGroup.add(v);
   }
   let artPlane=null;
@@ -133,13 +140,7 @@ export function createThreeDice(board){
       ctx.fillRect(inset,inset,edge,edge);
       ctx.strokeStyle='rgba(205,169,96,.8)';
       ctx.lineWidth=5;ctx.strokeRect(inset+9,inset+9,edge-18,edge-18);
-      // Embossed decorative central emblem, not an oversized logo or UI panel.
-      ctx.save();ctx.translate(512,512);ctx.rotate(Math.PI/4);
-      ctx.strokeStyle='rgba(236,224,175,.25)';ctx.lineWidth=12;
-      ctx.strokeRect(-185,-185,370,370);
-      ctx.strokeStyle='rgba(52,92,71,.16)';ctx.lineWidth=3;
-      ctx.strokeRect(-170,-170,340,340);
-      ctx.restore();
+      // Keep the felt center intentionally quiet; event cards and dice own this space.
       const texture=new CanvasTexture(canvas);
       texture.colorSpace=SRGBColorSpace;texture.anisotropy=4;
       // Printed board inks retain original colors; wood rim/pawns still react to real lighting.
@@ -148,18 +149,19 @@ export function createThreeDice(board){
         boardGroup.remove(artPlane);
         artPlane.geometry.dispose();artPlane.material.dispose();boardTexture?.dispose();
       }
-      const geo=new PlaneGeometry(surfaceHeight,surfaceHeight);
+      const geo=new PlaneGeometry(surfaceSize,surfaceSize);
       artPlane=new Mesh(geo,material);
-      artPlane.position.z=BOARD_DEPTH+.015;
+      artPlane.position.z=.012;
       boardGroup.add(artPlane);
       boardTexture=texture;boardReady=true;
       board.classList.add('tv-3d-board-ready');
+      board.closest('.tv-board-frame')?.classList.add('tv-3d-board-ready');
       board.dataset.displayEngine='three.js-table';
       board.dataset.displayReason='texture-ready';
       canvasElement.dataset.table='3d';
       draw();
     };
-    img.onerror=()=>{board.classList.remove('tv-3d-board-ready');};
+    img.onerror=()=>{board.classList.remove('tv-3d-board-ready');board.closest('.tv-board-frame')?.classList.remove('tv-3d-board-ready');};
     img.src=source;
   }
   const canvasElement=canvas;
@@ -170,13 +172,18 @@ export function createThreeDice(board){
   const pawnShadow=new CircleGeometry(.23,24);
   const pawns=new Map();
   let lastCells=null;
-  function worldPoint(cell){
+  function boardPoint(cell,localHeight=.035){
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
-    // Project against each pawn's z=1 depth, not the z=0 image plane.
-    // This removes the outward displacement near corner tiles.
-    const worldH=2*Math.tan(camera.fov*Math.PI/360)*(camera.position.z-1);
-    return new Vector3(((cell.offsetLeft+cell.offsetWidth/2)/w-.5)*worldH*w/h,
-      (.5-(cell.offsetTop+cell.offsetHeight/2)/h)*worldH,1);
+    const localX=((cell.offsetLeft+cell.offsetWidth/2)/w-.5)*surfaceSize*w/h;
+    const localY=(.5-(cell.offsetTop+cell.offsetHeight/2)/h)*surfaceSize;
+    return boardGroup.localToWorld(new Vector3(localX,localY,localHeight));
+  }
+  function boardCellSize(cell){
+    const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
+    return {width:cell.offsetWidth/w*surfaceSize*w/h,height:cell.offsetHeight/h*surfaceSize};
+  }
+  function worldPoint(cell){
+    return boardPoint(cell,.04);
   }
   function makePawn(color){
     const material=new MeshStandardMaterial({color,metalness:.55,roughness:.24});
@@ -185,12 +192,73 @@ export function createThreeDice(board){
       base=new Mesh(pawnBase,material);
     body.position.y=.17;top.position.y=.39;base.position.y=-.045;
     const shade=new Mesh(pawnShadow,new MeshBasicMaterial({color:0x06241b,transparent:true,opacity:.34,depthWrite:false}));
-    shade.position.set(.08,-.21,-.28);
+    shade.rotation.x=-Math.PI/2;shade.position.set(.08,.018,-.08);
     g.add(shade,base,body,top);
     scene.add(g);
     return {group:g,material,shade};
   }
-  function syncPawns(players,cells,colors){
+  const propertyMarks=new Map();
+  function removePropertyMark(index,mark){
+    boardGroup.remove(mark.group);
+    mark.group.traverse(node=>{
+      node.geometry?.dispose();
+      if(Array.isArray(node.material))node.material.forEach(m=>m.dispose());
+      else node.material?.dispose();
+    });
+    propertyMarks.delete(index);
+  }
+  function syncPropertyMarks(players,cells,colors,ownership={}){
+    const entries=Object.entries(ownership||{}).filter(([index,own])=>cells.has(Number(index))&&own?.ownerId);
+    const keep=new Set(entries.map(([index])=>String(index)));
+    for(const [index,mark] of propertyMarks)if(!keep.has(String(index)))removePropertyMark(index,mark);
+    for(const [rawIndex,own] of entries){
+      const index=Number(rawIndex),cell=cells.get(index);
+      const playerIndex=players.findIndex(p=>p.id===own.ownerId);
+      if(playerIndex<0)continue;
+      const color=colors[playerIndex%colors.length]||'#18a775';
+      let mark=propertyMarks.get(index);
+      if(mark?.ownerId===own.ownerId&&mark.houses===(own.houses||0)&&mark.hotel===!!own.hotel)continue;
+      if(mark)removePropertyMark(index,mark);
+      mark={group:new Group(),ownerId:own.ownerId,houses:own.houses||0,hotel:!!own.hotel};
+      const size=boardCellSize(cell),centerX=((cell.offsetLeft+cell.offsetWidth/2)/Math.max(1,board.clientWidth)-.5)*surfaceSize;
+      const centerY=(.5-(cell.offsetTop+cell.offsetHeight/2)/Math.max(1,board.clientHeight))*surfaceSize;
+      const fill=new Mesh(new PlaneGeometry(size.width*.84,size.height*.84),new MeshBasicMaterial({color,transparent:true,opacity:.11,depthWrite:false,side:DoubleSide}));
+      fill.position.set(centerX,centerY,.035);mark.group.add(fill);
+      const edge=Math.max(.035,Math.min(size.width,size.height)*.055);
+      const trimMat=new MeshStandardMaterial({color,emissive:color,emissiveIntensity:.16,roughness:.35,metalness:.22});
+      const trims=[
+        [size.width*.84,edge,centerX,centerY+size.height*.42],
+        [size.width*.84,edge,centerX,centerY-size.height*.42],
+        [edge,size.height*.84,centerX-size.width*.42,centerY],
+        [edge,size.height*.84,centerX+size.width*.42,centerY]
+      ];
+      for(const [width,height,x,y] of trims){
+        const bar=new Mesh(new BoxGeometry(width,height,.045),trimMat);
+        bar.position.set(x,y,.055);mark.group.add(bar);
+      }
+      const buildingCount=own.hotel?1:Math.min(4,Math.max(0,own.houses||0));
+      if(buildingCount){
+        const towardsCenterX=Math.abs(centerX)>Math.abs(centerY),
+          houseX=towardsCenterX?centerX-Math.sign(centerX)*size.width*.24:centerX,
+          houseY=towardsCenterX?centerY:centerY-Math.sign(centerY)*size.height*.24;
+        const buildingColor=own.hotel?0xc95c43:0x52ad68;
+        const buildingMat=new MeshStandardMaterial({color:buildingColor,roughness:.45,metalness:.12});
+        const step=Math.min(size.width*.18,size.height*.18);
+        for(let i=0;i<buildingCount;i++){
+          const offset=(i-(buildingCount-1)/2)*step;
+          const house=new Mesh(new BoxGeometry(Math.min(.18,size.width*.2),Math.min(.2,size.height*.24),.13),buildingMat);
+          house.position.set(houseX+(towardsCenterX?0:offset),houseY+(towardsCenterX?offset:0),.12);
+          mark.group.add(house);
+          const roof=new Mesh(new BoxGeometry(Math.min(.21,size.width*.23),Math.min(.07,size.height*.09),.055),trimMat);
+          roof.position.set(house.position.x,house.position.y,.21);mark.group.add(roof);
+        }
+      }
+      boardGroup.add(mark.group);propertyMarks.set(index,mark);
+    }
+    canvas.dataset.properties=String(propertyMarks.size);
+    canvas.dataset.buildings=String(entries.reduce((sum,[,own])=>sum+(own.hotel?1:Math.max(0,own.houses||0)),0));
+  }
+  function syncPawns(players,cells,colors,ownership={}){
     if(disposed)return;
     lastCells=cells;
     const list=players||[],ids=new Set(list.map(p=>p.id));
@@ -208,15 +276,16 @@ export function createThreeDice(board){
       if(fresh&&cell)pawn.group.position.copy(worldPoint(cell));
       pawn.group.scale.setScalar(.68+(i===0?.04:0));
     });
+    syncPropertyMarks(list,cells,colors,ownership);
     canvas.dataset.pawns=String(pawns.size);
-    // QA-only geometry diagnostic: projected 3D origin vs actual DOM tile center.
+    // Compare pawn projection with the projected center of its source-art tile.
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
     const offsets=list.map(p=>{
       const cell=cells.get(p.position||0),pawn=pawns.get(p.id);
       if(!cell||!pawn)return 0;
       const screen=pawn.group.position.clone().project(camera);
-      return Math.hypot((screen.x+1)*w/2-(cell.offsetLeft+cell.offsetWidth/2),
-        (1-screen.y)*h/2-(cell.offsetTop+cell.offsetHeight/2));
+      const target=boardPoint(cell,.04).project(camera);
+      return Math.hypot((screen.x-target.x)*w/2,(screen.y-target.y)*h/2);
     });
     canvas.dataset.maxPawnOffset=String(Math.round(Math.max(0,...offsets)));
     canvas.style.visibility='visible';draw();
@@ -250,16 +319,17 @@ export function createThreeDice(board){
   function draw(){
     if(disposed)return;
     resize();
-    maxCameraLift=Math.max(maxCameraLift,camera.position.y);
+    maxCameraLift=Math.max(maxCameraLift,Math.abs(camera.position.y-overviewCamera.y));
     canvas.dataset.maxCameraLift=maxCameraLift.toFixed(2);
-    canvas.dataset.cameraRestored=String(Math.abs(camera.position.y)<.02&&!board.classList.contains('tv-3d-rolling'));
-    camera.lookAt(0,0,-.8);
+    canvas.dataset.cameraRestored=String(Math.abs(camera.position.y-overviewCamera.y)<.02&&Math.abs(camera.position.z-overviewCamera.z)<.02&&Math.abs(camera.zoom-1)<.02&&!board.classList.contains('tv-3d-rolling'));
+    camera.lookAt(0,0,0);
+    camera.updateProjectionMatrix();
     renderer.render(scene,camera);
   }
   function clear(){
     timeline?.kill();timeline=null;
     shown=false;group.visible=false;
-    camera.position.set(0,0,10);
+    camera.position.set(overviewCamera.x,overviewCamera.y,overviewCamera.z);camera.zoom=1;
     board.classList.remove('tv-3d-rolling');
     canvas.style.visibility=(boardReady||pawns.size)?'visible':'hidden';
     draw();
@@ -270,10 +340,10 @@ export function createThreeDice(board){
     clear();
     const target=values.map(value=>{
       const normal=NORMALS[FACES.indexOf(value)];
-      return new Quaternion().setFromUnitVectors(normal,new Vector3(0,0,1));
+      return new Quaternion().setFromUnitVectors(normal,CAMERA_FACE_NORMAL);
     });
     dice.forEach((die,i)=>{
-      die.position.set((i===0?-1:1)*.76,-.25,0);
+      die.position.set((i===0?-1:1)*.76,.56,0);
       die.quaternion.copy(target[i]);
       die.rotation.x+=Math.PI*2;die.rotation.y+=Math.PI*2;
     });
@@ -290,20 +360,22 @@ export function createThreeDice(board){
         onUpdate:draw,
         onComplete:()=>{
           timeline=null;
-          camera.position.set(0,0,10);
+          camera.position.set(overviewCamera.x,overviewCamera.y,overviewCamera.z);camera.zoom=1;
           board.classList.remove('tv-3d-rolling');
           dice.forEach((die,i)=>die.quaternion.copy(target[i]));
           draw();resolve(true);
         },
         onInterrupt:()=>{
-          timeline=null;camera.position.set(0,0,10);
+          timeline=null;camera.position.set(overviewCamera.x,overviewCamera.y,overviewCamera.z);camera.zoom=1;
           board.classList.remove('tv-3d-rolling');draw();resolve(false);
         }
       });
       timeline=tl;
       // Genuine Three.js perspective camera crane, not a CSS zoom.
-      tl.to(camera.position,{y:2.1,z:10.4,duration:.38,ease:'power2.out'},0);
-      tl.to(camera.position,{y:0,z:10,duration:.43,ease:'power2.inOut'},.75);
+      tl.to(camera.position,{y:9.1,z:6,duration:.38,ease:'power2.out'},0);
+      tl.to(camera,{zoom:1.12,duration:.38,ease:'power2.out',onUpdate:()=>camera.updateProjectionMatrix()},0);
+      tl.to(camera.position,{y:overviewCamera.y,z:overviewCamera.z,duration:.43,ease:'power2.inOut'},.75);
+      tl.to(camera,{zoom:1,duration:.43,ease:'power2.inOut',onUpdate:()=>camera.updateProjectionMatrix()},.75);
       dice.forEach((die,i)=>{
         die.quaternion.copy(target[i]);
         // GSAP rotates exactly two full revolutions and lands on the server face.
@@ -321,10 +393,12 @@ export function createThreeDice(board){
       scene.remove(pawn.group);pawn.material.dispose();pawn.shade.material.dispose();
     }
     pawns.clear();pawnBody.dispose();pawnTop.dispose();pawnBase.dispose();pawnShadow.dispose();
+    for(const [index,mark] of propertyMarks)removePropertyMark(index,mark);
     if(artPlane){boardGroup.remove(artPlane);artPlane.geometry.dispose();artPlane.material.dispose();}
     boardTexture?.dispose();
     for(const resource of boardResources)resource.dispose();
     board.classList.remove('tv-3d-board-ready');
+    board.closest('.tv-board-frame')?.classList.remove('tv-3d-board-ready');
     for(const t of textures)t.dispose();
     for(const m of materials)m.dispose();
     geometry.dispose();shadowGeometry.dispose();shadowMaterial.dispose();

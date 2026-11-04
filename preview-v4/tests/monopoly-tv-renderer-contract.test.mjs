@@ -65,11 +65,11 @@ test('3D pieces use mesh geometry and authoritative board coordinates',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/new CylinderGeometry\(/);
   assert.match(d,/new SphereGeometry\(/);
-  assert.match(d,/function syncPawns\(players,cells,colors\)/);
+  assert.match(d,/function syncPawns\(players,cells,colors,ownership=\{\}\)/);
   assert.match(d,/function movePawn\(id,index,duration/);
   assert.match(d,/canvas\.dataset\.pawns=String\(pawns\.size\)/);
   assert.match(d,/canvas\.dataset\.dice=values\.join\(','\)/);
-  assert.match(scene,/threeDice\.syncPawns\(state\.players,cells,colors\)/);
+  assert.match(scene,/threeDice\.syncPawns\(state\.players,cells,colors,state\.ownership\|\|\{\}\)/);
   assert.match(scene,/threeDice\.movePawn\(id,index,duration\)/);
   assert.match(scene,/layer\.visible=false/);
 });
@@ -123,7 +123,11 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.match(d,/const slabGeo=new BoxGeometry\(/);
   assert.match(d,/const feltGeo=new BoxGeometry\(/);
   assert.match(d,/const rimGeoHorizontal=new BoxGeometry\(/);
-  assert.match(d,/const geo=new PlaneGeometry\(surfaceHeight,surfaceHeight\)/);
+  assert.match(d,/const geo=new PlaneGeometry\(surfaceSize,surfaceSize\)/);
+  assert.match(d,/boardGroup\.rotation\.x=-Math\.PI\/2/);
+  assert.match(d,/board\.closest\('\.tv-board-frame'\)\?\.classList\.add\('tv-3d-board-ready'\)/);
+  assert.match(d,/function syncPropertyMarks\(players,cells,colors,ownership=\{\}\)/);
+  assert.match(d,/canvas\.dataset\.properties=String\(propertyMarks\.size\)/);
   assert.match(d,/new CanvasTexture\(canvas\)/);
   assert.match(d,/board\.classList\.add\('tv-3d-board-ready'\)/);
   assert.match(d,/board\.classList\.remove\('tv-3d-board-ready'\)/);
@@ -143,12 +147,23 @@ test('TV idle and pre-roll center stay open, with readable-sized 3D pawns',()=>{
   assert.match(d,/pawn\.group\.scale\.setScalar\(\.68\+\(i===0\?\.04:0\)\)/);
 });
 
+test('Three.js renders a real tabletop perspective instead of a front-facing board',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/new PerspectiveCamera\(34,1/);
+  assert.match(d,/overviewCamera=\{x:0,y:11,z:6\.4\}/);
+  assert.match(d,/boardGroup\.rotation\.x=-Math\.PI\/2/);
+  assert.match(d,/camera\.lookAt\(0,0,0\)/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:9\.1,z:6/);
+  assert.match(d,/tl\.to\(camera,\{zoom:1\.12/);
+  assert.match(css,/\.tv-board-frame\.tv-3d-board-ready\{[\s\S]*?background:transparent/);
+});
+
 test('dice roll uses a real Three.js camera crane and always restores the tile projection',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
-  assert.match(d,/camera\.lookAt\(0,0,-\.8\)/);
-  assert.match(d,/tl\.to\(camera\.position,\{y:2\.1,z:10\.4/);
-  assert.match(d,/tl\.to\(camera\.position,\{y:0,z:10/);
-  assert.match(d,/camera\.position\.set\(0,0,10\)/);
+  assert.match(d,/camera\.lookAt\(0,0,0\)/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:9\.1,z:6/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:overviewCamera\.y,z:overviewCamera\.z/);
+  assert.match(d,/camera\.position\.set\(overviewCamera\.x,overviewCamera\.y,overviewCamera\.z\)/);
   assert.match(d,/board\.classList\.add\('tv-3d-rolling'\)/);
   assert.match(d,/board\.classList\.remove\('tv-3d-rolling'\)/);
   assert.match(css,/\.tv-board\.tv-3d-board-ready\.tv-3d-rolling \.tv-cell/);
