@@ -22,7 +22,8 @@ test('release link removes stale Monopoly TV assets before loading the scene',()
   const html=readFileSync(new URL('../monopoly-party/tv/index.html',import.meta.url),'utf8');
   assert.match(html,/searchParams\.get\('release'\)/);
   assert.match(html,/pathname\.includes\('\/monopoly-party\/'\).*cache\.delete\(request\)/s);
-  assert.match(html,/location\.replace\(location\.href\).*import\('\.\/tv\.js'\)/s);
+  assert.match(html,/location\.replace\(location\.href\)/);
+  assert.match(html,/<script type="module" src="\.\/tv\.js"><\/script>/);
 });
 const state=(phase,turnIndex=0)=>({
   status:'playing',phase,turnIndex,
