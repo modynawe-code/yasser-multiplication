@@ -31,6 +31,12 @@ test('Three.js initializes before Pixi to reserve the TV browser WebGL context',
   assert.doesNotMatch(entry,/board\.dataset\.displayEngine='pixi-three'/);
   assert.match(scene,/get engine\(\)\{return threeDice\?\.boardReady\?'three\.js-table':'pixi\.js-fallback';\}/);
 });
+test('installed family service workers revalidate Monopoly TV assets after staging deploys',()=>{
+  const sw=read('service-worker.js');
+  assert.match(sw,/shell-231/);
+  assert.match(sw,/const isMonopolyAsset=new URL\(event\.request\.url\)\.pathname\.includes\('\/monopoly-party\/'\)/);
+  assert.match(sw,/if\(!isMonopolyAsset&&new URL\(event\.request\.url\)\.origin===self\.location\.origin/);
+});
 test('rendering does not authorize server money, player actions or mutate snapshots',()=>{
   assert.doesNotMatch(scene,/submitAction|createRoom|fetch\(|\.cash\s*[+\-*/]?=|\.ownership\s*=/);
   assert.match(scene,/prefers-reduced-motion/);

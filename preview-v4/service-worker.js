@@ -1,7 +1,7 @@
 importScripts('./src/modules/mashaal/curriculum/recitation-media-data.js');
 
 const CACHE_PREFIX='yasser-multiplication-v4-';
-const CACHE_VERSION=`${CACHE_PREFIX}shell-230`;
+const CACHE_VERSION=`${CACHE_PREFIX}shell-231`;
 const RECITATION_MEDIA=globalThis.__FAMILY_LEARNING_RECITATION_MEDIA__||[];
 const RECITATION_ASSETS=RECITATION_MEDIA.map(item=>item?.localPath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
 const RECITATION_COMPANION_ASSETS=RECITATION_MEDIA.map(item=>item?.mushafPage?.imagePath).filter(path=>typeof path==='string'&&path.startsWith('./assets/recitation/'));
@@ -177,8 +177,10 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
   event.respondWith((async()=>{
     const cache=await caches.open(CACHE_VERSION);
-    // Versioned same-origin static resources do not need a network round trip on every opening.
-    if(new URL(event.request.url).origin===self.location.origin&&['script','style','image','font'].includes(event.request.destination)){
+    const isMonopolyAsset=new URL(event.request.url).pathname.includes('/monopoly-party/');
+    // TV assets change independently of the family-app shell. Always revalidate them
+    // so an installed PWA worker cannot keep an older TV scene after a staging deploy.
+    if(!isMonopolyAsset&&new URL(event.request.url).origin===self.location.origin&&['script','style','image','font'].includes(event.request.destination)){
       const cached=await cache.match(event.request);
       if(cached)return cached;
     }
