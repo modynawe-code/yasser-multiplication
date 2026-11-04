@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOARD,partyActions,partyPortfolioActions,resolvePartyAction,roomCode,tileCoordinates,publicJoinUrl,makePartyConnection} from '../monopoly-party/shared.js';
+import {readFileSync} from 'node:fs';
+import {BOARD,partyActions,partyPortfolioActions,resolvePartyAction,roomCode,tileCoordinates,publicJoinUrl,makePartyConnection,demoPlayerAction} from '../monopoly-party/shared.js';
 
 test('TV board represents each of 40 unique squares including all four corners',()=>{
   assert.equal(BOARD.length,40);
@@ -16,6 +17,12 @@ test('QR join URLs carry only six-digit room code, never a player token',()=>{
   assert.equal(url.searchParams.size,1);
   assert.equal(roomCode('123456'),'123456');
   assert.equal(roomCode('12345'),null);
+});
+test('release link removes stale Monopoly TV assets before loading the scene',()=>{
+  const html=readFileSync(new URL('../monopoly-party/tv/index.html',import.meta.url),'utf8');
+  assert.match(html,/searchParams\.get\('release'\)/);
+  assert.match(html,/pathname\.includes\('\/monopoly-party\/'\).*cache\.delete\(request\)/s);
+  assert.match(html,/location\.replace\(location\.href\).*import\('\.\/tv\.js'\)/s);
 });
 const state=(phase,turnIndex=0)=>({
   status:'playing',phase,turnIndex,
@@ -39,6 +46,16 @@ test('phone sees only authorized turn actions and spectator has no controller',(
   assert.deepEqual(partyActions(state('trade'),'host'),[]);
   assert.deepEqual(partyActions(state('end'),'host').map(x=>x.type),['end']);
   assert.deepEqual(partyActions(state('roll'),'fake-player'),[]);
+});
+test('demo opponent only selects an authorized action for its active turn',()=>{
+  assert.equal(demoPlayerAction({status:'waiting',players:[{id:'host'},{id:'demo'}]},'demo'),null);
+  assert.equal(demoPlayerAction(state('roll'),'guest'),null);
+  assert.equal(demoPlayerAction(state('roll'),'host').type,'roll');
+  assert.equal(demoPlayerAction(state('property'),'host').type,'skip');
+  assert.equal(demoPlayerAction(state('auction'),'guest').type,'pass-auction');
+  assert.equal(demoPlayerAction(state('trade'),'guest').type,'trade-reject');
+  assert.equal(demoPlayerAction(state('card'),'host').type,'card-pick');
+  assert.equal(demoPlayerAction(state('end'),'host').type,'end');
 });
 test('spectator may join and resume but cannot create or issue player commands',async()=>{
   const map=new Map();

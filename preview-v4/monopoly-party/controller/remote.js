@@ -1,7 +1,10 @@
-import {BOARD,PARTY_COLORS,partyActions,partyPortfolioActions,publicJoinUrl,makePartyConnection,roomCode} from '../shared.js';
+import {BOARD,PARTY_COLORS,partyActions,partyPortfolioActions,publicJoinUrl,makePartyConnection,roomCode,demoPlayerAction} from '../shared.js';
 
 const get=id=>document.getElementById(id);
-let current=null,pending=false;
+let current=null,pending=false,demoConnection=null,demoBusy=false,demoAttemptedVersion=-1,demoTimer=null;
+const demoButton=get('addDemoPlayer');
+const demoAllowed=location.hostname==='monopoly-tv-staging.modynawe.workers.dev';
+if(demoAllowed)demoButton.hidden=false;
 const connection=makePartyConnection({role:'player',onRoom:render,onStatus:(value,error)=>{
   get('remoteStatus').textContent=value==='connected'?'متصل':'جارٍ استعادة الاتصال'+(error?.status?' ('+error.status+')':'');
   get('remoteStatus').classList.toggle('offline',value!=='connected');
@@ -178,6 +181,39 @@ function render(room){
   const space=BOARD[landed]||BOARD[myPlayer?.position];
   get('remoteCurrentProperty').textContent=space?'الخانة: '+space.name+(space.price?' · السعر '+space.price+' ريال':''):'';
 }
+function queueDemoAction(room){
+  if(!demoConnection||demoBusy||room?.status!=='playing')return;
+  const playerId=demoConnection.session?.playerId,action=demoPlayerAction(room.state,playerId);
+  if(!action||room.version===demoAttemptedVersion)return;
+  demoAttemptedVersion=room.version;
+  clearTimeout(demoTimer);
+  demoTimer=setTimeout(async()=>{
+    const latest=demoConnection?.room;
+    if(!latest||latest.version!==room.version||demoBusy)return;
+    const next=demoPlayerAction(latest.state,demoConnection.session?.playerId);
+    if(!next)return;
+    demoBusy=true;
+    try{await demoConnection.action(next.type,next.payload||{});}
+    catch(error){if(error.status!==409)get('remoteActionError').textContent='تعذّر تحريك اللاعب التجريبي: '+(error.message||'اتصال غير متاح');}
+    finally{demoBusy=false;if(demoConnection?.room)queueDemoAction(demoConnection.room);}
+  },650);
+}
+demoButton.addEventListener('click',async()=>{
+  if(!demoAllowed||!current||demoConnection)return;
+  demoButton.disabled=true;demoButton.textContent='جارٍ إضافة اللاعب التجريبي…';
+  const values=new Map();
+  const isolatedStorage={getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,String(value)),removeItem:key=>values.delete(key)};
+  demoConnection=makePartyConnection({role:'player',storage:isolatedStorage,
+    onRoom:room=>{render(room);queueDemoAction(room);}});
+  try{
+    await demoConnection.join(current.code,'لاعب تجريبي');
+    demoButton.textContent='اللاعب التجريبي يلعب تلقائيًا';
+  }catch(error){
+    demoConnection.leave();demoConnection=null;demoButton.disabled=false;
+    demoButton.textContent='إضافة لاعب كمبيوتر للتجربة';
+    get('remoteActionError').textContent='تعذّرت إضافة اللاعب التجريبي: '+(error.status||error.message||'اتصال غير متاح');
+  }
+});
 get('remoteForm').addEventListener('submit',async event=>{
   event.preventDefault();
   const form=event.currentTarget,submitter=event.submitter;
@@ -192,6 +228,8 @@ get('remoteForm').addEventListener('submit',async event=>{
   finally{buttons.forEach(b=>b.disabled=false);}
 });
 get('remoteLeave').addEventListener('click',()=>{
+  clearTimeout(demoTimer);demoConnection?.leave();demoConnection=null;demoAttemptedVersion=-1;demoBusy=false;
+  demoButton.disabled=false;demoButton.textContent='إضافة لاعب كمبيوتر للتجربة';
   connection.leave();current=null;get('remoteJoin').hidden=false;get('remoteStage').hidden=true;get('remoteLeave').hidden=true;
   get('remoteStatus').textContent='غير متصل';get('remoteStatus').classList.add('offline');
 });

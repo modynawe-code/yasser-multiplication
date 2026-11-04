@@ -12,4 +12,20 @@
  <div class="tv-board-frame tv-table-surface"><div id="partyBoard" class="tv-board" aria-label="لوحة مونوبولي المكونة من 40 خانة"></div></div>
  <aside class="tv-side tv-rail tv-rail-info"><section class="tv-panel"><h2>الحدث الحالي</h2><div id="tvEvent" class="tv-event" aria-live="polite"><strong>بانتظار اللاعبين</strong></div><div id="tvDice" class="tv-dice"></div></section><section class="tv-panel"><h2>معلومات الجلسة</h2><p id="tvPhase" class="tv-wait">بانتظار انضمام لاعبين</p><p class="party-hint">كل القرارات تأتي من جوالات اللاعبين. شاشة التلفزيون لا تملك صلاحية شراء أو رمي.</p><div class="tv-options"><button id="tvSound" class="party-btn secondary" type="button" aria-pressed="false">🔇 تفعيل الصوت</button><button id="tvOverview" class="party-btn secondary" type="button">اللوحة كاملة</button></div><button id="tvDisconnect" class="party-btn secondary" type="button">الخروج من وضع التلفزيون</button></section></aside>
 </main>
-<script type="module" src="./tv.js"></script></body></html>
+<script type="module">
+const release=new URL(location.href).searchParams.get('release'),marker='monopoly-tv-cache-release';
+const boot=async()=>{
+  if(release&&/^[a-f0-9]{12,40}$/i.test(release)&&sessionStorage.getItem(marker)!==release){
+    sessionStorage.setItem(marker,release);
+    try{
+      for(const name of await caches.keys()){
+        const cache=await caches.open(name);
+        for(const request of await cache.keys())if(new URL(request.url).pathname.includes('/monopoly-party/'))await cache.delete(request);
+      }
+      location.replace(location.href);return;
+    }catch{sessionStorage.removeItem(marker);}
+  }
+  await import('./tv.js');
+};
+void boot();
+</script></body></html>

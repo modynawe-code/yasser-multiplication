@@ -38,6 +38,15 @@ export function partyActions(state,playerId){
   if(phase==='end')return [{type:'end',label:'إنهاء الدور'}];
   return [];
 }
+// A deterministic, low-risk opponent for staging play-throughs. It can only
+// choose commands already authorized for that player by the normal action list.
+export function demoPlayerAction(state,playerId){
+  const actions=partyActions(state,playerId);
+  if(state?.status!=='playing')return null;
+  const preferred={roll:'roll',property:'skip',auction:'pass-auction',trade:'trade-reject',end:'end'}[state.phase];
+  return actions.find(action=>action.type===preferred)||
+    (state.phase==='card'?actions[0]||null:null);
+}
 // Portfolio decisions are not turn-advancing actions; show them separately.
 export function partyPortfolioActions(state,playerId){
   if(state?.status!=='playing'||state.players?.[state.turnIndex]?.id!==playerId)return [];
