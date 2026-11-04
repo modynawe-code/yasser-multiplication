@@ -161,7 +161,12 @@ export function createThreeDice(board){
       canvasElement.dataset.table='3d';
       draw();
     };
-    img.onerror=()=>{board.classList.remove('tv-3d-board-ready');board.closest('.tv-board-frame')?.classList.remove('tv-3d-board-ready');};
+    img.onerror=()=>{
+      board.classList.remove('tv-3d-board-ready');
+      board.closest('.tv-board-frame')?.classList.remove('tv-3d-board-ready');
+      board.dataset.displayEngine='pixi-dom-fallback';
+      board.dataset.displayReason='board-art-load-failed';
+    };
     img.src=source;
   }
   const canvasElement=canvas;

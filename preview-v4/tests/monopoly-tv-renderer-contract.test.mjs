@@ -23,6 +23,14 @@ test('TV integrates local bundled renderer and retains DOM fallback',()=>{
   assert.match(entry,/catch\(error=>\{[^}]*console\.warn\('TV cinematic renderer unavailable/);
   assert.match(css,/\.tv-board\.cinematic-ready \.tv-token\{visibility:hidden\}/);
 });
+test('Three.js initializes before Pixi to reserve the TV browser WebGL context',()=>{
+  assert.ok(scene.indexOf('threeDice=createThreeDice(board)')<scene.indexOf('await app.init('));
+  assert.match(scene,/board\.dataset\.displayEngine='pixi-dom-fallback'/);
+  assert.match(scene,/board\.dataset\.displayReason='webgl-context-unavailable'/);
+  assert.match(scene,/board\.dataset\.displayReason='webgl-render-failed'/);
+  assert.doesNotMatch(entry,/board\.dataset\.displayEngine='pixi-three'/);
+  assert.match(scene,/get engine\(\)\{return threeDice\?\.boardReady\?'three\.js-table':'pixi\.js-fallback';\}/);
+});
 test('rendering does not authorize server money, player actions or mutate snapshots',()=>{
   assert.doesNotMatch(scene,/submitAction|createRoom|fetch\(|\.cash\s*[+\-*/]?=|\.ownership\s*=/);
   assert.match(scene,/prefers-reduced-motion/);

@@ -8,6 +8,19 @@ function rgb(hex){return Number(String(hex||'#18a775').replace('#','0x'))||0x18a
 export async function createCinematicScene({board,cells,colors}){
   if(!board||!cells?.size)return null;
   const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let threeDice=null,threeUnavailable=false;
+  // Reserve the first WebGL context for the board. Some TV browsers limit
+  // concurrent contexts; initializing Pixi first can leave Three.js on DOM fallback.
+  try{
+    threeDice=createThreeDice(board);
+    board.dataset.displayEngine='three.js-initializing';
+    board.dataset.displayReason='waiting-for-board-texture';
+  }catch(error){
+    threeUnavailable=true;
+    board.dataset.displayEngine='pixi-dom-fallback';
+    board.dataset.displayReason='webgl-context-unavailable';
+    console.warn('Three.js board unavailable; keeping PixiJS board fallback',error);
+  }
   const app=new Application();
   await app.init({resizeTo:board,backgroundAlpha:0,preference:'webgl',antialias:true,resolution:limit(devicePixelRatio||1,1,2),autoDensity:true});
   const canvas=app.canvas;
@@ -110,16 +123,8 @@ export async function createCinematicScene({board,cells,colors}){
   };
   const diceLayer=new Container();
   app.stage.addChild(diceLayer);
-  let diceTimeline=null,threeDice=null,threeUnavailable=false;
-  // Mount the shared Three.js scene at TV start, not only after the first roll.
-  // If WebGL fails, the accessible Pixi/DOM board remains available.
-  try{
-    threeDice=createThreeDice(board);
-    layer.visible=false;
-  }catch(error){
-    threeUnavailable=true;
-    console.warn('Three.js board unavailable; keeping PixiJS board fallback',error);
-  }
+  let diceTimeline=null;
+  if(threeDice)layer.visible=false;
   function setBoardArt(source){
     if(destroyed)return;
     if(threeDice)threeDice.setBoardArt(source);
@@ -153,6 +158,8 @@ export async function createCinematicScene({board,cells,colors}){
       }catch(error){
         console.warn('Three.js dice unavailable; using PixiJS dice fallback',error);
         threeDice?.destroy();threeDice=null;threeUnavailable=true;layer.visible=true;
+        board.dataset.displayEngine='pixi-dom-fallback';
+        board.dataset.displayReason='webgl-render-failed';
       }
     }
     const centerX=board.offsetWidth/2,centerY=board.offsetHeight/2;
@@ -205,5 +212,5 @@ export async function createCinematicScene({board,cells,colors}){
     app.destroy(true,{children:true});
     gsap.set(board,{clearProps:'transform,transformOrigin'});
   }
-  return {sync,refresh,focus,overview,move,rollDice,clearDice,setBoardArt,presentEvent,clearEvent,resize,destroy,engine:'pixi.js+gsap+three.js'};
+  return {sync,refresh,focus,overview,move,rollDice,clearDice,setBoardArt,presentEvent,clearEvent,resize,destroy,get engine(){return threeDice?.boardReady?'three.js-table':'pixi.js-fallback';}};
 }

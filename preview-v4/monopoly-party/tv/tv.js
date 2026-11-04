@@ -344,8 +344,6 @@ void import('../vendor/cinematic-scene.mjs').then(async module=>{
   cinematic=await module.createCinematicScene({board,cells,colors:PARTY_COLORS});
   if(cinematic){
     board.classList.add('cinematic-ready');
-    board.dataset.displayEngine='pixi-three';
-    board.dataset.displayReason='waiting-for-board-texture';
     if(boardArtSource)cinematic.setBoardArt(boardArtSource);
     if(latestState)cinematic.sync(latestState);
   }
