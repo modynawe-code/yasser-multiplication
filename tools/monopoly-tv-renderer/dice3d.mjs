@@ -112,6 +112,7 @@ export function createThreeDice(board,cells=new Map()){
   const BOARD_DEPTH=0;
   const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*camera.position.distanceTo(new Vector3(0,0,BOARD_DEPTH));
   const surfaceSize=surfaceHeight*.94;
+  const TILE_TOP=.05+.075/2;
   const woodTexture=woodGrainTexture();
   const slabMat=new MeshStandardMaterial({map:woodTexture,color:0xffffff,roughness:.62,metalness:.04});
   const rimMat=new MeshStandardMaterial({color:0xcea55a,roughness:.28,metalness:.62});
@@ -259,7 +260,8 @@ export function createThreeDice(board,cells=new Map()){
     return {width:cell.offsetWidth/w*surfaceSize*w/h,height:cell.offsetHeight/h*surfaceSize};
   }
   function worldPoint(cell){
-    return boardPoint(cell,.04);
+    // Keep the pawn base above the raised tile mesh instead of embedding it in the board.
+    return boardPoint(cell,TILE_TOP+.058);
   }
   function makePawn(color){
     const material=new MeshStandardMaterial({color,metalness:.55,roughness:.24});
@@ -299,7 +301,7 @@ export function createThreeDice(board,cells=new Map()){
       const size=boardCellSize(cell),centerX=((cell.offsetLeft+cell.offsetWidth/2)/Math.max(1,board.clientWidth)-.5)*surfaceSize;
       const centerY=(.5-(cell.offsetTop+cell.offsetHeight/2)/Math.max(1,board.clientHeight))*surfaceSize;
       const fill=new Mesh(new PlaneGeometry(size.width*.84,size.height*.84),new MeshBasicMaterial({color,transparent:true,opacity:.11,depthWrite:false,side:DoubleSide}));
-      fill.position.set(centerX,centerY,.035);mark.group.add(fill);
+      fill.position.set(centerX,centerY,TILE_TOP+.008);mark.group.add(fill);
       const edge=Math.max(.035,Math.min(size.width,size.height)*.055);
       const trimMat=new MeshStandardMaterial({color,emissive:color,emissiveIntensity:.16,roughness:.35,metalness:.22});
       const trims=[
@@ -310,7 +312,7 @@ export function createThreeDice(board,cells=new Map()){
       ];
       for(const [width,height,x,y] of trims){
         const bar=new Mesh(new BoxGeometry(width,height,.045),trimMat);
-        bar.position.set(x,y,.055);mark.group.add(bar);
+        bar.position.set(x,y,TILE_TOP+.033);mark.group.add(bar);
       }
       const buildingCount=own.hotel?1:Math.min(4,Math.max(0,own.houses||0));
       if(buildingCount){
@@ -322,11 +324,13 @@ export function createThreeDice(board,cells=new Map()){
         const step=Math.min(size.width*.18,size.height*.18);
         for(let i=0;i<buildingCount;i++){
           const offset=(i-(buildingCount-1)/2)*step;
-          const house=new Mesh(new BoxGeometry(Math.min(.18,size.width*.2),Math.min(.2,size.height*.24),.13),buildingMat);
-          house.position.set(houseX+(towardsCenterX?0:offset),houseY+(towardsCenterX?offset:0),.12);
+          const houseDepth=.13;
+          const house=new Mesh(new BoxGeometry(Math.min(.18,size.width*.2),Math.min(.2,size.height*.24),houseDepth),buildingMat);
+          house.position.set(houseX+(towardsCenterX?0:offset),houseY+(towardsCenterX?offset:0),TILE_TOP+houseDepth/2+.018);
           mark.group.add(house);
-          const roof=new Mesh(new BoxGeometry(Math.min(.21,size.width*.23),Math.min(.07,size.height*.09),.055),trimMat);
-          roof.position.set(house.position.x,house.position.y,.21);mark.group.add(roof);
+          const roofDepth=.055;
+          const roof=new Mesh(new BoxGeometry(Math.min(.21,size.width*.23),Math.min(.07,size.height*.09),roofDepth),trimMat);
+          roof.position.set(house.position.x,house.position.y,house.position.z+houseDepth/2+roofDepth/2+.006);mark.group.add(roof);
         }
       }
       boardGroup.add(mark.group);propertyMarks.set(index,mark);
@@ -360,7 +364,7 @@ export function createThreeDice(board,cells=new Map()){
       const cell=cells.get(p.position||0),pawn=pawns.get(p.id);
       if(!cell||!pawn)return 0;
       const screen=pawn.group.position.clone().project(camera);
-      const target=boardPoint(cell,.04).project(camera);
+      const target=worldPoint(cell).project(camera);
       return Math.hypot((screen.x-target.x)*w/2,(screen.y-target.y)*h/2);
     });
     canvas.dataset.maxPawnOffset=String(Math.round(Math.max(0,...offsets)));

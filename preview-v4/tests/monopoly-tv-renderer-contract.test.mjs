@@ -87,6 +87,17 @@ test('3D pieces use mesh geometry and authoritative board coordinates',()=>{
   assert.match(scene,/layer\.visible=false/);
 });
 
+test('3D pieces and ownership markers sit above raised tile surfaces',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/const TILE_TOP=\.05\+\.075\/2/);
+  assert.match(d,/return boardPoint\(cell,TILE_TOP\+\.058\)/);
+  assert.match(d,/fill\.position\.set\(centerX,centerY,TILE_TOP\+\.008\)/);
+  assert.match(d,/bar\.position\.set\(x,y,TILE_TOP\+\.033\)/);
+  assert.match(d,/TILE_TOP\+houseDepth\/2\+\.018/);
+  assert.match(d,/house\.position\.z\+houseDepth\/2\+roofDepth\/2\+\.006/);
+  assert.match(d,/const target=worldPoint\(cell\)\.project\(camera\)/);
+});
+
 test('GSAP camera uses clamped XY follow and returns to overview after an event',()=>{
   assert.match(scene,/const maxX=\(scale-1\)\*w\/2,maxY=\(scale-1\)\*h\/2/);
   assert.match(scene,/const x=limit\(\(w\/2-point\.x\)\*scale,-maxX,maxX\)/);
