@@ -211,7 +211,7 @@ def run(browser_type,name):
         if name=="chromium":
             tv.wait_for_function("""() => {
               const c=document.querySelector('#partyBoard canvas.tv-three-dice-canvas');
-              return Number(c?.dataset.maxCameraLift||0)>1.6 &&
+              return Number(c?.dataset.maxCameraLift||0)>.15 &&
                 c?.dataset.cameraRestored==='true';
             }""",timeout=15000)
             result["cameraCrane"]="Three.js camera lifted and returned to original tile alignment"

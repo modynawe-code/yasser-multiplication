@@ -119,12 +119,17 @@ export function createThreeDice(board,cells=new Map()){
   }
   function buildRaisedTiles(image){
     clearTileMeshes();
-    const boardWidth=Math.max(1,board.clientWidth),boardHeight=Math.max(1,board.clientHeight);
+    const boardRect=board.getBoundingClientRect();
     for(const cell of cells.values()){
-      const pixelX=cell.offsetLeft/boardWidth*image.naturalWidth;
-      const pixelY=cell.offsetTop/boardHeight*image.naturalHeight;
-      const pixelWidth=cell.offsetWidth/boardWidth*image.naturalWidth;
-      const pixelHeight=cell.offsetHeight/boardHeight*image.naturalHeight;
+      const rect=cell.getBoundingClientRect();
+      const left=(rect.left-boardRect.left)/Math.max(1,boardRect.width);
+      const topFraction=(rect.top-boardRect.top)/Math.max(1,boardRect.height);
+      const width=rect.width/Math.max(1,boardRect.width);
+      const height=rect.height/Math.max(1,boardRect.height);
+      const pixelX=left*image.naturalWidth;
+      const pixelY=topFraction*image.naturalHeight;
+      const pixelWidth=width*image.naturalWidth;
+      const pixelHeight=height*image.naturalHeight;
       const textureCanvas=document.createElement('canvas');
       textureCanvas.width=Math.max(32,Math.round(pixelWidth));
       textureCanvas.height=Math.max(32,Math.round(pixelHeight));
@@ -139,8 +144,8 @@ export function createThreeDice(board,cells=new Map()){
       const top=new MeshBasicMaterial({map:texture});
       const edge=new MeshStandardMaterial({color:0x36513e,roughness:.55,metalness:.08});
       const mesh=new Mesh(geometry,[edge,edge,edge,edge,top,edge]);
-      const x=((cell.offsetLeft+cell.offsetWidth/2)/boardWidth-.5)*surfaceSize;
-      const y=(.5-(cell.offsetTop+cell.offsetHeight/2)/boardHeight)*surfaceSize;
+      const x=(left+width/2-.5)*surfaceSize;
+      const y=(.5-(topFraction+height/2))*surfaceSize;
       mesh.position.set(x,y,.0295);
       boardGroup.add(mesh);
       tileMeshes.push({mesh,geometry,top,edge,texture});
