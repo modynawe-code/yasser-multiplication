@@ -166,15 +166,15 @@ test('Three.js renders a real tabletop perspective instead of a front-facing boa
   assert.match(d,/overviewCamera=\{x:0,y:11,z:6\.4\}/);
   assert.match(d,/boardGroup\.rotation\.x=-Math\.PI\/2/);
   assert.match(d,/camera\.lookAt\(0,0,0\)/);
-  assert.match(d,/tl\.to\(camera\.position,\{y:9\.1,z:6/);
-  assert.match(d,/tl\.to\(camera,\{zoom:1\.12/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:10\.8,z:6\.3/);
+  assert.match(d,/tl\.to\(camera,\{zoom:1\.06/);
   assert.match(css,/\.tv-board-frame\.tv-3d-board-ready\{[\s\S]*?background:transparent/);
 });
 
 test('dice roll uses a real Three.js camera crane and always restores the tile projection',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/camera\.lookAt\(0,0,0\)/);
-  assert.match(d,/tl\.to\(camera\.position,\{y:9\.1,z:6/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:10\.8,z:6\.3/);
   assert.match(d,/tl\.to\(camera\.position,\{y:overviewCamera\.y,z:overviewCamera\.z/);
   assert.match(d,/camera\.position\.set\(overviewCamera\.x,overviewCamera\.y,overviewCamera\.z\)/);
   assert.match(d,/board\.classList\.add\('tv-3d-rolling'\)/);

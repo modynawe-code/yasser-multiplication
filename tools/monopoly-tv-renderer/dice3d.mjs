@@ -377,8 +377,9 @@ export function createThreeDice(board){
       });
       timeline=tl;
       // Genuine Three.js perspective camera crane, not a CSS zoom.
-      tl.to(camera.position,{y:9.1,z:6,duration:.38,ease:'power2.out'},0);
-      tl.to(camera,{zoom:1.12,duration:.38,ease:'power2.out',onUpdate:()=>camera.updateProjectionMatrix()},0);
+      // Keep the full table edge in frame while making the dice read larger.
+      tl.to(camera.position,{y:10.8,z:6.3,duration:.38,ease:'power2.out'},0);
+      tl.to(camera,{zoom:1.06,duration:.38,ease:'power2.out',onUpdate:()=>camera.updateProjectionMatrix()},0);
       tl.to(camera.position,{y:overviewCamera.y,z:overviewCamera.z,duration:.43,ease:'power2.inOut'},.75);
       tl.to(camera,{zoom:1,duration:.43,ease:'power2.inOut',onUpdate:()=>camera.updateProjectionMatrix()},.75);
       dice.forEach((die,i)=>{
