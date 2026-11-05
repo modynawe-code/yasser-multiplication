@@ -90,12 +90,26 @@ test('3D pieces use mesh geometry and authoritative board coordinates',()=>{
 test('3D pieces and ownership markers sit above raised tile surfaces',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/const TILE_TOP=\.05\+\.075\/2/);
-  assert.match(d,/return boardPoint\(cell,TILE_TOP\+\.058\)/);
+  assert.match(d,/return boardPoint\(cell,TILE_TOP\+\.058,slotIndex\)/);
   assert.match(d,/fill\.position\.set\(centerX,centerY,TILE_TOP\+\.008\)/);
   assert.match(d,/bar\.position\.set\(x,y,TILE_TOP\+\.033\)/);
   assert.match(d,/TILE_TOP\+houseDepth\/2\+\.018/);
   assert.match(d,/house\.position\.z\+houseDepth\/2\+roofDepth\/2\+\.006/);
-  assert.match(d,/const target=worldPoint\(cell\)\.project\(camera\)/);
+  assert.match(d,/const target=worldPoint\(cell,i\)\.project\(camera\)/);
+});
+
+test('four 3D player pieces have distinct silhouettes and avoid stacking on one point',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/ConeGeometry,TorusGeometry/);
+  assert.match(d,/styleIndex%4===0/);
+  assert.match(d,/styleIndex%4===1/);
+  assert.match(d,/styleIndex%4===2/);
+  assert.match(d,/new ConeGeometry\(/);
+  assert.match(d,/new TorusGeometry\(/);
+  assert.match(d,/slots=\[\[-\.29,\.29\],\[\.29,\.29\],\[-\.29,-\.29\],\[\.29,-\.29\]\]/);
+  assert.match(d,/pawn=makePawn\(colors\[i%colors\.length\]\|\|'#18a775',i\)/);
+  assert.match(d,/worldPoint\(cell,i\)/);
+  assert.match(d,/worldPoint\(cell,pawn\.slot\|\|0\)/);
 });
 
 test('GSAP camera uses clamped XY follow and returns to overview after an event',()=>{

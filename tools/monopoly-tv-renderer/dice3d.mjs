@@ -3,7 +3,7 @@ import {
   WebGLRenderer,Scene,PerspectiveCamera,AmbientLight,DirectionalLight,
   Mesh,BoxGeometry,MeshStandardMaterial,CanvasTexture,Group,
   PlaneGeometry,MeshBasicMaterial,DoubleSide,Vector3,Quaternion,SRGBColorSpace,
-  CylinderGeometry,SphereGeometry,CircleGeometry,RepeatWrapping
+  CylinderGeometry,SphereGeometry,CircleGeometry,RepeatWrapping,ConeGeometry,TorusGeometry
 } from 'three';
 import {gsap} from 'gsap';
 
@@ -243,37 +243,64 @@ export function createThreeDice(board,cells=new Map()){
   }
   const canvasElement=canvas;
   // Shared WebGL context: three-dimensional player pieces with server-owned positions.
-  const pawnBody=new CylinderGeometry(.13,.19,.34,20);
-  const pawnTop=new SphereGeometry(.135,16,12);
   const pawnBase=new CylinderGeometry(.23,.23,.065,24);
   const pawnShadow=new CircleGeometry(.23,24);
   const pawns=new Map();
   let lastCells=null;
-  function boardPoint(cell,localHeight=.035){
+  function boardPoint(cell,localHeight=.035,slotIndex=0){
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
-    const localX=((cell.offsetLeft+cell.offsetWidth/2)/w-.5)*surfaceSize*w/h;
-    const localY=(.5-(cell.offsetTop+cell.offsetHeight/2)/h)*surfaceSize;
+    const tile=boardCellSize(cell),slots=[[-.29,.29],[.29,.29],[-.29,-.29],[.29,-.29]];
+    const [sx,sy]=slots[slotIndex%slots.length];
+    const localX=((cell.offsetLeft+cell.offsetWidth/2)/w-.5)*surfaceSize*w/h+sx*tile.width;
+    const localY=(.5-(cell.offsetTop+cell.offsetHeight/2)/h)*surfaceSize+sy*tile.height;
     return boardGroup.localToWorld(new Vector3(localX,localY,localHeight));
   }
   function boardCellSize(cell){
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
     return {width:cell.offsetWidth/w*surfaceSize*w/h,height:cell.offsetHeight/h*surfaceSize};
   }
-  function worldPoint(cell){
-    // Keep the pawn base above the raised tile mesh instead of embedding it in the board.
-    return boardPoint(cell,TILE_TOP+.058);
+  function worldPoint(cell,slotIndex=0){
+    // Keep pawn bases above the raised tile and arrange co-located players in four clear slots.
+    return boardPoint(cell,TILE_TOP+.058,slotIndex);
   }
-  function makePawn(color){
-    const material=new MeshStandardMaterial({color,metalness:.55,roughness:.24});
+  function makePawn(color,styleIndex=0){
+    const material=new MeshStandardMaterial({color,metalness:.48,roughness:.28});
+    const accent=new MeshStandardMaterial({color,metalness:.24,roughness:.34,emissive:color,emissiveIntensity:.07});
+    const dark=new MeshStandardMaterial({color:0x18201d,roughness:.72});
     const g=new Group();
-    const body=new Mesh(pawnBody,material),top=new Mesh(pawnTop,material),
-      base=new Mesh(pawnBase,material);
-    body.position.y=.17;top.position.y=.39;base.position.y=-.045;
-    const shade=new Mesh(pawnShadow,new MeshBasicMaterial({color:0x06241b,transparent:true,opacity:.34,depthWrite:false}));
+    const geometries=[];
+    const add=(geometry,mat,x,y,z)=>{
+      geometries.push(geometry);
+      const part=new Mesh(geometry,mat);part.position.set(x,y,z);g.add(part);return part;
+    };
+    add(pawnBase,material,0,-.045,0);
+    if(styleIndex%4===0){
+      add(new CylinderGeometry(.13,.19,.30,20),material,0,.14,0);
+      add(new SphereGeometry(.125,18,14),accent,0,.36,0);
+      add(new CylinderGeometry(.08,.08,.07,16),accent,0,.325,0);
+    }else if(styleIndex%4===1){
+      add(new BoxGeometry(.38,.14,.24),material,0,.13,0);
+      add(new BoxGeometry(.21,.15,.18),accent,0,.275,-.015);
+      for(const x of [-.14,.14])for(const z of [-.10,.10])
+        add(new SphereGeometry(.058,12,10),dark,x,.065,z);
+    }else if(styleIndex%4===2){
+      add(new CylinderGeometry(.14,.19,.28,18),material,0,.14,0);
+      add(new CylinderGeometry(.18,.18,.075,16),accent,0,.31,0);
+      for(let i=0;i<4;i++){
+        const a=i*Math.PI/2;
+        add(new BoxGeometry(.09,.10,.09),accent,Math.cos(a)*.12,.39,Math.sin(a)*.12);
+      }
+    }else{
+      add(new ConeGeometry(.16,.32,20),material,0,.20,0);
+      add(new SphereGeometry(.095,16,12),accent,0,.39,0);
+      const ring=add(new TorusGeometry(.14,.027,8,20),accent,0,.10,0);ring.rotation.x=Math.PI/2;
+    }
+    const shadeMaterial=new MeshBasicMaterial({color:0x06241b,transparent:true,opacity:.34,depthWrite:false});
+    const shade=new Mesh(pawnShadow,shadeMaterial);
     shade.rotation.x=-Math.PI/2;shade.position.set(.08,.018,-.08);
-    g.add(shade,base,body,top);
+    g.add(shade);
     scene.add(g);
-    return {group:g,material,shade};
+    return {group:g,materials:[material,accent,dark,shadeMaterial],geometries:geometries.filter(geo=>geo!==pawnBase),shade,slot:styleIndex};
   }
   const propertyMarks=new Map();
   function removePropertyMark(index,mark){
@@ -345,26 +372,31 @@ export function createThreeDice(board,cells=new Map()){
     for(const [id,pawn] of pawns){
       if(!ids.has(id)){
         gsap.killTweensOf(pawn.group.position);
-        scene.remove(pawn.group);pawn.material.dispose();
-        pawn.shade.material.dispose();pawns.delete(id);
+        scene.remove(pawn.group);pawn.materials.forEach(material=>material.dispose());
+        pawn.geometries.forEach(geometry=>geometry.dispose());pawns.delete(id);
       }
     }
     list.forEach((p,i)=>{
       let pawn=pawns.get(p.id),fresh=false;
-      if(!pawn){pawn=makePawn(colors[i%colors.length]||'#18a775');pawns.set(p.id,pawn);fresh=true;}
+      if(!pawn){pawn=makePawn(colors[i%colors.length]||'#18a775',i);pawns.set(p.id,pawn);fresh=true;}
       const cell=cells.get(p.position||0);
-      if(fresh&&cell)pawn.group.position.copy(worldPoint(cell));
+      const slotChanged=pawn.slot!==i;
+      pawn.slot=i;
+      if((fresh||slotChanged)&&cell){
+        gsap.killTweensOf(pawn.group.position);
+        pawn.group.position.copy(worldPoint(cell,i));
+      }
       pawn.group.scale.setScalar(.68+(i===0?.04:0));
     });
     syncPropertyMarks(list,cells,colors,ownership);
     canvas.dataset.pawns=String(pawns.size);
     // Compare pawn projection with the projected center of its source-art tile.
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
-    const offsets=list.map(p=>{
+    const offsets=list.map((p,i)=>{
       const cell=cells.get(p.position||0),pawn=pawns.get(p.id);
       if(!cell||!pawn)return 0;
       const screen=pawn.group.position.clone().project(camera);
-      const target=worldPoint(cell).project(camera);
+      const target=worldPoint(cell,i).project(camera);
       return Math.hypot((screen.x-target.x)*w/2,(screen.y-target.y)*h/2);
     });
     canvas.dataset.maxPawnOffset=String(Math.round(Math.max(0,...offsets)));
@@ -373,7 +405,7 @@ export function createThreeDice(board,cells=new Map()){
   async function movePawn(id,index,duration=.24){
     const pawn=pawns.get(id),cell=lastCells?.get(index);
     if(disposed||!pawn||!cell)return false;
-    const point=worldPoint(cell);
+    const point=worldPoint(cell,pawn.slot||0);
     gsap.killTweensOf(pawn.group.position);
     if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
       pawn.group.position.copy(point);draw();return true;
@@ -471,9 +503,10 @@ export function createThreeDice(board,cells=new Map()){
     clear();disposed=true;
     for(const pawn of pawns.values()){
       gsap.killTweensOf(pawn.group.position);
-      scene.remove(pawn.group);pawn.material.dispose();pawn.shade.material.dispose();
+      scene.remove(pawn.group);pawn.materials.forEach(material=>material.dispose());
+      pawn.geometries.forEach(geometry=>geometry.dispose());
     }
-    pawns.clear();pawnBody.dispose();pawnTop.dispose();pawnBase.dispose();pawnShadow.dispose();
+    pawns.clear();pawnBase.dispose();pawnShadow.dispose();
     for(const [index,mark] of propertyMarks)removePropertyMark(index,mark);
     if(artPlane){boardGroup.remove(artPlane);artPlane.geometry.dispose();artPlane.material.dispose();}
     boardTexture?.dispose();
