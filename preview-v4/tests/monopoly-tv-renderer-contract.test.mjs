@@ -24,7 +24,7 @@ test('TV integrates local bundled renderer and retains DOM fallback',()=>{
   assert.match(css,/\.tv-board\.cinematic-ready \.tv-token\{visibility:hidden\}/);
 });
 test('Three.js initializes before Pixi to reserve the TV browser WebGL context',()=>{
-  assert.ok(scene.indexOf('threeDice=createThreeDice(board)')<scene.indexOf('await app.init('));
+  assert.ok(scene.indexOf('threeDice=createThreeDice(board,cells)')<scene.indexOf('await app.init('));
   assert.match(scene,/board\.dataset\.displayEngine='pixi-dom-fallback'/);
   assert.match(scene,/board\.dataset\.displayReason='webgl-context-unavailable'/);
   assert.match(scene,/board\.dataset\.displayReason='webgl-render-failed'/);
@@ -66,7 +66,7 @@ test('genuine 3D dice use Three.js geometry, six face textures and authoritative
   assert.match(d,/Number\.isInteger\(v\)&&v>=1&&v<=6/);
   assert.match(d,/prefers-reduced-motion/);
   assert.match(d,/renderer\.dispose\(\)/);
-  assert.match(scene,/createThreeDice\(board\)/);
+  assert.match(scene,/createThreeDice\(board,cells\)/);
   assert.match(scene,/threeDice\.roll\(values\)/);
   assert.match(scene,/using PixiJS dice fallback/);
   assert.doesNotMatch(d,/submitAction|createRoom|game\.cash\s*=/);
@@ -142,10 +142,15 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.match(d,/function syncPropertyMarks\(players,cells,colors,ownership=\{\}\)/);
   assert.match(d,/canvas\.dataset\.properties=String\(propertyMarks\.size\)/);
   assert.match(d,/new CanvasTexture\(canvas\)/);
+  assert.match(d,/function buildRaisedTiles\(image\)/);
+  assert.match(d,/const geometry=new BoxGeometry\(Math\.max\(\.02,size\.width-gap\),Math\.max\(\.02,size\.height-gap\),\.035\)/);
+  assert.match(d,/canvasElement\.dataset\.raisedTiles=String\(tileMeshes\.length\)/);
+  assert.match(d,/buildRaisedTiles\(img\)/);
+  assert.match(d,/clearTileMeshes\(\)/);
   assert.match(d,/board\.classList\.add\('tv-3d-board-ready'\)/);
   assert.match(d,/board\.classList\.remove\('tv-3d-board-ready'\)/);
   assert.match(d,/canvasElement\.dataset\.table='3d'/);
-  assert.match(scene,/threeDice=createThreeDice\(board\)/);
+  assert.match(scene,/threeDice=createThreeDice\(board,cells\)/);
   assert.match(scene,/function setBoardArt\(source\)/);
   assert.match(entry,/cinematic\?\.setBoardArt\(boardArtSource\)/);
   assert.match(entry,/if\(boardArtSource\)cinematic\.setBoardArt\(boardArtSource\)/);

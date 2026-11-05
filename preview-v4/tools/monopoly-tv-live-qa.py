@@ -77,6 +77,8 @@ def execute(kind,browser):
             host.locator('#remoteActions button[data-action=roll]').click()
         else:
             host.locator('#remoteActions button[data-action=roll]').click()
+        if kind=="chromium":
+            tv.wait_for_function("() => document.querySelector('#partyBoard canvas.tv-three-dice-canvas')?.dataset.raisedTiles==='40'",timeout=20000)
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=22000)
         assert tv.locator('#tvCenterScene').count()==1, 'Cinematic center scene missing'
         tv.wait_for_function("""() => {

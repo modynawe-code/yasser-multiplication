@@ -35,7 +35,7 @@ function faceTexture(n){
   texture.colorSpace=SRGBColorSpace;
   return texture;
 }
-export function createThreeDice(board){
+export function createThreeDice(board,cells=new Map()){
   let renderer;
   try{
     renderer=new WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
@@ -82,6 +82,7 @@ export function createThreeDice(board){
   const boardGroup=new Group();scene.add(boardGroup);
   const boardResources=[];
   let boardTexture=null,boardReady=false,artVersion=0;
+  const tileMeshes=[];
   const BOARD_DEPTH=0;
   const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*camera.position.distanceTo(new Vector3(0,0,BOARD_DEPTH));
   const surfaceSize=surfaceHeight*.94;
@@ -109,6 +110,43 @@ export function createThreeDice(board){
     boardGroup.add(v);
   }
   let artPlane=null;
+  function clearTileMeshes(){
+    for(const tile of tileMeshes){
+      boardGroup.remove(tile.mesh);
+      tile.geometry.dispose();tile.top.dispose();tile.edge.dispose();tile.texture.dispose();
+    }
+    tileMeshes.length=0;
+  }
+  function buildRaisedTiles(image){
+    clearTileMeshes();
+    const boardWidth=Math.max(1,board.clientWidth),boardHeight=Math.max(1,board.clientHeight);
+    for(const cell of cells.values()){
+      const pixelX=cell.offsetLeft/boardWidth*image.naturalWidth;
+      const pixelY=cell.offsetTop/boardHeight*image.naturalHeight;
+      const pixelWidth=cell.offsetWidth/boardWidth*image.naturalWidth;
+      const pixelHeight=cell.offsetHeight/boardHeight*image.naturalHeight;
+      const textureCanvas=document.createElement('canvas');
+      textureCanvas.width=Math.max(32,Math.round(pixelWidth));
+      textureCanvas.height=Math.max(32,Math.round(pixelHeight));
+      const textureContext=textureCanvas.getContext('2d');
+      if(!textureContext)continue;
+      textureContext.drawImage(image,pixelX,pixelY,pixelWidth,pixelHeight,
+        0,0,textureCanvas.width,textureCanvas.height);
+      const texture=new CanvasTexture(textureCanvas);
+      texture.colorSpace=SRGBColorSpace;texture.anisotropy=4;
+      const size=boardCellSize(cell),gap=Math.min(.012,Math.min(size.width,size.height)*.025);
+      const geometry=new BoxGeometry(Math.max(.02,size.width-gap),Math.max(.02,size.height-gap),.035);
+      const top=new MeshBasicMaterial({map:texture});
+      const edge=new MeshStandardMaterial({color:0x36513e,roughness:.55,metalness:.08});
+      const mesh=new Mesh(geometry,[edge,edge,edge,edge,top,edge]);
+      const x=((cell.offsetLeft+cell.offsetWidth/2)/boardWidth-.5)*surfaceSize;
+      const y=(.5-(cell.offsetTop+cell.offsetHeight/2)/boardHeight)*surfaceSize;
+      mesh.position.set(x,y,.0295);
+      boardGroup.add(mesh);
+      tileMeshes.push({mesh,geometry,top,edge,texture});
+    }
+    canvasElement.dataset.raisedTiles=String(tileMeshes.length);
+  }
   // Image is supplied only by the already-loaded self-hosted board source.
   function setBoardArt(source){
     if(disposed||typeof source!=='string'||!source.startsWith('data:image/png;base64,'))return;
@@ -153,6 +191,7 @@ export function createThreeDice(board){
       artPlane=new Mesh(geo,material);
       artPlane.position.z=.012;
       boardGroup.add(artPlane);
+      buildRaisedTiles(img);
       boardTexture=texture;boardReady=true;
       board.classList.add('tv-3d-board-ready');
       board.closest('.tv-board-frame')?.classList.add('tv-3d-board-ready');
@@ -402,6 +441,7 @@ export function createThreeDice(board){
     for(const [index,mark] of propertyMarks)removePropertyMark(index,mark);
     if(artPlane){boardGroup.remove(artPlane);artPlane.geometry.dispose();artPlane.material.dispose();}
     boardTexture?.dispose();
+    clearTileMeshes();
     for(const resource of boardResources)resource.dispose();
     board.classList.remove('tv-3d-board-ready');
     board.closest('.tv-board-frame')?.classList.remove('tv-3d-board-ready');

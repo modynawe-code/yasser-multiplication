@@ -12,7 +12,7 @@ export async function createCinematicScene({board,cells,colors}){
   // Reserve the first WebGL context for the board. Some TV browsers limit
   // concurrent contexts; initializing Pixi first can leave Three.js on DOM fallback.
   try{
-    threeDice=createThreeDice(board);
+    threeDice=createThreeDice(board,cells);
     board.dataset.displayEngine='three.js-initializing';
     board.dataset.displayReason='waiting-for-board-texture';
   }catch(error){
@@ -151,7 +151,7 @@ export async function createCinematicScene({board,cells,colors}){
     clearDice();
     if(!threeUnavailable){
       try{
-        threeDice||=createThreeDice(board);
+        threeDice||=createThreeDice(board,cells);
         const initial=previousState?.players?.length?previousState:currentState;
         if(initial?.players){threeDice.syncPawns(initial.players,cells,colors,initial.ownership||{});layer.visible=false;}
         if(await threeDice.roll(values))return true;

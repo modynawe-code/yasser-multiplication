@@ -172,10 +172,11 @@ def run(browser_type,name):
                 const layer=board?.querySelector('canvas.tv-three-dice-canvas');
                 return board?.classList.contains('tv-3d-board-ready') &&
                     layer?.dataset.table==='3d' &&
+                    layer?.dataset.raisedTiles==='40' &&
                     getComputedStyle(layer).visibility==='visible';
             }""",timeout=20000)
             tv.screenshot(path=str(OUT/"chromium-tv-3d-table-lobby.png"),full_page=True)
-            result["real3DTable"]="textured lit board mounted before roll"
+            result["real3DTable"]="textured 3D table with 40 raised tile meshes mounted before roll"
             result["cinematicRenderer"]="pixi.js+gsap canvas mounted"
         else:
             result["cinematicRenderer"]="browser fallback permitted; inspect screenshot"
