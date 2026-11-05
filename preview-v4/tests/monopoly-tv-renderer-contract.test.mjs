@@ -176,6 +176,10 @@ test('TV idle and pre-roll center stay open, with readable-sized 3D pawns',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(css,/\.tv-center-scene\[data-phase=waiting\],\s*\.tv-view \.tv-center-scene\[data-phase=roll\]\{\s*display:none;/);
   assert.match(css,/\.tv-view \.tv-board\.has-art \.tv-board-center\{[\s\S]*?background:linear-gradient\(145deg,#2c6d50 0%,#1d5039 56%,#143b2b 100%\)/);
+  assert.doesNotMatch(css,/\.tv-view \.tv-board\.has-art \.tv-board-center\.is-playing\s*\{[^}]*background:/,
+    'the no-WebGL fallback must keep the whole board center felt-green while playing');
+  assert.match(css,/\.tv-board-center\.is-playing \.tv-center-scene\[data-event=auction\][\s\S]*?background:linear-gradient\(155deg,#f9f4e9,#dceadd\)/,
+    'event cards keep their own surface instead of recoloring the whole board center');
   assert.match(d,/pawn\.group\.scale\.setScalar\(\.68\+\(i===0\?\.04:0\)\)/);
 });
 
