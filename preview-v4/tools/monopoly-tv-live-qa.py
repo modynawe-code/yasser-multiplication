@@ -115,6 +115,14 @@ def execute(kind,browser):
         tv.locator("#tvCode").get_by_text(code).wait_for(timeout=20000)
         tv.locator(".tv-player").nth(len(phones)-1).wait_for(timeout=12000)
         assert tv.locator(".tv-player").count()==len(phones)
+        # A TV that leaves and reconnects to the same room must recover its
+        # spectator token instead of failing with learner_already_in_room.
+        tv.locator("#tvDisconnect").click()
+        tv.locator("#tvJoin").wait_for(state="visible",timeout=10000)
+        tv.locator("#tvJoinForm input[name=code]").fill(code)
+        tv.locator("#tvJoinForm button").click()
+        tv.locator("#tvStage").wait_for(state="visible",timeout=20000)
+        assert tv.locator(".tv-player").count()==len(phones)
         layout=tv.evaluate("""() => {
           const b=document.querySelector('#partyBoard').getBoundingClientRect();
           return {left:b.left,right:b.right,width:b.width,height:b.height,screenWidth:innerWidth};

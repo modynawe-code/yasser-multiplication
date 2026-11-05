@@ -188,6 +188,8 @@ test('room backend exposes spectator roles, state projection and prevents specta
   assert.match(source,/seat===null\?null/);
   assert.match(source,/projectState/);
   assert.match(source,/viewerPlayerId/);
+  assert.match(source,/participationRole==='spectator'&&existingParticipant\.participation_role==='spectator'/);
+  assert.match(source,/UPDATE game_room_players SET token_hash=\?,last_seen_at=\?/);
 });
 
 test('online room storage keeps temporary player tokens hashed and uses six-digit codes',async()=>{

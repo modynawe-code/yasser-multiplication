@@ -110,7 +110,19 @@ async function joinRoom(request,env,respond,readJson){
   const rules=getGameRoomRules(row.game_id);if(!rules)return fail(409,'unsupported_game_room');
   if(participationRole==='player'&&row.status!=='waiting')return fail(409,'room_not_waiting',{room:await roomPayload(env,row)});
   if(participationRole==='spectator'&&row.status==='closed')return fail(409,'room_closed',{room:await roomPayload(env,row)});
-  const existing=await playersForRoom(env,row.id);if(existing.some(item=>item.learner_id===learnerId))return fail(409,'learner_already_in_room');
+  const existing=await playersForRoom(env,row.id),existingParticipant=existing.find(item=>item.learner_id===learnerId);
+  if(existingParticipant){
+    // A TV spectator can reconnect after its local token is lost. Rotate only
+    // the spectator token; never turn a duplicate player join into a new seat.
+    if(participationRole==='spectator'&&existingParticipant.participation_role==='spectator'){
+      const playerToken=randomSessionToken(),tokenHash=await sha256Base64Url(playerToken),reconnectedAt=nowIso();
+      const refreshed=await env.DB.prepare("UPDATE game_room_players SET token_hash=?,last_seen_at=? WHERE room_id=? AND player_id=? AND participation_role='spectator'").bind(tokenHash,reconnectedAt,row.id,existingParticipant.player_id).run();
+      if(Number(refreshed?.meta?.changes||0)!==1)return fail(409,'spectator_join_conflict');
+      await clearJoinThrottle(env,throttleKey);
+      return respond(200,{playerToken,room:await roomPayload(env,row,existingParticipant.player_id)});
+    }
+    return fail(409,'learner_already_in_room');
+  }
   const activePlayers=existing.filter(item=>(item.participation_role||'player')==='player'),spectators=existing.filter(item=>item.participation_role==='spectator');
   if(participationRole==='player'&&activePlayers.length>=rules.maxPlayers)return fail(409,'room_full');
   if(participationRole==='spectator'&&spectators.length>=Number(rules.maxSpectators||0))return fail(409,'spectator_limit');
