@@ -208,8 +208,10 @@ demoButton.addEventListener('click',async()=>{
   try{
     await demoConnection.join(current.code,'لاعب تجريبي');
     demoButton.textContent='اللاعب التجريبي يلعب تلقائيًا';
+    demoButton.classList.add('is-auto');
   }catch(error){
     demoConnection.leave();demoConnection=null;demoButton.disabled=false;
+    demoButton.classList.remove('is-auto');
     demoButton.textContent='إضافة لاعب كمبيوتر للتجربة';
     get('remoteActionError').textContent='تعذّرت إضافة اللاعب التجريبي: '+(error.status||error.message||'اتصال غير متاح');
   }
@@ -229,7 +231,7 @@ get('remoteForm').addEventListener('submit',async event=>{
 });
 get('remoteLeave').addEventListener('click',()=>{
   clearTimeout(demoTimer);demoConnection?.leave();demoConnection=null;demoAttemptedVersion=-1;demoBusy=false;
-  demoButton.disabled=false;demoButton.textContent='إضافة لاعب كمبيوتر للتجربة';
+  demoButton.disabled=false;demoButton.classList.remove('is-auto');demoButton.textContent='إضافة لاعب كمبيوتر للتجربة';
   connection.leave();current=null;get('remoteJoin').hidden=false;get('remoteStage').hidden=true;get('remoteLeave').hidden=true;
   get('remoteStatus').textContent='غير متصل';get('remoteStatus').classList.add('offline');
 });

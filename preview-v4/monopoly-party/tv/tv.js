@@ -5,6 +5,8 @@ import {movementRoute} from '../../src/modules/games/monopoly/monopoly-scene.js'
 const byId=id=>document.getElementById(id);
 const status=byId('connectionStatus');
 const board=byId('partyBoard');
+const centerHouseIcon='<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M5 22 24 6l19 16M11 19v22h26V19M20 41V28h9v13" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 24h5v5h-5zm11 0h5v5h-5z" fill="currentColor"/></svg>';
+function setCenterSymbol(symbol,value){if(value==='🏠')symbol.innerHTML=centerHouseIcon;else symbol.textContent=value;}
 // Diagnostic identity is exposed on the page, not taken as visual acceptance.
 board.dataset.displayEngine='dom-fallback';
 board.dataset.displayReason='initializing';
@@ -191,37 +193,37 @@ function updateCenterScene(state,moving=false){
   scene.style.setProperty('--scene-band',color);
   dice.replaceChildren();
   if(state.status==='waiting'){
-    symbol.textContent='🎲';heading.textContent='جاهزون للعب؟';
+    setCenterSymbol(symbol,'🎲');heading.textContent='جاهزون للعب؟';
     detail.textContent='بانتظار انضمام لاعب آخر وبدء الجولة';return;
   }
   if(moving){
-    symbol.textContent='🎲';heading.textContent='القطعة تتحرك';
+    setCenterSymbol(symbol,'🎲');heading.textContent='القطعة تتحرك';
     detail.textContent='تابع مسار '+(player?.name||'اللاعب')+' على اللوحة';
   }else if(actionScene){
-    symbol.textContent=actionScene.symbol;heading.textContent=actionScene.title;
+    setCenterSymbol(symbol,actionScene.symbol);heading.textContent=actionScene.title;
     detail.textContent=state.log||'تم تحديث حالة الجولة';
   }else if(phase==='roll'){
-    symbol.textContent='🎲';heading.textContent='دور '+(player?.name||'اللاعب');
+    setCenterSymbol(symbol,'🎲');heading.textContent='دور '+(player?.name||'اللاعب');
     detail.textContent='ارمِ النرد من جوالك';
   }else if(phase==='property'){
-    symbol.textContent='🏠';heading.textContent=space?.name||'صك ملكية';
+    setCenterSymbol(symbol,'🏠');heading.textContent=space?.name||'صك ملكية';
     detail.textContent='صك ملكية متاح · '+(space?.price??0)+' ريال';
   }else if(phase==='auction'){
-    symbol.textContent='🔨';heading.textContent='مزاد '+(space?.name||'أرض');
+    setCenterSymbol(symbol,'🔨');heading.textContent='مزاد '+(space?.name||'أرض');
     detail.textContent='أعلى مزايدة: '+(state.auction?.bid??0)+' ريال';
   }else if(phase==='card'){
-    symbol.textContent='🃏';heading.textContent='فرصة أو جماعة';
+    setCenterSymbol(symbol,'🃏');heading.textContent='فرصة أو جماعة';
     detail.textContent=state.pending?.stage==='face'?
       String(state.pending?.card?.text||'اكشف البطاقة من الجوال'):
       'تظهر البطاقة للجميع · القرار من الجوال';
   }else if(phase==='trade'){
-    symbol.textContent='🤝';heading.textContent='عرض تبادل';
+    setCenterSymbol(symbol,'🤝');heading.textContent='عرض تبادل';
     detail.textContent='بانتظار قبول أو رفض اللاعب الآخر';
   }else if(state.status==='finished'){
-    symbol.textContent='🏆';heading.textContent='انتهت الجولة';
+    setCenterSymbol(symbol,'🏆');heading.textContent='انتهت الجولة';
     detail.textContent=state.log||'تهانينا للفائز';
   }else{
-    symbol.textContent='✓';heading.textContent='اكتمل الحدث';
+    setCenterSymbol(symbol,'✓');heading.textContent='اكتمل الحدث';
     detail.textContent=state.log||'العودة إلى الجولة';
   }
   if(state.dice?.length===2)
@@ -331,6 +333,24 @@ byId('tvJoinForm').addEventListener('submit',async e=>{
 });
 byId('tvDisconnect').addEventListener('click',()=>{clearTimeout(overviewTimer);++sequence;cinematic?.clearEvent(byId('tvCenterScene'));cinematic?.clearDice();cinematic?.overview();conn.leave();previousRoom=null;byId('tvStage').hidden=true;byId('tvJoin').hidden=false;status.textContent='غير متصل';status.classList.add('offline');});
 byId('tvOverview').addEventListener('click',resetCamera);
+const fullscreenButton=byId('tvFullscreen');
+function syncFullscreenButton(){
+  const active=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  fullscreenButton?.setAttribute('aria-pressed',String(active));
+  if(fullscreenButton)fullscreenButton.textContent=active?'الخروج من ملء الشاشة':'ملء شاشة التلفزيون';
+}
+fullscreenButton?.addEventListener('click',async()=>{
+  try{
+    if(document.fullscreenElement||document.webkitFullscreenElement)
+      await (document.exitFullscreen?.()||document.webkitExitFullscreen?.());
+    else if(document.documentElement.requestFullscreen)
+      await document.documentElement.requestFullscreen({navigationUI:'hide'});
+    else document.documentElement.webkitRequestFullscreen?.();
+  }catch(error){console.warn('TV fullscreen is not available in this browser',error);}
+  syncFullscreenButton();
+});
+document.addEventListener('fullscreenchange',syncFullscreenButton);
+document.addEventListener('webkitfullscreenchange',syncFullscreenButton);
 byId('tvSound').addEventListener('click',()=>{
   voiceEnabled=!voiceEnabled;
   byId('tvSound').setAttribute('aria-pressed',String(voiceEnabled));

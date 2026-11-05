@@ -5,6 +5,8 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const scene=read('../tools/monopoly-tv-renderer/scene.mjs');
 const entry=read('monopoly-party/tv/tv.js');
 const css=read('monopoly-party/party.css');
+const controller=read('monopoly-party/controller/remote.js');
+const tvHtml=read('monopoly-party/tv/index.html');
 const pkg=JSON.parse(read('../tools/monopoly-tv-renderer/package.json'));
 test('real renderer uses pinned PixiJS and GSAP instead of inert dependency',()=>{
   assert.equal(pkg.dependencies['pixi.js'],'8.22.0');
@@ -218,6 +220,18 @@ test('TV idle and pre-roll center stay open, with readable-sized 3D pawns',()=>{
   assert.match(d,/pawn\.group\.scale\.setScalar\(\.60\)/);
   assert.match(css,/\.tv-board\.has-art\{\s*padding:0;/);
   assert.match(css,/background-size:116\.55% 116\.55%/);
+});
+
+test('TV event styling and fullscreen affordance are explicit, while the demo player reads as automatic',()=>{
+  assert.match(tvHtml,/id="tvFullscreen"[^>]*>ملء شاشة التلفزيون/);
+  assert.match(entry,/document\.documentElement\.requestFullscreen\(\{navigationUI:'hide'\}\)/);
+  assert.match(entry,/webkitRequestFullscreen/);
+  assert.match(entry,/document\.addEventListener\('fullscreenchange',syncFullscreenButton\)/);
+  assert.match(entry,/const centerHouseIcon='<svg/);
+  assert.match(entry,/function setCenterSymbol\(symbol,value\)/);
+  assert.match(css,/\.tv-board-center\.is-playing \.tv-center-scene::before\{\s*content:none;/);
+  assert.match(controller,/demoButton\.classList\.add\('is-auto'\)/);
+  assert.match(css,/\.remote-card #addDemoPlayer\.is-auto\{opacity:1/);
 });
 
 test('Three.js renders a real tabletop perspective instead of a front-facing board',()=>{

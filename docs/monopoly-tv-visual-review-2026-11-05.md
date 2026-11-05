@@ -36,3 +36,10 @@
 - Three.js dice now settle on the felt around the event card and stay visible through the landing event; flat duplicate dice are hidden only when Three.js board rendering is active. Results still come from the existing server state. Reduced the TV board's viewport/width reserves slightly; no phone CSS or game rules changed.
 - Local validation: renderer contract, family Monopoly and room tests **47/47 passed**; `node --check` passed for the renderer and TV entry; `git diff --check` passed. Local bundling could not run because this worktree has no installed `esbuild`; CI build and deployed screenshots are the next acceptance gate.
 - Not yet visually accepted: confirm cropped raised tiles line up in Chromium/WebKit screenshots, event dice are not covered by the card, 720p/1080p readability, and actual 50-inch TV view. Keep this branch/Staging-only; do not merge to main.
+
+## Follow-up for TV polish notes — 2026-11-05
+- Added a user-gesture fullscreen control with Safari-prefixed fallback so the TV browser chrome can be hidden where supported; existing overview-camera control remains separate.
+- Replaced the property card's multicolor house emoji with a consistent single-color SVG mark and removed the unexplained colored stripe. Kept the server's action/event text unchanged.
+- The demo opponent remains disabled after joining, but now has a clear green automatic-player state instead of looking broken or unavailable.
+- Adjusted the board's viewport reserve and table gap based on the 720p/1080p CI measurements, to keep the tabletop in bounds and its outer 3D rim clear of side rails.
+- Validation for this follow-up is pending after the current staging workflow completes; do not treat these changes as published until a matching staging release is confirmed.
