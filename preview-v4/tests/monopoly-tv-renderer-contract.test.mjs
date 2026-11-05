@@ -49,6 +49,11 @@ test('cinematic dice are drawn from authoritative faces before piece travel',()=
   assert.match(scene,/gsap\.timeline\(/);
   assert.match(scene,/onInterrupt:/);
   assert.match(entry,/await cinematic\.rollDice\(state\.dice,old\.state\)/);
+  assert.doesNotMatch(entry,/await cinematic\.rollDice\(state\.dice,old\.state\);if\(generation!==sequence\)return;\s*cinematic\.clearDice\(\)/,
+    'settled dice remain visible through the landing event');
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/z:1\.8,duration:\.22,ease:'power2\.out'/);
+  assert.match(css,/\.tv-board\.tv-3d-board-ready \.tv-center-dice\{display:none\}/);
   assert.match(entry,/if\(generation!==sequence\)return/);
   assert.match(entry,/cinematic\?\.clearDice\(\)/);
 });
@@ -107,7 +112,7 @@ test('3D pieces and ownership markers sit above raised tile surfaces',()=>{
   assert.match(d,/const target=worldPoint\(cell,i\)\.project\(camera\)/);
 });
 
-test('four 3D player pieces have distinct silhouettes and avoid stacking on one point',()=>{
+test('four 3D player pieces have distinct silhouettes and stay at the outside of their tile',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/ConeGeometry,TorusGeometry/);
   assert.match(d,/styleIndex%4===0/);
@@ -115,7 +120,10 @@ test('four 3D player pieces have distinct silhouettes and avoid stacking on one 
   assert.match(d,/styleIndex%4===2/);
   assert.match(d,/new ConeGeometry\(/);
   assert.match(d,/new TorusGeometry\(/);
-  assert.match(d,/slots=\[\[-\.29,\.29\],\[\.29,\.29\],\[-\.29,-\.29\],\[\.29,-\.29\]\]/);
+  assert.match(d,/row===0\?\[\[ -\.18,\.31\],\[\.18,\.31\],\[-\.18,\.12\],\[\.18,\.12\]\]/);
+  assert.match(d,/row===10\?/);
+  assert.match(d,/col===0\?/);
+  assert.match(d,/pawn\.group\.scale\.setScalar\(\.60\)/);
   assert.match(d,/pawn=makePawn\(colors\[i%colors\.length\]\|\|'#18a775',i\)/);
   assert.match(d,/worldPoint\(cell,i\)/);
   assert.match(d,/worldPoint\(cell,pawn\.slot\|\|0\)/);
@@ -182,7 +190,11 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.match(d,/const boardRect=board\.getBoundingClientRect\(\)/);
   assert.match(d,/const rect=cell\.getBoundingClientRect\(\)/);
   assert.doesNotMatch(d,/cell\.offsetLeft\/boardWidth/);
-  assert.match(d,/buildRaisedTiles\(img\)/);
+  assert.match(d,/const crop=img\.naturalWidth\*\.071,playable=img\.naturalWidth-2\*crop/);
+  assert.match(d,/buildRaisedTiles\(canvas\)/);
+  assert.match(d,/Replace the tiny scan-printed label with crisp, larger Arabic typesetting/);
+  assert.match(d,/textureContext\.direction='rtl';textureContext\.textAlign='center'/);
+  assert.match(d,/textureContext\.fillText\(value,textureCanvas\.width\/2/);
   assert.match(d,/clearTileMeshes\(\)/);
   assert.match(d,/board\.classList\.add\('tv-3d-board-ready'\)/);
   assert.match(d,/board\.classList\.remove\('tv-3d-board-ready'\)/);
@@ -203,7 +215,9 @@ test('TV idle and pre-roll center stay open, with readable-sized 3D pawns',()=>{
     'the no-WebGL fallback must keep the whole board center felt-green while playing');
   assert.match(css,/\.tv-board-center\.is-playing \.tv-center-scene\[data-event=auction\][\s\S]*?background:linear-gradient\(155deg,#f9f4e9,#dceadd\)/,
     'event cards keep their own surface instead of recoloring the whole board center');
-  assert.match(d,/pawn\.group\.scale\.setScalar\(\.68\+\(i===0\?\.04:0\)\)/);
+  assert.match(d,/pawn\.group\.scale\.setScalar\(\.60\)/);
+  assert.match(css,/\.tv-board\.has-art\{\s*padding:0;/);
+  assert.match(css,/background-size:116\.55% 116\.55%/);
 });
 
 test('Three.js renders a real tabletop perspective instead of a front-facing board',()=>{

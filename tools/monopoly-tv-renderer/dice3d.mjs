@@ -163,16 +163,17 @@ export function createThreeDice(board,cells=new Map()){
   function buildRaisedTiles(image){
     clearTileMeshes();
     const boardRect=board.getBoundingClientRect();
+    const sourceWidth=image.naturalWidth||image.width,sourceHeight=image.naturalHeight||image.height;
     for(const cell of cells.values()){
       const rect=cell.getBoundingClientRect();
       const left=(rect.left-boardRect.left)/Math.max(1,boardRect.width);
       const topFraction=(rect.top-boardRect.top)/Math.max(1,boardRect.height);
       const width=rect.width/Math.max(1,boardRect.width);
       const height=rect.height/Math.max(1,boardRect.height);
-      const pixelX=left*image.naturalWidth;
-      const pixelY=topFraction*image.naturalHeight;
-      const pixelWidth=width*image.naturalWidth;
-      const pixelHeight=height*image.naturalHeight;
+      const pixelX=left*sourceWidth;
+      const pixelY=topFraction*sourceHeight;
+      const pixelWidth=width*sourceWidth;
+      const pixelHeight=height*sourceHeight;
       const textureCanvas=document.createElement('canvas');
       textureCanvas.width=Math.max(32,Math.round(pixelWidth));
       textureCanvas.height=Math.max(32,Math.round(pixelHeight));
@@ -180,6 +181,32 @@ export function createThreeDice(board,cells=new Map()){
       if(!textureContext)continue;
       textureContext.drawImage(image,pixelX,pixelY,pixelWidth,pixelHeight,
         0,0,textureCanvas.width,textureCanvas.height);
+      // Replace the tiny scan-printed label with crisp, larger Arabic typesetting.
+      // Keep the upper half intact so each tile's original icon and color strip remain.
+      const name=cell.querySelector('strong')?.textContent?.trim()||'';
+      const price=cell.querySelector('small')?.textContent?.trim()||'';
+      const labelTop=Math.floor(textureCanvas.height*.51),labelHeight=textureCanvas.height-labelTop;
+      textureContext.fillStyle='rgba(239,242,232,.96)';
+      textureContext.fillRect(2,labelTop,textureCanvas.width-4,labelHeight-2);
+      textureContext.direction='rtl';textureContext.textAlign='center';textureContext.textBaseline='middle';
+      textureContext.fillStyle='#18392b';
+      const words=name.split(/\s+/),lines=[];let line='';
+      textureContext.font=`700 ${Math.max(12,Math.round(textureCanvas.width*.17))}px system-ui,sans-serif`;
+      for(const word of words){
+        const candidate=line?line+' '+word:word;
+        if(line&&textureContext.measureText(candidate).width>textureCanvas.width-8&&lines.length<1){lines.push(line);line=word;}
+        else line=candidate;
+      }
+      if(line)lines.push(line);
+      const nameLines=lines.slice(0,2),nameFont=Math.max(11,Math.round(textureCanvas.width*.16));
+      textureContext.font=`700 ${nameFont}px system-ui,sans-serif`;
+      const nameStep=Math.max(nameFont+1,labelHeight*.31),nameStart=labelTop+labelHeight*.38-(nameLines.length-1)*nameStep/2;
+      nameLines.forEach((value,i)=>textureContext.fillText(value,textureCanvas.width/2,nameStart+i*nameStep,textureCanvas.width-8));
+      if(price){
+        textureContext.font=`600 ${Math.max(10,Math.round(textureCanvas.width*.12))}px system-ui,sans-serif`;
+        textureContext.fillStyle='#355b45';
+        textureContext.fillText(price,textureCanvas.width/2,labelTop+labelHeight*.84,textureCanvas.width-8);
+      }
       const texture=new CanvasTexture(textureCanvas);
       texture.colorSpace=SRGBColorSpace;texture.anisotropy=4;
       const size=boardCellSize(cell),gap=Math.min(.012,Math.min(size.width,size.height)*.025);
@@ -208,16 +235,20 @@ export function createThreeDice(board,cells=new Map()){
       if(!ctx)return;
       // Transparent pixels in the source artwork must not expose dark wood.
       ctx.fillStyle='#eee8d4';ctx.fillRect(0,0,1024,1024);
-      ctx.drawImage(img,0,0,1024,1024);
+      // The playable ring begins about 7.1% in from each edge of the source scan.
+      // Crop that empty border once, then align both raised meshes and the DOM grid
+      // to the enlarged texture. This preserves every tile while reclaiming the mat.
+      const crop=img.naturalWidth*.071,playable=img.naturalWidth-2*crop;
+      ctx.drawImage(img,crop,crop,playable,playable,0,0,1024,1024);
       // Clean the non-playable border in the supplied board scan; retain the 40 tiles.
-      const outerMargin=60;
+      const outerMargin=0;
       ctx.fillStyle='#eee8d4';
       ctx.fillRect(0,0,outerMargin,1024);
       ctx.fillRect(1024-outerMargin,0,outerMargin,1024);
       ctx.fillRect(0,0,1024,outerMargin);
       ctx.fillRect(0,1024-outerMargin,1024,outerMargin);
       // Source art includes a printed brand in its center. Preserve the 40 tiles.
-      const inset=188,edge=1024-2*inset;
+      const inset=136,edge=1024-2*inset;
       const gradient=ctx.createRadialGradient(512,430,30,512,512,500);
       gradient.addColorStop(0,'#39775a');
       gradient.addColorStop(.58,'#245941');
@@ -239,7 +270,7 @@ export function createThreeDice(board,cells=new Map()){
       artPlane=new Mesh(geo,material);
       artPlane.position.z=.012;
       boardGroup.add(artPlane);
-      buildRaisedTiles(img);
+      buildRaisedTiles(canvas);
       boardTexture=texture;boardReady=true;
       board.classList.add('tv-3d-board-ready');
       board.closest('.tv-board-frame')?.classList.add('tv-3d-board-ready');
@@ -264,7 +295,14 @@ export function createThreeDice(board,cells=new Map()){
   let lastCells=null;
   function boardPoint(cell,localHeight=.035,slotIndex=0){
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
-    const tile=boardCellSize(cell),slots=[[-.29,.29],[.29,.29],[-.29,-.29],[.29,-.29]];
+    const tile=boardCellSize(cell),row=Number.parseInt(cell.style.gridRow,10)-1,
+      col=Number.parseInt(cell.style.gridColumn,10)-1;
+    // Keep player silhouettes on the outside edge, away from printed labels/icons.
+    // Four slots remain inside each cell and follow its edge around the square.
+    const slots=row===0?[[ -.18,.31],[.18,.31],[-.18,.12],[.18,.12]]:
+      row===10?[[-.18,-.31],[.18,-.31],[-.18,-.12],[.18,-.12]]:
+      col===0?[[-.31,-.18],[-.31,.18],[-.12,-.18],[-.12,.18]]:
+      [[.31,-.18],[.31,.18],[.12,-.18],[.12,.18]];
     const [sx,sy]=slots[slotIndex%slots.length];
     const localX=((cell.offsetLeft+cell.offsetWidth/2)/w-.5)*surfaceSize*w/h+sx*tile.width;
     const localY=(.5-(cell.offsetTop+cell.offsetHeight/2)/h)*surfaceSize+sy*tile.height;
@@ -401,7 +439,7 @@ export function createThreeDice(board,cells=new Map()){
         gsap.killTweensOf(pawn.group.position);
         pawn.group.position.copy(worldPoint(cell,i));
       }
-      pawn.group.scale.setScalar(.68+(i===0?.04:0));
+      pawn.group.scale.setScalar(.60);
     });
     syncPropertyMarks(list,cells,colors,ownership);
     canvas.dataset.pawns=String(pawns.size);
@@ -508,8 +546,10 @@ export function createThreeDice(board,cells=new Map()){
         die.quaternion.copy(target[i]);
         // GSAP rotates exactly two full revolutions and lands on the server face.
         const rx=die.rotation.x,ry=die.rotation.y;
-        tl.fromTo(die.position,{y:1.65+i*.3},{y:-.25,duration:.85,ease:'bounce.out'},i*.09);
+        tl.fromTo(die.position,{y:1.65+i*.3},{y:.56,duration:.85,ease:'bounce.out'},i*.09);
         tl.fromTo(die.rotation,{x:rx,y:ry},{x:rx+Math.PI*2,y:ry+Math.PI*2,duration:.77,ease:'power3.out'},i*.09);
+        // Park the server-result dice just above the event card until the next turn.
+        tl.to(die.position,{x:(i===0?-1:1)*.76,y:.56,z:1.8,duration:.22,ease:'power2.out'},.91);
       });
     });
   }

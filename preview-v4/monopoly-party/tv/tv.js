@@ -299,8 +299,7 @@ async function renderRoom(room){
     if((old.state?.phase==='roll'||state.presentation?.action==='roll')&&
        Array.isArray(state.dice)&&state.dice.length===2){
       sound('dice');
-      if(cinematic){await cinematic.rollDice(state.dice,old.state);if(generation!==sequence)return;
-        cinematic.clearDice();}
+      if(cinematic){await cinematic.rollDice(state.dice,old.state);if(generation!==sequence)return;}
     }
     state.players.filter(p=>p.id!==moving.id).forEach(p=>place(p.id,p.position||0,false));
     await animateArrival(old.state.players.find(p=>p.id===moving.id),moving,moving,generation);

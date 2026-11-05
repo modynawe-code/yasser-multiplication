@@ -28,3 +28,11 @@
 - إعادة الاختبار في وضع ملء الشاشة على التلفزيون الفعلي؛ الصور المرفقة تثبت شكل العرض المصوّر ولا تثبت أداء Android TV.
 - عدم اعتبار هذه الملاحظات موافقة نهائية، وعدم تغيير قواعد اللعبة أو صلاحياتها.
 - لا نشر على main؛ التطوير والاختبار على Staging فقط.
+
+## Visual fix checkpoint — 2026-11-05
+- Updated only the TV renderer/layout. The 7.1% non-playable scan border is cropped from the Three.js texture and fallback artwork; the 40-cell grid and raised tile meshes now share that full-size coordinate space. This increases playable ring scale by about 16.5% without changing tile order or game state.
+- Replaced the scan's tiny baked tile labels on raised Three.js tiles with crisp RTL canvas labels from the existing 40-cell DOM data. The icon/color strip remains visible above the label band; prices stay sourced from the existing board data.
+- Moved the four pawn slots to the outside edge for each board side and reduced token scale to 0.60, so tokens sit away from the center label/icon area while staying within their tile.
+- Three.js dice now settle on the felt around the event card and stay visible through the landing event; flat duplicate dice are hidden only when Three.js board rendering is active. Results still come from the existing server state. Reduced the TV board's viewport/width reserves slightly; no phone CSS or game rules changed.
+- Local validation: renderer contract, family Monopoly and room tests **47/47 passed**; `node --check` passed for the renderer and TV entry; `git diff --check` passed. Local bundling could not run because this worktree has no installed `esbuild`; CI build and deployed screenshots are the next acceptance gate.
+- Not yet visually accepted: confirm cropped raised tiles line up in Chromium/WebKit screenshots, event dice are not covered by the card, 720p/1080p readability, and actual 50-inch TV view. Keep this branch/Staging-only; do not merge to main.
