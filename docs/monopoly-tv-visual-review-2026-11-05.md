@@ -42,4 +42,8 @@
 - Replaced the property card's multicolor house emoji with a consistent single-color SVG mark and removed the unexplained colored stripe. Kept the server's action/event text unchanged.
 - The demo opponent remains disabled after joining, but now has a clear green automatic-player state instead of looking broken or unavailable.
 - Adjusted the board's viewport reserve and table gap based on the 720p/1080p CI measurements, to keep the tabletop in bounds and its outer 3D rim clear of side rails.
-- Validation for this follow-up is pending after the current staging workflow completes; do not treat these changes as published until a matching staging release is confirmed.
+- This follow-up was deployed and its release-matched Staging route checks, TV/phone workflow, Chromium, and WebKit checks succeeded on `23cf7f5f5ada`. The live four-player screenshot prompted the separate corner-slot fix below.
+
+## Four-player corner placement follow-up — 2026-11-05
+- Live Staging screenshot with four Chromium players exposed a real corner-slot clipping issue: edge-oriented slots applied to a corner pushed pieces against the canvas boundary. Corner pieces now use the inward quadrant; straight-edge pieces keep their side-specific outer strip. No coordinates or game state change.
+- Re-run renderer and room tests and publish only after the new release-specific staging test verifies all four player silhouettes at the start corner.

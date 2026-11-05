@@ -296,10 +296,14 @@ export function createThreeDice(board,cells=new Map()){
   function boardPoint(cell,localHeight=.035,slotIndex=0){
     const w=Math.max(1,board.clientWidth),h=Math.max(1,board.clientHeight);
     const tile=boardCellSize(cell),row=Number.parseInt(cell.style.gridRow,10)-1,
-      col=Number.parseInt(cell.style.gridColumn,10)-1;
-    // Keep player silhouettes on the outside edge, away from printed labels/icons.
-    // Four slots remain inside each cell and follow its edge around the square.
-    const slots=row===0?[[ -.18,.31],[.18,.31],[-.18,.12],[.18,.12]]:
+      col=Number.parseInt(cell.style.gridColumn,10)-1,
+      corner=(row===0||row===10)&&(col===0||col===10);
+    // Edge cells use the outer strip; corner cells use their inward quadrant so
+    // multiple pawns cannot cross the board/canvas boundary or stack on the icon.
+    const inwardX=col===0?1:-1,inwardY=row===0?-1:1;
+    const slots=corner?[[inwardX*.34,inwardY*.34],[inwardX*.18,inwardY*.34],
+      [inwardX*.34,inwardY*.18],[inwardX*.18,inwardY*.18]]:
+      row===0?[[ -.18,.31],[.18,.31],[-.18,.12],[.18,.12]]:
       row===10?[[-.18,-.31],[.18,-.31],[-.18,-.12],[.18,-.12]]:
       col===0?[[-.31,-.18],[-.31,.18],[-.12,-.18],[-.12,.18]]:
       [[.31,-.18],[.31,.18],[.12,-.18],[.12,.18]];
