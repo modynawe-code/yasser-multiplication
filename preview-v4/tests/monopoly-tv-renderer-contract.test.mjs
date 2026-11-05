@@ -170,6 +170,9 @@ test('TV idle and pre-roll center stay open, with readable-sized 3D pawns',()=>{
 
 test('Three.js renders a real tabletop perspective instead of a front-facing board',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/function woodGrainTexture\(\)/);
+  assert.match(d,/const slabMat=new MeshStandardMaterial\(\{map:woodTexture/);
+  assert.match(d,/texture\.wrapS=RepeatWrapping;texture\.wrapT=RepeatWrapping/);
   assert.match(d,/new PerspectiveCamera\(34,1/);
   assert.match(d,/overviewCamera=\{x:0,y:11,z:6\.4\}/);
   assert.match(d,/boardGroup\.rotation\.x=-Math\.PI\/2/);

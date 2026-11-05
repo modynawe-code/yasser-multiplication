@@ -3,7 +3,7 @@ import {
   WebGLRenderer,Scene,PerspectiveCamera,AmbientLight,DirectionalLight,
   Mesh,BoxGeometry,MeshStandardMaterial,CanvasTexture,Group,
   PlaneGeometry,MeshBasicMaterial,DoubleSide,Vector3,Quaternion,SRGBColorSpace,
-  CylinderGeometry,SphereGeometry,CircleGeometry
+  CylinderGeometry,SphereGeometry,CircleGeometry,RepeatWrapping
 } from 'three';
 import {gsap} from 'gsap';
 
@@ -33,6 +33,32 @@ function faceTexture(n){
   }
   const texture=new CanvasTexture(canvas);
   texture.colorSpace=SRGBColorSpace;
+  return texture;
+}
+function woodGrainTexture(){
+  const canvas=document.createElement('canvas');
+  canvas.width=canvas.height=512;
+  const c=canvas.getContext('2d');
+  if(!c)throw new Error('2D wood texture context unavailable');
+  const base=c.createLinearGradient(0,0,512,512);
+  base.addColorStop(0,'#89613a');base.addColorStop(.48,'#76502f');base.addColorStop(1,'#624226');
+  c.fillStyle=base;c.fillRect(0,0,512,512);
+  // Fine, irregular grain catches the Three.js lights without competing with tile text.
+  for(let i=0;i<42;i++){
+    const y=i*13-8,shift=(i*37)%57;
+    c.beginPath();c.moveTo(-20,y);
+    c.bezierCurveTo(120,y-9+shift*.12,330,y+8-shift*.1,532,y-3);
+    c.strokeStyle=i%4===0?'rgba(226,190,129,.105)':'rgba(38,24,13,.085)';
+    c.lineWidth=i%5===0?2:1;c.stroke();
+  }
+  for(let i=0;i<9;i++){
+    const x=35+(i*59)%440,y=24+(i*83)%464;
+    c.beginPath();c.ellipse(x,y,18+(i%3)*5,3,((i%4)-2)*.08,0,Math.PI*2);
+    c.strokeStyle='rgba(38,24,13,.12)';c.lineWidth=1;c.stroke();
+  }
+  const texture=new CanvasTexture(canvas);
+  texture.colorSpace=SRGBColorSpace;texture.wrapS=RepeatWrapping;texture.wrapT=RepeatWrapping;
+  texture.repeat.set(2,2);
   return texture;
 }
 export function createThreeDice(board,cells=new Map()){
@@ -86,14 +112,15 @@ export function createThreeDice(board,cells=new Map()){
   const BOARD_DEPTH=0;
   const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*camera.position.distanceTo(new Vector3(0,0,BOARD_DEPTH));
   const surfaceSize=surfaceHeight*.94;
-  const slabMat=new MeshStandardMaterial({color:0x77502d,roughness:.52,metalness:.08});
+  const woodTexture=woodGrainTexture();
+  const slabMat=new MeshStandardMaterial({map:woodTexture,color:0xffffff,roughness:.62,metalness:.04});
   const rimMat=new MeshStandardMaterial({color:0xcea55a,roughness:.28,metalness:.62});
   const feltMat=new MeshStandardMaterial({color:0x173c2c,roughness:.94,metalness:0});
   const slabGeo=new BoxGeometry(surfaceSize+.16,surfaceSize+.16,.28);
   const feltGeo=new BoxGeometry(surfaceSize+.28,surfaceSize+.28,.14);
   const rimGeoHorizontal=new BoxGeometry(surfaceSize+.34,.09,.11);
   const rimGeoVertical=new BoxGeometry(.11,surfaceSize+.34,.09);
-  boardResources.push(slabMat,rimMat,feltMat,slabGeo,feltGeo,rimGeoHorizontal,rimGeoVertical);
+  boardResources.push(woodTexture,slabMat,rimMat,feltMat,slabGeo,feltGeo,rimGeoHorizontal,rimGeoVertical);
   // The board artwork and tabletop now lie flat on the XZ ground plane.
   // Three.js owns the real overhead perspective; tiles remain baked into the exact source image.
   boardGroup.rotation.x=-Math.PI/2;
