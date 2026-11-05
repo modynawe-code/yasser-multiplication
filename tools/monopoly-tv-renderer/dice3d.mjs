@@ -140,13 +140,13 @@ export function createThreeDice(board,cells=new Map()){
       const texture=new CanvasTexture(textureCanvas);
       texture.colorSpace=SRGBColorSpace;texture.anisotropy=4;
       const size=boardCellSize(cell),gap=Math.min(.012,Math.min(size.width,size.height)*.025);
-      const geometry=new BoxGeometry(Math.max(.02,size.width-gap),Math.max(.02,size.height-gap),.035);
+      const geometry=new BoxGeometry(Math.max(.02,size.width-gap),Math.max(.02,size.height-gap),.075);
       const top=new MeshBasicMaterial({map:texture});
-      const edge=new MeshStandardMaterial({color:0x36513e,roughness:.55,metalness:.08});
+      const edge=new MeshStandardMaterial({color:0x624d2e,roughness:.58,metalness:.1});
       const mesh=new Mesh(geometry,[edge,edge,edge,edge,top,edge]);
       const x=(left+width/2-.5)*surfaceSize;
       const y=(.5-(topFraction+height/2))*surfaceSize;
-      mesh.position.set(x,y,.0295);
+      mesh.position.set(x,y,.05);
       boardGroup.add(mesh);
       tileMeshes.push({mesh,geometry,top,edge,texture});
     }

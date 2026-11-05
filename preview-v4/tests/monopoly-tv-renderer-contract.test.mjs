@@ -143,7 +143,7 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.match(d,/canvas\.dataset\.properties=String\(propertyMarks\.size\)/);
   assert.match(d,/new CanvasTexture\(canvas\)/);
   assert.match(d,/function buildRaisedTiles\(image\)/);
-  assert.match(d,/const geometry=new BoxGeometry\(Math\.max\(\.02,size\.width-gap\),Math\.max\(\.02,size\.height-gap\),\.035\)/);
+  assert.match(d,/const geometry=new BoxGeometry\(Math\.max\(\.02,size\.width-gap\),Math\.max\(\.02,size\.height-gap\),\.075\)/);
   assert.match(d,/canvasElement\.dataset\.raisedTiles=String\(tileMeshes\.length\)/);
   assert.match(d,/const boardRect=board\.getBoundingClientRect\(\)/);
   assert.match(d,/const rect=cell\.getBoundingClientRect\(\)/);
