@@ -86,6 +86,15 @@ test('3D pieces use mesh geometry and authoritative board coordinates',()=>{
   assert.match(scene,/threeDice\.movePawn\(id,index,duration\)/);
   assert.match(scene,/layer\.visible=false/);
 });
+test('Three.js dice and pawns use soft contact shadows instead of opaque squares',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/function softShadowTexture\(\)/);
+  assert.match(d,/createRadialGradient\(64,64,4,64,64,64\)/);
+  assert.match(d,/rgba\(5,18,14,0\)/);
+  assert.match(d,/const shadowMaterial=new MeshBasicMaterial\(\{map:shadowTexture/);
+  assert.match(d,/shadeMaterial=new MeshBasicMaterial\(\{map:shadowTexture/);
+  assert.match(d,/shadowTexture\.dispose\(\)/);
+});
 
 test('3D pieces and ownership markers sit above raised tile surfaces',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');

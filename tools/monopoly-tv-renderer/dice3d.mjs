@@ -35,6 +35,20 @@ function faceTexture(n){
   texture.colorSpace=SRGBColorSpace;
   return texture;
 }
+function softShadowTexture(){
+  const canvas=document.createElement('canvas');
+  canvas.width=canvas.height=128;
+  const c=canvas.getContext('2d');
+  if(!c)throw new Error('shadow texture context unavailable');
+  const gradient=c.createRadialGradient(64,64,4,64,64,64);
+  gradient.addColorStop(0,'rgba(5,18,14,.42)');
+  gradient.addColorStop(.48,'rgba(5,18,14,.2)');
+  gradient.addColorStop(1,'rgba(5,18,14,0)');
+  c.fillStyle=gradient;c.fillRect(0,0,128,128);
+  const texture=new CanvasTexture(canvas);
+  texture.colorSpace=SRGBColorSpace;
+  return texture;
+}
 function woodGrainTexture(){
   const canvas=document.createElement('canvas');
   canvas.width=canvas.height=512;
@@ -84,6 +98,7 @@ export function createThreeDice(board,cells=new Map()){
   const fill=new DirectionalLight(0x91bdb2,1.1);
   fill.position.set(4,-2,5);scene.add(fill);
   const textures=[1,2,3,4,5,6].map(faceTexture);
+  const shadowTexture=softShadowTexture();
   const materials=FACES.map(n=>new MeshStandardMaterial({
     map:textures[n-1],roughness:.32,metalness:.06
   }));
@@ -96,7 +111,7 @@ export function createThreeDice(board,cells=new Map()){
   });
   // Contact shadow is a transparent plane behind the cubes.
   const shadowGeometry=new PlaneGeometry(1.25,1.25);
-  const shadowMaterial=new MeshBasicMaterial({color:0x071b16,transparent:true,opacity:.24,side:DoubleSide,depthWrite:false});
+  const shadowMaterial=new MeshBasicMaterial({map:shadowTexture,color:0x071b16,transparent:true,opacity:.75,side:DoubleSide,depthWrite:false});
   const shadows=dice.map((die)=>{
     const m=new Mesh(shadowGeometry,shadowMaterial);
     m.rotation.x=-Math.PI/2;
@@ -295,7 +310,7 @@ export function createThreeDice(board,cells=new Map()){
       add(new SphereGeometry(.095,16,12),accent,0,.39,0);
       const ring=add(new TorusGeometry(.14,.027,8,20),accent,0,.10,0);ring.rotation.x=Math.PI/2;
     }
-    const shadeMaterial=new MeshBasicMaterial({color:0x06241b,transparent:true,opacity:.34,depthWrite:false});
+    const shadeMaterial=new MeshBasicMaterial({map:shadowTexture,color:0x06241b,transparent:true,opacity:.68,depthWrite:false});
     const shade=new Mesh(pawnShadow,shadeMaterial);
     shade.rotation.x=-Math.PI/2;shade.position.set(.08,.018,-.08);
     g.add(shade);
@@ -515,6 +530,7 @@ export function createThreeDice(board,cells=new Map()){
     board.classList.remove('tv-3d-board-ready');
     board.closest('.tv-board-frame')?.classList.remove('tv-3d-board-ready');
     for(const t of textures)t.dispose();
+    shadowTexture.dispose();
     for(const m of materials)m.dispose();
     geometry.dispose();shadowGeometry.dispose();shadowMaterial.dispose();
     renderer.dispose();canvas.remove();
