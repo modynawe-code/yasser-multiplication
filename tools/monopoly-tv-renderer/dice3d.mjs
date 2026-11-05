@@ -301,8 +301,8 @@ export function createThreeDice(board,cells=new Map()){
     // Edge cells use the outer strip; corner cells use their inward quadrant so
     // multiple pawns cannot cross the board/canvas boundary or stack on the icon.
     const inwardX=col===0?1:-1,inwardY=row===0?-1:1;
-    const slots=corner?[[inwardX*.34,inwardY*.34],[inwardX*.18,inwardY*.34],
-      [inwardX*.34,inwardY*.18],[inwardX*.18,inwardY*.18]]:
+    const slots=corner?[[inwardX*.46,inwardY*.46],[inwardX*.24,inwardY*.46],
+      [inwardX*.46,inwardY*.24],[inwardX*.24,inwardY*.24]]:
       row===0?[[ -.18,.31],[.18,.31],[-.18,.12],[.18,.12]]:
       row===10?[[-.18,-.31],[.18,-.31],[-.18,-.12],[.18,-.12]]:
       col===0?[[-.31,-.18],[-.31,.18],[-.12,-.18],[-.12,.18]]:

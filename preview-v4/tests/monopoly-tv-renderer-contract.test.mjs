@@ -123,7 +123,7 @@ test('four 3D player pieces have distinct silhouettes and stay at the outside of
   assert.match(d,/new ConeGeometry\(/);
   assert.match(d,/new TorusGeometry\(/);
   assert.match(d,/row===0\?\[\[ -\.18,\.31\],\[\.18,\.31\],\[-\.18,\.12\],\[\.18,\.12\]\]/);
-  assert.match(d,/corner\?\[\[inwardX\*\.34,inwardY\*\.34\],\[inwardX\*\.18,inwardY\*\.34\]/);
+  assert.match(d,/corner\?\[\[inwardX\*\.46,inwardY\*\.46\],\[inwardX\*\.24,inwardY\*\.46\]/);
   assert.match(d,/row===10\?/);
   assert.match(d,/col===0\?/);
   assert.match(d,/pawn\.group\.scale\.setScalar\(\.60\)/);

@@ -46,4 +46,4 @@
 
 ## Four-player corner placement follow-up — 2026-11-05
 - Live Staging screenshot with four Chromium players exposed a real corner-slot clipping issue: edge-oriented slots applied to a corner pushed pieces against the canvas boundary. Corner pieces now use the inward quadrant; straight-edge pieces keep their side-specific outer strip. No coordinates or game state change.
-- Re-run renderer and room tests and publish only after the new release-specific staging test verifies all four player silhouettes at the start corner.
+- The four-player live screenshot confirmed the pieces stay inside the corner after the first fix, but still crowded the start arrow. Moved the corner slots farther into the inward quadrant; this final spacing update awaits a fresh staging screenshot.
