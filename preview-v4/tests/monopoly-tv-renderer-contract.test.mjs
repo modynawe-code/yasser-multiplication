@@ -123,10 +123,10 @@ test('four 3D player pieces have distinct silhouettes and stay at the outside of
   assert.match(d,/new ConeGeometry\(/);
   assert.match(d,/new TorusGeometry\(/);
   assert.match(d,/row===0\?\[\[ -\.18,\.31\],\[\.18,\.31\],\[-\.18,\.12\],\[\.18,\.12\]\]/);
-  assert.match(d,/corner\?\[\[inwardX\*\.46,inwardY\*\.46\],\[inwardX\*\.24,inwardY\*\.46\]/);
+  assert.match(d,/corner\?\[\[inwardX\*\.34,inwardY\*\.34\],\[inwardX\*\.04,inwardY\*\.34\]/);
   assert.match(d,/row===10\?/);
   assert.match(d,/col===0\?/);
-  assert.match(d,/pawn\.group\.scale\.setScalar\(\.60\)/);
+  assert.match(d,/pawn\.group\.scale\.setScalar\(isCornerCell\(cell\)\?\.46:\.60\)/);
   assert.match(d,/pawn=makePawn\(colors\[i%colors\.length\]\|\|'#18a775',i\)/);
   assert.match(d,/worldPoint\(cell,i\)/);
   assert.match(d,/worldPoint\(cell,pawn\.slot\|\|0\)/);
@@ -218,7 +218,7 @@ test('TV idle and pre-roll center stay open, with readable-sized 3D pawns',()=>{
     'the no-WebGL fallback must keep the whole board center felt-green while playing');
   assert.match(css,/\.tv-board-center\.is-playing \.tv-center-scene\[data-event=auction\][\s\S]*?background:linear-gradient\(155deg,#f9f4e9,#dceadd\)/,
     'event cards keep their own surface instead of recoloring the whole board center');
-  assert.match(d,/pawn\.group\.scale\.setScalar\(\.60\)/);
+  assert.match(d,/pawn\.group\.scale\.setScalar\(isCornerCell\(cell\)\?\.46:\.60\)/);
   assert.match(css,/\.tv-board\.has-art\{\s*padding:0;/);
   assert.match(css,/background-size:116\.55% 116\.55%/);
 });

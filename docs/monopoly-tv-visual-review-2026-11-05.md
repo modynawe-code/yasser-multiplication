@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 2215)
+Total output lines: 53
+
 # Monopoly TV — ملاحظات المراجعة البصرية
 
 تاريخ المراجعة: 2026-11-05  
@@ -18,15 +21,7 @@
 7. **هوامش صورة اللوحة:** تظهر حواف فاتحة واسعة حول الخانات المطبوعة، خصوصًا أسفل اللوحة وجوانبها. افحص أصل الصورة واقتصاصها كي تستفيد الخانات من مساحة الطاولة دون قص أي خانة.
 8. **النرد بعد الرمية:** في حالة الوصول إلى محطة المدينة تظهر النتيجة 5 و1 كمربعات رقمية مسطحة داخل بطاقة الحدث، بينما النرد ثلاثي الأبعاد غير ظاهر في هذه اللقطة. راجع انتقال النتيجة إلى الحالة المستقرة؛ المطلوب الحفاظ على نتيجة الخادم وإظهار إخراج متسق مع النرد ثلاثي الأبعاد.
 9. **تحديد الخانة والقطع:** في زاوية الصورة، القطع وإطار تمييز الخانة قريبون من بعض الخانات المجاورة. لا يُسجل هذا كخلل مؤكد من الصورة؛ يلزم التحقق من إسقاط الخانة النشطة ومواقع القطع وحدود الملكية في المشهد ثلاثي الأبعاد.
-10. **ملء شاشة التلفزيون:** شريط المتصفح ظاهر أعلى الشاشة ويقلل المساحة المتاحة. اختبر وضع ملء الشاشة/تطبيق التلفزيون النهائي، واضبط المشهد على مساحة العرض الفعلية بدون قص اللوحة أو الـHUD.
-
-## بوابة التحقق
-
-- صور قبل/بعد على 1080p و4K إن توفر، مع مراجعة الانتظار واللعب وحدث الملكية.
-- فحص مقروئية أسماء الخانات والأسعار من مسافة مشاهدة التلفزيون.
-- التحقق من بروز الخانات ومواضع القطع والنرد، وتسلسل الكاميرا، ووضوح بطاقة الحدث، وحركة لاعب الكمبيوتر.
-- إعادة الاختبار في وضع ملء الشاشة على التلفزيون الفعلي؛ الصور المرفقة تثبت شكل العرض المصوّر ولا تثبت أداء Android TV.
-- عدم اعتبار هذه الملاحظات موافقة نهائية، وعدم تغيير قواعد اللعبة أو صلاحياتها.
+10. **ملء شاشة التلفزيون:** شريط المتصفح ظاهر أعلى الشاشة ويقلل المساحة المتاحة. اختبر وضع ملء الشاشة/تطبيق التلفزيون ا…215 tokens truncated… نهائية، وعدم تغيير قواعد اللعبة أو صلاحياتها.
 - لا نشر على main؛ التطوير والاختبار على Staging فقط.
 
 ## Visual fix checkpoint — 2026-11-05
@@ -47,3 +42,7 @@
 ## Four-player corner placement follow-up — 2026-11-05
 - Live Staging screenshot with four Chromium players exposed a real corner-slot clipping issue: edge-oriented slots applied to a corner pushed pieces against the canvas boundary. Corner pieces now use the inward quadrant; straight-edge pieces keep their side-specific outer strip. No coordinates or game state change.
 - The four-player live screenshot confirmed the pieces stay inside the corner after the first fix, but still crowded the start arrow. Moved the corner slots farther into the inward quadrant; this final spacing update awaits a fresh staging screenshot.
+
+## Physical TV photo follow-up — 2026-11-05
+- User's physical-TV photos showed that corner pawns still crowded the start arrow at four players. Tightened their footprint only on corner tiles: four positions spread across the inward quadrant and scale reduced to 0.46; straight-edge pawn scale and game coordinates are unchanged.
+- Local verification: TV renderer contract, Monopoly room, and backend room suites passed **48/48**; renderer syntax and whitespace checks passed. Awaiting build, Staging deployment, and a fresh four-player screenshot before calling this correction verified.
