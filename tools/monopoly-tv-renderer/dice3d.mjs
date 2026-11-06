@@ -13,7 +13,9 @@ const NORMALS=[
   new Vector3(0,1,0),new Vector3(0,-1,0),
   new Vector3(0,0,1),new Vector3(0,0,-1)
 ];
-const CAMERA_FACE_NORMAL=new Vector3(0,.85,.53).normalize();
+// The result face rests upward. The elevated camera naturally sees its top
+// and one side, keeping each settled die visibly three-dimensional.
+const DIE_TOP_NORMAL=new Vector3(0,1,0);
 const PIPS={
   1:[[0,0]],2:[[-1,-1],[1,1]],3:[[-1,-1],[0,0],[1,1]],
   4:[[-1,-1],[1,-1],[-1,1],[1,1]],
@@ -489,6 +491,12 @@ export function createThreeDice(board,cells=new Map()){
     if(disposed)return;
     resize();
     if(boardReady&&boardArtCanvas&&tileMeshes.length!==40&&buildRaisedTiles(boardArtCanvas))markBoardReady();
+    shadows.forEach((shadow,i)=>{
+      const die=dice[i],height=Math.max(0,die.position.y-.56);
+      shadow.position.set(die.position.x+.10,.025,die.position.z-.08);
+      const spread=1+Math.min(.65,height*.3);
+      shadow.scale.set(spread,spread,1);
+    });
     maxCameraLift=Math.max(maxCameraLift,Math.abs(camera.position.y-overviewCamera.y));
     canvas.dataset.maxCameraLift=maxCameraLift.toFixed(2);
     canvas.dataset.cameraRestored=String(Math.abs(camera.position.y-overviewCamera.y)<.02&&Math.abs(camera.position.z-overviewCamera.z)<.02&&Math.abs(camera.zoom-1)<.02&&!board.classList.contains('tv-3d-rolling'));
@@ -525,7 +533,7 @@ export function createThreeDice(board,cells=new Map()){
     clear();
     const target=values.map(value=>{
       const normal=NORMALS[FACES.indexOf(value)];
-      return new Quaternion().setFromUnitVectors(normal,CAMERA_FACE_NORMAL);
+      return new Quaternion().setFromUnitVectors(normal,DIE_TOP_NORMAL);
     });
     dice.forEach((die,i)=>{
       die.position.set((i===0?-1:1)*.76,.56,0);

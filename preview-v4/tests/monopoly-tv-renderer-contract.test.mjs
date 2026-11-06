@@ -81,6 +81,9 @@ test('genuine 3D dice use Three.js geometry, six face textures and authoritative
   assert.match(d,/new DirectionalLight\(/);
   assert.match(d,/const FACES=\[3,4,2,5,1,6\]/);
   assert.match(d,/FACES\.indexOf\(value\)/);
+  assert.match(d,/const DIE_TOP_NORMAL=new Vector3\(0,1,0\)/);
+  assert.match(d,/setFromUnitVectors\(normal,DIE_TOP_NORMAL\)/);
+  assert.match(d,/shadow\.position\.set\(die\.position\.x\+\.10,\.025,die\.position\.z-\.08\)/);
   assert.match(d,/setFromUnitVectors\(/);
   assert.match(d,/Number\.isInteger\(v\)&&v>=1&&v<=6/);
   assert.match(d,/prefers-reduced-motion/);
