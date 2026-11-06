@@ -77,6 +77,14 @@ def execute(kind,browser):
             host.locator('#remoteActions button[data-action=roll]').click()
         else:
             host.locator('#remoteActions button[data-action=roll]').click()
+        tv.wait_for_function("""() => {
+            const board=document.querySelector('#partyBoard');
+            const dice=board?.querySelector('canvas.tv-three-dice-canvas');
+            return board?.classList.contains('tv-3d-rolling') && dice?.dataset.dice?.split(',').length===2;
+        }""",timeout=20000)
+        tv.wait_for_timeout(550)
+        tv.screenshot(path=str(ART/f"{kind}-tv-dice-roll.png"),full_page=True)
+        result["diceRollScreenshot"]=f"{kind}-tv-dice-roll.png"
         if kind=="chromium":
             tv.wait_for_function("() => document.querySelector('#partyBoard canvas.tv-three-dice-canvas')?.dataset.raisedTiles==='40'",timeout=20000)
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=22000)

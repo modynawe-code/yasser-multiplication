@@ -71,7 +71,7 @@ test('settled dice clear before piece travel and the landing event',()=>{
   assert.doesNotMatch(entry,/if\(state\.dice\?\.length===2\)\s*state\.dice\.forEach\(value=>dice\.append/,
     'old dice values must not be drawn inside the landing card');
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
-  assert.match(d,/z:1\.8,duration:\.22,ease:'power2\.out'/);
+  assert.match(d,/z:1\.8,duration:\.24,ease:'power2\.out'/);
   assert.match(css,/\.tv-board\.tv-3d-board-ready \.tv-center-dice\{display:none\}/);
   assert.match(entry,/if\(generation!==sequence\)return/);
   assert.match(entry,/cinematic\?\.clearDice\(\)/);
@@ -80,6 +80,9 @@ test('settled dice clear before piece travel and the landing event',()=>{
 test('genuine 3D dice use Three.js geometry, six face textures and authoritative results',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/from 'three'/);
+  assert.match(d,/RoundedBoxGeometry.*from 'three\/addons\/geometries\/RoundedBoxGeometry\.js'/);
+  assert.match(d,/const DIE_SIZE=\.78/);
+  assert.match(d,/new RoundedBoxGeometry\(DIE_SIZE,DIE_SIZE,DIE_SIZE,3,\.085\)/);
   assert.match(d,/new BoxGeometry\(/);
   assert.match(d,/new WebGLRenderer\(/);
   assert.match(d,/new MeshStandardMaterial\(/);
@@ -92,6 +95,8 @@ test('genuine 3D dice use Three.js geometry, six face textures and authoritative
   assert.match(d,/setFromUnitVectors\(/);
   assert.match(d,/Number\.isInteger\(v\)&&v>=1&&v<=6/);
   assert.match(d,/prefers-reduced-motion/);
+  assert.match(d,/duration:1\.28,ease:'power2\.out'/);
+  assert.match(d,/const turns=i===0\?\[4,2,3\]:\[3,4,2\]/);
   assert.match(d,/renderer\.dispose\(\)/);
   assert.match(scene,/createThreeDice\(board,cells\)/);
   assert.match(scene,/threeDice\.roll\(values\)/);
@@ -271,8 +276,8 @@ test('Three.js renders a real tabletop perspective instead of a front-facing boa
   assert.match(d,/overviewCamera=\{x:0,y:11,z:6\.4\}/);
   assert.match(d,/boardGroup\.rotation\.x=-Math\.PI\/2/);
   assert.match(d,/camera\.lookAt\(0,0,0\)/);
-  assert.match(d,/tl\.to\(camera\.position,\{y:10\.8,z:6\.3/);
-  assert.match(d,/tl\.to\(camera,\{zoom:1\.06/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:10\.35,z:6\.8/);
+  assert.match(d,/tl\.to\(camera,\{zoom:1\.035/);
   assert.match(css,/\.tv-board-frame\.tv-3d-board-ready\{[\s\S]*?background:transparent/);
 });
 
@@ -285,7 +290,7 @@ test('3D table fits the roll zoom and drops the old inner CSS frame',()=>{
 test('dice roll uses a real Three.js camera crane and always restores the tile projection',()=>{
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/camera\.lookAt\(0,0,0\)/);
-  assert.match(d,/tl\.to\(camera\.position,\{y:10\.8,z:6\.3/);
+  assert.match(d,/tl\.to\(camera\.position,\{y:10\.35,z:6\.8/);
   assert.match(d,/tl\.to\(camera\.position,\{y:overviewCamera\.y,z:overviewCamera\.z/);
   assert.match(d,/camera\.position\.set\(overviewCamera\.x,overviewCamera\.y,overviewCamera\.z\)/);
   assert.match(d,/board\.classList\.add\('tv-3d-rolling'\)/);

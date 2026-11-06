@@ -5,6 +5,7 @@ import {
   PlaneGeometry,MeshBasicMaterial,DoubleSide,Vector3,Quaternion,SRGBColorSpace,
   CylinderGeometry,SphereGeometry,CircleGeometry,RepeatWrapping,ConeGeometry,TorusGeometry
 } from 'three';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {gsap} from 'gsap';
 
 const FACES=[3,4,2,5,1,6]; // BoxGeometry: +X,-X,+Y,-Y,+Z,-Z. Camera faces +Z.
@@ -104,7 +105,10 @@ export function createThreeDice(board,cells=new Map()){
   const materials=FACES.map(n=>new MeshStandardMaterial({
     map:textures[n-1],roughness:.32,metalness:.06
   }));
-  const geometry=new BoxGeometry(1.03,1.03,1.03);
+  // Soft, die-like bevels catch highlights and read as a crafted game piece.
+  // The smaller footprint leaves the board center and its event cards legible.
+  const DIE_SIZE=.78;
+  const geometry=new RoundedBoxGeometry(DIE_SIZE,DIE_SIZE,DIE_SIZE,3,.085);
   const group=new Group();scene.add(group);
   const dice=[0,1].map(i=>{
     const die=new Mesh(geometry,materials);
@@ -536,7 +540,7 @@ export function createThreeDice(board,cells=new Map()){
       return new Quaternion().setFromUnitVectors(normal,DIE_TOP_NORMAL);
     });
     dice.forEach((die,i)=>{
-      die.position.set((i===0?-1:1)*.76,.56,0);
+      die.position.set((i===0?-1:1)*.58,.43,0);
       die.quaternion.copy(target[i]);
       die.rotation.x+=Math.PI*2;die.rotation.y+=Math.PI*2;
     });
@@ -564,20 +568,29 @@ export function createThreeDice(board,cells=new Map()){
         }
       });
       timeline=tl;
-      // Genuine Three.js perspective camera crane, not a CSS zoom.
-      // Keep the full table edge in frame while making the dice read larger.
-      tl.to(camera.position,{y:10.8,z:6.3,duration:.38,ease:'power2.out'},0);
-      tl.to(camera,{zoom:1.06,duration:.38,ease:'power2.out',onUpdate:()=>camera.updateProjectionMatrix()},0);
-      tl.to(camera.position,{y:overviewCamera.y,z:overviewCamera.z,duration:.43,ease:'power2.inOut'},.75);
-      tl.to(camera,{zoom:1,duration:.43,ease:'power2.inOut',onUpdate:()=>camera.updateProjectionMatrix()},.75);
+      // A measured camera move gives the roll room to read on TV, then eases
+      // back before pawn travel. The server still owns every dice result.
+      tl.to(camera.position,{y:10.35,z:6.8,duration:.52,ease:'power2.inOut'},0);
+      tl.to(camera,{zoom:1.035,duration:.52,ease:'power2.inOut',onUpdate:()=>camera.updateProjectionMatrix()},0);
+      tl.to(camera.position,{y:overviewCamera.y,z:overviewCamera.z,duration:.48,ease:'power2.inOut'},1.02);
+      tl.to(camera,{zoom:1,duration:.48,ease:'power2.inOut',onUpdate:()=>camera.updateProjectionMatrix()},1.02);
       dice.forEach((die,i)=>{
         die.quaternion.copy(target[i]);
-        // GSAP rotates exactly two full revolutions and lands on the server face.
-        const rx=die.rotation.x,ry=die.rotation.y;
-        tl.fromTo(die.position,{y:1.65+i*.3},{y:.56,duration:.85,ease:'bounce.out'},i*.09);
-        tl.fromTo(die.rotation,{x:rx,y:ry},{x:rx+Math.PI*2,y:ry+Math.PI*2,duration:.77,ease:'power3.out'},i*.09);
-        // Park the server-result dice just above the event card until the next turn.
-        tl.to(die.position,{x:(i===0?-1:1)*.76,y:.56,z:1.8,duration:.22,ease:'power2.out'},.91);
+        // Each die tumbles on a different three-axis path, then settles softly.
+        // Full turns preserve the server-result orientation at the end.
+        const start={x:die.rotation.x,y:die.rotation.y,z:die.rotation.z};
+        const turns=i===0?[4,2,3]:[3,4,2];
+        const delay=i*.12;
+        tl.fromTo(die.position,{y:1.25+i*.12},{y:.43,duration:1.12,ease:'power2.out'},delay);
+        tl.fromTo(die.rotation,start,{
+          x:start.x+Math.PI*2*turns[0],
+          y:start.y+Math.PI*2*turns[1],
+          z:start.z+Math.PI*2*turns[2],
+          duration:1.28,ease:'power2.out'
+        },delay);
+        tl.to(die.position,{y:.39,duration:.12,ease:'power1.inOut'},1.12+delay);
+        // Park the server-result dice clear of the landing event card.
+        tl.to(die.position,{x:(i===0?-1:1)*.58,y:.43,z:1.8,duration:.24,ease:'power2.out'},1.35+delay);
       });
     });
   }
