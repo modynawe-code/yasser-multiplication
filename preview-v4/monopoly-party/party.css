@@ -489,6 +489,7 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
 .tv-view .tv-board.tv-3d-board-ready .tv-board-center .tv-center-scene{
   pointer-events:none;
 }
+.tv-view #tvSessionHint[hidden]{display:none}
 .tv-view .tv-board.tv-3d-board-ready .tv-three-dice-canvas{
   display:block;
   contain:layout paint;

@@ -163,6 +163,14 @@ test('event card reveal is GSAP-driven, cancellable and never writes game state'
   assert.match(entry,/cinematic\?\.presentEvent\(byId\('tvCenterScene'\)/);
   assert.match(entry,/cinematic\?\.clearEvent\(byId\('tvCenterScene'\)\)/);
 });
+test('TV HUD uses one phase-specific instruction and Arabic stage labels',()=>{
+  assert.match(tvHtml,/id="tvSessionHint"/);
+  assert.match(entry,/const instructions=\{[\s\S]*?roll:'ارمِ النرد من جوال اللاعب'[\s\S]*?property:'قرار الشراء أو المزاد من يد التحكم'/);
+  assert.match(entry,/const phaseLabels=\{roll:'رمي النرد',property:'قرار الشراء',auction:'المزاد',card:'البطاقة',trade:'التبادل',end:'نهاية الدور'\}/);
+  assert.match(entry,/byId\('tvSessionHint'\)\.hidden=true/);
+  assert.doesNotMatch(entry,/textContent='المرحلة: '\+state\.phase/);
+  assert.doesNotMatch(entry,/dest\.append\(el\('strong','',headline\),el\('p','',state\.log/);
+});
 
 test('spectator does not skip the first authoritative roll when polling jumps from waiting',()=>{
   assert.doesNotMatch(entry,/old\.status==='waiting'\|\|state\.status==='waiting'/);

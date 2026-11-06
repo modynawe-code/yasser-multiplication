@@ -235,6 +235,7 @@ function renderEvent(state){
   if(state.status==='waiting'){
     dest.append(el('strong','','بانتظار بدء اللعبة'),el('p','','ينضم لاعبان على الأقل، ثم يضغط المضيف «ابدأ اللعبة» من جواله.'));
     byId('tvPhase').textContent='بانتظار اللاعبين · '+state.players.length+' / 4';
+    byId('tvSessionHint').hidden=false;
     byId('tvDice').replaceChildren();return;
   }
   const player=state.players[state.turnIndex];
@@ -248,7 +249,16 @@ function renderEvent(state){
   else if(state.phase==='trade')headline='عرض تبادل';
   else if(state.phase==='end')headline='الحدث اكتمل';
   if(state.status==='finished')headline='نهاية الجولة';
-  dest.append(el('strong','',headline),el('p','',state.log||'تابع اللعبة من الجوال'));
+  const instructions={
+    roll:'ارمِ النرد من جوال اللاعب',
+    property:'قرار الشراء أو المزاد من يد التحكم',
+    auction:'قدّم المزايدة من جوالك',
+    card:'اكشف البطاقة واتخذ القرار من الجوال',
+    trade:'اقبل العرض أو ارفضه من الجوال',
+    end:'انتهى الدور، ويستعد اللاعب التالي'
+  };
+  const instruction=state.status==='finished'?'انتهت الجولة':(instructions[state.phase]||'تابع الجولة من الجوال');
+  dest.append(el('strong','',headline),el('p','',instruction));
   if(name)dest.append(el('p','','الموقع: '+name));
   if(state.phase==='property'&&state.pending?.index!==undefined){
     const tile=BOARD[state.pending.index];
@@ -260,7 +270,9 @@ function renderEvent(state){
     dest.append(el('p','','تبادل '+(tile?.name||'أرض')+' مع '+(to?.name||'اللاعب')));
   }
   if(state.phase==='card'&&pending?.stage==='face'&&pending.card?.text)dest.append(el('p','',pending.card.text));
-  byId('tvPhase').textContent='المرحلة: '+state.phase+' · الدور: '+(player?.name||'—');
+  const phaseLabels={roll:'رمي النرد',property:'قرار الشراء',auction:'المزاد',card:'البطاقة',trade:'التبادل',end:'نهاية الدور'};
+  byId('tvPhase').textContent='المرحلة: '+(phaseLabels[state.phase]||'اللعب')+' · اللاعبون: '+state.players.length+' / 4';
+  byId('tvSessionHint').hidden=true;
   const dice=byId('tvDice');dice.replaceChildren();
   (state.dice||[]).forEach(v=>dice.append(el('div','tv-die',v)));
 }
