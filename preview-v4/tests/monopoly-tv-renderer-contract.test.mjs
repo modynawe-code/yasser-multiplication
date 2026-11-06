@@ -56,15 +56,20 @@ test('rendering does not authorize server money, player actions or mutate snapsh
   assert.match(scene,/function destroy\(/);
 });
 
-test('cinematic dice are drawn from authoritative faces before piece travel',()=>{
+test('settled dice clear before piece travel and the landing event',()=>{
   assert.match(scene,/async function rollDice\(values(?:,previousState=null)?\)/);
   assert.match(scene,/values\.every\(n=>Number\.isInteger\(n\)&&n>=1&&n<=6\)/);
   assert.match(scene,/pipLayout\[number\]/);
   assert.match(scene,/gsap\.timeline\(/);
   assert.match(scene,/onInterrupt:/);
   assert.match(entry,/await cinematic\.rollDice\(state\.dice,old\.state\)/);
-  assert.doesNotMatch(entry,/await cinematic\.rollDice\(state\.dice,old\.state\);if\(generation!==sequence\)return;\s*cinematic\.clearDice\(\)/,
-    'settled dice remain visible through the landing event');
+  const rollAt=entry.indexOf('await cinematic.rollDice(state.dice,old.state)');
+  const clearAt=entry.indexOf('cinematic?.clearDice()',rollAt);
+  const travelAt=entry.indexOf('await animateArrival(',clearAt);
+  assert.ok(rollAt>=0&&rollAt<clearAt&&clearAt<travelAt,
+    'board dice clear after the roll and before the piece starts moving');
+  assert.doesNotMatch(entry,/if\(state\.dice\?\.length===2\)\s*state\.dice\.forEach\(value=>dice\.append/,
+    'old dice values must not be drawn inside the landing card');
   const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
   assert.match(d,/z:1\.8,duration:\.22,ease:'power2\.out'/);
   assert.match(css,/\.tv-board\.tv-3d-board-ready \.tv-center-dice\{display:none\}/);

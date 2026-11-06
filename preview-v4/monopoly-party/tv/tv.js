@@ -226,8 +226,6 @@ function updateCenterScene(state,moving=false){
     setCenterSymbol(symbol,'✓');heading.textContent='اكتمل الحدث';
     detail.textContent=state.log||'العودة إلى الجولة';
   }
-  if(state.dice?.length===2)
-    state.dice.forEach(value=>dice.append(el('span','tv-center-die',value)));
 }
 function renderEvent(state){
   updateCenterScene(state);
@@ -315,6 +313,9 @@ async function renderRoom(room){
       sound('dice');
       if(cinematic){await cinematic.rollDice(state.dice,old.state);if(generation!==sequence)return;}
     }
+    // Keep dice in view for the roll only. The result stays in the side rail;
+    // clear the board before travel so the landing event has a clear center.
+    cinematic?.clearDice();
     state.players.filter(p=>p.id!==moving.id).forEach(p=>place(p.id,p.position||0,false));
     await animateArrival(old.state.players.find(p=>p.id===moving.id),moving,moving,generation);
     if(generation!==sequence)return;
