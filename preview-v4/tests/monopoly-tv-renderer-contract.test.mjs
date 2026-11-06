@@ -207,9 +207,8 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.doesNotMatch(d,/cell\.offsetLeft\/boardWidth/);
   assert.match(d,/const crop=img\.naturalWidth\*\.071,playable=img\.naturalWidth-2\*crop/);
   assert.match(d,/if\(buildRaisedTiles\(boardArtCanvas\)\)markBoardReady\(\)/);
-  assert.match(d,/Replace the tiny scan-printed label with crisp, larger Arabic typesetting/);
-  assert.match(d,/textureContext\.direction='rtl';textureContext\.textAlign='center'/);
-  assert.match(d,/textureContext\.fillText\(value,textureCanvas\.width\/2/);
+  assert.match(d,/Keep the exact aligned source crop on the raised surface/);
+  assert.doesNotMatch(d,/textureContext\.fillText\(/);
   assert.match(d,/clearTileMeshes\(\)/);
   assert.match(d,/board\.classList\.add\('tv-3d-board-ready'\)/);
   assert.match(d,/board\.classList\.remove\('tv-3d-board-ready'\)/);
@@ -259,6 +258,12 @@ test('Three.js renders a real tabletop perspective instead of a front-facing boa
   assert.match(d,/tl\.to\(camera\.position,\{y:10\.8,z:6\.3/);
   assert.match(d,/tl\.to\(camera,\{zoom:1\.06/);
   assert.match(css,/\.tv-board-frame\.tv-3d-board-ready\{[\s\S]*?background:transparent/);
+});
+
+test('3D table fits the roll zoom and drops the old inner CSS frame',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/const surfaceSize=surfaceHeight\*\.76/);
+  assert.match(css,/\.tv-view \.tv-board\.tv-3d-board-ready\{[\s\S]*?box-shadow:none;/);
 });
 
 test('dice roll uses a real Three.js camera crane and always restores the tile projection',()=>{

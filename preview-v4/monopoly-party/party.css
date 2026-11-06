@@ -460,6 +460,7 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
   background-image:none!important;
   background-color:transparent!important;
   border:0;
+  box-shadow:none;
   overflow:visible;
 }
 .tv-view .tv-board-frame.tv-3d-board-ready{

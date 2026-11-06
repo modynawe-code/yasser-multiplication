@@ -127,7 +127,9 @@ export function createThreeDice(board,cells=new Map()){
   let boardArtCanvas=null,lastTileLayout={width:0,height:0};
   const BOARD_DEPTH=0;
   const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*camera.position.distanceTo(new Vector3(0,0,BOARD_DEPTH));
-  const surfaceSize=surfaceHeight*.94;
+  // Fit the entire square and outer rim inside the perspective frustum,
+  // including the tighter roll camera and its temporary 1.06 zoom.
+  const surfaceSize=surfaceHeight*.76;
   const TILE_TOP=.05+.075/2;
   const woodTexture=woodGrainTexture();
   const slabMat=new MeshStandardMaterial({map:woodTexture,color:0xffffff,roughness:.62,metalness:.04});
@@ -189,32 +191,8 @@ export function createThreeDice(board,cells=new Map()){
       if(!textureContext)continue;
       textureContext.drawImage(image,pixelX,pixelY,pixelWidth,pixelHeight,
         0,0,textureCanvas.width,textureCanvas.height);
-      // Replace the tiny scan-printed label with crisp, larger Arabic typesetting.
-      // Keep the upper half intact so each tile's original icon and color strip remain.
-      const name=cell.querySelector('strong')?.textContent?.trim()||'';
-      const price=cell.querySelector('small')?.textContent?.trim()||'';
-      const labelTop=Math.floor(textureCanvas.height*.51),labelHeight=textureCanvas.height-labelTop;
-      textureContext.fillStyle='rgba(239,242,232,.96)';
-      textureContext.fillRect(2,labelTop,textureCanvas.width-4,labelHeight-2);
-      textureContext.direction='rtl';textureContext.textAlign='center';textureContext.textBaseline='middle';
-      textureContext.fillStyle='#18392b';
-      const words=name.split(/\s+/),lines=[];let line='';
-      textureContext.font=`700 ${Math.max(12,Math.round(textureCanvas.width*.17))}px system-ui,sans-serif`;
-      for(const word of words){
-        const candidate=line?line+' '+word:word;
-        if(line&&textureContext.measureText(candidate).width>textureCanvas.width-8&&lines.length<1){lines.push(line);line=word;}
-        else line=candidate;
-      }
-      if(line)lines.push(line);
-      const nameLines=lines.slice(0,2),nameFont=Math.max(11,Math.round(textureCanvas.width*.16));
-      textureContext.font=`700 ${nameFont}px system-ui,sans-serif`;
-      const nameStep=Math.max(nameFont+1,labelHeight*.31),nameStart=labelTop+labelHeight*.38-(nameLines.length-1)*nameStep/2;
-      nameLines.forEach((value,i)=>textureContext.fillText(value,textureCanvas.width/2,nameStart+i*nameStep,textureCanvas.width-8));
-      if(price){
-        textureContext.font=`600 ${Math.max(10,Math.round(textureCanvas.width*.12))}px system-ui,sans-serif`;
-        textureContext.fillStyle='#355b45';
-        textureContext.fillText(price,textureCanvas.width/2,labelTop+labelHeight*.84,textureCanvas.width-8);
-      }
+      // Keep the exact aligned source crop on the raised surface. Re-typesetting
+      // these labels over the original ink caused duplicate Arabic names/prices.
       const texture=new CanvasTexture(textureCanvas);
       texture.colorSpace=SRGBColorSpace;texture.anisotropy=4;
       const size=boardCellSize(cell),gap=Math.min(.012,Math.min(size.width,size.height)*.025);
