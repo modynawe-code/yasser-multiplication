@@ -165,7 +165,10 @@ export function createThreeDice(board,cells=new Map()){
   function buildRaisedTiles(image){
     const boardRect=board.getBoundingClientRect();
     const cellRects=cells.size===40?[...cells.values()].map(cell=>cell.getBoundingClientRect()):[];
-    if(boardRect.width<2||boardRect.height<2||cellRects.length!==40||cellRects.some(rect=>rect.width<2||rect.height<2))return false;
+    if(boardRect.width<2||boardRect.height<2||cellRects.length!==40||cellRects.some(rect=>rect.width<2||rect.height<2)){
+      canvasElement.dataset.tileLayoutState=boardRect.width<2||boardRect.height<2?'board-hidden':`cells-unmeasurable-${cellRects.filter(rect=>rect.width<2||rect.height<2).length}`;
+      return false;
+    }
     if(tileMeshes.length===40&&Math.abs(lastTileLayout.width-boardRect.width)<1&&Math.abs(lastTileLayout.height-boardRect.height)<1)return true;
     clearTileMeshes();
     const sourceWidth=image.naturalWidth||image.width,sourceHeight=image.naturalHeight||image.height;
@@ -228,6 +231,7 @@ export function createThreeDice(board,cells=new Map()){
     canvasElement.dataset.raisedTiles=String(tileMeshes.length);
     if(tileMeshes.length!==40){clearTileMeshes();canvasElement.dataset.raisedTiles='0';return false;}
     lastTileLayout={width:boardRect.width,height:boardRect.height};
+    canvasElement.dataset.tileLayoutState='ready';
     return true;
   }
   function markBoardReady(){
@@ -506,6 +510,7 @@ export function createThreeDice(board,cells=new Map()){
   function draw(){
     if(disposed)return;
     resize();
+    if(boardReady&&boardArtCanvas&&tileMeshes.length!==40&&buildRaisedTiles(boardArtCanvas))markBoardReady();
     maxCameraLift=Math.max(maxCameraLift,Math.abs(camera.position.y-overviewCamera.y));
     canvas.dataset.maxCameraLift=maxCameraLift.toFixed(2);
     canvas.dataset.cameraRestored=String(Math.abs(camera.position.y-overviewCamera.y)<.02&&Math.abs(camera.position.z-overviewCamera.z)<.02&&Math.abs(camera.zoom-1)<.02&&!board.classList.contains('tv-3d-rolling'));
