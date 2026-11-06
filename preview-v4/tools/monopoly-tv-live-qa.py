@@ -81,11 +81,13 @@ def execute(kind,browser):
             tv.wait_for_function("() => document.querySelector('#partyBoard canvas.tv-three-dice-canvas')?.dataset.raisedTiles==='40'",timeout=20000)
         tv.wait_for_function("() => document.querySelectorAll('#tvDice .tv-die').length===2",timeout=22000)
         assert tv.locator('#tvCenterScene').count()==1, 'Cinematic center scene missing'
+        # Capture the landed event, not the earlier dice/movement frame.
         tv.wait_for_function("""() => {
             const node=document.querySelector('#tvCenterScene');
-            return node && node.dataset.phase!=='waiting'
-               && document.querySelector('#tvCenterHeadline')?.textContent!=='احتكار المعرفة';
-        }""",timeout=22000)
+            return node && !['waiting','moving'].includes(node.dataset.phase)
+               && document.querySelector('#tvCenterHeadline')?.textContent!=='القطعة تتحرك';
+        }""",timeout=30000)
+        assert tv.locator('#tvCenterDice > *').count()==0, "Old dice must not remain in the landing card"
         tv.screenshot(path=str(ART/f"{kind}-tv-after-dice.png"),full_page=True)
         assert tv.locator(".tv-token").count()==len(phones)
         for other in phones[1:]:
