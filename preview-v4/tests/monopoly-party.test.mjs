@@ -186,3 +186,10 @@ test('host START retries only an optimistic version conflict caused by another p
   assert.equal(attempts,2);
   connection.leave();
 });
+
+test('fresh TV URL clears the saved spectator room instead of resuming it',()=>{
+  const source=readFileSync(new URL('../monopoly-party/tv/tv.js',import.meta.url),'utf8');
+  assert.match(source,/searchParams;[\s\S]*?get\('fresh'\)==='1'/);
+  assert.match(source,/if\(fresh\)[\s\S]*?conn\.leave\(\)[\s\S]*?delete\('code'\)/);
+  assert.match(source,/else\{[\s\S]*?void conn\.resume\(\)/);
+});

@@ -368,6 +368,15 @@ void import('../vendor/cinematic-scene.mjs').then(async module=>{
   }
 }).catch(error=>{board.dataset.displayEngine='dom-fallback';board.dataset.displayReason='renderer-load-error';console.warn('TV cinematic renderer unavailable; retaining accessible DOM fallback',error);});
 void loadBoardArt();
-const initial=new URL(location.href).searchParams.get('code');if(roomCode(initial))byId('tvJoinForm').elements.code.value=initial;
-void conn.resume();
+const urlParams=new URL(location.href).searchParams;
+const fresh=urlParams.get('fresh')==='1';
+if(fresh){
+  conn.leave();
+  urlParams.delete('fresh');urlParams.delete('code');
+  const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete('fresh');cleanUrl.searchParams.delete('code');
+  history.replaceState(null,'',cleanUrl.toString());
+}else{
+  const initial=urlParams.get('code');if(roomCode(initial))byId('tvJoinForm').elements.code.value=initial;
+  void conn.resume();
+}
 window.addEventListener('resize',()=>{if(latestState){latestState.players?.forEach(p=>place(p.id,p.position||0,false));cinematic?.resize(latestState);}});
