@@ -5,6 +5,7 @@ import {movementRoute} from '../../src/modules/games/monopoly/monopoly-scene.js'
 const byId=id=>document.getElementById(id);
 const status=byId('connectionStatus');
 const board=byId('partyBoard');
+const eventCardArt=Object.freeze({chance:new URL('./assets/chance-card.svg',import.meta.url).href,chest:new URL('./assets/chest-card.svg',import.meta.url).href});
 const centerHouseIcon='<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M5 22 24 6l19 16M11 19v22h26V19M20 41V28h9v13" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 24h5v5h-5zm11 0h5v5h-5z" fill="currentColor"/></svg>';
 function setCenterSymbol(symbol,value){if(value==='🏠')symbol.innerHTML=centerHouseIcon;else symbol.textContent=value;}
 // Diagnostic identity is exposed on the page, not taken as visual acceptance.
@@ -34,8 +35,9 @@ function boardSetup(){
   const symbol=el('div','center-mark','🎲');symbol.id='tvCenterSymbol';
   const heading=el('h2','','احتكار المعرفة');heading.id='tvCenterHeadline';
   const detail=el('p','','العب من جوالك · الشاشة تتابع الحكاية');detail.id='tvCenterDetail';
+  const cardArt=el('img','tv-event-card-art');cardArt.id='tvEventCardArt';cardArt.alt='';cardArt.setAttribute('aria-hidden','true');cardArt.hidden=true;
   const dice=el('div','tv-center-dice');dice.id='tvCenterDice';
-  scene.append(symbol,heading,detail,dice);center.append(scene);board.append(center,tokenLayer);
+  scene.append(symbol,cardArt,heading,detail,dice);center.append(scene);board.append(center,tokenLayer);
 }
 async function loadBoardArt(){
   // Reuse the same checked Arabic Figma board art as the original Monopoly.
@@ -166,8 +168,8 @@ function syncBuildings(state){
 function updateCenterScene(state,moving=false){
   const scene=byId('tvCenterScene'),heading=byId('tvCenterHeadline'),
         detail=byId('tvCenterDetail'),symbol=byId('tvCenterSymbol'),
-        dice=byId('tvCenterDice');
-  if(!scene||!heading||!detail||!symbol||!dice)return;
+        dice=byId('tvCenterDice'),cardArt=byId('tvEventCardArt');
+  if(!scene||!heading||!detail||!symbol||!dice||!cardArt)return;
   const playing=state.status==='playing';
   scene.parentElement.classList.toggle('is-playing',playing);
   const phase=moving?'moving':state.status==='waiting'?'waiting':state.phase||'end';
@@ -191,6 +193,11 @@ function updateCenterScene(state,moving=false){
   const position=state.pending?.index??player?.position;
   const space=BOARD[position],color=GROUP_COLORS[space?.group]||'#d4b66c';
   scene.style.setProperty('--scene-band',color);
+  cardArt.hidden=phase!=='card';symbol.hidden=phase==='card';
+  if(phase==='card'){
+    const kind=space?.type==='chest'?'chest':'chance',art=eventCardArt[kind];
+    if(cardArt.dataset.kind!==kind){cardArt.src=art;cardArt.dataset.kind=kind;}
+  }
   dice.replaceChildren();
   if(state.status==='waiting'){
     setCenterSymbol(symbol,'🎲');heading.textContent='جاهزون للعب؟';
@@ -212,7 +219,7 @@ function updateCenterScene(state,moving=false){
     setCenterSymbol(symbol,'🔨');heading.textContent='مزاد '+(space?.name||'أرض');
     detail.textContent='أعلى مزايدة: '+(state.auction?.bid??0)+' ريال';
   }else if(phase==='card'){
-    setCenterSymbol(symbol,'🃏');heading.textContent='فرصة أو جماعة';
+    heading.textContent=space?.type==='chest'?'صندوق الجماعة':'بطاقة الفرصة';
     detail.textContent=state.pending?.stage==='face'?
       String(state.pending?.card?.text||'اكشف البطاقة من الجوال'):
       'تظهر البطاقة للجميع · القرار من الجوال';

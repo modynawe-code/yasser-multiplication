@@ -183,6 +183,8 @@ a{color:#c9f7cb}button:disabled{opacity:.45;cursor:not-allowed}
   background:linear-gradient(150deg,#fdf3e4,#f0d7ac);
   border:2px solid #b98a54;
 }
+.tv-event-card-art{width:clamp(74px,7vw,116px);height:auto;max-height:20vh;object-fit:contain;justify-self:center;filter:drop-shadow(0 5px 4px #1b2d2255);transform:perspective(900px) rotateX(5deg) rotateZ(-2deg)}
+.tv-event-card-art[hidden]{display:none}
 .tv-center-scene[data-event] h2{overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){
   .tv-center-scene{animation:none!important}
