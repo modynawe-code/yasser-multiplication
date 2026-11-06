@@ -515,9 +515,17 @@ export function createThreeDice(board,cells=new Map()){
   }
   // The TV stage starts hidden until a room is joined. Artwork can finish
   // loading first, so build the tiles only after the board has real dimensions.
+  let tileRebuildQueued=false;
   const boardLayoutObserver=typeof ResizeObserver==='function'?new ResizeObserver(()=>{
-    if(disposed||!boardArtCanvas)return;
-    if(buildRaisedTiles(boardArtCanvas)){markBoardReady();draw();}
+    if(disposed||!boardArtCanvas||tileRebuildQueued)return;
+    // Defer mesh construction and ready-class changes beyond the observer
+    // delivery phase to avoid WebKit's ResizeObserver feedback-loop warning.
+    tileRebuildQueued=true;
+    requestAnimationFrame(()=>{
+      tileRebuildQueued=false;
+      if(disposed)return;
+      if(buildRaisedTiles(boardArtCanvas)){markBoardReady();draw();}
+    });
   }):null;
   boardLayoutObserver?.observe(board);
   function clear(){

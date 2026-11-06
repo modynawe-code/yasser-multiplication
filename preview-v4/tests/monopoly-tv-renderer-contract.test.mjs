@@ -40,6 +40,7 @@ test('Three.js waits for the hidden TV board to have measurable layout before cr
   assert.match(d,/cellRects\.some\(rect=>rect\.width<2\|\|rect\.height<2\)/);
   assert.match(d,/board\.dataset\.displayReason='board-layout-pending'/);
   assert.match(d,/new ResizeObserver\(\(\)=>\{/);
+  assert.match(d,/requestAnimationFrame\(\(\)=>\{/);
   assert.match(d,/if\(buildRaisedTiles\(boardArtCanvas\)\)\{markBoardReady\(\);draw\(\);\}/);
   assert.match(d,/boardLayoutObserver\?\.disconnect\(\)/);
 });
