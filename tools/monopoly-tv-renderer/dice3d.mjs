@@ -124,6 +124,7 @@ export function createThreeDice(board,cells=new Map()){
   const boardResources=[];
   let boardTexture=null,boardReady=false,artVersion=0;
   const tileMeshes=[];
+  let boardArtCanvas=null,lastTileLayout={width:0,height:0};
   const BOARD_DEPTH=0;
   const surfaceHeight=2*Math.tan(camera.fov*Math.PI/360)*camera.position.distanceTo(new Vector3(0,0,BOARD_DEPTH));
   const surfaceSize=surfaceHeight*.94;
@@ -159,10 +160,14 @@ export function createThreeDice(board,cells=new Map()){
       tile.geometry.dispose();tile.top.dispose();tile.edge.dispose();tile.texture.dispose();
     }
     tileMeshes.length=0;
+    lastTileLayout={width:0,height:0};
   }
   function buildRaisedTiles(image){
-    clearTileMeshes();
     const boardRect=board.getBoundingClientRect();
+    const cellRects=cells.size===40?[...cells.values()].map(cell=>cell.getBoundingClientRect()):[];
+    if(boardRect.width<2||boardRect.height<2||cellRects.length!==40||cellRects.some(rect=>rect.width<2||rect.height<2))return false;
+    if(tileMeshes.length===40&&Math.abs(lastTileLayout.width-boardRect.width)<1&&Math.abs(lastTileLayout.height-boardRect.height)<1)return true;
+    clearTileMeshes();
     const sourceWidth=image.naturalWidth||image.width,sourceHeight=image.naturalHeight||image.height;
     for(const cell of cells.values()){
       const rect=cell.getBoundingClientRect();
@@ -221,6 +226,17 @@ export function createThreeDice(board,cells=new Map()){
       tileMeshes.push({mesh,geometry,top,edge,texture});
     }
     canvasElement.dataset.raisedTiles=String(tileMeshes.length);
+    if(tileMeshes.length!==40){clearTileMeshes();canvasElement.dataset.raisedTiles='0';return false;}
+    lastTileLayout={width:boardRect.width,height:boardRect.height};
+    return true;
+  }
+  function markBoardReady(){
+    if(!boardReady||tileMeshes.length!==40)return;
+    board.classList.add('tv-3d-board-ready');
+    board.closest('.tv-board-frame')?.classList.add('tv-3d-board-ready');
+    board.dataset.displayEngine='three.js-table';
+    board.dataset.displayReason='texture-ready';
+    canvasElement.dataset.table='3d';
   }
   // Image is supplied only by the already-loaded self-hosted board source.
   function setBoardArt(source){
@@ -270,13 +286,11 @@ export function createThreeDice(board,cells=new Map()){
       artPlane=new Mesh(geo,material);
       artPlane.position.z=.012;
       boardGroup.add(artPlane);
-      buildRaisedTiles(canvas);
-      boardTexture=texture;boardReady=true;
-      board.classList.add('tv-3d-board-ready');
-      board.closest('.tv-board-frame')?.classList.add('tv-3d-board-ready');
-      board.dataset.displayEngine='three.js-table';
-      board.dataset.displayReason='texture-ready';
-      canvasElement.dataset.table='3d';
+      boardTexture=texture;boardReady=true;boardArtCanvas=canvas;
+      canvasElement.dataset.raisedTiles='0';
+      board.dataset.displayEngine='three.js-initializing';
+      board.dataset.displayReason='board-layout-pending';
+      if(buildRaisedTiles(boardArtCanvas))markBoardReady();
       draw();
     };
     img.onerror=()=>{
@@ -499,6 +513,13 @@ export function createThreeDice(board,cells=new Map()){
     camera.updateProjectionMatrix();
     renderer.render(scene,camera);
   }
+  // The TV stage starts hidden until a room is joined. Artwork can finish
+  // loading first, so build the tiles only after the board has real dimensions.
+  const boardLayoutObserver=typeof ResizeObserver==='function'?new ResizeObserver(()=>{
+    if(disposed||!boardArtCanvas)return;
+    if(buildRaisedTiles(boardArtCanvas)){markBoardReady();draw();}
+  }):null;
+  boardLayoutObserver?.observe(board);
   function clear(){
     timeline?.kill();timeline=null;
     shown=false;group.visible=false;
@@ -563,7 +584,7 @@ export function createThreeDice(board,cells=new Map()){
   }
   function destroy(){
     if(disposed)return;
-    clear();disposed=true;
+    clear();disposed=true;boardLayoutObserver?.disconnect();
     for(const pawn of pawns.values()){
       gsap.killTweensOf(pawn.group.position);
       scene.remove(pawn.group);pawn.materials.forEach(material=>material.dispose());

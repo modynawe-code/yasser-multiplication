@@ -33,6 +33,16 @@ test('Three.js initializes before Pixi to reserve the TV browser WebGL context',
   assert.doesNotMatch(entry,/board\.dataset\.displayEngine='pixi-three'/);
   assert.match(scene,/get engine\(\)\{return threeDice\?\.boardReady\?'three\.js-table':'pixi\.js-fallback';\}/);
 });
+test('Three.js waits for the hidden TV board to have measurable layout before creating raised tiles',()=>{
+  const d=read('../tools/monopoly-tv-renderer/dice3d.mjs');
+  assert.match(d,/const cellRects=cells\.size===40/);
+  assert.match(d,/boardRect\.width<2\|\|boardRect\.height<2/);
+  assert.match(d,/cellRects\.some\(rect=>rect\.width<2\|\|rect\.height<2\)/);
+  assert.match(d,/board\.dataset\.displayReason='board-layout-pending'/);
+  assert.match(d,/new ResizeObserver\(\(\)=>\{/);
+  assert.match(d,/if\(buildRaisedTiles\(boardArtCanvas\)\)\{markBoardReady\(\);draw\(\);\}/);
+  assert.match(d,/boardLayoutObserver\?\.disconnect\(\)/);
+});
 test('installed family service workers revalidate Monopoly TV assets after staging deploys',()=>{
   const sw=read('service-worker.js');
   assert.match(sw,/const isMonopolyAsset=new URL\(event\.request\.url\)\.pathname\.includes\('\/monopoly-party\/'\)/);
@@ -194,7 +204,7 @@ test('Three.js owns a textured, lit, actual 3D board while keeping 40 original t
   assert.match(d,/const rect=cell\.getBoundingClientRect\(\)/);
   assert.doesNotMatch(d,/cell\.offsetLeft\/boardWidth/);
   assert.match(d,/const crop=img\.naturalWidth\*\.071,playable=img\.naturalWidth-2\*crop/);
-  assert.match(d,/buildRaisedTiles\(canvas\)/);
+  assert.match(d,/if\(buildRaisedTiles\(boardArtCanvas\)\)markBoardReady\(\)/);
   assert.match(d,/Replace the tiny scan-printed label with crisp, larger Arabic typesetting/);
   assert.match(d,/textureContext\.direction='rtl';textureContext\.textAlign='center'/);
   assert.match(d,/textureContext\.fillText\(value,textureCanvas\.width\/2/);
